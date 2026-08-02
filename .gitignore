@@ -1,0 +1,27 @@
+# Python & Virtual Environments
+backend/venv/
+backend/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Node.js & Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+
+# Environment Variables & Logs
+.env
+.env.local
+.env.development.local
+.env.production.local
+*.log
+
+# Large Pickle Model Cache (optional, keep code lightweight)
+# backend/app/ml/registry/v1/*.pkl
+
+# OS Files
+.DS_Store
+Thumbs.db

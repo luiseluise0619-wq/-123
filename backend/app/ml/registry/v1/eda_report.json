@@ -1,0 +1,382 @@
+{
+  "dataset_shape": {
+    "rows": 4644,
+    "columns": 38
+  },
+  "missing_values": {
+    "district_code": 0,
+    "district_name": 0,
+    "gu_name": 0,
+    "dong_name": 0,
+    "industry": 0,
+    "year": 0,
+    "quarter": 0,
+    "lat": 0,
+    "lng": 0,
+    "pop_total": 0,
+    "households": 0,
+    "age_20_30_ratio": 0,
+    "age_40_50_ratio": 0,
+    "workplace_pop": 0,
+    "resident_pop": 0,
+    "foot_traffic_daily": 0,
+    "foot_traffic_lunch": 0,
+    "foot_traffic_dinner": 0,
+    "dwell_time_avg": 0,
+    "foot_traffic_3yr_growth": 0,
+    "card_sales_avg": 0,
+    "industry_spend_ratio": 0,
+    "avg_ticket_size": 0,
+    "competitor_count_100m": 0,
+    "competitor_count_500m": 0,
+    "openings_1yr": 0,
+    "closures_1yr": 0,
+    "competitor_density": 0,
+    "avg_operating_months": 0,
+    "rent_per_m2": 0,
+    "vacancy_rate": 0,
+    "building_age": 0,
+    "transit_passengers_daily": 0,
+    "data_quality_score": 0,
+    "monthly_revenue_actual": 0,
+    "target_monthly_revenue": 0,
+    "target_success_label": 0,
+    "target_closure_risk": 0
+  },
+  "feature_statistics": {
+    "lat": {
+      "mean": 37.551,
+      "std": 0.058,
+      "min": 37.45,
+      "25%": 37.5,
+      "50% (median)": 37.551,
+      "75%": 37.601,
+      "max": 37.65,
+      "skewness": -0.023
+    },
+    "lng": {
+      "mean": 127.001,
+      "std": 0.086,
+      "min": 126.85,
+      "25%": 126.927,
+      "50% (median)": 127.001,
+      "75%": 127.076,
+      "max": 127.15,
+      "skewness": -0.024
+    },
+    "pop_total": {
+      "mean": 21973.861,
+      "std": 6870.453,
+      "min": 3000.0,
+      "25%": 17359.75,
+      "50% (median)": 21909.0,
+      "75%": 26543.25,
+      "max": 46151.0,
+      "skewness": 0.036
+    },
+    "households": {
+      "mean": 9622.083,
+      "std": 3091.355,
+      "min": 1168.0,
+      "25%": 7526.25,
+      "50% (median)": 9571.0,
+      "75%": 11582.5,
+      "max": 21775.0,
+      "skewness": 0.11
+    },
+    "age_20_30_ratio": {
+      "mean": 0.325,
+      "std": 0.08,
+      "min": 0.12,
+      "25%": 0.273,
+      "50% (median)": 0.326,
+      "75%": 0.379,
+      "max": 0.58,
+      "skewness": -0.031
+    },
+    "age_40_50_ratio": {
+      "mean": 0.3,
+      "std": 0.059,
+      "min": 0.15,
+      "25%": 0.259,
+      "50% (median)": 0.301,
+      "75%": 0.34,
+      "max": 0.45,
+      "skewness": -0.008
+    },
+    "workplace_pop": {
+      "mean": 18892.907,
+      "std": 19656.356,
+      "min": 1.0,
+      "25%": 5299.5,
+      "50% (median)": 13002.5,
+      "75%": 25984.75,
+      "max": 232635.0,
+      "skewness": 2.383
+    },
+    "resident_pop": {
+      "mean": 16740.836,
+      "std": 5430.458,
+      "min": 2206.0,
+      "25%": 13052.25,
+      "50% (median)": 16578.5,
+      "75%": 20427.0,
+      "max": 38262.0,
+      "skewness": 0.156
+    },
+    "foot_traffic_daily": {
+      "mean": 37769.746,
+      "std": 34088.473,
+      "min": 1884.0,
+      "25%": 16993.25,
+      "50% (median)": 26761.0,
+      "75%": 46221.75,
+      "max": 408031.0,
+      "skewness": 3.02
+    },
+    "foot_traffic_lunch": {
+      "mean": 11355.237,
+      "std": 10494.175,
+      "min": 560.0,
+      "25%": 4996.25,
+      "50% (median)": 7945.5,
+      "75%": 13749.0,
+      "max": 128758.0,
+      "skewness": 3.075
+    },
+    "foot_traffic_dinner": {
+      "mean": 13587.601,
+      "std": 12473.391,
+      "min": 753.0,
+      "25%": 5958.0,
+      "50% (median)": 9603.0,
+      "75%": 16429.75,
+      "max": 137309.0,
+      "skewness": 2.981
+    },
+    "dwell_time_avg": {
+      "mean": 51.898,
+      "std": 18.936,
+      "min": 20.0,
+      "25%": 35.1,
+      "50% (median)": 51.8,
+      "75%": 68.5,
+      "max": 85.0,
+      "skewness": 0.02
+    },
+    "foot_traffic_3yr_growth": {
+      "mean": 0.039,
+      "std": 0.122,
+      "min": -0.491,
+      "25%": -0.043,
+      "50% (median)": 0.039,
+      "75%": 0.122,
+      "max": 0.547,
+      "skewness": 0.008
+    },
+    "card_sales_avg": {
+      "mean": 33640.88,
+      "std": 12767.193,
+      "min": -6006.0,
+      "25%": 25000.0,
+      "50% (median)": 32977.0,
+      "75%": 41541.5,
+      "max": 92725.0,
+      "skewness": 0.336
+    },
+    "industry_spend_ratio": {
+      "mean": 0.287,
+      "std": 0.078,
+      "min": 0.15,
+      "25%": 0.22,
+      "50% (median)": 0.287,
+      "75%": 0.356,
+      "max": 0.42,
+      "skewness": -0.018
+    },
+    "avg_ticket_size": {
+      "mean": 15958.441,
+      "std": 4636.519,
+      "min": 1204.0,
+      "25%": 12838.75,
+      "50% (median)": 15706.5,
+      "75%": 18773.0,
+      "max": 35908.0,
+      "skewness": 0.365
+    },
+    "competitor_count_100m": {
+      "mean": 5.741,
+      "std": 2.881,
+      "min": 0.0,
+      "25%": 4.0,
+      "50% (median)": 6.0,
+      "75%": 7.0,
+      "max": 19.0,
+      "skewness": 0.634
+    },
+    "competitor_count_500m": {
+      "mean": 42.773,
+      "std": 25.449,
+      "min": 0.0,
+      "25%": 24.0,
+      "50% (median)": 38.0,
+      "75%": 55.0,
+      "max": 168.0,
+      "skewness": 1.112
+    },
+    "openings_1yr": {
+      "mean": 2.997,
+      "std": 1.734,
+      "min": 0.0,
+      "25%": 2.0,
+      "50% (median)": 3.0,
+      "75%": 4.0,
+      "max": 10.0,
+      "skewness": 0.561
+    },
+    "closures_1yr": {
+      "mean": 2.021,
+      "std": 1.432,
+      "min": 0.0,
+      "25%": 1.0,
+      "50% (median)": 2.0,
+      "75%": 3.0,
+      "max": 9.0,
+      "skewness": 0.747
+    },
+    "competitor_density": {
+      "mean": 0.951,
+      "std": 0.566,
+      "min": 0.0,
+      "25%": 0.533,
+      "50% (median)": 0.844,
+      "75%": 1.222,
+      "max": 3.733,
+      "skewness": 1.112
+    },
+    "avg_operating_months": {
+      "mean": 41.992,
+      "std": 15.981,
+      "min": -13.5,
+      "25%": 31.3,
+      "50% (median)": 42.0,
+      "75%": 52.7,
+      "max": 99.2,
+      "skewness": -0.033
+    },
+    "rent_per_m2": {
+      "mean": 48147.322,
+      "std": 19744.509,
+      "min": 15000.0,
+      "25%": 33912.25,
+      "50% (median)": 46784.0,
+      "75%": 60746.0,
+      "max": 124567.0,
+      "skewness": 0.51
+    },
+    "vacancy_rate": {
+      "mean": 0.051,
+      "std": 0.027,
+      "min": 0.01,
+      "25%": 0.03,
+      "50% (median)": 0.05,
+      "75%": 0.07,
+      "max": 0.153,
+      "skewness": 0.378
+    },
+    "building_age": {
+      "mean": 20.093,
+      "std": 10.331,
+      "min": 2.0,
+      "25%": 11.2,
+      "50% (median)": 20.4,
+      "75%": 28.9,
+      "max": 38.0,
+      "skewness": -0.031
+    },
+    "transit_passengers_daily": {
+      "mean": 36885.995,
+      "std": 37968.796,
+      "min": 0.0,
+      "25%": 10138.75,
+      "50% (median)": 25058.0,
+      "75%": 51080.0,
+      "max": 313346.0,
+      "skewness": 2.113
+    },
+    "data_quality_score": {
+      "mean": 0.92,
+      "std": 0.041,
+      "min": 0.85,
+      "25%": 0.885,
+      "50% (median)": 0.921,
+      "75%": 0.955,
+      "max": 0.99,
+      "skewness": -0.02
+    }
+  },
+  "target_analysis": {
+    "monthly_revenue": {
+      "mean_krw_10k": 3436.5,
+      "median_krw_10k": 2762.6,
+      "std_krw_10k": 2536.4,
+      "skewness": 2.957
+    },
+    "success_rate_split": {
+      "success_count": 932,
+      "fail_count": 3712,
+      "success_ratio_pct": 20.1
+    },
+    "closure_risk_split": {
+      "low_risk_pct": 17.0,
+      "medium_risk_pct": 18.4,
+      "high_risk_pct": 64.6
+    }
+  },
+  "correlations_with_revenue": {
+    "top_positive": [
+      [
+        "monthly_revenue_actual",
+        1.0
+      ],
+      [
+        "foot_traffic_daily",
+        0.8133
+      ],
+      [
+        "foot_traffic_dinner",
+        0.8008
+      ],
+      [
+        "foot_traffic_lunch",
+        0.7914
+      ],
+      [
+        "workplace_pop",
+        0.7841
+      ]
+    ],
+    "top_negative": [
+      [
+        "target_closure_risk",
+        -0.4744
+      ],
+      [
+        "lng",
+        -0.0303
+      ],
+      [
+        "dwell_time_avg",
+        -0.0251
+      ],
+      [
+        "vacancy_rate",
+        -0.024
+      ],
+      [
+        "industry_spend_ratio",
+        -0.0131
+      ]
+    ]
+  }
+}
