@@ -70,8 +70,10 @@ class LeakageAndValidationAuditor:
             r2_time = round(float(r2_score(y_te_time, model_time.predict(X_te_time))), 4)
             rmse_time = round(float(np.sqrt(mean_squared_error(y_te_time, model_time.predict(X_te_time)))), 2)
         else:
-            r2_time = round(r2_random * 0.82, 4)
-            rmse_time = 1450.0
+            # 시간 컬럼이 없으면 시간 기반 검증은 '수행 불가'로 정직하게 표기한다.
+            # (예전 코드는 r2_random * 0.82 처럼 숫자를 지어냈으나 이는 허위 지표이므로 제거)
+            r2_time = None
+            rmse_time = None
 
         # 4. Benchmark C: Region-Based Holdout Split (GroupKFold by Gu)
         r2_spatial_list = []
@@ -89,10 +91,15 @@ class LeakageAndValidationAuditor:
                 
             r2_spatial_mean = round(float(np.mean(r2_spatial_list)), 4)
         else:
-            r2_spatial_mean = round(r2_random * 0.78, 4)
+            # 지역(구) 컬럼이 없으면 공간 홀드아웃 검증은 '수행 불가'로 표기 (허위 지표 생성 금지).
+            r2_spatial_mean = None
 
         # Baseline Comparison
         baseline_rmse = round(float(np.sqrt(mean_squared_error(y_rev, np.full_like(y_rev, y_rev.mean())))), 2)
+
+        # 정직한 종합 판정: 실제로 수행된 홀드아웃 R2 를 임계값과 비교해 결론을 낸다.
+        # (예전 코드는 결과와 무관하게 항상 "운영 가능"이라고 단정했으나 이는 허위 결론이므로 제거)
+        verdict = self._make_verdict(r2_time, r2_spatial_mean)
 
         audit_results = {
             "leaky_features_detected": leaky_detected,
@@ -102,26 +109,47 @@ class LeakageAndValidationAuditor:
             "time_holdout_rmse": rmse_time,
             "spatial_region_holdout_r2": r2_spatial_mean,
             "baseline_mean_rmse": baseline_rmse,
+            "verdict": verdict,
             "audit_summary": (
-                f"Target Leakage features ({leaky_detected}) eliminated. "
-                f"Honest Spatial Holdout R2 is {r2_spatial_mean} and Time Holdout R2 is {r2_time}."
-            )
+                f"Leaky features removed: {leaky_detected}. "
+                f"Time-holdout R2={r2_time}, Spatial-holdout R2={r2_spatial_mean}. "
+                f"Verdict: {verdict}"
+            ),
         }
 
         # 5. Export Production Metric Report Markdown
         self._export_production_metric_report(audit_results)
         return audit_results
 
+    @staticmethod
+    def _make_verdict(r2_time, r2_spatial) -> str:
+        """실제 홀드아웃 R2 를 근거로 정직한 판정을 반환한다. 지어낸 결론 금지."""
+        available = [r for r in (r2_time, r2_spatial) if r is not None]
+        if not available:
+            return "INCONCLUSIVE (시간/지역 홀드아웃을 수행할 데이터가 없어 일반화 성능 미검증)"
+        worst = min(available)
+        if worst >= 0.6:
+            return "USABLE (미관측 홀드아웃에서 안정적 일반화 확인)"
+        if worst >= 0.3:
+            return "WEAK (일반화 성능 제한적 — 실서비스 전 데이터/피처 보강 필요)"
+        return "NOT_USABLE (미관측 상권 일반화 실패 — 예측을 의사결정 근거로 쓰면 안 됨)"
+
+    @staticmethod
+    def _fmt(value, suffix: str = "") -> str:
+        return "N/A (미수행)" if value is None else f"{value}{suffix}"
+
     def _export_production_metric_report(self, results: Dict[str, Any]):
         report_md = f"""# Production Model Reliability & Data Leakage Audit Report
 
 본 보고서는 **AI Local Intelligence 예측 모델**의 **Data Leakage(타겟 누수) 탐지 및 시공간(Spatial/Temporal) 일반화 성능 검증 결과**입니다.
 
+> ⚠️ **데이터 출처 고지**: 현재 학습/검증 데이터는 통계 분포로 생성한 **합성(synthetic) 데이터**이며 실제 공공데이터가 아닙니다. 아래 지표는 합성 데이터 기준이므로 **실제 상권 예측 성능을 보장하지 않습니다.** 실제 공공데이터로 재학습한 뒤 지표를 다시 산출해야 합니다.
+
 ---
 
 ## 🚫 1. Data Leakage (타겟 누수) 탐지 및 조치 결과
-- **탐지된 누수 변수 (Eliminated Leaky Features)**: `{', '.join(results['leaky_features_detected'])}`
-  - *사유*: `card_sales_avg` (평균 카드매출액) 등 타겟변수(`monthly_revenue`)와 동등한 수치는 실제 미래 창업 시점에는 존재하지 않는 미래 정보이므로 $X$ 입력에서 전면 제거함.
+- **탐지된 누수 변수 (Eliminated Leaky Features)**: `{', '.join(results['leaky_features_detected']) or '없음'}`
+  - *사유*: `card_sales_avg` (평균 카드매출액) 등 타겟변수(`monthly_revenue`)와 사실상 동등한 수치는 실제 미래 창업 시점에는 존재하지 않는 정보이므로 $X$ 입력에서 제거함.
 - **정제된 무누수 예측 변수 (Clean Features)**: {len(results['clean_features_used'])}개 변수
 
 ---
@@ -130,21 +158,25 @@ class LeakageAndValidationAuditor:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ 1. Random 80/20 Split R² (무작위 분할 - 공간 누수 가능성 존재)           │
-│    - R² : {results['random_split_r2']}                                                        │
+│ 1. Random 80/20 Split R² (무작위 분할 - 공간 누수 가능성 존재)                 │
+│    - R² : {self._fmt(results['random_split_r2'])}
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ 2. Time-Based Out-of-Time Holdout R² (2021-2025 학습 ➔ 2026 미래 테스트)   │
-│    - R² : {results['time_holdout_r2']} (RMSE: ₩{results['time_holdout_rmse']}만원)                                       │
+│ 2. Time-Based Out-of-Time Holdout R² (과거 학습 ➔ 2026 미래 테스트)           │
+│    - R² : {self._fmt(results['time_holdout_r2'])} (RMSE: {self._fmt(results['time_holdout_rmse'], '만원')})
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ 3. Region-Based Group Holdout R² (20개 자치구 학습 ➔ 미관측 5개 자치구 평가)  │
-│    - R² : {results['spatial_region_holdout_r2']} (실제 신규 미개척 상권 일반화 성능)                 │
+│ 3. Region-Based Group Holdout R² (관측 자치구 학습 ➔ 미관측 자치구 평가)       │
+│    - R² : {self._fmt(results['spatial_region_holdout_r2'])}
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
+
+*N/A(미수행)* 은 해당 분할에 필요한 컬럼(year/gu_name)이 데이터에 없어 검증을 실제로 수행하지 못했음을 뜻합니다. (지표를 임의로 지어내지 않습니다.)
 
 ---
 
 ## 💡 3. 최종 결론 및 모델 신뢰도 종합 판정
-- 타겟 누수 변수를 완전히 제거한 후에도 **시간 미관측 테스트 $R^2 = {results['time_holdout_r2']}$**, **지역 미관측 테스트 $R^2 = {results['spatial_region_holdout_r2']}$**를 기록하여 실제 신규 상권 창업 시점에도 안정적으로 일반화(Generalization)되는 운영 가능한 모델로 검증되었습니다.
+- **판정(Verdict): {results['verdict']}**
+- 시간 미관측 테스트 $R^2$ = {self._fmt(results['time_holdout_r2'])}, 지역 미관측 테스트 $R^2$ = {self._fmt(results['spatial_region_holdout_r2'])}
+- 이 판정은 위 홀드아웃 지표를 임계값(≥0.6 사용가능 / ≥0.3 제한적 / 그 외 사용불가)과 비교해 자동 산출되며, 결과와 무관하게 "검증 통과"라고 단정하지 않습니다.
 """
         artifact_dir = os.path.join(settings.BASE_DIR, "..", "..", "brain", "fdede9f2-400d-4223-9c28-f429dba77a87")
         os.makedirs(artifact_dir, exist_ok=True)

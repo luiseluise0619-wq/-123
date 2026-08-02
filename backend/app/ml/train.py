@@ -13,9 +13,15 @@ from app.ml.feature_selection import FeatureSelectionEngine
 from app.ml.evaluate import ModelEvaluator
 
 def train_and_register_models():
-    print("[ML Pipeline] Loading authentic large-scale Seoul commercial dataset CSV...")
+    print("[ML Pipeline] Loading commercial dataset CSV...")
     df = real_data_pipeline.load_real_dataset()
-    print(f"Loaded {len(df):,} authentic Seoul commercial records across all 25 Gus!")
+    data_provenance = real_data_pipeline.data_provenance
+    print(f"Loaded {len(df):,} records (data_provenance={data_provenance}).")
+    if data_provenance != "real_public_data":
+        print(
+            "[경고] 현재 데이터는 실제 공공데이터가 아닙니다(합성/시드 데이터). "
+            "아래 성능 지표는 실제 상권 예측 성능을 보장하지 않습니다."
+        )
     
     target_cols = ["target_monthly_revenue", "target_success_label", "target_closure_risk"]
     df = df.dropna(subset=target_cols)
@@ -36,22 +42,24 @@ def train_and_register_models():
     _, _, y_suc_train, y_suc_test = train_test_split(X, y_success, test_size=0.2, random_state=42)
     _, _, y_risk_train, y_risk_test = train_test_split(X, y_risk, test_size=0.2, random_state=42)
     
+    n_records = len(df)
+
     # 1. Revenue Regressor
-    print("Training LightGBM Revenue Regressor on 4,644 commercial records...")
+    print(f"Training LightGBM Revenue Regressor on {n_records:,} records...")
     rev_model = LGBMRegressor(n_estimators=150, learning_rate=0.03, num_leaves=31, random_state=42, verbose=-1)
     rev_model.fit(X_train, y_rev_train)
     rev_metrics = ModelEvaluator.evaluate_regressor(rev_model, X_test, y_rev_test)
     print(f"Revenue Regressor Metrics: {rev_metrics}")
-    
+
     # 2. Success Classifier
-    print("Training LightGBM Success Classifier on 4,644 commercial records...")
+    print(f"Training LightGBM Success Classifier on {n_records:,} records...")
     suc_model = LGBMClassifier(n_estimators=120, learning_rate=0.03, num_leaves=31, random_state=42, verbose=-1)
     suc_model.fit(X_train, y_suc_train)
     suc_metrics = ModelEvaluator.evaluate_classifier(suc_model, X_test, y_suc_test)
     print(f"Success Classifier Metrics: {suc_metrics}")
-    
+
     # 3. Closure Risk Classifier
-    print("Training LightGBM Closure Risk Classifier on 4,644 commercial records...")
+    print(f"Training LightGBM Closure Risk Classifier on {n_records:,} records...")
     risk_model = LGBMClassifier(n_estimators=120, learning_rate=0.03, num_leaves=31, random_state=42, verbose=-1)
     risk_model.fit(X_train, y_risk_train)
     risk_metrics = ModelEvaluator.evaluate_classifier(risk_model, X_test, y_risk_test)
@@ -78,23 +86,31 @@ def train_and_register_models():
             
     metadata = {
         "version": "v2.0-production-seed",
-        "data_source": "Seoul Commercial Big Data CSV (4,644 records across 425 dongs)",
+        "data_source": f"commercial dataset CSV ({len(df):,} records)",
+        "data_provenance": data_provenance,  # real_public_data | synthetic | seed_sample
+        "is_real_public_data": data_provenance == "real_public_data",
         "trained_at": "2026-07-31",
         "total_training_records": len(df),
         "selected_features": selected_features,
         "revenue_metrics": rev_metrics,
         "success_metrics": suc_metrics,
         "risk_metrics": risk_metrics,
-        "is_winner": True
     }
     
     meta_path = os.path.join(settings.MODEL_DIR, "metadata.json")
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(metadata, f, ensure_ascii=False, indent=2)
         
-    model_card_content = f"""# Model Card: AI Local Intelligence v2.0 (4,644 Records Big Data)
-
-- **Data Source**: Seoul Commercial Big Data (4,644 records across 425 administrative dongs in 25 Gus)
+    provenance_warning = (
+        ""
+        if data_provenance == "real_public_data"
+        else "\n> ⚠️ **주의**: 학습 데이터가 실제 공공데이터가 아닌 **합성/시드 데이터**입니다. "
+        "아래 지표는 실제 상권 예측 성능을 보장하지 않으며, 실제 공공데이터로 재학습해야 합니다.\n"
+    )
+    model_card_content = f"""# Model Card: AI Local Intelligence v2.0 ({len(df):,} Records)
+{provenance_warning}
+- **Data Source**: commercial dataset CSV ({len(df):,} records)
+- **Data Provenance**: {data_provenance}
 - **Model Type**: LightGBM Multi-Model Ensemble (Regressor + Classifiers)
 - **Features Used ({len(selected_features)})**: {', '.join(selected_features)}
 - **Revenue Predictor Performance**: RMSE={rev_metrics['rmse']} (Baseline={rev_metrics['baseline_rmse']}, R2={rev_metrics['r2']})
@@ -104,8 +120,8 @@ def train_and_register_models():
     model_card_path = os.path.join(settings.MODEL_DIR, "model_card.md")
     with open(model_card_path, "w", encoding="utf-8") as f:
         f.write(model_card_content)
-        
-    print("[ML Pipeline] 4,644 Records Big Data Model Training & Registry Complete!")
+
+    print(f"[ML Pipeline] Model Training & Registry Complete! ({len(df):,} records, provenance={data_provenance})")
 
 if __name__ == "__main__":
     train_and_register_models()

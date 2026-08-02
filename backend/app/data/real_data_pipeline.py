@@ -7,19 +7,30 @@ from app.data.quality.validator import DataQualityValidator
 
 class RealDataIngestionPipeline:
     """
-    Ingests, cleans, and validates authentic Large-Scale Public Commercial Data CSV files (4,644+ records).
+    상권 데이터 CSV 를 적재/정제/검증하는 파이프라인.
+
+    정직성 고지: 기본 제공 CSV(`sample_real_data/`)는 실제 공공데이터가 아니라
+    통계 분포로 생성한 합성/시드 데이터입니다. `data_provenance` 속성으로
+    현재 적재된 데이터의 출처를 구분합니다:
+        - "real_public_data" : 사용자가 직접 제공한 실제 공공데이터 CSV
+        - "synthetic"        : 대규모 합성 데이터(seoul_bigdata_multi_thousand_2026.csv)
+        - "seed_sample"      : 소규모 수기 시드 샘플(seoul_commercial_districts_2026.csv)
     """
     def __init__(self, csv_filepath: Optional[str] = None):
         base_dir = settings.BASE_DIR
         bigdata_path = os.path.join(base_dir, "data", "sample_real_data", "seoul_bigdata_multi_thousand_2026.csv")
         seed_path = os.path.join(base_dir, "data", "sample_real_data", "seoul_commercial_districts_2026.csv")
-        
+
         if csv_filepath and os.path.exists(csv_filepath):
+            # 사용자가 명시적으로 넣은 CSV 는 실제 공공데이터로 간주.
             self.csv_filepath = csv_filepath
+            self.data_provenance = "real_public_data"
         elif os.path.exists(bigdata_path):
             self.csv_filepath = bigdata_path
+            self.data_provenance = "synthetic"
         else:
             self.csv_filepath = seed_path
+            self.data_provenance = "seed_sample"
 
     def load_real_dataset(self) -> pd.DataFrame:
         if not os.path.exists(self.csv_filepath):
