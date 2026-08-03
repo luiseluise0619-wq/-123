@@ -60,6 +60,20 @@ def _prepare_real(df):
     else:
         y_revenue = df["target_monthly_revenue"].astype(float)
 
+    # lag 피처: 같은 상권×업종의 '전분기 매출'. 미래 예측 시점에 이미 아는 값이라 누수 아님.
+    #  패널데이터에서 보통 가장 효과 큰 단일 피처. ADD_LAG=true 로 활성화.
+    lag_series = None
+    if os.getenv("ADD_LAG", "false").lower() == "true" and {"TRDAR_CD", "SVC_INDUTY_CD"}.issubset(df.columns):
+        g = pd.DataFrame(
+            {"y": y_revenue.values,
+             "q": df["STDR_YYQU_CD"].astype(str).values,
+             "grp": (df["TRDAR_CD"].astype(str) + "_" + df["SVC_INDUTY_CD"].astype(str)).values},
+            index=df.index,
+        ).sort_values(["grp", "q"])
+        g["lag"] = g.groupby("grp")["y"].shift(1)
+        lag_series = g["lag"].reindex(df.index)  # 원래 순서로 복원
+        print("[Prepare] ADD_LAG=true → 전분기 매출(PREV_Q_REVENUE) 피처 추가.")
+
     # 소비(지출)는 매출과 near-tautology(준누수)라 정직한 구조 성능 측정 시 제외 가능.
     exclude_spend = os.getenv("EXCLUDE_SPEND", "false").lower() == "true"
     cols = {}  # dict 로 모아 한 번에 DataFrame 생성 (fragmentation 경고 방지)
@@ -76,6 +90,8 @@ def _prepare_real(df):
             col = pd.to_numeric(df[c], errors="coerce")
             if col.notna().sum() > 0:
                 cols[c] = col
+    if lag_series is not None:
+        cols["PREV_Q_REVENUE"] = lag_series.fillna(lag_series.median())
     X_raw = pd.DataFrame(cols, index=df.index).fillna(0)
     if exclude_spend:
         print("[Prepare] EXCLUDE_SPEND=true → 소비지출(EXPNDTR) 피처 제외 (정직 성능 측정)")
