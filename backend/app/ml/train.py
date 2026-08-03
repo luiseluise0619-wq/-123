@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from lightgbm import LGBMRegressor, LGBMClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, mean_absolute_error
 from app.core.config import settings
 from app.data.real_data_pipeline import real_data_pipeline
 from app.ml.data_processing import FEATURE_NAMES
@@ -116,9 +116,11 @@ def time_series_cv(X, y, quarters, n_folds=5):
         m = LGBMRegressor(n_estimators=150, learning_rate=0.03, num_leaves=31,
                           random_state=42, verbose=-1)
         m.fit(X[tr], y[tr])
+        pred = m.predict(X[te])
         folds.append({
             "test_quarter": tq,
-            "r2": round(float(r2_score(y[te], m.predict(X[te]))), 4),
+            "r2": round(float(r2_score(y[te], pred)), 4),
+            "mae": round(float(mean_absolute_error(y[te], pred)), 1),
             "n_test": int(te.sum()),
         })
     return folds
@@ -196,7 +198,7 @@ def train_and_register_models():
             r2s = [f["r2"] for f in cv_folds]
             print(f"[CV] 시계열 교차검증 {len(cv_folds)}회:")
             for f in cv_folds:
-                print(f"     테스트 {f['test_quarter']}: R²={f['r2']} (n={f['n_test']:,})")
+                print(f"     테스트 {f['test_quarter']}: R²={f['r2']} | MAE={f['mae']:,} (n={f['n_test']:,})")
             print(f"[CV] 평균 R²={np.mean(r2s):.4f} ± {np.std(r2s):.4f} "
                   f"(min={min(r2s):.4f}, max={max(r2s):.4f})")
 
