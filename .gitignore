@@ -22,6 +22,9 @@ frontend/.vercel/
 # Large Pickle Model Cache (optional, keep code lightweight)
 # backend/app/ml/registry/v1/*.pkl
 
+# 수집된 대용량 실데이터 CSV (GitHub 100MB 초과 방지 - 로컬에만 보관)
+backend/app/data/real_data/
+
 # OS Files
 .DS_Store
 Thumbs.db
