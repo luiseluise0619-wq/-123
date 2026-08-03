@@ -21,7 +21,13 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "http://openapi.seoul.go.kr:8088"
 PAGE_SIZE = 1000  # 서울 API 는 한 번에 최대 1000건
-KEY_COLS = ["STDR_YYQU_CD", "TRDAR_CD"]  # 조인 키: 기준년분기 + 상권코드
+
+# 학습 그레인 = 상권 × 업종 × 분기.
+#  - 추정매출/점포 는 업종(SVC_INDUTY_CD)까지 포함 -> 3개 키로 조인
+#  - 유동인구/상주인구/직장인구/집객시설 은 상권 단위 -> 2개 키로 조인(업종에 broadcast)
+BASE_KEYS = ["STDR_YYQU_CD", "TRDAR_CD"]         # 모든 서비스 공통(최소)
+CANDIDATE_KEYS = ["STDR_YYQU_CD", "TRDAR_CD", "SVC_INDUTY_CD"]  # 있으면 함께 조인
+KEY_COLS = CANDIDATE_KEYS  # 하위호환 별칭
 
 # 서울시 상권분석서비스 '상권' 단위 서비스명.
 # (집객시설-상권배후지=VwsmTrdhlFcltyQq 를 실제 확인함. 상권 단위는 Trdar.
@@ -73,16 +79,27 @@ def fetch_service(service: str, key: str, max_rows: int = 200_000, timeout: int 
 
 
 def merge_all(frames: Dict[str, pd.DataFrame]) -> pd.DataFrame:
-    """여러 서비스 DataFrame 을 상권코드+분기로 조인. 중복 컬럼은 뒤에서 제거."""
+    """
+    서비스 DataFrame 들을 조인. 그레인은 가장 세분화된 매출(상권×업종×분기)에 맞춘다.
+      - base = 매출('sales'): 업종(SVC_INDUTY_CD)을 포함
+      - 각 프레임은 base 와 공통으로 가진 키(2~3개)로만 left-join
+        (업종 없는 상권 단위 데이터는 2키로 조인되어 모든 업종에 broadcast)
+    이렇게 하면 업종별 데이터를 붙일 때 행이 폭발하지 않는다.
+    """
+    # 매출을 base 로 먼저 놓는다(없으면 입력 순서 유지).
+    order = (["sales"] if "sales" in frames else []) + [k for k in frames if k != "sales"]
+
     merged = None
-    for name, df in frames.items():
-        if df.empty or not set(KEY_COLS).issubset(df.columns):
-            logger.warning("  skip '%s' (empty or missing key cols)", name)
+    for name in order:
+        df = frames.get(name)
+        if df is None or df.empty or not set(BASE_KEYS).issubset(df.columns):
+            logger.warning("  skip '%s' (empty or missing base keys)", name)
             continue
         if merged is None:
             merged = df.copy()
             continue
-        # 이미 있는 비-키 컬럼은 중복이므로 제거 후 조인
-        dup = [c for c in df.columns if c in merged.columns and c not in KEY_COLS]
-        merged = merged.merge(df.drop(columns=dup), on=KEY_COLS, how="left")
+        join_keys = [k for k in CANDIDATE_KEYS if k in merged.columns and k in df.columns]
+        dup = [c for c in df.columns if c in merged.columns and c not in join_keys]
+        merged = merged.merge(df.drop(columns=dup), on=join_keys, how="left")
+        logger.info("  merged '%s' on %s -> %d rows", name, join_keys, len(merged))
     return merged if merged is not None else pd.DataFrame()
