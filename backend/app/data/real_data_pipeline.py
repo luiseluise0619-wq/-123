@@ -18,12 +18,18 @@ class RealDataIngestionPipeline:
     """
     def __init__(self, csv_filepath: Optional[str] = None):
         base_dir = settings.BASE_DIR
+        # build_seoul_dataset.py --build 로 생성되는 실제 공공데이터 CSV (있으면 최우선)
+        real_path = os.path.join(base_dir, "data", "real_data", "seoul_trdar_dataset.csv")
         bigdata_path = os.path.join(base_dir, "data", "sample_real_data", "seoul_bigdata_multi_thousand_2026.csv")
         seed_path = os.path.join(base_dir, "data", "sample_real_data", "seoul_commercial_districts_2026.csv")
 
         if csv_filepath and os.path.exists(csv_filepath):
             # 사용자가 명시적으로 넣은 CSV 는 실제 공공데이터로 간주.
             self.csv_filepath = csv_filepath
+            self.data_provenance = "real_public_data"
+        elif os.path.exists(real_path):
+            # 서울 상권분석 API 로 수집한 실제 공공데이터
+            self.csv_filepath = real_path
             self.data_provenance = "real_public_data"
         elif os.path.exists(bigdata_path):
             self.csv_filepath = bigdata_path
