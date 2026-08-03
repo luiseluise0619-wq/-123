@@ -46,7 +46,19 @@ def _prepare_real(df):
             "매출(THSMON_SELNG_AMT) 기반 타겟을 먼저 생성하세요."
         )
     df = df.dropna(subset=["target_monthly_revenue"]).reset_index(drop=True)
-    y_revenue = df["target_monthly_revenue"].astype(float)
+
+    # 타겟 선택: 기본은 상권×업종 '총매출'.
+    #  TARGET_PER_STORE=true 면 '점포당 평균매출'(총매출/점포수)로 바꿔 규모 tautology 제거
+    #  → "이 자리 점포 하나가 얼마 벌까"를 예측(소상공인 관점).
+    target_per_store = os.getenv("TARGET_PER_STORE", "false").lower() == "true"
+    if target_per_store and "STOR_CO" in df.columns:
+        stor = pd.to_numeric(df["STOR_CO"], errors="coerce")
+        df = df[stor.fillna(0) > 0].reset_index(drop=True)
+        stor = pd.to_numeric(df["STOR_CO"], errors="coerce")
+        y_revenue = df["target_monthly_revenue"].astype(float) / stor
+        print("[Prepare] TARGET_PER_STORE=true → 타겟=점포당 평균매출(총매출/점포수). 규모 tautology 제거.")
+    else:
+        y_revenue = df["target_monthly_revenue"].astype(float)
 
     # 소비(지출)는 매출과 near-tautology(준누수)라 정직한 구조 성능 측정 시 제외 가능.
     exclude_spend = os.getenv("EXCLUDE_SPEND", "false").lower() == "true"
