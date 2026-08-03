@@ -26,9 +26,15 @@
 | `auto_pr_generator.py` | 진짜 unified diff(git apply 가능) 생성. 가짜 PR/CI 주장 제거 |
 
 ### 정직한 성능 (지어낸 수치 아님)
-- 함수 단위 취약점 분류(실 repo, Bandit 라벨, repo 홀드아웃): **ROC-AUC ≈ 0.6**
-- 밑바닥 신경망(취약 샘플 20개): AUC 0.42 — 데이터 부족으로 학습 실패(정직)
-- 밑바닥 신경망(균형 충분 데이터): AUC 1.0 — **병목은 모델이 아니라 데이터**
+- 함수 분류(실 repo, Bandit 라벨 20개, repo 홀드아웃): **ROC-AUC ≈ 0.6** (데이터 부족)
+- **실 CVE 라벨 2만개**(VulDeePecker CWE-119/399, 중복제거+프로그램홀드아웃):
+  **ROC-AUC 0.96 / recall 0.87** ← 데이터를 키우니 천장이 뚫림
+- **Devign**(순수 실프로젝트 함수, TF-IDF): **ROC-AUC 0.52 (거의 랜덤)**
+  → 취약/패치 함수가 표면상 거의 동일. 어려운 실데이터엔 그래프/dataflow 모델 필요(정직).
+- 밑바닥 신경망: 취약 20개 → AUC 0.42(실패) / 균형 충분데이터 → AUC 1.0
+  → **병목은 모델이 아니라 데이터**
+- **불균형 처리**(취약 2%로 downsample): 무처리는 정확도 0.985 인데 취약 62% 놓침.
+  class_weight/scale_pos_weight/임계값튜닝으로 recall 0.375→0.68. **정확도는 함정, PR-AUC/recall 로 평가.**
 - 자동 패치(md5→sha256, shell=True→False 등): 재스캔으로 해결 **검증됨**
 
 ## ⚠️ 아직 데모/미검증 (정직한 한계)
@@ -43,6 +49,9 @@
 ```bash
 python -m ml.train                       # 실제 학습 → models/vuln_clf.joblib
 python -m security_engine.integrated_auditor   # 탐지→패치→재스캔검증 데모
+python fetch_cve_data.py && python cve_train.py # 실 CVE 라벨 2만개 학습 (AUC 0.96)
+python imbalance_experiment.py           # 불균형 처리(정확도 함정) 실험
+python build_vuln_db.py --repos <git...> # CVE수정커밋→취약/정상 함수 DB 구축
 python train_from_scratch_nn.py          # 밑바닥 신경망(실 repo)
 python nn_learns_proof.py                # 신경망 학습능력 증명
 python real_benchmark.py                 # 실제 취약 repo 벤치마크
