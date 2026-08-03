@@ -34,3 +34,7 @@ node_modules/
 
 # Trained model binary (reproduce with: python -m ml.train)
 models/*.joblib
+
+# CVE 원천 데이터(대용량) — 스크립트로 재다운로드
+cvedata/
+*.txt.big
