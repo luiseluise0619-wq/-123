@@ -39,10 +39,14 @@ from app.data.collectors.seoul_trdar_client import (  # noqa: E402
     fetch_service,
     get_api_key,
     merge_all,
+    reshape_sales_long,
+    PerStoreAdapter,
 )
 
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app", "data", "real_data")
 OUTPUT_CSV = os.path.join(OUTPUT_DIR, "seoul_trdar_dataset.csv")
+CACHE_DIR = os.path.join(OUTPUT_DIR, "_cache")
+MANIFEST = os.path.join(OUTPUT_DIR, "provenance.json")
 
 
 def run_test() -> None:
@@ -74,35 +78,76 @@ def detect_target(df: pd.DataFrame) -> str:
     return candidates[0] if candidates else ""
 
 
-def run_build() -> None:
+def run_build(granular: str = "", use_cache: bool = True,
+              per_store_csv: str = "") -> None:
+    import datetime
     key = get_api_key()
     print("=== 서울 상권분석 실데이터 전량 수집 ===")
-    frames = {}
+    cache = CACHE_DIR if use_cache else None
+    if cache:
+        print(f"  (캐시: {cache} — 중단 후 재실행하면 이어받음)")
+    frames, prov = {}, {}
     for name, service in SERVICES.items():
         try:
             print(f"- {name} ({service}) 수집 중...")
-            frames[name] = fetch_service(service, key)
+            frames[name] = fetch_service(service, key, cache_dir=cache)
+            prov[name] = {"service": service, "rows": int(len(frames[name]))}
         except Exception as exc:  # noqa: BLE001
             print(f"  ! {name} 실패(건너뜀): {exc}")
+            prov[name] = {"service": service, "error": str(exc)[:120]}
 
     merged = merge_all(frames)
     if merged.empty:
         print("병합 결과가 비었습니다. --test 로 서비스명을 먼저 점검하세요.")
         sys.exit(1)
 
-    target = detect_target(merged)
-    if target:
-        # 학습 파이프라인이 기대하는 타겟 컬럼명으로 매핑 (만원 단위)
-        merged["monthly_revenue_actual"] = pd.to_numeric(merged[target], errors="coerce")
-        merged["target_monthly_revenue"] = merged["monthly_revenue_actual"] / 10000.0
-        print(f"타겟 컬럼 감지: {target} -> monthly_revenue_actual / target_monthly_revenue 생성")
+    # (선택) 요일/시간대 단위로 타깃 해상도 확대
+    if granular:
+        before = len(merged)
+        merged = reshape_sales_long(merged, by=granular)
+        merged["monthly_revenue_actual"] = merged["slice_selng_amt"]
+        merged["target_monthly_revenue"] = pd.to_numeric(
+            merged["slice_selng_amt"], errors="coerce") / 10000.0
+        print(f"세분화({granular}): {before:,} → {len(merged):,} 행 "
+              f"(타깃=슬라이스 매출, zone 내부 변동 반영)")
     else:
-        print("⚠️ 매출(SELNG_AMT) 컬럼을 못 찾았습니다. 추정매출 서비스 컬럼명을 확인해주세요.")
+        target = detect_target(merged)
+        if target:
+            merged["monthly_revenue_actual"] = pd.to_numeric(merged[target], errors="coerce")
+            merged["target_monthly_revenue"] = merged["monthly_revenue_actual"] / 10000.0
+            print(f"타겟 컬럼 감지: {target} -> monthly_revenue_actual / target_monthly_revenue")
+        else:
+            print("⚠️ 매출(SELNG_AMT) 컬럼을 못 찾았습니다. 추정매출 서비스 컬럼명 확인 필요.")
+
+    # (선택) 천장을 여는 per-store 실매출 병합
+    ps = PerStoreAdapter(per_store_csv or None).load()
+    if ps is not None:
+        keys = [k for k in ["STDR_YYQU_CD", "TRDAR_CD", "SVC_INDUTY_CD"]
+                if k in merged.columns and k in ps.columns]
+        merged = merged.merge(ps, on=keys, how="left")
+        print(f"per-store 실매출 병합: +{len(ps):,}건 (키={keys}) → 천장 돌파용 타깃 확보")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     merged.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
+
+    # provenance 기록 (무엇을·언제·몇 행 받았는지 정직하게 남김)
+    quarters = sorted(merged["STDR_YYQU_CD"].dropna().unique().tolist()) \
+        if "STDR_YYQU_CD" in merged.columns else []
+    with open(MANIFEST, "w", encoding="utf-8") as f:
+        json.dump({
+            "collected_at": datetime.datetime.now().isoformat(timespec="seconds"),
+            "source": "서울열린데이터광장 상권분석서비스 OpenAPI",
+            "services": prov,
+            "granular": granular or "none",
+            "per_store_merged": ps is not None,
+            "output_rows": int(len(merged)),
+            "output_cols": int(len(merged.columns)),
+            "quarters": quarters,
+        }, f, ensure_ascii=False, indent=2)
+
     print(f"\n✅ 저장 완료: {OUTPUT_CSV}")
-    print(f"   행={len(merged):,}  열={len(merged.columns)}  (조인키={KEY_COLS})")
+    print(f"   행={len(merged):,}  열={len(merged.columns)}  분기={len(quarters)}개")
+    print(f"   provenance: {MANIFEST}")
     print("\n다음:  export USE_REAL_DATA=true  &&  python -m app.ml.eda  후  python -m app.ml.train")
 
 
@@ -110,12 +155,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="서울 상권분석 실데이터 CSV 생성")
     parser.add_argument("--test", action="store_true", help="연결/서비스명/컬럼 점검 (5건씩)")
     parser.add_argument("--build", action="store_true", help="전량 수집 + 조인 + CSV 생성")
+    parser.add_argument("--granular", choices=["dow", "tmzon"], default="",
+                        help="타깃 세분화: dow=요일별, tmzon=시간대별 (해상도↑)")
+    parser.add_argument("--no-cache", action="store_true", help="서비스 캐시 비활성화")
+    parser.add_argument("--per-store", default="",
+                        help="가게단위 실매출 CSV 경로(천장 돌파용, 있으면 병합)")
     args = parser.parse_args()
 
     if args.test:
         run_test()
     elif args.build:
-        run_build()
+        run_build(granular=args.granular, use_cache=not args.no_cache,
+                  per_store_csv=args.per_store)
     else:
         parser.print_help()
 

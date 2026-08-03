@@ -20,7 +20,9 @@ REAL_KEY_COLS = ("STDR_YYQU_CD", "TRDAR_CD")
 REAL_NAME_COLS = ("TRDAR_CD_NM", "SVC_INDUTY_CD_NM", "TRDAR_SE_CD_NM",
                   "SIGNGU_CD_NM", "ADSTRD_CD_NM", "TRDAR_CHNGE_IX_NM")
 # 범주형(라벨인코딩): 업종/상권구분/자치구/행정동/상권변화등급
-REAL_CAT_COLS = ("SVC_INDUTY_CD", "TRDAR_SE_CD", "SIGNGU_CD", "ADSTRD_CD", "TRDAR_CHNGE_IX")
+#  slice/slice_kind = 세분화(--granular) 시 요일·시간대 (zone 내부 변동 피처)
+REAL_CAT_COLS = ("SVC_INDUTY_CD", "TRDAR_SE_CD", "SIGNGU_CD", "ADSTRD_CD",
+                 "TRDAR_CHNGE_IX", "slice", "slice_kind")
 
 
 def _prepare_synthetic(df):

@@ -11,8 +11,10 @@
 """
 
 import os
+import time
+import json
 import logging
-from typing import Dict
+from typing import Dict, List, Optional
 
 import pandas as pd
 import requests
@@ -21,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "http://openapi.seoul.go.kr:8088"
 PAGE_SIZE = 1000  # 서울 API 는 한 번에 최대 1000건
+MAX_RETRIES = 4   # 네트워크 오류 시 지수백오프 재시도
 
 # 학습 그레인 = 상권 × 업종 × 분기.
 #  - 추정매출/점포 는 업종(SVC_INDUTY_CD)까지 포함 -> 3개 키로 조인
@@ -42,7 +45,22 @@ SERVICES: Dict[str, str] = {
     "facility": "VwsmTrdarFcltyQq",    # 집객시설-상권
     "area": "TbgisTrdarRelm",          # 영역-상권 (자치구·좌표·면적, 분기/업종 없음-상권당 1줄)
     "change": "VwsmTrdarIxQq",         # 상권변화지표-상권 (등급 LL/LH/HL/HH, 운영·폐업 평균개월)
-    # "apt": "??",                     # 아파트-상권 (서비스명 확인 후 추가)
+    "apt": "VwsmTrdarAptQq",           # 아파트-상권 (단지수·가구·시세) — --test 로 검증 후 사용
+}
+
+# 추정매출(sales) 서비스가 제공하는 '분해' 매출 컬럼.
+#  이 컬럼들을 long-format 으로 펼치면 zone×업종×분기 1행 → 요일 7행 / 시간대 6행 으로
+#  세분화되어, zone 내부 변동(요일·시간·인구층별)을 타깃이 담게 됨 = 공공데이터 최대 해상도.
+SALES_TOTAL_COL = "THSMON_SELNG_AMT"   # 당월 매출 총액(현재 타깃)
+DOW_COLS = {  # 요일별 매출
+    "MON_SELNG_AMT": "mon", "TUES_SELNG_AMT": "tue", "WED_SELNG_AMT": "wed",
+    "THUR_SELNG_AMT": "thu", "FRI_SELNG_AMT": "fri",
+    "SAT_SELNG_AMT": "sat", "SUN_SELNG_AMT": "sun",
+}
+TMZON_COLS = {  # 시간대별 매출
+    "TMZON_00_06_SELNG_AMT": "t00_06", "TMZON_06_11_SELNG_AMT": "t06_11",
+    "TMZON_11_14_SELNG_AMT": "t11_14", "TMZON_14_17_SELNG_AMT": "t14_17",
+    "TMZON_17_21_SELNG_AMT": "t17_21", "TMZON_21_24_SELNG_AMT": "t21_24",
 }
 
 
@@ -56,16 +74,46 @@ def get_api_key() -> str:
     return key
 
 
-def fetch_service(service: str, key: str, max_rows: int = 10_000_000, timeout: int = 20) -> pd.DataFrame:
+def _get_page(url: str, timeout: int) -> requests.Response:
+    """지수 백오프 재시도(2/4/8/16초)로 한 페이지 요청."""
+    last = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            resp = requests.get(url, timeout=timeout)
+            resp.raise_for_status()
+            return resp
+        except requests.RequestException as exc:  # 네트워크/일시오류만 재시도
+            last = exc
+            wait = 2 ** (attempt + 1)
+            logger.warning("    요청 실패(%d/%d) %ds 후 재시도: %s",
+                           attempt + 1, MAX_RETRIES, wait, str(exc)[:60])
+            time.sleep(wait)
+    raise RuntimeError(f"요청 4회 실패: {last}")
+
+
+def fetch_service(service: str, key: str, max_rows: int = 10_000_000, timeout: int = 20,
+                  cache_dir: Optional[str] = None) -> pd.DataFrame:
     """서비스 하나를 페이지네이션으로 전량 수집해 DataFrame 으로 반환.
+
+    - 네트워크 오류는 지수백오프로 최대 4회 재시도.
+    - cache_dir 지정 시 서비스별 parquet 캐시로 저장/재사용(중단 후 재개에 유리).
     max_rows 는 폭주 방지용 상한일 뿐, 실제로는 list_total_count 에 도달하면 종료한다."""
+    if cache_dir:
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_path = os.path.join(cache_dir, f"{service}.parquet")
+        if os.path.exists(cache_path):
+            logger.info("    캐시 사용: %s", cache_path)
+            try:
+                return pd.read_parquet(cache_path)
+            except Exception:  # 캐시 손상 시 재수집
+                logger.warning("    캐시 로드 실패 — 재수집")
+
     rows = []
     start = 1
     while start <= max_rows:
         end = start + PAGE_SIZE - 1
         url = f"{BASE_URL}/{key}/json/{service}/{start}/{end}/"
-        resp = requests.get(url, timeout=timeout)
-        resp.raise_for_status()
+        resp = _get_page(url, timeout)
         body = resp.json().get(service, {})
         code = body.get("RESULT", {}).get("CODE")
         if code not in ("INFO-000", None):
@@ -75,13 +123,68 @@ def fetch_service(service: str, key: str, max_rows: int = 10_000_000, timeout: i
             break
         rows.extend(batch)
         total = int(body.get("list_total_count", 0) or 0)
-        # 10페이지(1만 행)마다 또는 마지막에 진행 표시
         if (start // PAGE_SIZE) % 10 == 0 or (total and end >= total):
             logger.info("    %s: %s/%s rows...", service, f"{len(rows):,}", f"{total:,}")
         if total and end >= total:
             break
         start += PAGE_SIZE
-    return pd.DataFrame(rows)
+
+    df = pd.DataFrame(rows)
+    if cache_dir and not df.empty:
+        try:
+            df.to_parquet(os.path.join(cache_dir, f"{service}.parquet"), index=False)
+        except Exception as exc:  # parquet 엔진 없을 때 CSV 폴백
+            logger.warning("    parquet 캐시 실패(%s) — 스킵", str(exc)[:40])
+    return df
+
+
+def reshape_sales_long(sales: pd.DataFrame, by: str = "dow") -> pd.DataFrame:
+    """추정매출을 요일/시간대 단위 long-format 으로 펼쳐 타깃 해상도를 높인다.
+
+    zone×업종×분기 1행 → (by='dow') 요일 7행 / (by='tmzon') 시간대 6행.
+    각 행의 타깃 slice_selng_amt = 해당 슬라이스 매출. 공공데이터로 얻을 수 있는
+    가장 세분화된 타깃(zone 내부 요일·시간 변동을 담음).
+    """
+    colmap = DOW_COLS if by == "dow" else TMZON_COLS
+    present = {c: v for c, v in colmap.items() if c in sales.columns}
+    if not present:
+        logger.warning("reshape_sales_long: %s 분해 컬럼이 없음 — 원본 반환", by)
+        return sales
+    id_cols = [c for c in sales.columns if c not in colmap]  # 나머지 컬럼 유지
+    long = sales.melt(id_vars=id_cols, value_vars=list(present.keys()),
+                      var_name="slice_raw", value_name="slice_selng_amt")
+    long["slice"] = long["slice_raw"].map(present)
+    long["slice_kind"] = by
+    long["slice_selng_amt"] = pd.to_numeric(long["slice_selng_amt"], errors="coerce")
+    return long.drop(columns=["slice_raw"])
+
+
+class PerStoreAdapter:
+    """천장(0.28)을 실제로 뚫는 유료/제휴 데이터 슬롯.
+
+    공공데이터의 타깃은 zone 평균이라 구조적으로 0.28 을 못 넘는다. 가게 단위
+    실매출(카드사·POS·배달앱)을 붙이면 타깃이 per-store 가 되어 천장이 열린다.
+    여기에 그 데이터를 CSV 로 넣으면 학습 프레임에 병합된다(형식만 맞추면 됨).
+
+    필수 컬럼: store_id, TRDAR_CD, SVC_INDUTY_CD, STDR_YYQU_CD, store_monthly_revenue
+    """
+
+    REQUIRED = ["store_id", "TRDAR_CD", "SVC_INDUTY_CD", "STDR_YYQU_CD",
+                "store_monthly_revenue"]
+
+    def __init__(self, csv_path: Optional[str] = None):
+        self.csv_path = csv_path
+
+    def load(self) -> Optional[pd.DataFrame]:
+        if not self.csv_path or not os.path.exists(self.csv_path):
+            logger.info("PerStoreAdapter: per-store 데이터 없음(공공데이터만 사용). "
+                        "가게단위 실매출 CSV 를 넣으면 천장이 열림.")
+            return None
+        df = pd.read_csv(self.csv_path)
+        missing = [c for c in self.REQUIRED if c not in df.columns]
+        if missing:
+            raise ValueError(f"per-store 데이터에 필수 컬럼 없음: {missing}")
+        return df
 
 
 def merge_all(frames: Dict[str, pd.DataFrame]) -> pd.DataFrame:
