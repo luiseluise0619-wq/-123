@@ -106,12 +106,22 @@ def train_and_register_models():
     #  과거 분기로 학습 -> 최신 분기로 테스트 (실제 미래 예측 상황과 동일, 정직한 성능).
     #  무작위 분할은 같은 상권이 학습/테스트에 동시에 들어가 성능을 과대평가한다.
     if "STDR_YYQU_CD" in df.columns and df["STDR_YYQU_CD"].astype(str).nunique() > 1:
-        quarters = sorted(df["STDR_YYQU_CD"].astype(str).unique())
-        test_quarter = quarters[-1]
-        test_mask = df["STDR_YYQU_CD"].astype(str).values == test_quarter
-        split_method = f"time_holdout(test_quarter={test_quarter})"
-        print(f"[Split] 시간기반 분할 → 테스트=최신분기 {test_quarter} "
-              f"(train={int((~test_mask).sum()):,}, test={int(test_mask.sum()):,})")
+        # 시간순 유지(누수 방지)하면서 최신 분기들을 모아 테스트 ≈ 20% 가 되게 한다.
+        qcol = df["STDR_YYQU_CD"].astype(str)
+        counts = qcol.value_counts()
+        n_total = len(df)
+        test_quarters, cum = [], 0
+        for q in sorted(counts.index, reverse=True):  # 최신 분기부터 담기
+            test_quarters.append(q)
+            cum += int(counts[q])
+            if cum >= 0.20 * n_total:
+                break
+        test_mask = qcol.isin(test_quarters).values
+        test_frac = float(test_mask.mean())
+        split_method = f"time_holdout(test_quarters={sorted(test_quarters)}, test={test_frac:.1%})"
+        print(f"[Split] 시간기반 분할 → 테스트=최신분기 {sorted(test_quarters)} | "
+              f"train={int((~test_mask).sum()):,} ({1 - test_frac:.0%}), "
+              f"test={int(test_mask.sum()):,} ({test_frac:.0%})")
         X_train, X_test = X[~test_mask], X[test_mask]
         y_rev_train, y_rev_test = y_revenue[~test_mask], y_revenue[test_mask]
         y_suc_train, y_suc_test = y_success[~test_mask], y_success[test_mask]

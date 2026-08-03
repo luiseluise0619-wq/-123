@@ -53,8 +53,9 @@ def get_api_key() -> str:
     return key
 
 
-def fetch_service(service: str, key: str, max_rows: int = 200_000, timeout: int = 20) -> pd.DataFrame:
-    """서비스 하나를 페이지네이션으로 전량 수집해 DataFrame 으로 반환."""
+def fetch_service(service: str, key: str, max_rows: int = 10_000_000, timeout: int = 20) -> pd.DataFrame:
+    """서비스 하나를 페이지네이션으로 전량 수집해 DataFrame 으로 반환.
+    max_rows 는 폭주 방지용 상한일 뿐, 실제로는 list_total_count 에 도달하면 종료한다."""
     rows = []
     start = 1
     while start <= max_rows:
