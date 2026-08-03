@@ -38,7 +38,9 @@ SERVICES: Dict[str, str] = {
     "stores": "VwsmTrdarStorQq",       # 점포-상권
     "resident": "VwsmTrdarRepopQq",    # 상주인구-상권
     "worker": "VwsmTrdarWrcPopltnQq",  # 직장인구-상권
-    "spend": "VwsmTrdarConsmpQq",      # 소비-상권
+    # 소득소비-상권: 정확한 서비스명 미확정(VwsmTrdarConsmpQq 는 빈응답).
+    # 후보로 소득소비(ICAA) 명을 사용 — 여전히 빈응답이면 자동 skip 됨(핵심 아님).
+    "spend": "VwsmTrdarIcaaQq",        # 소득소비-상권 (best guess)
     "facility": "VwsmTrdarFcltyQq",    # 집객시설-상권
 }
 
