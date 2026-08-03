@@ -73,7 +73,9 @@ def fetch_service(service: str, key: str, max_rows: int = 200_000, timeout: int 
             break
         rows.extend(batch)
         total = int(body.get("list_total_count", 0) or 0)
-        logger.info("  %s: %d/%d rows", service, len(rows), total)
+        # 10페이지(1만 행)마다 또는 마지막에 진행 표시
+        if (start // PAGE_SIZE) % 10 == 0 or (total and end >= total):
+            logger.info("    %s: %s/%s rows...", service, f"{len(rows):,}", f"{total:,}")
         if total and end >= total:
             break
         start += PAGE_SIZE

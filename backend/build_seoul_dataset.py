@@ -21,10 +21,14 @@
 """
 
 import argparse
+import logging
 import os
 import sys
 
 import pandas as pd
+
+# 수집 진행 상황이 화면에 보이도록 로깅 설정 (안 보이면 멈춘 걸로 오해하게 됨)
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 # backend 폴더 기준으로 app 패키지 import 가능하게
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
