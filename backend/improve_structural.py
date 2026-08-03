@@ -27,7 +27,7 @@ KEYS = {"STDR_YYQU_CD", "TRDAR_CD"}
 NAMES = {"TRDAR_CD_NM", "SVC_INDUTY_CD_NM", "TRDAR_SE_CD_NM"}
 TGT = {"target_monthly_revenue", "monthly_revenue_actual"}
 CATS = {"SVC_INDUTY_CD", "TRDAR_SE_CD"}
-SAMPLE_N = 150_000  # 실험 속도용 표본
+SAMPLE_N = 80_000  # 실험 속도용 표본
 
 
 def num(df, c):

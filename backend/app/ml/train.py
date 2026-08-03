@@ -200,8 +200,11 @@ def train_and_register_models():
     n_records = len(df)
 
     # 1. Revenue Regressor
+    #  Tweedie 목적함수: 매출(양수·우편향)에 제곱오차보다 적합 (공간홀드아웃 실험서 최고).
     print(f"Training LightGBM Revenue Regressor on {n_records:,} records...")
-    rev_model = LGBMRegressor(n_estimators=150, learning_rate=0.03, num_leaves=31, random_state=42, verbose=-1)
+    rev_model = LGBMRegressor(objective="tweedie", tweedie_variance_power=1.3,
+                              n_estimators=150, learning_rate=0.03, num_leaves=31,
+                              random_state=42, verbose=-1)
     rev_model.fit(X_train, y_rev_train)
     rev_metrics = ModelEvaluator.evaluate_regressor(rev_model, X_test, y_rev_test)
     print(f"Revenue Regressor Metrics: {rev_metrics}")
