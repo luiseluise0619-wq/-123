@@ -36,11 +36,28 @@ def train_and_register_models():
     print(f"Selected {len(selected_features)} features: {selected_features}")
     
     X = X_raw[selected_features]
-    
-    # Train/Test Split (80% Train, 20% Out-of-Sample Test)
-    X_train, X_test, y_rev_train, y_rev_test = train_test_split(X, y_revenue, test_size=0.2, random_state=42)
-    _, _, y_suc_train, y_suc_test = train_test_split(X, y_success, test_size=0.2, random_state=42)
-    _, _, y_risk_train, y_risk_test = train_test_split(X, y_risk, test_size=0.2, random_state=42)
+
+    # Train/Test Split.
+    #  실데이터(분기 STDR_YYQU_CD 존재)면 '시간 기반 분할'을 쓴다:
+    #  과거 분기로 학습 -> 최신 분기로 테스트 (실제 미래 예측 상황과 동일, 정직한 성능).
+    #  무작위 분할은 같은 상권이 학습/테스트에 동시에 들어가 성능을 과대평가한다.
+    if "STDR_YYQU_CD" in df.columns and df["STDR_YYQU_CD"].astype(str).nunique() > 1:
+        quarters = sorted(df["STDR_YYQU_CD"].astype(str).unique())
+        test_quarter = quarters[-1]
+        test_mask = df["STDR_YYQU_CD"].astype(str).values == test_quarter
+        split_method = f"time_holdout(test_quarter={test_quarter})"
+        print(f"[Split] 시간기반 분할 → 테스트=최신분기 {test_quarter} "
+              f"(train={int((~test_mask).sum()):,}, test={int(test_mask.sum()):,})")
+        X_train, X_test = X[~test_mask], X[test_mask]
+        y_rev_train, y_rev_test = y_revenue[~test_mask], y_revenue[test_mask]
+        y_suc_train, y_suc_test = y_success[~test_mask], y_success[test_mask]
+        y_risk_train, y_risk_test = y_risk[~test_mask], y_risk[test_mask]
+    else:
+        split_method = "random_80_20"
+        print("[Split] 무작위 80/20 분할 (분기 정보 없음 — 합성/시드 데이터)")
+        X_train, X_test, y_rev_train, y_rev_test = train_test_split(X, y_revenue, test_size=0.2, random_state=42)
+        _, _, y_suc_train, y_suc_test = train_test_split(X, y_success, test_size=0.2, random_state=42)
+        _, _, y_risk_train, y_risk_test = train_test_split(X, y_risk, test_size=0.2, random_state=42)
     
     n_records = len(df)
 
