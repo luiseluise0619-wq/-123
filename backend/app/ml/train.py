@@ -48,19 +48,25 @@ def _prepare_real(df):
     df = df.dropna(subset=["target_monthly_revenue"]).reset_index(drop=True)
     y_revenue = df["target_monthly_revenue"].astype(float)
 
-    feat = pd.DataFrame(index=df.index)
+    # 소비(지출)는 매출과 near-tautology(준누수)라 정직한 구조 성능 측정 시 제외 가능.
+    exclude_spend = os.getenv("EXCLUDE_SPEND", "false").lower() == "true"
+    cols = {}  # dict 로 모아 한 번에 DataFrame 생성 (fragmentation 경고 방지)
     for c in df.columns:
         if c in REAL_TARGET_COLS or c in REAL_KEY_COLS or c in REAL_NAME_COLS:
             continue
         if any(s in c.upper() for s in REAL_LEAKY_SUBSTR):
             continue  # 매출 구성요소 = 타겟 누수
+        if exclude_spend and "EXPNDTR" in c.upper():
+            continue  # ablation: 소비지출 제외
         if c in REAL_CAT_COLS:
-            feat[c + "_ENC"] = df[c].astype("category").cat.codes
+            cols[c + "_ENC"] = df[c].astype("category").cat.codes
         else:
             col = pd.to_numeric(df[c], errors="coerce")
             if col.notna().sum() > 0:
-                feat[c] = col
-    X_raw = feat.fillna(0)
+                cols[c] = col
+    X_raw = pd.DataFrame(cols, index=df.index).fillna(0)
+    if exclude_spend:
+        print("[Prepare] EXCLUDE_SPEND=true → 소비지출(EXPNDTR) 피처 제외 (정직 성능 측정)")
 
     # 파생 라벨 (실데이터엔 성공/폐업 정답이 없음 → 매출 분위 기반 프록시)
     y_success = (y_revenue > y_revenue.median()).astype(int)
