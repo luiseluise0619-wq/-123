@@ -49,28 +49,30 @@ class CommercialDataEDA:
                 }
                 
         # 4. Target Variable Analysis
+        # 실데이터엔 성공/폐업 라벨이 없을 수 있으므로 존재하는 것만 분석한다.
         revenue_target = df["target_monthly_revenue"]
-        success_target = df["target_success_label"]
-        risk_target = df["target_closure_risk"]
-        
         target_stats = {
             "monthly_revenue": {
                 "mean_krw_10k": round(float(revenue_target.mean()), 1),
                 "median_krw_10k": round(float(revenue_target.median()), 1),
                 "std_krw_10k": round(float(revenue_target.std()), 1),
                 "skewness": round(float(revenue_target.skew()), 3) if len(revenue_target) > 2 else 0.0
-            },
-            "success_rate_split": {
+            }
+        }
+        if "target_success_label" in df.columns:
+            success_target = df["target_success_label"]
+            target_stats["success_rate_split"] = {
                 "success_count": int((success_target == 1).sum()),
                 "fail_count": int((success_target == 0).sum()),
                 "success_ratio_pct": round(float((success_target == 1).mean() * 100), 1)
-            },
-            "closure_risk_split": {
+            }
+        if "target_closure_risk" in df.columns:
+            risk_target = df["target_closure_risk"]
+            target_stats["closure_risk_split"] = {
                 "low_risk_pct": round(float((risk_target == 0).mean() * 100), 1),
                 "medium_risk_pct": round(float((risk_target == 1).mean() * 100), 1),
                 "high_risk_pct": round(float((risk_target == 2).mean() * 100), 1)
             }
-        }
         
         # 5. Correlation Analysis with Revenue Target
         corr_series = df.corr(numeric_only=True)["target_monthly_revenue"].drop("target_monthly_revenue", errors="ignore")
