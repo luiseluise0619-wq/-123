@@ -37,23 +37,25 @@ def add_growth(df):
     """YoY(4분기 전 대비) 성장률 피처 추가."""
     df = df.copy()
     q = "STDR_YYQU_CD"
+    # 병합키 dtype 통일 (int/str 혼재 방지)
+    for k in ["STDR_YYQU_CD", "TRDAR_CD", "SVC_INDUTY_CD"]:
+        if k in df.columns:
+            df[k] = df[k].astype(str)
     # 상권 단위 피처: (상권,분기) 유니크로 성장률 계산 후 병합
     zcols = [c for c in ZONE_FEATS if c in df.columns]
     if zcols:
         z = df[["TRDAR_CD", q] + zcols].drop_duplicates(["TRDAR_CD", q]).copy()
-        z[q] = z[q].astype(str)
         z = z.sort_values(["TRDAR_CD", q])
         for c in zcols:
             z[c] = pd.to_numeric(z[c], errors="coerce")
-            z[c + "_YOY"] = z.groupby("TRDAR_CD")[c].pct_change(4)
+            z[c + "_YOY"] = z.groupby("TRDAR_CD")[c].pct_change(4, fill_method=None)
         df = df.merge(z[["TRDAR_CD", q] + [c + "_YOY" for c in zcols]], on=["TRDAR_CD", q], how="left")
     # 점포: (상권,업종,분기)
     if "STOR_CO" in df.columns:
         s = df[["TRDAR_CD", "SVC_INDUTY_CD", q, "STOR_CO"]].drop_duplicates(["TRDAR_CD", "SVC_INDUTY_CD", q]).copy()
-        s[q] = s[q].astype(str)
         s = s.sort_values(["TRDAR_CD", "SVC_INDUTY_CD", q])
         s["STOR_CO"] = pd.to_numeric(s["STOR_CO"], errors="coerce")
-        s["STOR_CO_YOY"] = s.groupby(["TRDAR_CD", "SVC_INDUTY_CD"])["STOR_CO"].pct_change(4)
+        s["STOR_CO_YOY"] = s.groupby(["TRDAR_CD", "SVC_INDUTY_CD"])["STOR_CO"].pct_change(4, fill_method=None)
         df = df.merge(s[["TRDAR_CD", "SVC_INDUTY_CD", q, "STOR_CO_YOY"]],
                       on=["TRDAR_CD", "SVC_INDUTY_CD", q], how="left")
     return df
