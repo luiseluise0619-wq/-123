@@ -1,5 +1,0 @@
-{
-  "model_type": "codebert-base-v3",
-  "num_labels": 2,
-  "vocab_size": 50265
-}

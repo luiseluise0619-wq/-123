@@ -31,3 +31,6 @@ Thumbs.db
 __pycache__/
 *.pyc
 node_modules/
+
+# Trained model binary (reproduce with: python -m ml.train)
+models/*.joblib

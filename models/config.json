@@ -1,0 +1,11 @@
+{
+  "model_type": "TF-IDF + LogisticRegression (from scratch, no pretraining)",
+  "trained_at": "2026-08-03T11:31:13Z",
+  "n_functions": 2281,
+  "n_vulnerable": 18,
+  "n_repos": 5,
+  "label_source": "Bandit (real SAST, MEDIUM+)",
+  "eval": "repo-level GroupKFold holdout",
+  "roc_auc_holdout": 0.6131435521556208,
+  "honest_note": "취약 샘플이 적어 성능 상한이 낮음. 실전 성능은 CVE 라벨 취약함수 수천~수만 개(DiverseVul 등)로 올라감."
+}
