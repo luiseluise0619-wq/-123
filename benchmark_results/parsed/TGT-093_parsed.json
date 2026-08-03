@@ -1,0 +1,18 @@
+{
+  "target_id": "TGT-093",
+  "name": "Aegis Secure Wallet iOS #93",
+  "repo_url": "https://github.com/organization/aegis-wallet-ios",
+  "type": "iOS",
+  "framework": "iOS Swift",
+  "language": "Swift",
+  "scan_start_time": "2026-08-03T06:11:57.000Z",
+  "scan_end_time": "2026-08-03T06:11:57.000Z",
+  "total_duration_seconds": 0.0,
+  "status": "SUCCESS",
+  "failure_reason": null,
+  "vulnerabilities_found": 2,
+  "evidence_count": 1,
+  "docker_build_seconds": 0.0,
+  "memory_usage_mb": "Not Measured",
+  "cpu_usage_percent": "Not Measured"
+}

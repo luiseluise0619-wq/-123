@@ -1,0 +1,19 @@
+{
+  "index": 16,
+  "target_id": "UNSEEN-REPO-016",
+  "repository_name": "Healthcare EHR Portal 2026 #16",
+  "repository_url": "https://github.com/organization/healthcare-ehr-portal-2026-node-16",
+  "commit_hash": "e1acab2bb14fc203",
+  "programming_language": "JavaScript",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 1,
+  "tested_vulnerability_type": "CWE-639: Patient Record IDOR Extraction",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security vulnerability (Patient Record IDOR Extraction). Sandbox exploit replay verified."
+  }
+}

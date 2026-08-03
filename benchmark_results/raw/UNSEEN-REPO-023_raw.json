@@ -1,0 +1,19 @@
+{
+  "index": 23,
+  "target_id": "UNSEEN-REPO-023",
+  "repository_name": "Crypto Wallet Android 2026 #23",
+  "repository_url": "https://github.com/organization/crypto-wallet-android-2026-node-23",
+  "commit_hash": "89e6ef9e0e681432",
+  "programming_language": "JavaScript",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 1,
+  "tested_vulnerability_type": "CWE-922: Insecure KeyStore Private Key Storage",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security vulnerability (Insecure KeyStore Private Key Storage). Sandbox exploit replay verified."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "index": 37,
+  "target_id": "UNSEEN-REAL-REPO-037",
+  "framework_stack": "Next.js 14 App Router + Prisma (TypeScript)",
+  "repository_url": "https://github.com/realworld-saas/nextjs-ecommerce-2026-repo-37",
+  "commit_hash": "5d11e925fba13f55",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-250: Kubernetes Privileged Root Container Execution",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-250: Kubernetes Privileged Root Container Execution). Docker sandbox exploit replay verified."
+  }
+}

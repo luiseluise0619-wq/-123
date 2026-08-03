@@ -1,0 +1,19 @@
+{
+  "index": 4,
+  "target_id": "UNSEEN-REPO-004",
+  "repository_name": "Legacy Banking Gateway 2026 #4",
+  "repository_url": "https://github.com/organization/legacy-banking-gateway-2026-node-4",
+  "commit_hash": "63e1e7f026f4e88c",
+  "programming_language": "Java",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 1,
+  "tested_vulnerability_type": "CWE-78: Command Injection in Diagnostic API",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security vulnerability (Command Injection in Diagnostic API). Sandbox exploit replay verified."
+  }
+}

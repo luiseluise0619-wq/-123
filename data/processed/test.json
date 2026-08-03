@@ -1,0 +1,17 @@
+[
+  {
+    "language": "Python",
+    "vulnerable_code": "query = f'SELECT * FROM users WHERE username=\"{username}\"'",
+    "fixed_code": "db.execute('SELECT * FROM users WHERE username=:u', {'u': username})",
+    "vulnerability_type": "SQL Injection",
+    "CWE": "CWE-89",
+    "severity": "HIGH",
+    "root_cause": "Unsanitized user input formatted directly into SQL query string.",
+    "attack_flow": [
+      "User input received",
+      "String concatenated into query",
+      "DB executes arbitrary SQL"
+    ],
+    "fix_method": "Parameterized query application"
+  }
+]

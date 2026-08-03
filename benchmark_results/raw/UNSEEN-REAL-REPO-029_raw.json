@@ -1,0 +1,19 @@
+{
+  "index": 29,
+  "target_id": "UNSEEN-REAL-REPO-029",
+  "framework_stack": "FastAPI + PostgreSQL (Python 3.11)",
+  "repository_url": "https://github.com/realworld-saas/fastapi-realworld-2026-repo-29",
+  "commit_hash": "7d907909565bc8d8",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "FAILED_MIGRATION",
+  "findings_count": 0,
+  "vulnerability_type": "CWE-362: Race Condition Balance Double Spending",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "DB_MIGRATION_FAILED",
+    "notes": "Database sandbox initialization failed: Missing Alembic / Prisma DB migration SQL script."
+  }
+}

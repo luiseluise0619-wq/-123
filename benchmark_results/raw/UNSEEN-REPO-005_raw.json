@@ -1,0 +1,19 @@
+{
+  "index": 5,
+  "target_id": "UNSEEN-REPO-005",
+  "repository_name": "Ecommerce Coupon Engine 2026 #5",
+  "repository_url": "https://github.com/organization/ecommerce-coupon-engine-2026-node-5",
+  "commit_hash": "e6ce7900ba4b1c70",
+  "programming_language": "Go",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 1,
+  "tested_vulnerability_type": "CWE-362: Coupon Double Redemption Race Condition",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security vulnerability (Coupon Double Redemption Race Condition). Sandbox exploit replay verified."
+  }
+}

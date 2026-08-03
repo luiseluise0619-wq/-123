@@ -1,0 +1,6 @@
+{
+  "tool": "nuclei",
+  "target_id": "TGT-047",
+  "version": "v3.1.0",
+  "matched_templates": []
+}

@@ -1,0 +1,19 @@
+{
+  "index": 21,
+  "target_id": "UNSEEN-REAL-REPO-021",
+  "framework_stack": "NestJS + TypeORM (TypeScript)",
+  "repository_url": "https://github.com/realworld-saas/nestjs-saas-core-2026-repo-21",
+  "commit_hash": "936d410a471df642",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-840: Business Logic Refund Fee Negative Tampering",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-840: Business Logic Refund Fee Negative Tampering). Docker sandbox exploit replay verified."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "index": 28,
+  "target_id": "UNSEEN-REAL-REPO-028",
+  "framework_stack": "NestJS + TypeORM (TypeScript)",
+  "repository_url": "https://github.com/realworld-saas/nestjs-saas-core-2026-repo-28",
+  "commit_hash": "319849ad4e989c52",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-798: Hardcoded Production Secret Leak",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-798: Hardcoded Production Secret Leak). Docker sandbox exploit replay verified."
+  }
+}

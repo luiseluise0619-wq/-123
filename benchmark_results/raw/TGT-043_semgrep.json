@@ -1,0 +1,20 @@
+{
+  "tool": "semgrep",
+  "target_id": "TGT-043",
+  "version": "1.34.0",
+  "results": [
+    {
+      "check_id": "rules.sqli-concat",
+      "path": "app.py",
+      "start": {
+        "line": 12,
+        "col": 5
+      },
+      "extra": {
+        "message": "Possible SQL injection concat detected",
+        "severity": "ERROR"
+      }
+    }
+  ],
+  "errors": []
+}

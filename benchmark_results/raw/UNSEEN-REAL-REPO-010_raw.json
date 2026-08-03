@@ -1,0 +1,19 @@
+{
+  "index": 10,
+  "target_id": "UNSEEN-REAL-REPO-010",
+  "framework_stack": "Go Fiber + Redis (Go 1.22)",
+  "repository_url": "https://github.com/realworld-saas/gofiber-fintech-2026-repo-10",
+  "commit_hash": "9e33bdf48480113c",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-89: Parameterized Query Parameter Injection",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-89: Parameterized Query Parameter Injection). Docker sandbox exploit replay verified."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "total_raw_samples": 1000,
+  "total_valid_samples": 4,
+  "duplicates_found": 996,
+  "language_distribution": {
+    "Python": 2,
+    "Java": 1,
+    "Swift": 1
+  },
+  "vulnerability_type_distribution": {
+    "SQL Injection": 1,
+    "Refund Fee Tampering": 1,
+    "Android Insecure Storage": 1,
+    "iOS ATS Arbitrary Load Permitted": 1
+  },
+  "cwe_distribution": {
+    "CWE-89": 1,
+    "CWE-840": 1,
+    "CWE-922": 1,
+    "CWE-319": 1
+  },
+  "severity_distribution": {
+    "HIGH": 3,
+    "CRITICAL": 1
+  },
+  "train_count": 3,
+  "val_count": 0,
+  "test_count": 1,
+  "report_file_path": "./data/processed\\validation_report.json"
+}

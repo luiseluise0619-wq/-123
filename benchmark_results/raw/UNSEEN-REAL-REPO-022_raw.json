@@ -1,0 +1,19 @@
+{
+  "index": 22,
+  "target_id": "UNSEEN-REAL-REPO-022",
+  "framework_stack": "FastAPI + PostgreSQL (Python 3.11)",
+  "repository_url": "https://github.com/realworld-saas/fastapi-realworld-2026-repo-22",
+  "commit_hash": "f3f0f00d5f128fa4",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-287: JWT alg:none Header Bypass",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-287: JWT alg:none Header Bypass). Docker sandbox exploit replay verified."
+  }
+}

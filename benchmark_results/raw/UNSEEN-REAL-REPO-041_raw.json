@@ -1,0 +1,19 @@
+{
+  "index": 41,
+  "target_id": "UNSEEN-REAL-REPO-041",
+  "framework_stack": "Django 5.0 + Celery (Python 3.12)",
+  "repository_url": "https://github.com/realworld-saas/django-healthcare-2026-repo-41",
+  "commit_hash": "bc68c43692bc19f9",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "FAILED_BUILD",
+  "findings_count": 0,
+  "vulnerability_type": "CWE-840: Business Logic Refund Fee Negative Tampering",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "DOCKER_BUILD_FAILED",
+    "notes": "Docker build failed: Missing native C++ dependency compilation flag or production ENV key."
+  }
+}

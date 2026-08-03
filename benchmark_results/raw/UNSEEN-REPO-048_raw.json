@@ -1,0 +1,19 @@
+{
+  "index": 48,
+  "target_id": "UNSEEN-REPO-048",
+  "repository_name": "SaaS Billing Microservice 2026 #48",
+  "repository_url": "https://github.com/organization/saas-billing-service-2026-node-48",
+  "commit_hash": "d65ebbc820cc4138",
+  "programming_language": "Swift",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 0,
+  "tested_vulnerability_type": "CWE-20: Zero Price Checkout Tampering",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "FALSE_POSITIVE",
+    "notes": "Flagged by SAST pattern matcher but verified safe by expert due to input validation wrapper."
+  }
+}

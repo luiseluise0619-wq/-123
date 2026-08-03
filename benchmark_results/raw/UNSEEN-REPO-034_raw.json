@@ -1,0 +1,19 @@
+{
+  "index": 34,
+  "target_id": "UNSEEN-REPO-034",
+  "repository_name": "Legacy Banking Gateway 2026 #34",
+  "repository_url": "https://github.com/organization/legacy-banking-gateway-2026-node-34",
+  "commit_hash": "90ca348192e1a72d",
+  "programming_language": "Swift",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 0,
+  "tested_vulnerability_type": "CWE-78: Command Injection in Diagnostic API",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "FALSE_NEGATIVE",
+    "notes": "Complex asynchronous multi-threaded data flow missed by single-pass static analyzer."
+  }
+}

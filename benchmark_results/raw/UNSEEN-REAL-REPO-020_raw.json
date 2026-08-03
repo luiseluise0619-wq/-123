@@ -1,0 +1,19 @@
+{
+  "index": 20,
+  "target_id": "UNSEEN-REAL-REPO-020",
+  "framework_stack": "Django 5.0 + Celery (Python 3.12)",
+  "repository_url": "https://github.com/realworld-saas/django-healthcare-2026-repo-20",
+  "commit_hash": "153f2dbe5ebb184c",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-89: Parameterized Query Parameter Injection",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-89: Parameterized Query Parameter Injection). Docker sandbox exploit replay verified."
+  }
+}

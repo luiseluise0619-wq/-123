@@ -1,0 +1,19 @@
+{
+  "index": 23,
+  "target_id": "UNSEEN-REAL-REPO-023",
+  "framework_stack": "Next.js 14 App Router + Prisma (TypeScript)",
+  "repository_url": "https://github.com/realworld-saas/nextjs-ecommerce-2026-repo-23",
+  "commit_hash": "f9bc7d98d89c6a7d",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "FAILED_BUILD",
+  "findings_count": 0,
+  "vulnerability_type": "CWE-918: SSRF Cloud Metadata Service Access",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "DOCKER_BUILD_FAILED",
+    "notes": "Docker build failed: Missing native C++ dependency compilation flag or production ENV key."
+  }
+}

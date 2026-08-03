@@ -1,0 +1,19 @@
+{
+  "index": 8,
+  "target_id": "UNSEEN-REPO-008",
+  "repository_name": "SaaS Billing Microservice 2026 #8",
+  "repository_url": "https://github.com/organization/saas-billing-service-2026-node-8",
+  "commit_hash": "abae793f5b75aa6f",
+  "programming_language": "Python",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 1,
+  "tested_vulnerability_type": "CWE-20: Zero Price Checkout Tampering",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security vulnerability (Zero Price Checkout Tampering). Sandbox exploit replay verified."
+  }
+}

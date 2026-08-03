@@ -1,0 +1,19 @@
+{
+  "index": 12,
+  "target_id": "UNSEEN-REAL-REPO-012",
+  "framework_stack": "Rust Actix-Web + Diesel (Rust 1.78)",
+  "repository_url": "https://github.com/realworld-saas/rust-auth-microservice-2026-repo-12",
+  "commit_hash": "cc3dd564e4fb7b0c",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-287: JWT alg:none Header Bypass",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-287: JWT alg:none Header Bypass). Docker sandbox exploit replay verified."
+  }
+}

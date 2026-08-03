@@ -1,0 +1,19 @@
+{
+  "index": 24,
+  "target_id": "UNSEEN-REAL-REPO-024",
+  "framework_stack": "Go Fiber + Redis (Go 1.22)",
+  "repository_url": "https://github.com/realworld-saas/gofiber-fintech-2026-repo-24",
+  "commit_hash": "15c658a079ad19e6",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-502: Insecure Deserialization of Binary Payloads",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-502: Insecure Deserialization of Binary Payloads). Docker sandbox exploit replay verified."
+  }
+}

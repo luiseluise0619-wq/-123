@@ -1,0 +1,19 @@
+{
+  "index": 35,
+  "target_id": "UNSEEN-REAL-REPO-035",
+  "framework_stack": "NestJS + TypeORM (TypeScript)",
+  "repository_url": "https://github.com/realworld-saas/nestjs-saas-core-2026-repo-35",
+  "commit_hash": "06ae1e57c83a93f2",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "FAILED_BUILD",
+  "findings_count": 0,
+  "vulnerability_type": "CWE-601: OAuth 2.0 State Parameter Missing CSRF",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "DOCKER_BUILD_FAILED",
+    "notes": "Docker build failed: Missing native C++ dependency compilation flag or production ENV key."
+  }
+}

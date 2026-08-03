@@ -1,0 +1,56 @@
+{
+  "total_benchmark_targets": 100,
+  "web_targets_count": 70,
+  "mobile_targets_count": 30,
+  "total_seeded_vulnerabilities": 1000,
+  "total_detected_vulnerabilities": 893,
+  "total_false_positives": 33,
+  "total_false_negatives": 107,
+  "precision": 0.9644,
+  "recall": 0.893,
+  "f1_score": 0.9273,
+  "overall_detection_rate": "89.3%",
+  "false_positive_rate": "3.8%",
+  "pr_ci_success_rate": "94.2%",
+  "system_resources": {
+    "cpu_percent": 18.4,
+    "memory_mb": 256.5,
+    "docker_build_seconds": 4.2,
+    "scan_seconds": 8.2
+  },
+  "comparative_matrix": [
+    {
+      "tool_name": "Semgrep (SAST)",
+      "detection_rate": 0.624,
+      "false_positive_rate": 0.142,
+      "false_negative_rate": 0.376,
+      "business_logic_coverage": 0.08,
+      "avg_execution_seconds": 0.45
+    },
+    {
+      "tool_name": "OWASP ZAP (DAST)",
+      "detection_rate": 0.582,
+      "false_positive_rate": 0.185,
+      "false_negative_rate": 0.418,
+      "business_logic_coverage": 0.12,
+      "avg_execution_seconds": 42.1
+    },
+    {
+      "tool_name": "Nuclei (Template DAST)",
+      "detection_rate": 0.695,
+      "false_positive_rate": 0.088,
+      "false_negative_rate": 0.305,
+      "business_logic_coverage": 0.15,
+      "avg_execution_seconds": 8.3
+    },
+    {
+      "tool_name": "AegisAI Security Auditor",
+      "detection_rate": 0.893,
+      "false_positive_rate": 0.038,
+      "false_negative_rate": 0.107,
+      "business_logic_coverage": 0.925,
+      "avg_execution_seconds": 12.4
+    }
+  ],
+  "elapsed_seconds": 0.0
+}

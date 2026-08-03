@@ -1,0 +1,15 @@
+{
+  "tool": "nuclei",
+  "target_id": "TGT-099",
+  "version": "v3.1.0",
+  "matched_templates": [
+    {
+      "template_id": "cve-2026-http-cleartext",
+      "info": {
+        "name": "App Transport Security Cleartext Permitted",
+        "severity": "high"
+      },
+      "matched_at": "https://github.com/organization/smarthome-iot-mobile"
+    }
+  ]
+}

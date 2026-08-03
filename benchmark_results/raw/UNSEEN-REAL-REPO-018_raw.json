@@ -1,0 +1,19 @@
+{
+  "index": 18,
+  "target_id": "UNSEEN-REAL-REPO-018",
+  "framework_stack": "Spring Boot 3 + H2 DB (Java 21)",
+  "repository_url": "https://github.com/realworld-saas/springboot-banking-2026-repo-18",
+  "commit_hash": "e2d26109c23c80eb",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-798: Hardcoded Production Secret Leak",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-798: Hardcoded Production Secret Leak). Docker sandbox exploit replay verified."
+  }
+}

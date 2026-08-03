@@ -1,0 +1,19 @@
+{
+  "audit_timestamp": "2026-08-03T17:00:00Z",
+  "dataset_directory": "C:\\Users\\실행기E\\.gemini\\antigravity\\scratch\\ai-security-auditor\\data\\dataset_v2",
+  "dataset_sample_counts": {
+    "train_samples": 5,
+    "val_samples": 2,
+    "test_samples": 2
+  },
+  "data_leakage_detected": false,
+  "leakage_checks": {
+    "cve_id_overlap_count": 0,
+    "cve_id_overlaps": [],
+    "github_repo_overlap_count": 0,
+    "github_repo_overlaps": [],
+    "code_hash_overlap_count": 0,
+    "patch_inversion_bugs_count": 0
+  },
+  "audit_verdict": "PASSED_ZERO_LEAKAGE"
+}

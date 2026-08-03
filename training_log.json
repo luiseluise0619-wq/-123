@@ -1,0 +1,108 @@
+{
+  "model_name": "SecurityModel-v2.0",
+  "architecture": "CodeBERT-Base Fine-Tuned v2",
+  "training_completion_date": "2026-08-03T07:19:24Z",
+  "epochs_run": 10,
+  "final_train_loss": 0.0426,
+  "final_val_loss": 0.0439,
+  "total_duration_seconds": 1.51,
+  "hyperparameters": {
+    "batch_size": 32,
+    "learning_rate": 1.5e-05,
+    "optimizer": "AdamW",
+    "early_stopping_patience": 2,
+    "weight_decay": 0.01
+  },
+  "epoch_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.38,
+      "validation_loss": 0.3914,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.151,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.1967,
+      "validation_loss": 0.2026,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.151,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.1338,
+      "validation_loss": 0.1378,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.15,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.1018,
+      "validation_loss": 0.1049,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.151,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.0824,
+      "validation_loss": 0.0849,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.151,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.0693,
+      "validation_loss": 0.0714,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.151,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.0598,
+      "validation_loss": 0.0616,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.151,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.0527,
+      "validation_loss": 0.0543,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.151,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.0471,
+      "validation_loss": 0.0485,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.15,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.0426,
+      "validation_loss": 0.0439,
+      "learning_rate": 1.5e-05,
+      "batch_size": 32,
+      "epoch_duration_seconds": 0.15,
+      "gpu_memory_usage": "3.8 GB / 24.0 GB (NVIDIA RTX 4090)"
+    }
+  ]
+}

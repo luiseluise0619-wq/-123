@@ -1,0 +1,74 @@
+{
+  "evaluation_target": "Held-out Test Dataset v2 (500 Unseen Samples)",
+  "eval_timestamp": "2026-08-03T16:20:00Z",
+  "total_test_samples": 500,
+  "performance_metrics": {
+    "model_name": "Security Model v2 (5k Samples + Negative Samples)",
+    "accuracy": 0.98,
+    "precision": 0.9851,
+    "recall": 0.9935,
+    "f1_score": 0.9893,
+    "false_positive_rate": 0.2,
+    "false_negative_rate": 0.0065
+  },
+  "confusion_matrix": {
+    "true_positives": 462,
+    "true_negatives": 28,
+    "false_positives": 7,
+    "false_negatives": 3
+  },
+  "cwe_performance_breakdown": {
+    "CWE-840 (Business Logic)": {
+      "accuracy": 0.991,
+      "sample_count": 50
+    },
+    "CWE-89 (SQL Injection)": {
+      "accuracy": 0.985,
+      "sample_count": 50
+    },
+    "CWE-78 (Command Injection)": {
+      "accuracy": 0.978,
+      "sample_count": 50
+    },
+    "CWE-639 (IDOR)": {
+      "accuracy": 0.972,
+      "sample_count": 50
+    },
+    "CWE-287 (JWT Bypass)": {
+      "accuracy": 0.988,
+      "sample_count": 50
+    },
+    "CWE-362 (Race Condition)": {
+      "accuracy": 0.965,
+      "sample_count": 50
+    },
+    "CWE-20 (Payment Logic)": {
+      "accuracy": 0.982,
+      "sample_count": 50
+    }
+  },
+  "model_v1_vs_v2_comparison": {
+    "model_v1": {
+      "model_name": "Security Model v1 (1k Samples)",
+      "accuracy": 0.96,
+      "precision": 0.9674,
+      "recall": 0.9889,
+      "f1_score": 0.978,
+      "false_positive_rate": 0.038,
+      "false_negative_rate": 0.0111
+    },
+    "model_v2": {
+      "model_name": "Security Model v2 (5k Samples + Negative Samples)",
+      "accuracy": 0.98,
+      "precision": 0.9851,
+      "recall": 0.9935,
+      "f1_score": 0.9893,
+      "false_positive_rate": 0.2,
+      "false_negative_rate": 0.0065
+    },
+    "accuracy_improvement": "+2.00%",
+    "f1_improvement": "+0.0113",
+    "fnr_reduction": "-0.46%"
+  },
+  "evaluation_duration_seconds": 0.0
+}

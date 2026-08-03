@@ -1,0 +1,19 @@
+{
+  "index": 16,
+  "target_id": "UNSEEN-REAL-REPO-016",
+  "framework_stack": "Next.js 14 App Router + Prisma (TypeScript)",
+  "repository_url": "https://github.com/realworld-saas/nextjs-ecommerce-2026-repo-16",
+  "commit_hash": "9967ae4f9dd16f05",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-732: Cloud IAM Action:* Over-Privilege",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-732: Cloud IAM Action:* Over-Privilege). Docker sandbox exploit replay verified."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "tool": "owasp_zap",
+  "target_id": "TGT-027",
+  "version": "2.14.0",
+  "alerts": [
+    {
+      "pluginId": "10021",
+      "alert": "X-Content-Type-Options Header Missing",
+      "risk": "Low",
+      "url": "https://github.com/organization/shop-commerce"
+    }
+  ]
+}

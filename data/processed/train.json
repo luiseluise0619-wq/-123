@@ -1,0 +1,47 @@
+[
+  {
+    "language": "Java",
+    "vulnerable_code": "getSharedPreferences(\"session\", MODE_WORLD_READABLE);",
+    "fixed_code": "EncryptedSharedPreferences.create(context, \"session\", masterKey, ...);",
+    "vulnerability_type": "Android Insecure Storage",
+    "CWE": "CWE-922",
+    "severity": "HIGH",
+    "root_cause": "SharedPreferences created with world readable permissions.",
+    "attack_flow": [
+      "App installs with world readable prefs",
+      "Malicious app reads file",
+      "Session stolen"
+    ],
+    "fix_method": "EncryptedSharedPreferences implementation"
+  },
+  {
+    "language": "Python",
+    "vulnerable_code": "refund = original_price - refund_fee",
+    "fixed_code": "policy_fee = calculate_policy_fee(ticket)\nrefund = original_price - policy_fee",
+    "vulnerability_type": "Refund Fee Tampering",
+    "CWE": "CWE-840",
+    "severity": "CRITICAL",
+    "root_cause": "Client provided refund_fee trusted without server policy re-calculation.",
+    "attack_flow": [
+      "Negative refund_fee passed",
+      "Subtracted from original price",
+      "Double refund approved"
+    ],
+    "fix_method": "Server-side policy fee recalculation"
+  },
+  {
+    "language": "Swift",
+    "vulnerable_code": "<key>NSAllowsArbitraryLoads</key><true/>",
+    "fixed_code": "<key>NSAllowsArbitraryLoads</key><false/>",
+    "vulnerability_type": "iOS ATS Arbitrary Load Permitted",
+    "CWE": "CWE-319",
+    "severity": "HIGH",
+    "root_cause": "Cleartext HTTP allowed across all domains in Info.plist.",
+    "attack_flow": [
+      "App initiates cleartext HTTP",
+      "Attacker captures Wi-Fi packets",
+      "MITM leak"
+    ],
+    "fix_method": "Disable arbitrary loads and specify HTTPS exception domains"
+  }
+]

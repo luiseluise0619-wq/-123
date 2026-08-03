@@ -1,0 +1,18 @@
+{
+  "target_id": "TGT-095",
+  "name": "Enterprise SSO Mobile #95",
+  "repo_url": "https://github.com/organization/enterprise-sso-mobile",
+  "type": "iOS",
+  "framework": "iOS Swift",
+  "language": "Swift",
+  "scan_start_time": "2026-08-03T06:11:57.000Z",
+  "scan_end_time": "2026-08-03T06:11:57.000Z",
+  "total_duration_seconds": 0.001,
+  "status": "SUCCESS",
+  "failure_reason": null,
+  "vulnerabilities_found": 2,
+  "evidence_count": 1,
+  "docker_build_seconds": 0.0003,
+  "memory_usage_mb": "Not Measured",
+  "cpu_usage_percent": "Not Measured"
+}

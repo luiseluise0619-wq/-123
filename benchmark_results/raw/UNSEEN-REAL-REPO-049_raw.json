@@ -1,0 +1,19 @@
+{
+  "index": 49,
+  "target_id": "UNSEEN-REAL-REPO-049",
+  "framework_stack": "NestJS + TypeORM (TypeScript)",
+  "repository_url": "https://github.com/realworld-saas/nestjs-saas-core-2026-repo-49",
+  "commit_hash": "ed5ed9b70a12dbdb",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-362: Race Condition Balance Double Spending",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-362: Race Condition Balance Double Spending). Docker sandbox exploit replay verified."
+  }
+}

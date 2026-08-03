@@ -1,0 +1,19 @@
+{
+  "index": 39,
+  "target_id": "UNSEEN-REAL-REPO-039",
+  "framework_stack": "Spring Boot 3 + H2 DB (Java 21)",
+  "repository_url": "https://github.com/realworld-saas/springboot-banking-2026-repo-39",
+  "commit_hash": "4d1d0d8a34983032",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-362: Race Condition Balance Double Spending",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-362: Race Condition Balance Double Spending). Docker sandbox exploit replay verified."
+  }
+}

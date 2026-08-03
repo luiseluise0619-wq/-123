@@ -1,0 +1,19 @@
+{
+  "index": 20,
+  "target_id": "UNSEEN-REPO-020",
+  "repository_name": "Cloud IAM Provisioner 2026 #20",
+  "repository_url": "https://github.com/organization/cloud-iam-provisioner-2026-node-20",
+  "commit_hash": "3ea55c1223e2d82e",
+  "programming_language": "Swift",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 1,
+  "tested_vulnerability_type": "CWE-732: AWS IAM Policy Action:* Over-Privilege",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security vulnerability (AWS IAM Policy Action:* Over-Privilege). Sandbox exploit replay verified."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "index": 4,
+  "target_id": "UNSEEN-REAL-REPO-004",
+  "framework_stack": "Spring Boot 3 + H2 DB (Java 21)",
+  "repository_url": "https://github.com/realworld-saas/springboot-banking-2026-repo-4",
+  "commit_hash": "fa7e9427f55fa081",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-502: Insecure Deserialization of Binary Payloads",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-502: Insecure Deserialization of Binary Payloads). Docker sandbox exploit replay verified."
+  }
+}

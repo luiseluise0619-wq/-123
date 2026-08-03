@@ -1,0 +1,19 @@
+{
+  "index": 34,
+  "target_id": "UNSEEN-REAL-REPO-034",
+  "framework_stack": "Django 5.0 + Celery (Python 3.12)",
+  "repository_url": "https://github.com/realworld-saas/django-healthcare-2026-repo-34",
+  "commit_hash": "d0e8ae317ccdd9b9",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-502: Insecure Deserialization of Binary Payloads",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-502: Insecure Deserialization of Binary Payloads). Docker sandbox exploit replay verified."
+  }
+}

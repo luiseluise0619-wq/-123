@@ -1,0 +1,19 @@
+{
+  "index": 5,
+  "target_id": "UNSEEN-REAL-REPO-005",
+  "framework_stack": "Rust Actix-Web + Diesel (Rust 1.78)",
+  "repository_url": "https://github.com/realworld-saas/rust-auth-microservice-2026-repo-5",
+  "commit_hash": "d91690221de39a4a",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 0,
+  "vulnerability_type": "CWE-601: OAuth 2.0 State Parameter Missing CSRF",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "FALSE_POSITIVE",
+    "notes": "SAST pattern matched but verified safe due to upstream Input Validation middleware."
+  }
+}

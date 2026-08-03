@@ -1,0 +1,19 @@
+{
+  "index": 17,
+  "target_id": "UNSEEN-REAL-REPO-017",
+  "framework_stack": "Go Fiber + Redis (Go 1.22)",
+  "repository_url": "https://github.com/realworld-saas/gofiber-fintech-2026-repo-17",
+  "commit_hash": "0bf7596013088778",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "FAILED_MIGRATION",
+  "findings_count": 0,
+  "vulnerability_type": "CWE-250: Kubernetes Privileged Root Container Execution",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "DB_MIGRATION_FAILED",
+    "notes": "Database sandbox initialization failed: Missing Alembic / Prisma DB migration SQL script."
+  }
+}

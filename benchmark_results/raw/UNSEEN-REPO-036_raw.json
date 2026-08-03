@@ -1,0 +1,19 @@
+{
+  "index": 36,
+  "target_id": "UNSEEN-REPO-036",
+  "repository_name": "Healthcare EHR Portal 2026 #36",
+  "repository_url": "https://github.com/organization/healthcare-ehr-portal-2026-node-36",
+  "commit_hash": "4689b9ebc346510e",
+  "programming_language": "Python",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 0,
+  "tested_vulnerability_type": "CWE-639: Patient Record IDOR Extraction",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "FALSE_POSITIVE",
+    "notes": "Flagged by SAST pattern matcher but verified safe by expert due to input validation wrapper."
+  }
+}

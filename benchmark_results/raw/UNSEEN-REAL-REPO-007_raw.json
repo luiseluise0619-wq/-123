@@ -1,0 +1,19 @@
+{
+  "index": 7,
+  "target_id": "UNSEEN-REAL-REPO-007",
+  "framework_stack": "NestJS + TypeORM (TypeScript)",
+  "repository_url": "https://github.com/realworld-saas/nestjs-saas-core-2026-repo-7",
+  "commit_hash": "7143f7c3d576029c",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-250: Kubernetes Privileged Root Container Execution",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-250: Kubernetes Privileged Root Container Execution). Docker sandbox exploit replay verified."
+  }
+}

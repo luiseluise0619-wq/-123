@@ -1,0 +1,19 @@
+{
+  "index": 47,
+  "target_id": "UNSEEN-REAL-REPO-047",
+  "framework_stack": "Rust Actix-Web + Diesel (Rust 1.78)",
+  "repository_url": "https://github.com/realworld-saas/rust-auth-microservice-2026-repo-47",
+  "commit_hash": "c7d2b2fd75ecad51",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "FAILED_BUILD",
+  "findings_count": 0,
+  "vulnerability_type": "CWE-250: Kubernetes Privileged Root Container Execution",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "DOCKER_BUILD_FAILED",
+    "notes": "Docker build failed: Missing native C++ dependency compilation flag or production ENV key."
+  }
+}

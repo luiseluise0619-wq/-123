@@ -1,0 +1,19 @@
+{
+  "index": 2,
+  "target_id": "UNSEEN-REAL-REPO-002",
+  "framework_stack": "Next.js 14 App Router + Prisma (TypeScript)",
+  "repository_url": "https://github.com/realworld-saas/nextjs-ecommerce-2026-repo-2",
+  "commit_hash": "99573cc96f441de7",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-287: JWT alg:none Header Bypass",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-287: JWT alg:none Header Bypass). Docker sandbox exploit replay verified."
+  }
+}

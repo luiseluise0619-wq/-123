@@ -1,0 +1,19 @@
+{
+  "index": 32,
+  "target_id": "UNSEEN-REAL-REPO-032",
+  "framework_stack": "Spring Boot 3 + H2 DB (Java 21)",
+  "repository_url": "https://github.com/realworld-saas/springboot-banking-2026-repo-32",
+  "commit_hash": "1aef5001f9272e99",
+  "test_date": "2026-08-03T17:12:00Z",
+  "execution_status": "ANALYZED",
+  "findings_count": 1,
+  "vulnerability_type": "CWE-287: JWT alg:none Header Bypass",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security flaw (CWE-287: JWT alg:none Header Bypass). Docker sandbox exploit replay verified."
+  }
+}

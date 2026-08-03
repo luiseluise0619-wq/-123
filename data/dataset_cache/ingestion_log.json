@@ -1,0 +1,31 @@
+{
+  "collection_date": "2026-08-03T15:00:00Z",
+  "download_history": [
+    {
+      "source": "GitHub Security Advisories",
+      "url": "https://github.com/github/advisory-database",
+      "status": "FETCHED_OK"
+    },
+    {
+      "source": "CVE List V5",
+      "url": "https://github.com/CVEProject/cvelistV5",
+      "status": "FETCHED_OK"
+    },
+    {
+      "source": "OSV Database",
+      "url": "https://github.com/google/osv.dev",
+      "status": "FETCHED_OK"
+    },
+    {
+      "source": "OWASP Benchmark Java",
+      "url": "https://github.com/OWASP-Benchmark/BenchmarkJava",
+      "status": "FETCHED_OK"
+    }
+  ],
+  "metrics": {
+    "raw_items_fetched": 1050,
+    "deduplicated_items": 1000,
+    "filtered_items": 50,
+    "final_dataset_samples": 1000
+  }
+}

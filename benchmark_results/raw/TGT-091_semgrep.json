@@ -1,0 +1,7 @@
+{
+  "tool": "semgrep",
+  "target_id": "TGT-091",
+  "version": "1.34.0",
+  "results": [],
+  "errors": []
+}

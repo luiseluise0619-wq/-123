@@ -1,0 +1,19 @@
+{
+  "index": 39,
+  "target_id": "UNSEEN-REPO-039",
+  "repository_name": "K8s Security Controller 2026 #39",
+  "repository_url": "https://github.com/organization/k8s-security-controller-2026-node-39",
+  "commit_hash": "3016941d6c70c18d",
+  "programming_language": "Java",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 1,
+  "tested_vulnerability_type": "CWE-250: K8s Privileged Root Execution",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security vulnerability (K8s Privileged Root Execution). Sandbox exploit replay verified."
+  }
+}

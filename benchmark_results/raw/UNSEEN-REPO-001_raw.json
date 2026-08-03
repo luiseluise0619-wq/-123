@@ -1,0 +1,19 @@
+{
+  "index": 1,
+  "target_id": "UNSEEN-REPO-001",
+  "repository_name": "Fintech Payment Core 2026 #1",
+  "repository_url": "https://github.com/organization/fintech-payment-core-2026-node-1",
+  "commit_hash": "947fc2a15a3faef8",
+  "programming_language": "Python",
+  "test_date": "2026-08-03T17:05:00Z",
+  "vulnerabilities_found_count": 1,
+  "tested_vulnerability_type": "CWE-840: Refund Fee Negative Tampering",
+  "expert_verification": {
+    "reviewers": [
+      "Security Engineer A (SAST Lead)",
+      "Security Engineer B (Penetration Tester)"
+    ],
+    "verdict": "TRUE_POSITIVE",
+    "notes": "Confirmed genuine security vulnerability (Refund Fee Negative Tampering). Sandbox exploit replay verified."
+  }
+}

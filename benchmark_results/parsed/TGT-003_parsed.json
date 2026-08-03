@@ -1,0 +1,18 @@
+{
+  "target_id": "TGT-003",
+  "name": "OWASP Benchmark Java #3",
+  "repo_url": "https://github.com/OWASP-Benchmark/BenchmarkJava",
+  "type": "Web",
+  "framework": "Java Servlet",
+  "language": "Java",
+  "scan_start_time": "2026-08-03T06:11:57.000Z",
+  "scan_end_time": "2026-08-03T06:11:57.000Z",
+  "total_duration_seconds": 0.0,
+  "status": "SUCCESS",
+  "failure_reason": null,
+  "vulnerabilities_found": 1,
+  "evidence_count": 1,
+  "docker_build_seconds": 0.0,
+  "memory_usage_mb": "Not Measured",
+  "cpu_usage_percent": "Not Measured"
+}
