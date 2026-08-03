@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from lightgbm import LGBMRegressor, LGBMClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
 from app.core.config import settings
 from app.data.real_data_pipeline import real_data_pipeline
 from app.ml.data_processing import FEATURE_NAMES
@@ -78,6 +79,33 @@ def prepare_training_frame(df, provenance):
     return _prepare_synthetic(df)
 
 
+def time_series_cv(X, y, quarters, n_folds=5):
+    """
+    확장 윈도우 시계열 교차검증: '과거 전부로 학습 → 다음 분기로 테스트'를 여러 번 반복.
+    최신 n_folds 개 분기를 각각 테스트로 삼아 R² 를 여러 번 측정한다(단일 분할의 운 문제 완화).
+    분기코드(YYYYQ)는 문자열 정렬이 곧 시간순이므로 문자열 비교로 과거/미래를 가른다.
+    """
+    uq = sorted(quarters.unique())
+    if len(uq) < 3:
+        return []  # 분기가 너무 적으면 CV 불가
+    test_qs = uq[-n_folds:] if len(uq) > n_folds else uq[1:]
+    folds = []
+    for tq in test_qs:
+        tr = (quarters < tq).values
+        te = (quarters == tq).values
+        if tr.sum() == 0 or te.sum() == 0:
+            continue
+        m = LGBMRegressor(n_estimators=150, learning_rate=0.03, num_leaves=31,
+                          random_state=42, verbose=-1)
+        m.fit(X[tr], y[tr])
+        folds.append({
+            "test_quarter": tq,
+            "r2": round(float(r2_score(y[te], m.predict(X[te]))), 4),
+            "n_test": int(te.sum()),
+        })
+    return folds
+
+
 def train_and_register_models():
     print("[ML Pipeline] Loading commercial dataset CSV...")
     df = real_data_pipeline.load_real_dataset()
@@ -142,6 +170,18 @@ def train_and_register_models():
     rev_metrics = ModelEvaluator.evaluate_regressor(rev_model, X_test, y_rev_test)
     print(f"Revenue Regressor Metrics: {rev_metrics}")
 
+    # 시계열 교차검증: 여러 분기로 반복 테스트해 성능 안정성 확인 (단일 분할의 운 문제 완화)
+    cv_folds = []
+    if "STDR_YYQU_CD" in df.columns and df["STDR_YYQU_CD"].astype(str).nunique() >= 3:
+        cv_folds = time_series_cv(X, y_revenue, df["STDR_YYQU_CD"].astype(str), n_folds=5)
+        if cv_folds:
+            r2s = [f["r2"] for f in cv_folds]
+            print(f"[CV] 시계열 교차검증 {len(cv_folds)}회:")
+            for f in cv_folds:
+                print(f"     테스트 {f['test_quarter']}: R²={f['r2']} (n={f['n_test']:,})")
+            print(f"[CV] 평균 R²={np.mean(r2s):.4f} ± {np.std(r2s):.4f} "
+                  f"(min={min(r2s):.4f}, max={max(r2s):.4f})")
+
     # 2. Success Classifier
     print(f"Training LightGBM Success Classifier on {n_records:,} records...")
     suc_model = LGBMClassifier(n_estimators=120, learning_rate=0.03, num_leaves=31, random_state=42, verbose=-1)
@@ -192,6 +232,9 @@ def train_and_register_models():
         "revenue_metrics": rev_metrics,
         "success_metrics": suc_metrics,
         "risk_metrics": risk_metrics,
+        "cv_time_series": cv_folds,
+        "cv_mean_r2": round(float(np.mean([f["r2"] for f in cv_folds])), 4) if cv_folds else None,
+        "cv_std_r2": round(float(np.std([f["r2"] for f in cv_folds])), 4) if cv_folds else None,
     }
     
     meta_path = os.path.join(settings.MODEL_DIR, "metadata.json")
