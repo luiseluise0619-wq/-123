@@ -40,6 +40,9 @@ SERVICES: Dict[str, str] = {
     "worker": "VwsmTrdarWrcPopltnQq",  # 직장인구-상권
     "spend": "trdarNcmCnsmp",          # 소득소비-상권 (지출총액/항목별, Vwsm 패턴 아님-확인됨)
     "facility": "VwsmTrdarFcltyQq",    # 집객시설-상권
+    "area": "TbgisTrdarRelm",          # 영역-상권 (자치구·좌표·면적, 분기/업종 없음-상권당 1줄)
+    "change": "VwsmTrdarIxQq",         # 상권변화지표-상권 (등급 LL/LH/HL/HH, 운영·폐업 평균개월)
+    # "apt": "??",                     # 아파트-상권 (서비스명 확인 후 추가)
 }
 
 
@@ -95,8 +98,9 @@ def merge_all(frames: Dict[str, pd.DataFrame]) -> pd.DataFrame:
     merged = None
     for name in order:
         df = frames.get(name)
-        if df is None or df.empty or not set(BASE_KEYS).issubset(df.columns):
-            logger.warning("  skip '%s' (empty or missing base keys)", name)
+        # TRDAR_CD 만 있으면 조인 가능(영역-상권처럼 분기 없는 상권 단위 차원 테이블 포함).
+        if df is None or df.empty or "TRDAR_CD" not in df.columns:
+            logger.warning("  skip '%s' (empty or missing TRDAR_CD)", name)
             continue
         if merged is None:
             merged = df.copy()

@@ -25,9 +25,10 @@ from app.data.real_data_pipeline import real_data_pipeline  # noqa: E402
 
 LEAK = "SELNG"
 KEYS = {"STDR_YYQU_CD", "TRDAR_CD"}
-NAMES = {"TRDAR_CD_NM", "SVC_INDUTY_CD_NM", "TRDAR_SE_CD_NM"}
+NAMES = {"TRDAR_CD_NM", "SVC_INDUTY_CD_NM", "TRDAR_SE_CD_NM",
+         "SIGNGU_CD_NM", "ADSTRD_CD_NM", "TRDAR_CHNGE_IX_NM"}
 TGT = {"target_monthly_revenue", "monthly_revenue_actual"}
-CATS = {"SVC_INDUTY_CD", "TRDAR_SE_CD"}
+CATS = {"SVC_INDUTY_CD", "TRDAR_SE_CD", "SIGNGU_CD", "ADSTRD_CD", "TRDAR_CHNGE_IX"}
 
 SAMPLE_N = 40_000       # 탐색 속도용 표본
 SEARCH_TREES = 120

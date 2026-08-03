@@ -17,8 +17,10 @@ from app.ml.evaluate import ModelEvaluator
 REAL_LEAKY_SUBSTR = ("SELNG",)
 REAL_TARGET_COLS = ("target_monthly_revenue", "monthly_revenue_actual")
 REAL_KEY_COLS = ("STDR_YYQU_CD", "TRDAR_CD")
-REAL_NAME_COLS = ("TRDAR_CD_NM", "SVC_INDUTY_CD_NM", "TRDAR_SE_CD_NM")
-REAL_CAT_COLS = ("SVC_INDUTY_CD", "TRDAR_SE_CD")  # 업종/상권구분 → 라벨인코딩
+REAL_NAME_COLS = ("TRDAR_CD_NM", "SVC_INDUTY_CD_NM", "TRDAR_SE_CD_NM",
+                  "SIGNGU_CD_NM", "ADSTRD_CD_NM", "TRDAR_CHNGE_IX_NM")
+# 범주형(라벨인코딩): 업종/상권구분/자치구/행정동/상권변화등급
+REAL_CAT_COLS = ("SVC_INDUTY_CD", "TRDAR_SE_CD", "SIGNGU_CD", "ADSTRD_CD", "TRDAR_CHNGE_IX")
 
 
 def _prepare_synthetic(df):
