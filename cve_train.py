@@ -16,28 +16,34 @@
 지어낸 수치 없음. 나오는 값이 곧 결과.
 """
 
+import glob
 import os
 import re
 import sys
 import hashlib
 import numpy as np
 
-DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                    "..", "cvedata", "cwe119.txt")
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cvedata")
 SEP = "---------------------------------"
 
 
-def parse(path):
-    raw = open(path, encoding="utf-8", errors="ignore").read()
+def parse(paths):
+    """cwe*.txt 여러 파일을 모두 파싱해 합침 (CWE-119 + CWE-399 등)."""
+    if isinstance(paths, str):
+        paths = [paths]
     codes, labels, groups = [], [], []
-    for block in raw.split(SEP):
-        lines = [l for l in block.strip().split("\n") if l.strip() != ""]
-        if len(lines) < 2 or lines[-1].strip() not in ("0", "1"):
-            continue
-        header = lines[0]
-        label = int(lines[-1].strip())
-        code = "\n".join(lines[1:-1])           # 헤더·라벨 제외한 코드
-        codes.append(code); labels.append(label); groups.append(group_of(header))
+    for path in paths:
+        raw = open(path, encoding="utf-8", errors="ignore").read()
+        tag = os.path.basename(path).replace(".txt", "")
+        for block in raw.split(SEP):
+            lines = [l for l in block.strip().split("\n") if l.strip() != ""]
+            if len(lines) < 2 or lines[-1].strip() not in ("0", "1"):
+                continue
+            header = lines[0]
+            label = int(lines[-1].strip())
+            code = "\n".join(lines[1:-1])       # 헤더·라벨 제외한 코드
+            codes.append(code); labels.append(label)
+            groups.append(f"{tag}:{group_of(header)}")
     return codes, np.array(labels), np.array(groups)
 
 
@@ -64,15 +70,17 @@ def dedup(codes, labels, groups):
 
 
 def main():
-    if not os.path.exists(DATA):
-        print(f"데이터 없음: {DATA}\n먼저 cwe119.txt 를 받아두세요."); sys.exit(1)
+    files = sorted(glob.glob(os.path.join(DATA_DIR, "cwe*.txt")))
+    if not files:
+        print(f"데이터 없음: {DATA_DIR}\n먼저 `python fetch_cve_data.py` 실행."); sys.exit(1)
+    print("데이터 파일:", [os.path.basename(f) for f in files])
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.model_selection import GroupKFold
     from sklearn.metrics import roc_auc_score, average_precision_score, classification_report
     from lightgbm import LGBMClassifier
 
     print("[1] 파싱 + 중복 제거...")
-    codes, y, groups = parse(DATA)
+    codes, y, groups = parse(files)
     n0 = len(codes)
     codes, y, groups = dedup(codes, y, groups)
     print(f"    원본 {n0} → 중복제거 {len(codes)} gadget "
