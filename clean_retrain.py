@@ -23,7 +23,7 @@ from noise_filter import confident_label_errors
 
 SEED = 42
 MAX_PER = 60000          # 데이터셋당 상한(CPU 시간 관리). 넘으면 랜덤 서브샘플.
-MVD_SEP = "--------------------"
+MVD_SEP = "------------------------------"   # MVD 실제 구분자(대시 30개)
 
 
 def _dd(codes, y, groups):
@@ -65,9 +65,12 @@ def load_mvd():
         code = "\n".join(lines[1:-1])
         if len(code) < 20:
             continue
-        # 헤더 예: "1 150200/dirent_uri.c memset 405" → 파일명을 그룹으로
-        grp = lines[0].split()[1].split("/")[0] if len(lines[0].split()) > 1 else "na"
-        C.append(code); Y.append(1 if lab != "0" else 0); G.append(grp)
+        # 헤더 예: "4 151133/utils.c strcmp 737" → 파일 단위 그룹(변형번호 제거)
+        toks = lines[0].split()
+        path = toks[1] if len(toks) > 1 else lines[0]
+        base = path.split("/")[-1]
+        base = re.sub(r"_\d+\.c\w*$", "", base)      # SARD 변형번호 _NN 제거
+        C.append(code); Y.append(1 if lab != "0" else 0); G.append(base or path)
     return _dd(C, Y, G)
 
 
