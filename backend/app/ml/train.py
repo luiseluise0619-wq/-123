@@ -65,8 +65,10 @@ def add_domain_features(df):
         # 면적당 유동인구(혼잡도·노출도)
         "F_FLPOP_DENSITY": _ratio(df, "TOT_FLPOP_CO", "RELM_AR"),
     }
-    # 1인당 구매력(소비/총생활인구) — 세 컬럼 필요
-    if {"EXPNDTR_TOTAMT", "TOT_REPOP_CO", "TOT_WRC_POPLTN_CO"}.issubset(df.columns):
+    # 1인당 구매력(소비/총생활인구) — 세 컬럼 필요.
+    #  소비지출을 쓰므로 EXCLUDE_SPEND 시엔 제외(준누수 방지).
+    if os.getenv("EXCLUDE_SPEND", "false").lower() != "true" and \
+       {"EXPNDTR_TOTAMT", "TOT_REPOP_CO", "TOT_WRC_POPLTN_CO"}.issubset(df.columns):
         spend = pd.to_numeric(df["EXPNDTR_TOTAMT"], errors="coerce")
         pop = (pd.to_numeric(df["TOT_REPOP_CO"], errors="coerce")
                + pd.to_numeric(df["TOT_WRC_POPLTN_CO"], errors="coerce"))
@@ -218,7 +220,24 @@ def train_and_register_models():
     #  실데이터(분기 STDR_YYQU_CD 존재)면 '시간 기반 분할'을 쓴다:
     #  과거 분기로 학습 -> 최신 분기로 테스트 (실제 미래 예측 상황과 동일, 정직한 성능).
     #  무작위 분할은 같은 상권이 학습/테스트에 동시에 들어가 성능을 과대평가한다.
-    if "STDR_YYQU_CD" in df.columns and df["STDR_YYQU_CD"].astype(str).nunique() > 1:
+    spatial = os.getenv("SPATIAL_HOLDOUT", "false").lower() == "true"
+    if spatial and "TRDAR_CD" in df.columns and df["TRDAR_CD"].nunique() > 5:
+        # 공간 홀드아웃: 상권(TRDAR_CD) 단위로 분할 → 테스트는 '처음 보는 상권'.
+        #  "이 새 자리에 열면 얼마 벌까?"의 정직한 성능(시간분할보다 훨씬 어렵고 진짜).
+        from sklearn.model_selection import GroupShuffleSplit
+        groups = df["TRDAR_CD"].astype(str).values
+        tr_idx, te_idx = next(GroupShuffleSplit(1, test_size=0.2, random_state=42)
+                              .split(X, y_revenue, groups))
+        test_mask = np.zeros(len(df), bool); test_mask[te_idx] = True
+        split_method = f"spatial_holdout(by TRDAR_CD, test={test_mask.mean():.1%})"
+        print(f"[Split] 공간 홀드아웃 → 처음 보는 상권으로 테스트 | "
+              f"train={int((~test_mask).sum()):,}, test={int(test_mask.sum()):,} "
+              f"(상권 {df['TRDAR_CD'].nunique()}개 중 20% 홀드아웃)")
+        X_train, X_test = X[~test_mask], X[test_mask]
+        y_rev_train, y_rev_test = y_revenue[~test_mask], y_revenue[test_mask]
+        y_suc_train, y_suc_test = y_success[~test_mask], y_success[test_mask]
+        y_risk_train, y_risk_test = y_risk[~test_mask], y_risk[test_mask]
+    elif "STDR_YYQU_CD" in df.columns and df["STDR_YYQU_CD"].astype(str).nunique() > 1:
         # 시간순 유지(누수 방지)하면서 최신 분기들을 모아 테스트 ≈ 20% 가 되게 한다.
         qcol = df["STDR_YYQU_CD"].astype(str)
         counts = qcol.value_counts()
