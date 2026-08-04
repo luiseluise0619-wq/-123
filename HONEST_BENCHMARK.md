@@ -43,6 +43,27 @@ GroupKFold(프로젝트 단위):
 취약과 무관한 함수를 함께 수정). → **라벨 품질이 병목**임을 실측. OSV/NVD 정확
 CVE→커밋 매핑으로 라벨을 정제하면 더 오른다. "양보다 정확 라벨"의 정량 증거.
 
+## 정밀 라벨링 (OSV 근사) — 라벨 품질의 효과 실측 ⭐
+
+`build_vuln_db.py --precise`: **CVE-ID 명시 커밋만 + 함수 4개 이하 타깃수정만** 사용
+(리팩토링·헬퍼변경 노이즈 제거). 12개 라이브러리 전체 히스토리 마이닝:
+3,904 함수 / 취약 303 (7.8%) / **고유 CVE 205개**(휴리스틱 41개 → 5배).
+
+| 라벨 방식 | ROC-AUC | 비고 |
+| --- | ---: | --- |
+| 휴리스틱(보안 키워드) | 0.62 | 노이즈 필터 후 |
+| **CVE명시+타깃수정(정밀)** | **0.688** | 필터 없이도 더 높음 |
+
+**같은 실제 코드인데 라벨만 정밀하게 해서 +0.07.** OSV/NVD 정확매핑의 오프라인
+근사이며, "양보다 라벨 품질"을 정량 증명. DiverseVul 계열(0.68~0.7)과 일치.
+
+### 더 큰 정밀 데이터 (네 머신/Colab용, 여기선 호스트 막힘)
+- **MegaVul** (github.com/Icyrockton/MegaVul): 8,000+ CVE, 함수단위 C/C++/Java.
+  데이터는 OneDrive. `megavul_simple.json` 로더를 파이프라인에 준비해둠.
+- **MoreFixes** (github.com/JafarAkhondali/Morefixes): 26,617 CVE / 6,945 프로젝트 /
+  31,883 수정커밋. Zenodo dump. 이걸 build_vuln_db 방식으로 함수추출하면 대규모.
+- 전략: MegaVul+MoreFixes(정밀·대량) + build_vuln_db 로 신규 repo 계속 확장.
+
 ## 결론 (정직)
 
 1. **SARD/VulDeePecker/MVD 의 0.96~1.0 은 신기루다.** 합성 테스트케이스는

@@ -54,8 +54,14 @@ def clone(url: str, dest: str, full_history: bool):
     subprocess.run(cmd, check=True, timeout=600, capture_output=True)
 
 
-def security_fix_commits(repo: str, max_commits: int) -> List[Tuple[str, str]]:
-    """커밋 메시지에 보안수정/CVE 신호가 있는 커밋 (sha, message)."""
+def security_fix_commits(repo: str, max_commits: int,
+                         precise: bool = False) -> List[Tuple[str, str]]:
+    """보안수정 커밋 (sha, message).
+
+    precise=False: 보안 키워드 매칭(광범위·노이즈 많음).
+    precise=True : 커밋 메시지에 **실제 CVE-ID 가 명시된 커밋만**(고정밀 라벨).
+                   OSV/NVD 정확매핑의 오프라인 근사 — '이 커밋이 이 CVE 를 고친다'.
+    """
     log = sh(["git", "log", f"-n{max_commits}", "--pretty=format:%H%x1f%s%x1f%b%x1e"], repo)
     out = []
     for rec in log.split("\x1e"):
@@ -65,7 +71,8 @@ def security_fix_commits(repo: str, max_commits: int) -> List[Tuple[str, str]]:
         sha, subject = parts[0].strip(), parts[1]
         body = parts[2] if len(parts) > 2 else ""
         msg = subject + "\n" + body
-        if SECURITY_KEYWORDS.search(msg):
+        hit = CVE_RE.search(msg) if precise else SECURITY_KEYWORDS.search(msg)
+        if hit:
             out.append((sha, msg))
     return out
 
@@ -115,7 +122,8 @@ def init_db(path: str) -> sqlite3.Connection:
     return con
 
 
-def process_repo(url: str, con: sqlite3.Connection, max_commits: int, full: bool):
+def process_repo(url: str, con: sqlite3.Connection, max_commits: int, full: bool,
+                 precise: bool = False, max_funcs: int = 4):
     name = url.rstrip("/").split("/")[-1].replace(".git", "")
     added_v = added_n = 0
     with tempfile.TemporaryDirectory() as tmp:
@@ -124,41 +132,49 @@ def process_repo(url: str, con: sqlite3.Connection, max_commits: int, full: bool
             clone(url, dest, full)
         except Exception as e:
             print(f"  ! {name} clone 실패: {str(e)[:60]}"); return (0, 0)
-        commits = security_fix_commits(dest, max_commits)
-        print(f"  {name}: 보안수정 후보 커밋 {len(commits)}개")
+        commits = security_fix_commits(dest, max_commits, precise=precise)
+        print(f"  {name}: {'CVE명시' if precise else '보안수정'} 커밋 {len(commits)}개")
         for sha, msg in commits:
-            cve = (CVE_RE.search(msg) or [None])[0] if CVE_RE.search(msg) else None
             cve = CVE_RE.search(msg).group(0) if CVE_RE.search(msg) else ""
             cwe_m = re.search(r"CWE-\d+", msg)
             cwe = cwe_m.group(0) if cwe_m else ""
             parent = sh(["git", "rev-parse", f"{sha}^"], dest).strip()
             if not parent:
                 continue
+            # 이 커밋에서 바뀐 함수들을 먼저 모은다 (before,after,path)
+            changed_funcs, normals = [], []
             for path in changed_files(dest, sha):
                 before = file_at(dest, parent, path)
                 after = file_at(dest, sha, path)
                 if not before or not after:
                     continue
                 lang = LANG_BY_EXT.get(os.path.splitext(path)[1], "?")
-                fb = extract_functions(before)
-                fa = extract_functions(after)
-                for fname, code_before in fb.items():
-                    code_after = fa.get(fname)
-                    changed = (code_after is not None and code_after != code_before)
-                    is_vuln = 1 if changed else 0     # 수정 커밋에서 바뀐 함수=취약(전)
-                    try:
-                        con.execute(
-                            "INSERT OR IGNORE INTO functions(project,language,file_path,"
-                            "commit_sha,cve,cwe,is_vulnerable,code,patched_code) "
-                            "VALUES(?,?,?,?,?,?,?,?,?)",
-                            (name, lang, path, sha, cve, cwe, is_vuln,
-                             code_before, code_after if changed else None))
-                        if is_vuln:
-                            added_v += 1
-                        else:
-                            added_n += 1
-                    except Exception:
-                        pass
+                fb, fa = extract_functions(before), extract_functions(after)
+                for fname, cb in fb.items():
+                    ca = fa.get(fname)
+                    if ca is not None and ca != cb:
+                        changed_funcs.append((path, lang, cb, ca))
+                    else:
+                        normals.append((path, lang, cb))
+            # precise: 함수를 너무 많이 바꾼 커밋은 리팩토링(노이즈) → 통째로 스킵
+            if precise and len(changed_funcs) > max_funcs:
+                continue
+            def ins(path, lang, code, is_vuln, patched):
+                nonlocal added_v, added_n
+                try:
+                    con.execute(
+                        "INSERT OR IGNORE INTO functions(project,language,file_path,"
+                        "commit_sha,cve,cwe,is_vulnerable,code,patched_code) "
+                        "VALUES(?,?,?,?,?,?,?,?,?)",
+                        (name, lang, path, sha, cve, cwe, is_vuln, code, patched))
+                    if is_vuln: added_v += 1
+                    else:       added_n += 1
+                except Exception:
+                    pass
+            for path, lang, cb, ca in changed_funcs:
+                ins(path, lang, cb, 1, ca)          # 바뀐 함수 = 취약(수정전)
+            for path, lang, cb in normals:
+                ins(path, lang, cb, 0, None)        # 안 바뀐 함수 = 정상
         con.commit()
     print(f"    → 취약(전) {added_v} / 정상 {added_n} 저장")
     return (added_v, added_n)
@@ -175,13 +191,18 @@ def main():
     ap.add_argument("--max-commits", type=int, default=300)
     ap.add_argument("--full-history", action="store_true",
                     help="전체 히스토리(느림·큼). 기본은 최근 300커밋")
+    ap.add_argument("--precise", action="store_true",
+                    help="CVE-ID 명시 + 소규모 타깃수정 커밋만(고정밀 라벨, OSV 근사)")
+    ap.add_argument("--max-funcs", type=int, default=4,
+                    help="precise: 이보다 많은 함수를 바꾼 커밋은 리팩토링으로 보고 스킵")
     args = ap.parse_args()
 
     con = init_db(args.db)
-    print(f"[DB] {args.db}")
+    print(f"[DB] {args.db}  {'[정밀 라벨링]' if args.precise else ''}")
     tot_v = tot_n = 0
     for url in args.repos:
-        v, n = process_repo(url, con, args.max_commits, args.full_history)
+        v, n = process_repo(url, con, args.max_commits, args.full_history,
+                            precise=args.precise, max_funcs=args.max_funcs)
         tot_v += v; tot_n += n
     cur = con.execute("SELECT COUNT(*), SUM(is_vulnerable), COUNT(DISTINCT cve) FROM functions")
     total, vuln, cves = cur.fetchone()
