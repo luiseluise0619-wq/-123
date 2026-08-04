@@ -27,6 +27,22 @@
 | (tcpdump: 취약 1개라 무의미) | — |
 | **종합** | **0.601** (PR-AUC 0.101, 취약률 6.8%) |
 
+## 확장 마이닝 (16개 CVE-rich 라이브러리, "미니 DiverseVul")
+
+tcpdump·libtiff·libpng·libarchive·file·libgd·openjpeg·curl·libexpat·zlib·libssh2·
+ImageMagick·Little-CMS·libjpeg-turbo·libzip·libyaml 에서 마이닝.
+19,853 함수 / 취약 1,386 (dedup 후 8,987 함수 / 취약 954, 10.6%), 실제 CVE 41개.
+GroupKFold(프로젝트 단위):
+
+| | ROC-AUC | PR-AUC |
+| --- | ---: | ---: |
+| 정제 전(raw) | **0.411** | 0.092 |
+| 정제 후 | **0.623** | 0.177 |
+
+**raw 0.41(랜덤 이하)의 의미:** 커밋메시지 휴리스틱 라벨은 노이즈가 크다(보안 커밋도
+취약과 무관한 함수를 함께 수정). → **라벨 품질이 병목**임을 실측. OSV/NVD 정확
+CVE→커밋 매핑으로 라벨을 정제하면 더 오른다. "양보다 정확 라벨"의 정량 증거.
+
 ## 결론 (정직)
 
 1. **SARD/VulDeePecker/MVD 의 0.96~1.0 은 신기루다.** 합성 테스트케이스는
