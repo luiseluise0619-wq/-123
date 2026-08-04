@@ -143,6 +143,13 @@ def _prepare_real(df):
     # BMI 식 도메인 파생 피처(비율·밀도). 매출 미사용 → 유출 없음.
     for name, series in add_domain_features(df).items():
         cols[name] = series.reindex(df.index)
+    # 외부/생존 피처(상권변화지표 운영·폐업 개월 → 3년 생존 신호). 학습에 실제 투입.
+    try:
+        from app.ml.external_features import add_external_features
+        for name, series in add_external_features(df).items():
+            cols[name] = pd.to_numeric(series, errors="coerce").reindex(df.index)
+    except Exception as e:
+        print(f"[External] 스킵: {str(e)[:60]}")
     X_raw = pd.DataFrame(cols, index=df.index).fillna(0)
     if exclude_spend:
         print("[Prepare] EXCLUDE_SPEND=true → 소비지출(EXPNDTR) 피처 제외 (정직 성능 측정)")
