@@ -36,6 +36,48 @@ def _prepare_synthetic(df):
     return df, X_raw, y_revenue, y_success, y_risk
 
 
+def _ratio(df, num, den):
+    """안전한 비율 피처: num/den (0나눗셈·문자열 방어). 둘 다 있을 때만."""
+    if num not in df.columns or den not in df.columns:
+        return None
+    a = pd.to_numeric(df[num], errors="coerce")
+    b = pd.to_numeric(df[den], errors="coerce")
+    r = a / b.replace(0, np.nan)
+    return r.replace([np.inf, -np.inf], np.nan)
+
+
+def add_domain_features(df):
+    """BMI(몸무게/키²)처럼 원본 컬럼을 비율·밀도로 조합한 도메인 파생 피처.
+    매출(SELNG)은 타깃이라 절대 안 씀 — 유출 방지. 있는 컬럼으로만 계산."""
+    feats = {
+        # 점포당 유동인구(한 가게가 노출되는 잠재고객)
+        "F_FLPOP_PER_STORE": _ratio(df, "TOT_FLPOP_CO", "STOR_CO"),
+        # 경쟁 밀도(유사업종 대비 수요)
+        "F_COMPETITION": _ratio(df, "SIMILR_INDUTY_STOR_CO", "TOT_FLPOP_CO"),
+        # 주간상권 성격(오피스 vs 주거)
+        "F_WORK_RESIDENT": _ratio(df, "TOT_WRC_POPLTN_CO", "TOT_REPOP_CO"),
+        # 집객시설 밀도(면적당 시설)
+        "F_FACILITY_DENSITY": _ratio(df, "VIATR_FCLTY_CO", "RELM_AR"),
+        # 프랜차이즈 비율(상권 성숙도)
+        "F_FRANCHISE_RATIO": _ratio(df, "FRC_STOR_CO", "STOR_CO"),
+        # 상권 활력(운영개월/폐업개월 — 클수록 오래 버팀)
+        "F_VITALITY": _ratio(df, "OPR_SALE_MT_AVRG", "CLS_SALE_MT_AVRG"),
+        # 면적당 유동인구(혼잡도·노출도)
+        "F_FLPOP_DENSITY": _ratio(df, "TOT_FLPOP_CO", "RELM_AR"),
+    }
+    # 1인당 구매력(소비/총생활인구) — 세 컬럼 필요
+    if {"EXPNDTR_TOTAMT", "TOT_REPOP_CO", "TOT_WRC_POPLTN_CO"}.issubset(df.columns):
+        spend = pd.to_numeric(df["EXPNDTR_TOTAMT"], errors="coerce")
+        pop = (pd.to_numeric(df["TOT_REPOP_CO"], errors="coerce")
+               + pd.to_numeric(df["TOT_WRC_POPLTN_CO"], errors="coerce"))
+        feats["F_SPEND_PER_CAPITA"] = (spend / pop.replace(0, np.nan)) \
+            .replace([np.inf, -np.inf], np.nan)
+    out = {k: v for k, v in feats.items() if v is not None}
+    if out:
+        print(f"[Prepare] 도메인 파생 피처 {len(out)}개 추가: {list(out)}")
+    return out
+
+
 def _prepare_real(df):
     """
     실제 서울 상권분석 데이터: 컬럼명이 다르므로 직접 처리.
@@ -96,6 +138,9 @@ def _prepare_real(df):
                 cols[c] = col
     if lag_series is not None:
         cols["PREV_Q_REVENUE"] = lag_series.fillna(lag_series.median())
+    # BMI 식 도메인 파생 피처(비율·밀도). 매출 미사용 → 유출 없음.
+    for name, series in add_domain_features(df).items():
+        cols[name] = series.reindex(df.index)
     X_raw = pd.DataFrame(cols, index=df.index).fillna(0)
     if exclude_spend:
         print("[Prepare] EXCLUDE_SPEND=true → 소비지출(EXPNDTR) 피처 제외 (정직 성능 측정)")
