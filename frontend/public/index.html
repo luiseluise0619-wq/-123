@@ -1,0 +1,71 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>사장님인사이트 — 상권 데이터</title>
+<style>
+  :root{
+    --bg:#EDEEF2;--card:#FBFBFD;--ink:#13141B;--sub:#3C4152;--cap:#7A8096;--line:#DADDE7;
+    --accent:#4338CA;--accent2:#6366F1;--cta:#F0A23C;--dn:#2E9E6B;--up:#D6455A;
+    --serif:"Noto Serif KR",Georgia,"Apple SD Gothic Neo",serif;
+    --sans:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @media(prefers-color-scheme:dark){:root{--bg:#15161D;--card:#1B1D26;--ink:#EDEEF2;--sub:#B9BECC;--cap:#8990A2;--line:#2C2F3C}}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);word-break:keep-all;-webkit-font-smoothing:antialiased;line-height:1.6}
+  .top{background:var(--ink);color:#EDEEF2;padding:11px 20px;display:flex;align-items:center;gap:10px}
+  .top .logo{font-family:var(--serif);font-weight:700;font-size:15px}
+  .top .tab{background:var(--cta);color:#13141B;font-weight:700;font-size:11px;padding:4px 10px;border-radius:999px}
+  .wrap{max-width:920px;margin:0 auto;padding:52px 20px 70px}
+  .eyebrow{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.1em;text-transform:uppercase}
+  h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,5.5vw,46px);line-height:1.2;margin:10px 0 12px}
+  .lede{font-size:16px;color:var(--sub);max-width:60ch;margin:0 0 8px}
+  .lede b{color:var(--dn)}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 40px;font-size:12px}
+  .b{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;color:var(--sub);font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}@media(max-width:760px){.grid{grid-template-columns:1fr}}
+  a.card{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 22px;transition:.16s;box-shadow:0 1px 2px rgba(19,20,27,.04)}
+  a.card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(19,20,27,.12);border-color:var(--accent)}
+  .ic{font-size:26px;margin-bottom:12px}
+  .card h2{font-family:var(--serif);font-size:19px;font-weight:700;margin:0 0 6px}
+  .card p{font-size:13px;color:var(--sub);margin:0 0 16px;flex:1}
+  .go{font-size:13px;font-weight:700;color:var(--accent)}
+  .tagline{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;align-self:flex-start;margin-bottom:12px}
+  .t-calc{background:#2E9E6B1c;color:var(--dn)}.t-doc{background:#4338CA14;color:var(--accent)}.t-dash{background:#F0A23C24;color:#9A6512}
+  .note{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--cap);line-height:1.8}
+</style></head><body>
+<div class="top"><span class="logo">사장님인사이트</span><span class="tab">상권데이터</span></div>
+<div class="wrap">
+  <div class="eyebrow">서울·전국 상권 데이터</div>
+  <h1>여기서 장사, 해도 될까?</h1>
+  <p class="lede">임대료·매출·경쟁을 <b>실데이터로 계산</b>해서 답합니다. 예측이 아니라 산수 — 지어낸 숫자는 넣지 않습니다.</p>
+  <div class="badges">
+    <span class="b">🟢 부동산원 실임대료 (전국 17시도)</span>
+    <span class="b">🟢 서울 상권 실측 매출</span>
+    <span class="b">🧮 계산 = 오차 0</span>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="calculator.html">
+      <span class="tagline t-calc">계산 · 오차 0</span>
+      <div class="ic">🧮</div>
+      <h2>손익분기 계산기</h2>
+      <p>임대료·평수·원가율을 넣으면 “살아남으려면 하위 몇 %에 들지 않아야 하는지” 계산합니다.</p>
+      <span class="go">계산해보기 →</span>
+    </a>
+    <a class="card" href="report.html">
+      <span class="tagline t-doc">8쪽 PDF</span>
+      <div class="ic">📄</div>
+      <h2>상권 리포트</h2>
+      <p>판정·손익분기·포화도·닮은 상권·고객 구성. 각 숫자의 출처를 밝히고, 못 말하는 것까지 적습니다.</p>
+      <span class="go">샘플 리포트 →</span>
+    </a>
+    <a class="card" href="dashboard.html">
+      <span class="tagline t-dash">차트</span>
+      <div class="ic">📊</div>
+      <h2>상권 대시보드</h2>
+      <p>서울 상권을 매출 등급으로 줄세우고, 업종·식자재·가격을 여러 차트로 읽습니다.</p>
+      <span class="go">둘러보기 →</span>
+    </a>
+  </div>
+
+  <p class="note"><b style="color:var(--sub)">정직 원칙</b> — 모든 수치는 공공 실데이터에서 계산합니다. 예측 모델은 “찍는 것보단 나은” 수준이라 보조로만 쓰고, 판단의 중심은 계산입니다. 가정값(원가율·인건비 등)은 화면에 “가정”으로 표시합니다.</p>
+</div>
+</body></html>
