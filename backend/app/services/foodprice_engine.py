@@ -145,14 +145,22 @@ def analyze(item: str) -> Dict[str, Any]:
     except Exception:
         ml = None
 
+    # 정직 표기: '내일값 정확 예측'을 강조하지 않는다(단기 관성). 강조는 전년대비·추세.
+    yoy_txt = f"전년 대비 {yoy:+.0f}%" if yoy is not None else "전년비 데이터 없음"
+    headline = (f"{item}: 현재 {int(latest):,}원 · {yoy_txt} · 최근 {direction}세")
+    alert = None
+    if yoy is not None and yoy >= 30:
+        alert = f"⚠ 원가 위험: {item} 전년比 {yoy:+.0f}% — 해당 메뉴 원가 재점검 권장."
+    elif alt:
+        alert = f"{item} 상승세 — 대체 검토: {', '.join(alt)}"
+
     return {"available": True, "item": item,
             "latest_price": int(latest), "latest_date": str(latest_date.date()),
-            "ml_forecast": ml,
+            "yoy_change_pct": yoy, "direction": direction,
             "trend_slope_won_per_day": round(slope, 1),
-            "forecast_next": int(forecast), "forecast_change_pct": change_pct,
-            "direction": direction, "yoy_change_pct": yoy,
-            "alternatives": alt,
-            "advice": (f"{item} 가격 {direction} 예상({change_pct:+}%). "
-                       + (f"대체 검토: {', '.join(alt)}." if alt else "현 수급 유지 무난.")),
-            "method": "공판장 실가격 이동평균+선형추세(설명가능). ML 고도화 시 Prophet/LGBM 확장.",
-            "note": "예측은 확정이 아닌 가능성입니다."}
+            "headline": headline, "cost_alert": alert, "alternatives": alt,
+            # 내일 예측은 '참고(관성 기반)'로만 — 강조하지 않음
+            "next_day_note": "오늘 가격과 유사할 가능성 높음 (단기 관성 기반, 참고용)",
+            "ml_forecast": ml,  # 있으면 관성 대비 소폭 개선(R²는 관성 착시 주의)
+            "method": "공판장 실가격. 강조=전년대비·추세(팩트). 내일값은 관성이라 참고만.",
+            "note": "가격 '정확 예측'이 아니라 '변화 감지'가 목적입니다."}
