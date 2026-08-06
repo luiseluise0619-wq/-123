@@ -1,80 +1,74 @@
 <title>사장님인사이트</title>
 <style>
   :root{
-    --bg:#f5f6f8; --card:#ffffff; --ink:#1a1f2b; --mut:#606b7d; --faint:#95a0b0;
-    --line:#e6e9ef; --brand:#1b6b4c; --brand2:#25966b;
+    --bg:#f5f6f8; --card:#fff; --ink:#1a1f2b; --mut:#606b7d; --faint:#95a0b0;
+    --line:#e6e9ef; --brand:#1b5e8c; --brand2:#2f8fce;
     --up:#d64545; --dn:#2f7d55; --warn:#c9821a; --warnbg:#fdf3e2;
+    --a:#2f9e6b; --b:#3a95d6; --c:#d99a1a; --d:#dd7a3a; --f:#d64545;
     --sans:system-ui,-apple-system,"Segoe UI","Apple SD Gothic Neo",Roboto,sans-serif;
     --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
-  @media(prefers-color-scheme:dark){:root{
-    --bg:#0f141c; --card:#161d28; --ink:#e9eef6; --mut:#93a0b3; --faint:#5f6c7e;
-    --line:#242e3c; --brand:#3ecf8e; --brand2:#2fb377; --warnbg:#2a2113;}}
-  :root[data-theme=dark]{--bg:#0f141c;--card:#161d28;--ink:#e9eef6;--mut:#93a0b3;--faint:#5f6c7e;--line:#242e3c;--brand:#3ecf8e;--brand2:#2fb377;--warnbg:#2a2113;}
-  :root[data-theme=light]{--bg:#f5f6f8;--card:#fff;--ink:#1a1f2b;--mut:#606b7d;--faint:#95a0b0;--line:#e6e9ef;--brand:#1b6b4c;--warnbg:#fdf3e2;}
+  @media(prefers-color-scheme:dark){:root{--bg:#0f141c;--card:#161d28;--ink:#e9eef6;--mut:#93a0b3;--faint:#5f6c7e;--line:#242e3c;--brand:#4aa6e0;--warnbg:#2a2113;}}
+  :root[data-theme=dark]{--bg:#0f141c;--card:#161d28;--ink:#e9eef6;--mut:#93a0b3;--faint:#5f6c7e;--line:#242e3c;--brand:#4aa6e0;--warnbg:#2a2113;}
+  :root[data-theme=light]{--bg:#f5f6f8;--card:#fff;--ink:#1a1f2b;--mut:#606b7d;--faint:#95a0b0;--line:#e6e9ef;--brand:#1b5e8c;--warnbg:#fdf3e2;}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;font-size:15px}
   .top{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
-  .top .in{max-width:960px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:12px}
-  .logo{font-weight:800;font-size:18px;letter-spacing:-.02em}
-  .logo b{color:var(--brand)}
+  .top .in{max-width:1000px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:12px}
+  .logo{font-weight:800;font-size:18px;letter-spacing:-.02em} .logo b{color:var(--brand)}
   .date{color:var(--faint);font-size:12.5px;font-family:var(--mono);margin-left:auto}
   .themebtn{border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px}
-  .wrap{max-width:960px;margin:0 auto;padding:20px 18px 60px}
-  .sec-h{font-size:13px;font-weight:700;color:var(--mut);letter-spacing:.02em;margin:26px 2px 12px;text-transform:none;display:flex;align-items:center;gap:8px}
-  .sec-h .live{width:7px;height:7px;border-radius:50%;background:var(--dn);box-shadow:0 0 0 3px color-mix(in srgb,var(--dn) 22%,transparent);animation:blink 2s infinite}
-  @keyframes blink{50%{opacity:.4}}
-  h1.report{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:4px 2px 2px}
-  .report-sub{color:var(--mut);font-size:13px;margin:0 2px 4px}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 60px}
+  .eyebrow{font-size:12px;font-weight:700;color:var(--brand);letter-spacing:.04em}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:3px 0 3px}
+  .sub{color:var(--mut);font-size:13px;margin:0 0 14px}
+  .sec-h{font-size:13px;font-weight:700;color:var(--mut);margin:28px 2px 12px;display:flex;align-items:center;gap:8px}
 
-  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  @media(max-width:760px){.cards{grid-template-columns:repeat(2,1fr)}}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;position:relative}
-  .card .k{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px;font-weight:600}
-  .card .big{font-size:19px;font-weight:800;margin-top:9px;letter-spacing:-.01em;line-height:1.25}
-  .card .sub{font-size:12px;color:var(--faint);margin-top:3px}
-  .chg{font-family:var(--mono);font-weight:700;font-size:13px}
-  .chg.up{color:var(--up)} .chg.dn{color:var(--dn)}
+  /* 상권 메인 */
+  .searchbar{display:flex;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+  .searchbar select,.searchbar input{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:14px;font-family:var(--sans)}
+  .searchbar select{min-width:170px} .searchbar input{flex:1;min-width:150px}
+  .cnt{margin-left:auto;color:var(--faint);font-size:12px;font-family:var(--mono);align-self:center}
+  .zonegrid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:14px}
+  @media(max-width:800px){.zonegrid{grid-template-columns:1fr}}
+  .list{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;max-height:520px;overflow-y:auto}
+  .row{display:grid;grid-template-columns:30px 1fr auto auto;gap:10px;align-items:center;padding:11px 15px;border-bottom:1px solid var(--line);cursor:pointer}
+  .row:hover,.row.sel{background:var(--bg)} .row.sel{box-shadow:inset 3px 0 0 var(--brand)}
+  .rk{font-family:var(--mono);font-size:12px;color:var(--faint);text-align:right}
+  .zn{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .zn small{display:block;color:var(--faint);font-weight:400;font-size:11px}
+  .rev{font-family:var(--mono);font-size:12.5px;color:var(--mut);text-align:right}
+  .gr{font-family:var(--mono);font-weight:800;font-size:14px;width:32px;text-align:center;border-radius:7px;padding:2px 0}
+  .g-Ap,.g-A{color:#05281a;background:var(--a)} .g-B{color:#052232;background:var(--b)} .g-C{color:#33260a;background:var(--c)} .g-D{color:#331c0a;background:var(--d)} .g-F{color:#330a0a;background:var(--f)}
+  .detail{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0;align-self:start}
+  .empty{padding:48px 20px;text-align:center;color:var(--faint);font-size:13.5px}
+  .dh{padding:16px 18px 6px} .dz{font-size:18px;font-weight:800} .di{color:var(--mut);font-size:13px}
+  .bigrow{display:flex;gap:14px;align-items:center;padding:12px 18px}
+  .bg{font-family:var(--mono);font-weight:800;font-size:36px;border-radius:12px;padding:10px 16px}
+  .bmeta .pl{font-size:11px;color:var(--faint);font-family:var(--mono)} .bmeta .pv{font-size:14px;font-weight:700}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);margin:6px 0}
+  .kpi{background:var(--card);padding:12px 15px} .kpi .l{font-size:11px;color:var(--faint);font-family:var(--mono)} .kpi .v{font-size:16px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+  .reasons{padding:6px 18px 16px} .rz{display:flex;gap:8px;font-size:13px;padding:6px 0;border-top:1px solid var(--line)} .rz .i{flex:none;font-weight:800}
+  .up2{color:var(--dn)} .dn2{color:var(--up)} .nu2{color:var(--faint)}
 
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-top:14px;overflow:hidden}
-  .panel-h{padding:15px 18px 4px}
-  .panel-h .t{font-size:16px;font-weight:800;letter-spacing:-.01em}
-  .panel-h .d{font-size:12.5px;color:var(--mut);margin-top:2px}
-  .panel-b{padding:14px 18px 18px}
-
-  /* 원가관리 */
-  .calc{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:680px){.calc{grid-template-columns:1fr}}
-  .field{margin-bottom:10px}
-  .field label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;font-weight:600}
-  .field input,.field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:14px;font-family:var(--sans)}
-  .ing{display:flex;gap:7px;margin-bottom:7px;align-items:center}
-  .ing select{flex:1} .ing input{width:74px} .ing .rm{border:none;background:transparent;color:var(--faint);cursor:pointer;font-size:16px}
-  .addbtn{font-size:12.5px;color:var(--brand);background:transparent;border:1px dashed var(--line);border-radius:9px;padding:7px;width:100%;cursor:pointer;font-weight:600}
-  .result{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px}
-  .margin-big{font-size:34px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .margin-big small{font-size:14px;color:var(--mut);font-weight:600}
-  .rline{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-top:1px solid var(--line)}
-  .rline .v{font-family:var(--mono);font-variant-numeric:tabular-nums}
-  .advice{margin-top:12px;font-size:13px;padding:11px 13px;border-radius:10px;background:var(--warnbg);color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);line-height:1.55}
-  .advice b{color:var(--warn)}
-  .advice.ok{background:color-mix(in srgb,var(--dn) 10%,transparent);border-color:color-mix(in srgb,var(--dn) 28%,transparent)}
-  .advice.ok b{color:var(--dn)}
-
-  /* 식자재 테이블 */
-  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:22px 2px 0;overflow-x:auto}
-  .tab{padding:9px 14px;font-size:13.5px;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-weight:600}
-  .tab.on{color:var(--brand);border-color:var(--brand)}
-  .tabpane{display:none} .tabpane.on{display:block}
-  table{width:100%;border-collapse:collapse;font-size:13.5px}
-  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}
-  th{color:var(--faint);font-weight:600;font-size:12px}
-  td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
-  .pill{font-family:var(--mono);font-weight:700;font-size:12px;padding:2px 8px;border-radius:20px}
-  .pill.up{color:var(--up);background:color-mix(in srgb,var(--up) 12%,transparent)}
-  .pill.dn{color:var(--dn);background:color-mix(in srgb,var(--dn) 12%,transparent)}
-  .note{margin-top:18px;font-size:12px;color:var(--faint);font-family:var(--mono);line-height:1.7;border-top:1px solid var(--line);padding-top:12px}
-  .soon{color:var(--faint);font-size:13px;padding:18px;text-align:center}
+  /* 서브 */
+  .subgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:800px){.subgrid{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .panel.pending{border-style:dashed;opacity:.8}
+  .ph{padding:13px 16px 2px} .ph .t{font-size:14.5px;font-weight:800} .ph .d{font-size:12px;color:var(--mut);margin-top:1px}
+  .pb{padding:12px 16px 16px}
+  table{width:100%;border-collapse:collapse;font-size:13px} th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line)} th{color:var(--faint);font-weight:600;font-size:11.5px} td.num{font-family:var(--mono);text-align:right}
+  .pill{font-family:var(--mono);font-weight:700;font-size:11.5px;padding:2px 7px;border-radius:20px} .pill.up{color:var(--up);background:color-mix(in srgb,var(--up) 12%,transparent)} .pill.dn{color:var(--dn);background:color-mix(in srgb,var(--dn) 12%,transparent)}
+  .soon{color:var(--mut);font-size:13px;padding:20px 16px;text-align:center;line-height:1.7} .soon code{font-family:var(--mono);color:var(--brand);font-size:12px}
+  .calc .ing{display:flex;gap:6px;margin-bottom:6px;align-items:center} .calc select{flex:1.3;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:13px} .calc input{flex:1;width:auto;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:13px;font-family:var(--mono)} .calc .yoy{font-family:var(--mono);font-size:11px;font-weight:700} .calc .rm{border:none;background:none;color:var(--faint);cursor:pointer}
+  .addb{font-size:12px;color:var(--brand);background:none;border:1px dashed var(--line);border-radius:8px;padding:6px;width:100%;cursor:pointer;margin-top:2px}
+  .mres{margin-top:10px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .mbig{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums} .mbig small{font-size:12px;color:var(--mut)}
+  .adv{margin-top:9px;font-size:12.5px;padding:9px 11px;border-radius:9px;background:var(--warnbg);border:1px solid color-mix(in srgb,var(--warn) 28%,transparent);line-height:1.5} .adv b{color:var(--warn)} .adv.ok{background:color-mix(in srgb,var(--dn) 10%,transparent);border-color:color-mix(in srgb,var(--dn) 25%,transparent)} .adv.ok b{color:var(--dn)}
+  .note{margin-top:20px;font-size:11.5px;color:var(--faint);font-family:var(--mono);line-height:1.7;border-top:1px solid var(--line);padding-top:12px}
+  label.mini{font-size:11px;color:var(--mut);font-weight:600;display:block;margin:6px 0 3px}
+  input.full{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:13px}
 </style>
 
 <div class="top"><div class="in">
@@ -84,135 +78,113 @@
 </div></div>
 
 <div class="wrap">
-  <div class="sec-h"><span class="live"></span>실시간 업데이트</div>
-  <h1 class="report">오늘의 장사 리포트</h1>
-  <p class="report-sub">카페·음식점 사장님이 오늘 챙길 것들 — 실데이터 기준</p>
+  <div class="eyebrow">상권 분석</div>
+  <h1>여기서 장사, 해도 될까?</h1>
+  <p class="sub">업종을 고르면 서울 상권을 매출 등급으로 줄 세웁니다 — 실데이터 36,566건 기준.</p>
 
-  <div class="cards" id="report-cards"></div>
+  <div class="searchbar">
+    <select id="ind"></select>
+    <input id="search" placeholder="🔍 지역(배후지) 검색 — 성수 / 강남 / 홍대">
+    <span class="cnt" id="cnt"></span>
+  </div>
+  <div class="zonegrid">
+    <div class="list" id="list"></div>
+    <div class="detail" id="detail"><div class="empty">왼쪽에서 자리를 클릭하면<br>등급·매출·이유가 나옵니다.</div></div>
+  </div>
 
-  <!-- 원가 관리 (핵심 기능) -->
-  <div class="sec-h">🥇 원가 관리 — 내 메뉴 마진 계산기</div>
-  <div class="panel">
-    <div class="panel-h"><div class="t" id="menu-name-h">아메리카노</div>
-      <div class="d">재료를 넣으면 실시간 농산물 가격으로 원가·마진을 계산합니다.</div></div>
-    <div class="panel-b calc">
-      <div>
-        <div class="field"><label>메뉴 이름</label><input id="menu-name" value="계절 채소 샐러드"></div>
-        <div class="field"><label>판매가 (원)</label><input id="menu-price" type="number" value="9500"></div>
-        <label style="font-size:12px;color:var(--mut);font-weight:600">재료 (실시간 가격 연동)</label>
-        <div id="ings"></div>
-        <button class="addbtn" id="add-ing">+ 재료 추가</button>
-      </div>
-      <div class="result" id="result"></div>
+  <div class="sec-h">함께 챙기는 것 — 원가 · 트렌드 · 시즌</div>
+  <div class="subgrid">
+    <div class="panel"><div class="ph"><div class="t">🥇 원가 관리 · 마진 계산기</div><div class="d">내 매입가 입력 → 마진 + 재료 전년비 시세 경고(실데이터)</div></div>
+      <div class="pb calc">
+        <label class="mini">메뉴 / 판매가(원)</label>
+        <div style="display:flex;gap:6px"><input class="full" id="mn" value="채소 샐러드" style="flex:1.4"><input class="full" id="mp" type="number" value="9500" style="flex:1"></div>
+        <label class="mini">재료 · 매입 원가(원)</label>
+        <div id="ings"></div><button class="addb" id="addi">+ 재료</button>
+        <div class="mres" id="mres"></div>
+      </div></div>
+    <div>
+      <div class="panel pending"><div class="ph"><div class="t">📈 소비 트렌드</div></div>
+        <div class="soon">서버 실행 시 <b>Google Trends RSS</b>(무료·키없음) 실시간 표시.<br><code>/market/trending-for-business</code><br><span style="color:var(--faint);font-size:11px">가짜 예시 미표시</span></div></div>
+      <div class="panel" style="margin-top:14px"><div class="ph"><div class="t">🛒 식자재 급등 (실데이터)</div></div>
+        <div class="pb" style="overflow-x:auto"><table id="ftab"></table></div></div>
+      <div class="panel" style="margin-top:14px"><div class="ph"><div class="t">📅 시즌</div></div><div class="pb" id="season"></div></div>
     </div>
   </div>
-
-  <!-- 상세 탭 -->
-  <div class="tabs" id="tabs">
-    <div class="tab on" data-p="food">🛒 식자재 원가</div>
-    <div class="tab" data-p="trend">📈 소비 트렌드</div>
-    <div class="tab" data-p="zone">📍 상권</div>
-    <div class="tab" data-p="season">📅 시즌</div>
-  </div>
-  <div class="tabpane on" id="p-food">
-    <div class="panel"><div class="panel-h"><div class="t">식자재 전년대비 급등 순위</div>
-      <div class="d">원가 위험 감지 — 정확한 미래가격이 아니라 '변화'를 봅니다 (공판장 실데이터)</div></div>
-      <div class="panel-b" style="overflow-x:auto"><table id="food-table"></table></div></div>
-  </div>
-  <div class="tabpane" id="p-trend"><div class="panel"><div class="panel-b soon">
-    📈 실시간 소비 트렌드는 Google Trends RSS 로 서버 실행 시 자동 표시됩니다.<br>
-    (백엔드 <b>/market/trending-for-business</b> — 키 없이 무료)</div></div></div>
-  <div class="tabpane" id="p-zone"><div class="panel"><div class="panel-b soon">
-    📍 상권 등급/지도는 서울 상권 실데이터 36,566건으로 제공 (backend <b>/map/opportunity-map</b>).</div></div></div>
-  <div class="tabpane" id="p-season"><div class="panel"><div class="panel-b" id="season-box"></div></div></div>
-
   <p class="note" id="note"></p>
 </div>
 
+<script id="ZONES" type="application/json">__ZONES__</script>
 <script id="FOOD" type="application/json">__FOOD__</script>
 <script>
+const Z=JSON.parse(document.getElementById('ZONES').textContent);
 const FOOD=JSON.parse(document.getElementById('FOOD').textContent);
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const won=n=>Math.round(n).toLocaleString();
-const priceOf={}; FOOD.forEach(f=>priceOf[f.item]=f);
-const today=new Date();
-$('#date').textContent=today.toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+const fmt=n=>n>=10000?(n/10000).toFixed(n>=100000?0:1)+'억':n.toLocaleString()+'만';
+const today=new Date(); $('#date').textContent=today.toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+const byItem={};FOOD.forEach(f=>byItem[f.item]=f);
 
-// ---- 오늘의 리포트 카드 (실데이터) ----
-const topRise=FOOD.filter(f=>f.yoy>0).slice(0,1)[0];
-const cards=[
-  {k:'💰 원가 급등',big:`${topRise.item} <span class="chg up">+${Math.round(topRise.yoy)}%</span>`,sub:`전년 대비 · 현재 ${won(topRise.price)}원`},
-  {k:'📈 소비 트렌드',big:'말차 · 저당',sub:'검색 상승 (실시간 RSS 연동)'},
-  {k:'📍 상권',big:'성수 카페 <b>82점</b>',sub:'20대 유동 증가세'},
-  {k:'🌎 해외',big:'Dirty Soda',sub:'미국 급상승 (도입 검토)'},
-];
-$('#report-cards').innerHTML=cards.map(c=>
-  `<div class="card"><div class="k">${c.k}</div><div class="big">${c.big}</div><div class="sub">${c.sub}</div></div>`).join('');
+// ===== 상권 (메인) =====
+const rows=Z.rows||Z; const byInd={};
+rows.forEach(r=>{(byInd[r.i]=byInd[r.i]||[]).push(r)});
+Object.values(byInd).forEach(a=>a.sort((x,y)=>y.rev-x.rev));
+const inds=Object.keys(byInd).sort((a,b)=>byInd[b].length-byInd[a].length);
+const sel=$('#ind'); inds.forEach(i=>{const o=document.createElement('option');o.value=i;o.textContent=`${i} (${byInd[i].length})`;sel.appendChild(o)});
+let curInd=inds[0],cur=null;
+function gcls(g){return 'g-'+g.replace('+','p')}
+function renderList(){
+  const q=$('#search').value.trim(); let L=byInd[curInd]; if(q)L=L.filter(r=>r.z.includes(q));
+  $('#cnt').textContent=L.length+'개 자리';
+  $('#list').innerHTML=L.slice(0,250).map((r,i)=>`<div class="row ${cur===r?'sel':''}" data-i="${i}">
+    <div class="rk">${i+1}</div><div class="zn">${r.z}<small>상위 ${100-r.p}% · 점포 ${r.stores||'—'}</small></div>
+    <div class="rev">${fmt(r.rev)}</div><div class="gr ${gcls(r.g)}">${r.g}</div></div>`).join('')||'<div class="empty">검색 결과 없음</div>';
+  $$('#list .row').forEach((el,idx)=>el.onclick=()=>{cur=(q?byInd[curInd].filter(r=>r.z.includes(q)):byInd[curInd])[idx];renderList();detail(cur)});
+}
+function detail(r){
+  const L=byInd[r.i],rank=L.indexOf(r)+1;
+  const gc={'A+':'var(--a)','A':'var(--a)','B':'var(--b)','C':'var(--c)','D':'var(--d)','F':'var(--f)'}[r.g];
+  const succ=r.p>=70?'유망':r.p>=40?'보통':'주의';
+  const R=[]; if(r.p>=70)R.push(['up2','▲',`업종 내 <b>상위 ${100-r.p}%</b> — 수요 검증된 자리`]); else if(r.p<=30)R.push(['dn2','▼',`하위권(상위 ${100-r.p}%) — 수요 약함`]); else R.push(['nu2','·','중위권 — 차별화 필요']);
+  if(r.we_ratio>=40)R.push(['up2','▲',`주말 매출 ${r.we_ratio}% — 나들이 상권`]); else if(r.we_ratio>0&&r.we_ratio<28)R.push(['nu2','·',`평일 중심(주말 ${r.we_ratio}%) — 오피스·주거`]);
+  if(r.fm_ratio>=60)R.push(['nu2','·',`여성 ${r.fm_ratio}% — 타깃 뚜렷`]);
+  $('#detail').innerHTML=`<div class="dh"><div class="dz">${r.z}</div><div class="di">${r.i} · 상권배후지</div></div>
+    <div class="bigrow"><div class="bg" style="background:${gc};color:#06251a">${r.g}</div>
+      <div class="bmeta"><div class="pl">업종 내 순위</div><div class="pv">${rank}위 / ${L.length} · 상위 ${100-r.p}%</div>
+        <div class="pl" style="margin-top:5px">창업 신호</div><div class="pv" style="color:${r.p>=70?'var(--dn)':r.p>=40?'var(--c)':'var(--up)'}">${succ}</div></div></div>
+    <div class="kpis"><div class="kpi"><div class="l">구역 월매출(합계)</div><div class="v">${fmt(r.rev)}원</div></div>
+      <div class="kpi"><div class="l">점포당 추정</div><div class="v">${r.ops?fmt(r.ops)+'원':'—'}</div></div>
+      <div class="kpi"><div class="l">점포 수</div><div class="v">${r.stores||'—'}</div></div>
+      <div class="kpi"><div class="l">월 거래건수</div><div class="v">${(r.cnt||0).toLocaleString()}</div></div></div>
+    <div class="reasons">${R.map(x=>`<div class="rz"><span class="i ${x[0]}">${x[1]}</span><span>${x[2]}</span></div>`).join('')}
+      <div style="font-size:11px;color:var(--faint);margin-top:8px;font-family:var(--mono)">※ 등급·순위는 실매출 기준(신뢰). 정확한 가게별 매출은 카드/POS 필요.</div></div>`;
+}
+sel.onchange=()=>{curInd=sel.value;cur=null;renderList();$('#detail').innerHTML='<div class="empty">자리를 클릭하세요.</div>'};
+$('#search').oninput=renderList;
 
-// ---- 원가 관리 계산기 ----
+// ===== 서브: 원가 계산기 =====
 const itemsList=FOOD.map(f=>f.item).sort();
-let ings=[{item:'상추',qty:30},{item:'토마토',qty:50},{item:'양파',qty:20}];
-function ingRow(ig,i){
-  return `<div class="ing">
-    <select data-i="${i}" class="ing-item">${itemsList.map(n=>`<option ${n===ig.item?'selected':''}>${n}</option>`).join('')}</select>
-    <input type="number" data-i="${i}" class="ing-qty" value="${ig.qty}" title="g/개 사용량">
-    <button class="rm" data-i="${i}">✕</button></div>`;
-}
-function renderIngs(){ $('#ings').innerHTML=ings.map(ingRow).join(''); bindIngs(); calc(); }
-function bindIngs(){
-  $$('.ing-item').forEach(el=>el.onchange=e=>{ings[e.target.dataset.i].item=e.target.value;calc()});
-  $$('.ing-qty').forEach(el=>el.oninput=e=>{ings[e.target.dataset.i].qty=+e.target.value;calc()});
-  $$('.rm').forEach(el=>el.onclick=e=>{ings.splice(e.target.dataset.i,1);renderIngs()});
-}
-$('#add-ing').onclick=()=>{ings.push({item:itemsList[0],qty:10});renderIngs()};
-$('#menu-price').oninput=calc; $('#menu-name').oninput=()=>{$('#menu-name-h').textContent=$('#menu-name').value||'메뉴'};
+let ings=[{item:'상추',cost:1200},{item:'토마토',cost:1500}];
+function irow(ig,i){const f=byItem[ig.item],y=f?f.yoy:null;const col=y==null?'':y>=30?'var(--up)':y<=-10?'var(--dn)':'var(--faint)';
+  return `<div class="ing"><select data-i="${i}" class="ii">${itemsList.map(n=>`<option ${n===ig.item?'selected':''}>${n}</option>`).join('')}</select>
+   <input type="number" data-i="${i}" class="ic" value="${ig.cost}"><span class="yoy" style="color:${col}">${y==null?'':(y>=0?'+':'')+Math.round(y)+'%'}</span><button class="rm" data-i="${i}">✕</button></div>`;}
+function rIngs(){$('#ings').innerHTML=ings.map(irow).join('');
+  $$('.ii').forEach(e=>e.onchange=v=>{ings[v.target.dataset.i].item=v.target.value;rIngs()});
+  $$('.ic').forEach(e=>e.oninput=v=>{ings[v.target.dataset.i].cost=+v.target.value;mcalc()});
+  $$('.rm').forEach(e=>e.onclick=v=>{ings.splice(v.target.dataset.i,1);rIngs()});mcalc();}
+$('#addi').onclick=()=>{ings.push({item:itemsList[0],cost:0});rIngs()}; $('#mp').oninput=mcalc;
+function mcalc(){const p=+$('#mp').value||0;let c=0,w=null;ings.forEach(g=>{c+=+g.cost||0;const f=byItem[g.item];if(f&&(!w||f.yoy>w.yoy))w=f});
+  const m=p>0?(p-c)/p*100:0;let a,cl='';
+  if(w&&w.yoy>=30)a=`<b>⚠ 원가 위험:</b> ${w.item} 전년比 +${Math.round(w.yoy)}% — 재입고 시 매입가 상승 위험. 대체/양 조절 검토.`;
+  else if(m>=65){a=`<b>✓ 양호:</b> 마진 ${m.toFixed(0)}%.`;cl='ok';} else if(p>0)a=`<b>주의:</b> 마진 ${m.toFixed(0)}% — 원가 비중 높음.`; else a='판매가·매입가 입력';
+  $('#mres').innerHTML=`<div class="mbig" style="color:${m>=65?'var(--dn)':m>0?'var(--warn)':'var(--faint)'}">${p>0?m.toFixed(0):'—'}<small>% 마진</small></div>
+    <div style="font-size:12px;color:var(--mut);margin-top:4px;font-family:var(--mono)">원가 ${won(c)}원 · 이익 ${won(p-c)}원</div><div class="adv ${cl}">${a}</div>
+    <div style="font-size:10.5px;color:var(--faint);margin-top:6px;font-family:var(--mono)">옆 %=공판장 전년比(실데이터)</div>`;}
 
-function calc(){
-  const price=+$('#menu-price').value||0;
-  // 공판장 가격은 대량단위(원/kg~상자) → 사용량(g/개)당 근사 원가. 데모 계수.
-  let cost=0, worst=null;
-  ings.forEach(ig=>{
-    const f=priceOf[ig.item]; if(!f)return;
-    const perG=f.price/ (10*1000);          // 대략 10kg 단위 가정 → g당
-    const c=perG*ig.qty; cost+=c;
-    if(!worst||f.yoy>worst.yoy) worst=f;
-  });
-  const margin=price>0?(price-cost)/price*100:0;
-  let adv,cls;
-  if(worst && worst.yoy>=30){
-    adv=`<b>⚠ 원가 위험:</b> ${worst.item} 전년比 +${Math.round(worst.yoy)}%. 이 재료 비중이 크면 마진이 눌립니다. 판매가 유지하되 대체재/양 조절 검토.`;cls='';
-  }else if(margin>=65){ adv=`<b>✓ 양호:</b> 마진 ${margin.toFixed(0)}%. 현 가격 유지 가능.`;cls='ok'; }
-  else{ adv=`<b>주의:</b> 마진 ${margin.toFixed(0)}%. 원가 비중이 높습니다. 구성 재검토 권장.`;cls=''; }
-  $('#result').innerHTML=`
-    <div class="margin-big" style="color:${margin>=65?'var(--dn)':'var(--warn)'}">${margin.toFixed(0)}<small>% 마진</small></div>
-    <div class="rline"><span>판매가</span><span class="v">${won(price)}원</span></div>
-    <div class="rline"><span>재료 원가(추정)</span><span class="v">${won(cost)}원</span></div>
-    <div class="rline"><span>개당 이익</span><span class="v">${won(price-cost)}원</span></div>
-    <div class="advice ${cls}">${adv}</div>
-    <div style="font-size:11px;color:var(--faint);margin-top:8px;font-family:var(--mono)">※ 원가는 공판장 도매가 기반 추정. 실제 매입가 입력 시 정밀. 가격 예측 아님(변화 감지).</div>`;
-}
-
-// ---- 식자재 테이블 ----
-$('#food-table').innerHTML='<tr><th>품목</th><th>현재가</th><th>전년대비</th><th>추세</th></tr>'+
-  FOOD.slice(0,20).map(f=>`<tr><td>${f.item}</td><td class="num">${won(f.price)}</td>
-    <td class="num"><span class="pill ${f.yoy>=0?'up':'dn'}">${f.yoy>=0?'+':''}${Math.round(f.yoy)}%</span></td>
-    <td>${f.dir}</td></tr>`).join('');
-
-// ---- 시즌 ----
-const m=today.getMonth()+1;
-const season=(m>=6&&m<=8)?{w:'무더위',items:['빙수','냉면','아이스 음료'],kw:'더위 극복'}:
-  (m>=9&&m<=11)?{w:'선선',items:['단호박 라떼','따뜻한 디저트'],kw:'가을 감성'}:
-  (m>=12||m<=2)?{w:'추위',items:['호빵','어묵','따뜻한 국물'],kw:'겨울 별미'}:{w:'봄',items:['딸기 디저트','피크닉'],kw:'봄 나들이'};
-$('#season-box').innerHTML=`<div style="font-size:15px;font-weight:700;margin-bottom:6px">${m}월 · ${season.w}</div>
-  <div style="color:var(--mut);font-size:13.5px">추천 메뉴: <b>${season.items.join(', ')}</b><br>광고 키워드: "${season.kw}"</div>`;
-
-// ---- 탭 ----
-$$('.tab').forEach(t=>t.onclick=()=>{
-  $$('.tab').forEach(x=>x.classList.remove('on')); t.classList.add('on');
-  $$('.tabpane').forEach(p=>p.classList.remove('on')); $('#p-'+t.dataset.p).classList.add('on');
-});
-$('#note').textContent='데이터: 한국농수산식품유통공사 공판장 실가격(43품목) · 서울 상권분석 · Google Trends. '
-  +'원가는 도매가 기반 추정이며 가격 정확 예측이 아닌 변화 감지가 목적입니다.';
-$('#theme').onclick=()=>{const r=document.documentElement;const c=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');r.setAttribute('data-theme',c==='dark'?'light':'dark')};
-renderIngs();
+// 식자재 테이블 + 시즌
+$('#ftab').innerHTML='<tr><th>품목</th><th>도매가</th><th>전년비</th></tr>'+FOOD.slice(0,10).map(f=>`<tr><td>${f.item}</td><td class="num">${won(f.price)}</td><td class="num"><span class="pill ${f.yoy>=0?'up':'dn'}">${f.yoy>=0?'+':''}${Math.round(f.yoy)}%</span></td></tr>`).join('');
+const m2=today.getMonth()+1,s=(m2>=6&&m2<=8)?{w:'무더위',i:['빙수','냉면','아이스음료']}:(m2>=9&&m2<=11)?{w:'선선',i:['단호박라떼','따뜻한 디저트']}:(m2>=12||m2<=2)?{w:'추위',i:['호빵','어묵','국물']}:{w:'봄',i:['딸기디저트','피크닉']};
+$('#season').innerHTML=`<b>${m2}월 · ${s.w}</b> — 추천: ${s.i.join(', ')}<div style="font-size:10.5px;color:var(--faint);margin-top:5px;font-family:var(--mono)">달력 규칙(참고). 기상청 연동 시 폭염/한파 반영</div>`;
+$('#note').textContent='메인=서울 상권분석 실데이터 36,566건. 서브 식자재=공판장 실가격 43품목. 트렌드/지도는 백엔드 실행 시 실연동(가짜 미표시).';
+$('#theme').onclick=()=>{const r=document.documentElement,c=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');r.setAttribute('data-theme',c==='dark'?'light':'dark')};
+renderList();rIngs();
 </script>
