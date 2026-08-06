@@ -156,21 +156,29 @@ class SmallBusinessDataCollector:
 
 class LandRegistryDataCollector:
     """
-    국토교통부 상업용 부동산 임대료/실거래 어댑터.
-    실제 임대료·공실률은 한국부동산원 R-ONE 상업용부동산 임대동향조사가 더 정확합니다.
-    (엔드포인트/파라미터 확정 후 live_api 분기 추가 예정)
+    한국부동산원 상업용부동산 임대동향조사 임대료·공실률 어댑터 (자치구 분기별).
+
+    실 API (data.go.kr 활용신청 후 사용):
+      - 상업용부동산 임대동향 조사 통계 조회 서비스: data.go.kr/data/15002275/openapi.do
+      - 소규모상가 임대료/공실률(파일): data.go.kr/data/15069766 · 15069726
+    키: 환경변수 DATA_GO_KR_KEY. 지어낸 임대료(예전 55000 하드코딩)는 제거 —
+    키/명세 확정 전에는 available=False 로 정직하게 알리고 가짜 숫자를 내지 않는다.
     """
 
-    def fetch_rent_rates(self, district_code: str = "1000001") -> Dict[str, Any]:
-        # 실제 연동 전까지는 합성 폴백을 정직하게 표기합니다.
-        return {
-            "district_code": district_code,
-            "rent_per_m2": 55000,  # KRW/m2
-            "avg_key_money": 35000000,  # 35M KRW
-            "vacancy_rate": 0.042,  # 4.2%
-            "status": "SUCCESS",
-            "source": "synthetic_fallback",  # 실제 데이터 아님
-        }
+    ENDPOINT = "https://www.reb.or.kr/r-one/openapi/SttsApiTblData.do"
+
+    def fetch_rent_rates(self, sgg_nm: str = "강남구", small: bool = True) -> Dict[str, Any]:
+        import os
+        key = os.getenv("DATA_GO_KR_KEY") or os.getenv("REB_API_KEY")
+        if not key:
+            return {"available": False, "sgg": sgg_nm,
+                    "message": "DATA_GO_KR_KEY 없음. data.go.kr 15002275 활용신청 후 "
+                               "export DATA_GO_KR_KEY=키. 지어낸 임대료는 반환하지 않습니다."}
+        # 실제 연동은 활용신청 시 발급되는 명세(STATBL_ID/WRTTIME 등)로 확정.
+        # 명세 확정 전에는 정직하게 미연동 표기(가짜 숫자 금지).
+        return {"available": False, "sgg": sgg_nm, "endpoint": self.ENDPOINT,
+                "message": "부동산원 임대동향 API 명세(STATBL_ID·기간코드) 확정 후 연결. "
+                           "샌드박스는 data.go.kr 차단 — 키 넣고 네 PC/서버에서 연동."}
 
 
 seoul_api_collector = SeoulOpenDataCollector()
