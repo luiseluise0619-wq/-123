@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.v1 import analysis, simulator, map as map_api, chat, history, monitoring, report, festival
+from app.api.v1 import analysis, simulator, map as map_api, chat, history, monitoring, report, festival, market
 from app.db.database import Base, engine
 
 # Initialize database tables
@@ -31,6 +31,7 @@ app.include_router(history.router, prefix=f"{settings.API_V1_STR}/history", tags
 app.include_router(monitoring.router, prefix=f"{settings.API_V1_STR}/monitoring", tags=["Monitoring"])
 app.include_router(report.router, prefix=f"{settings.API_V1_STR}/report", tags=["Report"])
 app.include_router(festival.router, prefix=f"{settings.API_V1_STR}/festival", tags=["Festival"])
+app.include_router(market.router, prefix=f"{settings.API_V1_STR}/market", tags=["Market Intelligence"])
 
 @app.get("/")
 def root():
