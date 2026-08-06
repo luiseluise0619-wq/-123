@@ -86,6 +86,31 @@
   .tabbtn .tt{font-size:10.5px;font-weight:500;letter-spacing:.01em}
   .tabbtn.on{color:var(--accent)}
   .heat{display:grid;grid-template-columns:1fr;gap:0}
+  /* 리포트 문서 */
+  .rpaper{background:var(--surface);border:.5px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:26px 24px;margin-top:14px}
+  .rp-kick{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.02em}
+  .rp-title{font-size:26px;font-weight:700;letter-spacing:-.03em;margin:6px 0 3px}
+  .rp-meta{font-size:12.5px;color:var(--ink3);font-family:var(--mono)}
+  .rp-verdict{display:flex;align-items:center;gap:12px;margin:22px 0;font-size:14px;color:var(--ink2);line-height:1.5}
+  .rp-verdict b{color:var(--ink)}.rp-badge{font-size:18px;font-weight:700;color:#fff;padding:7px 16px;border-radius:999px;flex-shrink:0}
+  .rp-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5px;background:var(--line);border:.5px solid var(--line);border-radius:14px;overflow:hidden}
+  .rp-cell{background:var(--surface);padding:14px 16px}.rp-l{font-size:12px;color:var(--ink3)}.rp-v{font-size:18px;font-weight:600;margin-top:4px}
+  .rp-sec{font-size:13px;font-weight:600;color:var(--ink3);margin:24px 0 9px}
+  .rp-formula{background:var(--surface2);border-radius:12px;padding:13px 15px;font-family:var(--mono);font-size:11.5px;color:var(--ink2);line-height:1.9}.rp-formula b{color:var(--ink)}
+  .rp-note{margin:0;padding-left:18px;font-size:13px;color:var(--ink2);line-height:1.7}.rp-note b{color:var(--ink)}.rp-note li{margin-bottom:6px}
+  .rp-foot{margin-top:24px;padding-top:14px;border-top:.5px solid var(--line);font-size:11px;color:var(--ink3);font-family:var(--mono);line-height:1.6}
+  /* 데스크톱 — 같은 느낌 유지(중앙 컬럼 + 은은한 프레임) */
+  @media(min-width:640px){
+    body{background:var(--surface2)}
+    .app{box-shadow:0 0 0 .5px var(--line),0 24px 70px rgba(17,17,20,.08)}
+  }
+  /* 인쇄 — 리포트만 A4 */
+  @media print{
+    .nav,.tabbar,.more,.sec,.list,details,#reportOut>.caption,.screen:not(#s-report){display:none!important}
+    #s-report{display:block!important}.app{max-width:none;padding:0;min-height:0;box-shadow:none}
+    body{background:#fff}.rpaper{border:0;box-shadow:none;border-radius:0;padding:0;margin:0}
+    @page{size:A4;margin:15mm}
+  }
 </style></head><body>
 <div class="app">
   <div class="nav"><div class="eyebrow" id="eyebrow">상권 분석</div><div class="navtitle" id="navtitle">홈</div></div>
@@ -166,11 +191,29 @@
     <div class="caption" style="padding:0 4px">서울 25개 자치구 · 국세청. 특정 골목 상권까지의 정밀 연결은 상권 데이터 결합 후 제공됩니다.</div>
   </section>
 
+  <!-- 리포트 -->
+  <section class="screen" id="s-report">
+    <div class="sec">리포트 만들기</div>
+    <div class="list">
+      <div class="row field"><label>업종</label><div class="selwrap"><select id="indR"></select></div></div>
+      <div class="row field"><label>상권 · 전국 276곳</label><div class="selwrap"><select id="sangR"></select></div></div>
+      <div class="row"><span class="rl">가게 면적</span><span class="rv inl" style="max-width:120px"><input type="number" id="areaR" value="15" inputmode="numeric"><span class="u">평</span></span></div>
+    </div>
+    <button class="more" id="genBtn" style="background:var(--accent);color:#fff;border-radius:14px;margin-top:12px;font-weight:600;padding:15px">리포트 생성</button>
+
+    <div id="reportOut" hidden>
+      <div class="rpaper" id="rpaper"></div>
+      <button class="more" id="printBtn" style="border:.5px solid var(--line);border-radius:14px;margin-top:12px">PDF로 저장 · 인쇄</button>
+      <div class="caption" style="padding:0 4px">인쇄 시 이 리포트만 A4로 저장됩니다. 임대차 협상·대출 상담에 참고자료로 쓰세요.</div>
+    </div>
+  </section>
+
   <!-- 탭바 -->
   <nav class="tabbar">
     <button class="tabbtn on" data-s="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg><span class="tt">홈</span></button>
     <button class="tabbtn" data-s="analyze"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><span class="tt">분석</span></button>
     <button class="tabbtn" data-s="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4-6 2.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg><span class="tt">지역</span></button>
+    <button class="tabbtn" data-s="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg><span class="tt">리포트</span></button>
   </nav>
 </div>
 
@@ -181,7 +224,7 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const won=n=>n>=10000?(n/10000).toFixed(n>=100000?0:1)+'억':Math.round(n).toLocaleString()+'만';
 const cv=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 // 탭
-const titles={home:'홈',analyze:'분석',map:'지역'};
+const titles={home:'홈',analyze:'분석',map:'지역',report:'리포트'};
 $$('.tabbtn').forEach(b=>b.onclick=()=>{const s=b.dataset.s;$$('.tabbtn').forEach(x=>x.classList.toggle('on',x===b));$$('.screen').forEach(x=>x.classList.remove('on'));$('#s-'+s).classList.add('on');$('#navtitle').textContent=titles[s];window.scrollTo(0,0)});
 // 업종·상권 셀렉트
 const inds=Object.keys(IND),si=$('#ind');inds.forEach(i=>{const o=document.createElement('option');o.value=i;o.textContent=i;si.appendChild(o)});
@@ -202,10 +245,10 @@ function analyze(){
   const fixed=rent+labor+etc,bep=cogs<1?fixed/(1-cogs):0,dayRev=bep/days,cust=Math.round(dayRev*1e4/unit);
   const newExp=x.p50*NEW_RATIO,margin=newExp-bep,failN=pctBelow(x,bep);
   let score=Math.round((100-failN)*0.72+(margin>0?24:6));score=Math.max(8,Math.min(98,score));
-  const band=margin<0?{k:'risk',l:'위험',c:cv('--risk'),t:'본전 매출이 높아 여유가 없습니다. 조건을 다시 보세요.'}
-    :failN<=50?{k:'good',l:'해볼 만함',c:cv('--good'),t:`이 상권 ${curInd} 대부분이 넘기는 수준입니다.`}
-    :failN<=75?{k:'warn',l:'빠듯함',c:cv('--warn'),t:'넘길 순 있지만 초기 자금 여유가 필요합니다.'}
-    :{k:'risk',l:'위험',c:cv('--risk'),t:'이 업종 상권 절반 이상이 이 본전에 못 미칩니다.'};
+  const band=margin<0?{k:'risk',l:'부정',c:cv('--risk'),t:'본전 매출이 높아 여유가 없습니다. 조건을 다시 보세요.'}
+    :failN<=50?{k:'good',l:'긍정',c:cv('--good'),t:`이 상권 ${curInd} 대부분이 넘기는 수준입니다.`}
+    :failN<=75?{k:'warn',l:'중립',c:cv('--warn'),t:'넘길 순 있지만 초기 자금 여유가 필요합니다.'}
+    :{k:'risk',l:'부정',c:cv('--risk'),t:'이 업종 상권 절반 이상이 이 본전에 못 미칩니다.'};
   // 링
   const R=54,C=2*Math.PI*R,off=C*(1-score/100);
   $('#ringsvg').innerHTML=`<circle cx="66" cy="66" r="${R}" fill="none" stroke="${cv('--line')}" stroke-width="9"/><circle cx="66" cy="66" r="${R}" fill="none" stroke="${band.c}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 66 66)"/>`;
@@ -254,6 +297,48 @@ function drawDist(x,bep){
       <span class="num" style="font-size:12.5px;font-weight:600;color:${tc};min-width:44px;text-align:right">${d.trend>=0?'+':''}${d.trend}%</span>
     </div>`}).join('');
 })();
+// 리포트: 자체 선택 + 생성
+const siR=$('#indR');inds.forEach(i=>{const o=document.createElement('option');o.value=i;o.textContent=i;siR.appendChild(o)});
+const ssR=$('#sangR');order.filter(s=>byS[s]).forEach(s=>{const og=document.createElement('optgroup');og.label=s;byS[s].sort((a,b)=>b[1].rent-a[1].rent).forEach(([k,d])=>{const o=document.createElement('option');o.value=k;o.textContent=k.replace(s+'·','');og.appendChild(o)});ssR.appendChild(og)});
+ssR.value=curSang;
+function genReport(){
+  const it=siR.value,sk=ssR.value,x=IND[it],r=RENT[sk],area=+$('#areaR').value||15;
+  const rent=r?Math.round(r.rent*1000*area*3.3058/1e4):0;
+  const cogs=x.cogs/100,fixed=rent+x.labor+x.etc,bep=fixed/(1-cogs),dayRev=bep/26,cust=Math.round(dayRev*1e4/x.unit);
+  const newExp=x.p50*NEW_RATIO,margin=newExp-bep,failN=pctBelow(x,bep);
+  const band=margin<0?{l:'부정',c:cv('--risk')}:failN<=50?{l:'긍정',c:cv('--good')}:failN<=75?{l:'중립',c:cv('--warn')}:{l:'부정',c:cv('--risk')};
+  const place=sk.replace(/^[^·]+·/,''),sido=r?r.sido:'';
+  $('#rpaper').innerHTML=`
+    <div class="rp-head"><div class="rp-kick">상권 진단 리포트</div>
+      <div class="rp-title">${place}</div><div class="rp-meta">${sido} · ${it} · ${DA.quarter} · 실측 ${x.n.toLocaleString()}개 점포 기준</div></div>
+    <div class="rp-verdict"><span class="rp-badge" style="background:${band.c}">${band.l}</span>
+      <span>이 업종에서 <b>하위 ${failN}%</b>에 들지 않으면 본전은 넘깁니다.</span></div>
+    <div class="rp-grid">
+      <div class="rp-cell"><div class="rp-l">월 손익분기</div><div class="rp-v num">${won(bep)}원</div></div>
+      <div class="rp-cell"><div class="rp-l">예상 매출대 (비슷한 가게)</div><div class="rp-v num">${won(x.p25)}~${won(x.p75)}</div></div>
+      <div class="rp-cell"><div class="rp-l">하루 필요</div><div class="rp-v num">${won(dayRev)} · 손님 ${cust}명</div></div>
+      <div class="rp-cell"><div class="rp-l">상권 공실률</div><div class="rp-v num">${r&&r.vacancy!=null?r.vacancy+'%':'—'}</div></div>
+    </div>
+    <div class="rp-sec">본전은 어디쯤인가</div><div id="rp-dist"></div>
+    <div class="rp-sec">계산 방법</div>
+    <div class="rp-formula">손익분기 = 고정비 ÷ (1 − 원가율) = ${Math.round(fixed).toLocaleString()}만 ÷ (1 − 0.${x.cogs}) = <b>${won(bep)}원</b><br>임대료 ${rent.toLocaleString()}만(부동산원 ${r?r.rent:'-'}천원/㎡ × ${area}평) + 인건비 ${x.labor}만 + 기타 ${x.etc}만</div>
+    <div class="rp-sec">이 리포트가 못 말하는 것</div>
+    <ul class="rp-note">
+      <li>인건비·원가율·초기투자는 <b>가정값</b>입니다. 실제 조건으로 다시 계산하세요.</li>
+      <li>매출 분포는 <b>영업 중인 가게</b> 기준이라(폐업 가게 빠짐) 다소 낙관적입니다.</li>
+      <li>임대료는 상권 평균이라 층·목·면적에 따라 실제와 다릅니다.</li>
+    </ul>
+    <div class="rp-foot">사장님인사이트 · 실측=부동산원·서울 상권분석 · 최종 판단과 책임은 사장님에게 있습니다.</div>`;
+  // 분포 그리기
+  const W=560,H=64,pl=4,cw=W-8,lo=x.p25*.6,hi=x.p90*1.25,X=v=>pl+Math.max(0,Math.min(1,(v-lo)/(hi-lo)))*cw,A=cv('--accent'),bx=X(bep);
+  const seg=(a,b,c)=>`<rect x="${X(a)}" y="26" width="${Math.max(1,X(b)-X(a))}" height="10" fill="${c}" rx="3"/>`;
+  let s=seg(lo,x.p25,cv('--surface2'))+seg(x.p25,x.p50,A+'44')+seg(x.p50,x.p75,A+'88')+seg(x.p75,hi,A);
+  s+=`<line x1="${bx}" y1="16" x2="${bx}" y2="44" stroke="${cv('--warn')}" stroke-width="2.5"/><text x="${bx}" y="11" font-size="11" fill="${cv('--warn')}" font-weight="700" text-anchor="middle" class="num">내 본전 ${won(bep)}</text><text x="${X(x.p50)}" y="52" font-size="10.5" fill="${cv('--ink3')}" text-anchor="middle" class="num">평균 ${won(x.p50)}</text>`;
+  $('#rp-dist').innerHTML=`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`;
+  $('#reportOut').hidden=false;$('#reportOut').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('#genBtn').onclick=genReport;
+$('#printBtn').onclick=()=>{document.body.classList.add('printing');window.print();setTimeout(()=>document.body.classList.remove('printing'),400);};
 si.onchange=()=>{curInd=si.value;fillInd();fillRent();analyze()};
 ss.onchange=()=>{curSang=ss.value;fillRent();analyze()};
 $('#area').addEventListener('input',()=>{fillRent();analyze()});
