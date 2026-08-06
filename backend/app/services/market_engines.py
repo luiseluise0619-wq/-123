@@ -145,35 +145,6 @@ def food_price(item_name: str = "양파") -> Dict[str, Any]:
     return {"available": True, "source": "KAMIS", "item": item_name, "raw": r.json()}
 
 
-# ---------------------------------------------------------------- 6) 시즌 추천
-_SEASON = {
-    (6, 7, 8): {"weather": "무더위", "items": ["빙수", "냉면", "수박음료", "아이스커피"],
-                "keyword": "더위 극복"},
-    (9, 10, 11): {"weather": "선선", "items": ["단호박라떼", "군고구마", "따뜻한 디저트"],
-                  "keyword": "가을 감성"},
-    (12, 1, 2): {"weather": "추위", "items": ["호빵", "어묵", "붕어빵", "따뜻한 국물"],
-                 "keyword": "겨울 별미"},
-    (3, 4, 5): {"weather": "봄", "items": ["딸기디저트", "봄나물", "피크닉 도시락"],
-                "keyword": "봄 나들이"},
-}
-_HOLIDAYS = {"01-01": "신정", "02-09": "설연휴", "03-01": "삼일절", "05-05": "어린이날",
-             "06-06": "현충일", "08-15": "광복절", "09-16": "추석연휴",
-             "10-03": "개천절", "12-25": "성탄절"}
-
-
-def season_recommendation(month: int = None) -> Dict[str, Any]:
-    """달력 기반 시즌 추천. 지금 바로 동작(외부 키 불필요). 날씨 연동은 선택."""
-    today = datetime.date.today()
-    m = month or today.month
-    rec = next(v for months, v in _SEASON.items() if m in months)
-    upcoming = [(d, n) for d, n in _HOLIDAYS.items()
-                if d >= today.strftime("%m-%d")][:2]
-    return {"available": True, "month": m, "season_weather": rec["weather"],
-            "recommended_items": rec["items"], "ad_keyword": rec["keyword"],
-            "upcoming_holidays": [{"date": d, "name": n} for d, n in upcoming],
-            "note": "달력·계절 규칙 기반. 과거 매출·기상청 실황 연동 시 정밀도 상승."}
-
-
 # ---------------------------------------------------------------- 3/5) 글로벌·SNS (RAG+LLM)
 def rag_llm_trend(topic: str, collected_texts: List[str] = None) -> Dict[str, Any]:
     """글로벌 음식/SNS 바이럴 트렌드: 수집 텍스트를 Gemini 가 요약(근거 없으면 미연동).

@@ -57,11 +57,6 @@ def food_price_live(item: str = "배추", days: int = 7, se_cd: str = "01"):
     return FP.live_price(item=item, days=days, se_cd=se_cd)
 
 
-@router.get("/season")
-def season(month: Optional[int] = None):
-    return M.season_recommendation(month)
-
-
 class GlobalReq(BaseModel):
     topic: str = "미국 Dirty Soda"
     collected_texts: List[str] = []

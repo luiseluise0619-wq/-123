@@ -1,0 +1,43 @@
+name: 대시보드 자동 갱신
+
+# 가격(식자재)은 매일 바뀌므로 매일 06:10 KST(=21:10 UTC) 재생성.
+# 상권 원본은 분기별이라 매일 돌려도 그날 새 값만 반영됨(정직).
+on:
+  schedule:
+    - cron: "10 21 * * *"        # 매일 06:10 KST
+  workflow_dispatch: {}          # 수동 실행 버튼
+
+permissions:
+  contents: write                # 갱신된 HTML 커밋용
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 의존성 설치
+        run: pip install pandas numpy scikit-learn lightgbm
+
+      - name: 대시보드 재생성
+        working-directory: backend
+        env:
+          # 있으면 aT 실시간가로 최신값 갱신(없으면 CSV 기준). Actions Secrets 에 등록.
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: python refresh_dashboard.py
+
+      - name: 변경분 커밋
+        run: |
+          git config user.name  "dashboard-bot"
+          git config user.email "actions@users.noreply.github.com"
+          if git diff --quiet -- frontend/sangkwon_charts_dashboard.html; then
+            echo "변경 없음 — 커밋 생략"
+          else
+            git add frontend/sangkwon_charts_dashboard.html
+            git commit -m "chore: 대시보드 자동 갱신 ($(date -u +%Y-%m-%d))"
+            git push
+          fi
