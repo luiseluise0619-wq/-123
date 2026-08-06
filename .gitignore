@@ -29,3 +29,4 @@ backend/app/data/real_data/
 .DS_Store
 Thumbs.db
 backend/app/data/market/*.csv
+backend/app/data/market/*.pkl
