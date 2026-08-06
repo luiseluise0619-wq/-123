@@ -137,8 +137,17 @@ def analyze(item: str) -> Dict[str, Any]:
         cheap = (peers.groupby("품목명")["평균가격"].mean().sort_values().head(3))
         alt = list(cheap.index)
 
+    # 학습된 ML 모델 예측(있으면) — 이동평균보다 정확(내일 R²0.92)
+    ml = None
+    try:
+        from app.ml.foodprice_ml import predict as _mlpred
+        ml = _mlpred(item)
+    except Exception:
+        ml = None
+
     return {"available": True, "item": item,
             "latest_price": int(latest), "latest_date": str(latest_date.date()),
+            "ml_forecast": ml,
             "trend_slope_won_per_day": round(slope, 1),
             "forecast_next": int(forecast), "forecast_change_pct": change_pct,
             "direction": direction, "yoy_change_pct": yoy,
