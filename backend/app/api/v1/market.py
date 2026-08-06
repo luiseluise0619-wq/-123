@@ -21,6 +21,18 @@ def consumer_trends(req: TrendReq):
     return M.consumer_trends(req.keywords)
 
 
+@router.get("/trending-now")
+def trending_now(geo: str = "KR"):
+    """실시간 급상승 검색어(무료 RSS, 키 불필요)."""
+    return M.google_trending_now(geo)
+
+
+@router.get("/trending-for-business")
+def trending_for_business(geo: str = "KR"):
+    """소상공인 관련 실시간 트렌드 + (키 있으면)AI 실행 제안."""
+    return M.business_relevant_trends(geo)
+
+
 @router.get("/food-price")
 def food_price(item: str = "양파"):
     return M.food_price(item)

@@ -21,6 +21,62 @@ except Exception:
 
 
 # ---------------------------------------------------------------- 2) 소비자 트렌드
+def google_trending_now(geo: str = "KR") -> Dict[str, Any]:
+    """Google Trends 실시간 급상승 검색어 RSS — 완전 무료·키 불필요·의존성 없음.
+    실시간 인기 키워드 + 관련 뉴스 반환. (pytrends 보다 안정적)"""
+    import urllib.request
+    import xml.etree.ElementTree as ET
+    url = f"https://trends.google.com/trending/rss?geo={geo}"
+    ns = {"ht": "https://trends.google.com/trending/rss"}
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        xml = urllib.request.urlopen(req, timeout=15).read()
+        root = ET.fromstring(xml)
+    except Exception as e:
+        return {"available": False, "source": "google_trends_rss",
+                "message": f"조회 실패({str(e)[:60]}). 서버 네트워크 확인. (로컬 PC에선 보통 됨)"}
+    trends = []
+    for it in root.findall(".//item"):
+        title = it.findtext("title", "")
+        traffic = it.findtext("ht:approx_traffic", "", ns)
+        news = [{"title": n.findtext("ht:news_item_title", "", ns),
+                 "url": n.findtext("ht:news_item_url", "", ns),
+                 "source": n.findtext("ht:news_item_source", "", ns)}
+                for n in it.findall("ht:news_item", ns)][:3]
+        trends.append({"keyword": title, "traffic": traffic, "news": news})
+    return {"available": True, "source": "google_trends_rss", "geo": geo,
+            "count": len(trends), "trends": trends}
+
+
+def business_relevant_trends(geo: str = "KR") -> Dict[str, Any]:
+    """실시간 트렌드 중 소상공인/외식/소비 관련만 필터 + (Gemini 있으면) 실행 제안."""
+    raw = google_trending_now(geo)
+    if not raw.get("available"):
+        return raw
+    kw = ("맛집 카페 디저트 음식 메뉴 배달 창업 프랜차이즈 커피 빵 치킨 술 축제 "
+          "복날 명절 다이어트 건강 제로 저당 비건 소비 트렌드 아침 점심 편의점").split()
+    rel = [t for t in raw["trends"]
+           if any(k in (t["keyword"] + " " + " ".join(n["title"] for n in t["news"])) for k in kw)]
+    result = {"available": True, "source": "google_trends_rss", "geo": geo,
+              "relevant_trends": rel, "all_count": raw["count"], "relevant_count": len(rel)}
+    # Gemini 있으면 사장님용 실행 제안 생성(근거=실제 트렌드/뉴스)
+    key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if key and rel:
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=key)
+            model = genai.GenerativeModel(os.getenv("SANGKWON_LLM_MODEL", "gemini-2.0-flash"))
+            ctx = "\n".join(f"- {t['keyword']} ({t['traffic']}): "
+                            + "; ".join(n["title"] for n in t["news"]) for t in rel)
+            prompt = ("아래는 지금 한국 실시간 인기 검색어와 뉴스다. 소상공인(외식/카페/소매)이 "
+                      "이 중 활용할 만한 트렌드 3개를 골라, 왜 뜨는지와 '이번 주 실행 아이디어'를 "
+                      "간단히 제안하라. 근거 없는 추측 금지.\n\n" + ctx)
+            result["ai_suggestion"] = model.generate_content(prompt).text
+        except Exception as e:
+            result["ai_suggestion_error"] = str(e)[:80]
+    return result
+
+
 def google_trends(keywords: List[str]) -> Dict[str, Any]:
     """Google Trends — 완전 무료·키 불필요(pytrends). 네트워크만 있으면 동작."""
     try:
