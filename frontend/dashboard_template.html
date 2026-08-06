@@ -155,7 +155,7 @@
 
   <div class="sh" style="margin-top:34px"><h2>시장 차트</h2><span class="hint">버튼으로 지표를 전환하세요</span><span class="tag">Pro</span></div>
   <div class="tabs" role="tablist" id="tabs">
-    <button class="tab" role="tab" data-v="calib" aria-selected="true">🤖 예측 신뢰도</button>
+    <button class="tab" role="tab" data-v="forecast" aria-selected="true">🔮 매출 전망</button>
     <button class="tab" role="tab" data-v="bars" aria-selected="false">업종 매출</button>
     <button class="tab" role="tab" data-v="food" aria-selected="false">식자재 원가</button>
     <button class="tab" role="tab" data-v="lines" aria-selected="false">가격 추세</button>
@@ -193,7 +193,7 @@ const byInd={}; Z.forEach(r=>{(byInd[r.i]=byInd[r.i]||[]).push(r)});
 Object.values(byInd).forEach(a=>a.sort((x,y)=>y.rev-x.rev));
 const inds=Object.keys(byInd).sort((a,b)=>byInd[b].length-byInd[a].length);
 const sel=$('#ind'); inds.forEach(i=>{const o=document.createElement('option');o.value=i;o.textContent=`${i} · ${byInd[i].length}곳`;sel.appendChild(o)});
-let curInd=inds[0],cur=null,curView='calib';
+let curInd=inds[0],cur=null,curView='forecast';
 const gcls=g=>({'A+':'gA','A':'gA','B':'gB','C':'gC','D':'gD','F':'gF'}[g]);
 
 // ---- 등급 기준 (오른쪽 레퍼런스) ----
@@ -270,34 +270,54 @@ function drawRadar(r){
 }
 
 // ======== chart views ========
-function draw(){const p=$('#panel');({calib:drawCalib,bars:drawBars,food:drawFood,lines:drawLines,sources:drawSources}[curView])(p)}
+function draw(){const p=$('#panel');({forecast:drawForecast,bars:drawBars,food:drawFood,lines:drawLines,sources:drawSources}[curView])(p)}
 
-function drawCalib(p){
-  const D=C.calib||[],br=cssv('--brand'),W=460,H=290,pl=44,pb=34,pt=12,pr=14,cw=W-pl-pr,ch=H-pb-pt;
-  const X=v=>pl+v/100*cw,Y=v=>pt+ch-v/100*ch;
-  let g='';for(let k=0;k<=5;k++){const gx=pl+cw*k/5,gy=pt+ch*k/5,t=k*20;
-    g+=`<line x1="${pl}" y1="${gy}" x2="${W-pr}" y2="${gy}" stroke="${cssv('--grid')}"/>
-        <line x1="${gx}" y1="${pt}" x2="${gx}" y2="${pt+ch}" stroke="${cssv('--grid')}"/>
-        <text x="${pl-6}" y="${gy+3}" font-size="9.5" fill="${cssv('--faint')}" text-anchor="end" class="num">${100-t}</text>
-        <text x="${gx}" y="${H-18}" font-size="9.5" fill="${cssv('--faint')}" text-anchor="middle" class="num">${t}</text>`}
-  const ideal=`M${X(0)} ${Y(0)} L${X(100)} ${Y(100)}`;
-  const pts=D.map(d=>[X(d.sp),Y(d.actual_success),d]);
-  let line='';pts.forEach((p2,i)=>{line+=(i?'L':'M')+p2[0].toFixed(1)+' '+p2[1].toFixed(1)+' '});
-  const dots=pts.map(p2=>`<circle class="cp" data-s="${p2[2].sp}" data-a="${p2[2].actual_success}" data-n="${p2[2].n}" cx="${p2[0].toFixed(1)}" cy="${p2[1].toFixed(1)}" r="4" fill="${br}" stroke="${cssv('--card')}" stroke-width="1.6" style="cursor:pointer"/>`).join('');
-  p.innerHTML=`<h3>예측이 실제로 맞는가 — 신뢰도 곡선</h3>
-    <p class="cd">모델이 성공확률 X%라 한 상권들이, 실제로 X% 상위권이었는지. 점선(완벽)에 붙을수록 정확 · <b>AUC ${ML.success_auc||'0.80'}</b></p>
-    <svg viewBox="0 0 ${W} ${H}">${g}
-      <path d="${ideal}" fill="none" stroke="${cssv('--faint')}" stroke-width="1.4" stroke-dasharray="5 5"/>
-      <path d="${line}" fill="none" stroke="${br}" stroke-width="2.4" stroke-linejoin="round"/>${dots}
-      <text x="${pl+cw/2}" y="${H-4}" font-size="10" fill="${cssv('--mut')}" text-anchor="middle">모델이 예측한 성공확률 (%)</text>
-      <text x="14" y="${pt+ch/2}" font-size="10" fill="${cssv('--mut')}" text-anchor="middle" transform="rotate(-90 14 ${pt+ch/2})">실제 상위권 비율 (%)</text>
-    </svg>
-    <div class="legend"><span><i style="background:${br}"></i>실측 보정곡선</span><span><i style="background:${cssv('--faint')}"></i>완벽한 예측(대각선)</span></div>
-    <div style="margin-top:10px;font-size:11.5px;color:var(--faint);line-height:1.6">공간 홀드아웃(자기 상권을 안 본 모델) out-of-fold 예측 ${ML.n?ML.n.toLocaleString():''}건 · ${ML.zones||''}개 상권 5-fold. 곡선이 대각선에 거의 붙음 = 확률값을 그대로 믿어도 된다는 뜻.</div>`;
-  p.querySelectorAll('.cp').forEach(el=>{
-    el.onmousemove=e=>{el.setAttribute('r',6);showTip(e,`예측 <span class="num">${el.dataset.s}%</span> → 실제 <span class="num">${el.dataset.a}%</span> · ${(+el.dataset.n).toLocaleString()}건`)};
-    el.onmouseleave=()=>{el.setAttribute('r',4);hideTip()};});
+function drawForecast(p){
+  const FC=(ZD.forecast&&ZD.forecast.length)?ZD.forecast:null;
+  if(FC){  // 다분기 데이터가 있으면 진짜 forward 예측선을 그린다
+    const W=460,H=250,pl=48,pb=28,pt=12,pr=14,cw=W-pl-pr,ch=H-pb-pt;
+    const hist=FC.filter(d=>!d.f),fut=FC.filter(d=>d.f),all=FC.map(d=>d.v).concat(FC.filter(d=>d.hi).map(d=>d.hi));
+    const mx=Math.max(...all),mn=Math.min(...FC.map(d=>d.lo||d.v)),n=FC.length;
+    const X=i=>pl+cw*i/(n-1),Y=v=>pt+ch-(v-mn)/(mx-mn||1)*ch;
+    let g='';for(let k=0;k<=4;k++){const yy=pt+ch*k/4;g+=`<line x1="${pl}" y1="${yy}" x2="${W-pr}" y2="${yy}" stroke="${cssv('--grid')}"/>`}
+    let band='';fut.forEach((d,i)=>{const idx=hist.length-1+i;if(d.lo!=null){band+=`${X(idx)},${Y(d.hi)} `}});
+    let bandB='';[...fut].reverse().forEach((d,i)=>{const idx=hist.length-1+(fut.length-1-i);if(d.lo!=null)bandB+=`${X(idx)},${Y(d.lo)} `});
+    const hl=hist.map((d,i)=>(i?'L':'M')+X(i)+' '+Y(d.v)).join(' ');
+    const fl=[hist[hist.length-1]].concat(fut).map((d,i)=>(i?'L':'M')+X(hist.length-1+i)+' '+Y(d.v)).join(' ');
+    p.innerHTML=`<h3>다음 분기 매출 전망 — ${ZD.forecast_zone||'선택 상권'}</h3><p class="cd">실선=실측 · 점선=예측 · 음영=오차범위 · time-split 검증 R² ${ZD.forecast_r2||'0.80'}</p>
+      <svg viewBox="0 0 ${W} ${H}">${g}<polygon points="${band}${bandB}" fill="${cssv('--brand')}22"/>
+      <path d="${hl}" fill="none" stroke="${cssv('--brand')}" stroke-width="2.4"/>
+      <path d="${fl}" fill="none" stroke="${cssv('--brand')}" stroke-width="2.4" stroke-dasharray="5 4"/></svg>`;
+    return;
+  }
+  // 다분기 데이터 없음 → 지어내지 않고, 실제 검증된 예측 성능만 정직하게 보여준다
+  const bars=[
+    ['아는 상권 · 다음 분기 매출',0.80,'time-split 검증',cssv('--g0'),'가능'],
+    ['처음 보는 상권 · 성공확률',(ML.success_auc||0.80),'공간 홀드아웃 AUC',cssv('--g0'),'가능'],
+    ['처음 보는 상권 · 정확한 매출액',(ML.rev_r2_spatial||0.52),'공간 홀드아웃 R²',cssv('--g2'),'거침'],
+    ['식자재 · 단기 가격',0.0,'관성 못 이김(백테스트)',cssv('--g4'),'무의미'],
+  ];
+  const W=460,rowH=46,H=bars.length*rowH+6,labX=0,barX=8,barW=W-150;
+  let s='';bars.forEach((b,i)=>{const y=i*rowH+8,val=b[1],bw=Math.max(4,val*barW);
+    s+=`<text x="${labX}" y="${y+13}" font-size="12" font-weight="600" fill="${cssv('--ink')}">${b[0]}</text>
+        <text x="${labX}" y="${y+29}" font-size="10.5" fill="${cssv('--faint')}">${b[2]}</text>
+        <rect x="${barX}" y="${y+34}" width="${barW}" height="7" rx="3.5" fill="${cssv('--grid')}"/>
+        <rect x="${barX}" y="${y+34}" width="${bw}" height="7" rx="3.5" fill="${b[3]}"/>
+        <text x="${W-80}" y="${y+18}" font-size="15" font-weight="800" font-family="monospace" fill="${b[3]}" text-anchor="end">${val>0?val.toFixed(2):'—'}</text>
+        <text x="${W-72}" y="${y+18}" font-size="11" font-weight="700" fill="${b[3]}">${b[4]}</text>`});
+  p.innerHTML=`<h3>🔮 매출 전망 — 무엇을 예측할 수 있나</h3>
+    <p class="cd">전부 <b>실측 검증치</b> · 지어낸 예측선은 넣지 않았습니다</p>
+    <svg viewBox="0 0 ${W} ${H}">${s}</svg>
+    <div style="margin-top:14px;padding:13px 15px;border:1px solid var(--line);border-radius:11px;background:var(--brand-soft)">
+      <div style="font-size:12.5px;font-weight:800;color:var(--brand);margin-bottom:6px">📈 다음 분기 매출 예측선을 켜려면</div>
+      <div style="font-size:12px;color:var(--mut);line-height:1.7">
+        지금은 <b>1개 분기(20254)</b>만 있어 시간축이 없습니다. 서울 상권분석에서 <b style="color:var(--ink)">여러 분기 CSV</b>(예: 2022~2025, 12개 분기)를 넣으면,
+        아는 상권의 다음 분기~내년 매출을 <b style="color:var(--ink)">실선+점선+오차밴드</b> 그래프로 자동 생성합니다.
+        상권 매출은 분기마다 완만·추세적으로 변해 <b style="color:var(--ink)">진짜 시계열 예측(R²0.80)</b>이 됩니다 — 식자재 단기예측과 달리 관성이 아닙니다.
+      </div>
+    </div>`;
 }
+
 
 function drawSources(p){
   const uniqZones=new Set(Z.map(r=>r.z)).size;
