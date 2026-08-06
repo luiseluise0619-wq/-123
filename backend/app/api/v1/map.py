@@ -50,6 +50,10 @@ def load_zones(industry: str = "", crs: str = "EPSG:5181"):
         df["sim"] = pd.to_numeric(df["SIMILR_INDUTY_STOR_CO"], errors="coerce"); agg["comp"] = ("sim", "mean")
     if "TOT_FLPOP_CO" in df.columns:
         df["fp"] = pd.to_numeric(df["TOT_FLPOP_CO"], errors="coerce"); agg["foot"] = ("fp", "mean")
+    if "SIGNGU_CD_NM" in df.columns:
+        agg["gu"] = ("SIGNGU_CD_NM", "first")          # 자치구
+    if "ADSTRD_CD_NM" in df.columns:
+        agg["dong"] = ("ADSTRD_CD_NM", "first")        # 행정동
     g = df.groupby("TRDAR_CD").agg(**agg).reset_index()
     g = g[(g["rev"] > 0) & g["x"].notna() & g["y"].notna()]
     if g.empty:
@@ -69,8 +73,10 @@ def load_zones(industry: str = "", crs: str = "EPSG:5181"):
         ztype = "GREEN" if opp >= 70 else "RED" if opp <= 45 else "BLUE"
         zones.append({
             "id": str(r["TRDAR_CD"]), "name": str(r["name"]),
+            "gu": str(r.get("gu") or ""), "dong": str(r.get("dong") or ""),
             "lat": round(float(r["lat"]), 5), "lng": round(float(r["lon"]), 5),
             "grade": grade, "percentile_top": round((1 - r["p"]) * 100, 1),
+            "monthly_sales_won": int(r["rev"]),
             "opportunity_score": opp, "zone_color": GRADE_COLOR[grade], "zone_type": ztype,
             "avg_monthly_sales": f"{r['rev']/1e8:.1f}억",
             "foot_traffic_daily": int(r["foot"]) if r.get("foot") == r.get("foot") else None,
@@ -80,13 +86,47 @@ def load_zones(industry: str = "", crs: str = "EPSG:5181"):
     return zones
 
 
+@router.get("/regions")
+def get_regions(industry: str = ""):
+    """자치구 → 행정동 목록 + 각 지역 자리 수 (지역별 드릴다운용)."""
+    zones = load_zones(industry)
+    if zones is None:
+        return {"available": False, "message": "실데이터 없음. build_seoul_dataset.py --build 후 사용."}
+    from collections import defaultdict
+    gu = defaultdict(lambda: defaultdict(int))
+    for z in zones:
+        if z["gu"]:
+            gu[z["gu"]][z["dong"] or "-"] += 1
+    return {"available": True,
+            "regions": [{"gu": g, "count": sum(d.values()),
+                         "dongs": [{"dong": k, "count": v} for k, v in sorted(d.items())]}
+                        for g, d in sorted(gu.items())]}
+
+
 @router.get("/opportunity-map")
-def get_opportunity_map_layers(region: str = "서울", industry: str = "", limit: int = 800):
+def get_opportunity_map_layers(region: str = "서울", industry: str = "", gu: str = "",
+                               dong: str = "", grade: str = "", price_tier: str = "",
+                               limit: int = 800):
+    """지역별(gu/dong) + 가격대별(price_tier: high/mid/low) + 등급 필터.
+    price_tier: high=상위30%, mid=중간40%, low=하위30% (매출 기준)."""
     zones = load_zones(industry)
     if zones is None:
         return {"region": region, "available": False, "zones": [],
-                "message": "실데이터(seoul_trdar_dataset.csv) 없음. backend 에서 "
-                           "build_seoul_dataset.py --build 로 수집 후 사용 (pyproj/pandas 필요). "
-                           "가짜 데이터를 반환하지 않습니다."}
+                "message": "실데이터(seoul_trdar_dataset.csv) 없음. build_seoul_dataset.py --build "
+                           "로 수집 후 사용. 가짜 데이터를 반환하지 않습니다."}
+    if gu:
+        zones = [z for z in zones if z["gu"] == gu]
+    if dong:
+        zones = [z for z in zones if z["dong"] == dong]
+    if grade:
+        zones = [z for z in zones if z["grade"] == grade]
+    if price_tier and zones:
+        revs = sorted(z["monthly_sales_won"] for z in zones)
+        lo, hi = revs[int(len(revs) * .3)], revs[int(len(revs) * .7)]
+        zones = [z for z in zones if
+                 (price_tier == "low" and z["monthly_sales_won"] <= lo) or
+                 (price_tier == "mid" and lo < z["monthly_sales_won"] <= hi) or
+                 (price_tier == "high" and z["monthly_sales_won"] > hi)]
     return {"region": region, "available": True, "industry": industry or "전체",
+            "filters": {"gu": gu, "dong": dong, "grade": grade, "price_tier": price_tier},
             "count": len(zones), "zones": zones[:limit]}
