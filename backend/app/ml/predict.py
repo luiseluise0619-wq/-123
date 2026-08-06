@@ -126,12 +126,16 @@ class InferenceService:
             rent_change_pct=-0.20, floor_area_change_pct=0.20
         )
         
+        # 정직 표기: 실제 학습모델로 예측했는지, 모델이 없어 폴백값인지.
+        models_loaded = bool(self.rev_model and self.suc_model and self.risk_model)
         return {
             "address": address,
             "industry": industry,
             "budget_krw": budget,
             "floor_area_m2": floor_area,
             "district_name": address.split()[-1] if len(address.split()) > 0 else "성수동2가",
+            "prediction_source": "trained_model" if models_loaded else "fallback_no_model",
+            "models_loaded": models_loaded,
             "expected_monthly_revenue": int(expected_revenue),
             "success_probability_pct": round(success_prob * 100.0, 1),
             "closure_risk": closure_risk,
