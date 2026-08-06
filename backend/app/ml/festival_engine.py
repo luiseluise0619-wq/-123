@@ -33,6 +33,9 @@ class FestivalImpactEngine:
         ]
         
         return {
+            "method": "heuristic_rule",
+            "disclaimer": "축제 영향은 학습모델이 아니라 규칙 기반 추정(계수 미검증)입니다. "
+                          "실측 검증 전까지 참고용 시나리오로만 사용하세요.",
             "event_name": event_name,
             "location": location,
             "event_duration_days": event_duration_days,

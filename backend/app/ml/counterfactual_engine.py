@@ -49,6 +49,9 @@ class CounterfactualSimulationEngine:
             rec_label = "비추천 시나리오"
             
         return {
+            "method": "heuristic_rule",
+            "disclaimer": "what-if 효과는 학습모델이 아니라 규칙 기반 탄력성 계수(미검증) 추정입니다. "
+                          "참고용 시나리오이며 실제 인과효과가 아닙니다.",
             "scenario_summary": {
                 "price_change_pct": price_change_pct,
                 "operating_hours_extension": hours_extension,
