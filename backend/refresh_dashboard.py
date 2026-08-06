@@ -28,8 +28,8 @@ REAL = os.path.join(HERE, "app", "data", "real_data")
 AGCSV = os.path.join(MARKET, "agmarket_prices.csv")
 SNAP = os.path.join(MARKET, "sangkwon_snapshot.json")
 TRDAR = os.path.join(REAL, "seoul_trdar_dataset.csv")
-TEMPLATE = os.path.join(ROOT, "frontend", "dashboard_template.html")
-OUT = os.path.join(ROOT, "frontend", "sangkwon_charts_dashboard.html")
+TEMPLATE = os.path.join(HERE, "dashboard_template.html")
+OUT = os.path.join(ROOT, "frontend", "dashboard.html")
 
 
 # ----------------------------------------------------------------- 1) 식자재

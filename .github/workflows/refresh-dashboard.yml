@@ -34,10 +34,10 @@ jobs:
         run: |
           git config user.name  "dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
-          if git diff --quiet -- frontend/sangkwon_charts_dashboard.html; then
+          if git diff --quiet -- frontend/dashboard.html; then
             echo "변경 없음 — 커밋 생략"
           else
-            git add frontend/sangkwon_charts_dashboard.html
+            git add frontend/dashboard.html
             git commit -m "chore: 대시보드 자동 갱신 ($(date -u +%Y-%m-%d))"
             git push
           fi
