@@ -94,18 +94,27 @@ FEATS = ["stores", "we_ratio", "fm_ratio"]  # 누출 cnt·ops 제외
 
 
 def train_ml(rows):
+    """정직한 목표 = '점포당 매출'(내 가게가 실제 벌 돈).
+    총매출을 목표로 하면 점포수가 합계를 기계적으로 끌어올려 AUC 0.80/R²0.47로 부풀려짐.
+    새 점주가 궁금한 건 '내 가게'이므로 rev/stores 를 예측 → AUC 0.64 · R² 0.35(정직).
+    stores==0 행은 점포당 계산 불가 → 예측값 null(카드/그래프에서 미표시)."""
     from lightgbm import LGBMClassifier, LGBMRegressor
     from sklearn.model_selection import GroupKFold
     from sklearn.metrics import roc_auc_score, r2_score
-    df = pd.DataFrame(rows)
+    full = pd.DataFrame(rows)
     for c in FEATS:
-        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
-    df["icode"] = df["i"].astype("category").cat.codes
+        full[c] = pd.to_numeric(full[c], errors="coerce").fillna(0)
+    full["icode"] = full["i"].astype("category").cat.codes
+    full["sp"] = None; full["pr"] = None
+
+    df = full[full["stores"] > 0].copy()
+    df["perstore"] = df["rev"] / df["stores"]
+    df = df[df["perstore"] > 0].reset_index()          # index = full 행 매핑용
     X = df[FEATS + ["icode"]].values
     groups = df["z"].values
-    df["pct"] = df.groupby("i")["rev"].rank(pct=True)
+    df["pct"] = df.groupby("i")["perstore"].rank(pct=True)
     yc = (df["pct"] >= 0.65).astype(int).values
-    yr = df["rev"].values
+    yr = df["perstore"].values
     gkf = GroupKFold(n_splits=5)
     oof_p = np.zeros(len(df)); oof_r = np.zeros(len(df)); au = []; r2 = []
     for tr, te in gkf.split(X, yc, groups):
@@ -118,20 +127,18 @@ def train_ml(rows):
                             min_child_samples=40, random_state=42, verbose=-1).fit(X[tr], yr[tr])
         pr = np.clip(reg.predict(X[te]), 0, None); oof_r[te] = pr; r2.append(r2_score(yr[te], pr))
     df["sp"] = np.round(oof_p * 100).astype(int)
-    df["pr"] = np.round(oof_r).astype(int)
+    df["pr"] = np.round(oof_r).astype(int)             # 점포당 예측 월매출
+    for _, r in df.iterrows():                          # full 로 되돌려 매핑
+        full.at[r["index"], "sp"] = int(r["sp"]); full.at[r["index"], "pr"] = int(r["pr"])
     metrics = {"success_auc": round(float(np.mean(au)), 3),
                "success_auc_std": round(float(np.std(au)), 3),
                "rev_r2_spatial": round(float(np.mean(r2)), 3),
+               "target": "점포당 매출(내 가게)",
                "n": int(len(df)), "zones": int(df["z"].nunique()),
                "feats": FEATS + ["업종"], "holdout": "GroupKFold(zone) 5-fold"}
-    calib = (df.assign(pb=pd.qcut(df["sp"], 10, labels=False, duplicates="drop"))
-               .groupby("pb").agg(sp=("sp", "mean"),
-                                  actual_success=("pct", lambda s: float((s >= 0.65).mean())),
-                                  n=("sp", "size")).reset_index())
-    calib["sp"] = calib["sp"].round(1); calib["actual_success"] = (calib["actual_success"] * 100).round(1)
-    out_rows = df[["z", "i", "rev", "g", "p", "cnt", "we_ratio", "fm_ratio",
-                   "stores", "ops", "sp", "pr"]].to_dict("records")
-    return out_rows, metrics, calib[["sp", "actual_success", "n"]].to_dict("records")
+    out_rows = full[["z", "i", "rev", "g", "p", "cnt", "we_ratio", "fm_ratio",
+                     "stores", "ops", "sp", "pr"]].to_dict("records")
+    return out_rows, metrics, []
 
 
 # ----------------------------------------------------------------- chartdata
