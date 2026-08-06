@@ -1,0 +1,170 @@
+<title>상권 리포트 — 사장님인사이트</title>
+<style>
+  :root{
+    --bg:#EDEEF2;--paper:#FBFBFD;--ink:#13141B;--sub:#3C4152;--cap:#7A8096;--dim:#A5AABB;
+    --line:#DADDE7;--dash:#CFD3DE;--accent:#4338CA;--accent2:#6366F1;--cta:#F0A23C;--up:#D6455A;--dn:#2E9E6B;
+    --serif:"Noto Serif KR",Georgia,"Apple SD Gothic Neo",serif;
+    --sans:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);word-break:keep-all;overflow-wrap:break-word;-webkit-font-smoothing:antialiased}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .toolbar{position:sticky;top:0;z-index:9;background:var(--ink);color:#EDEEF2;padding:9px 18px;display:flex;align-items:center;gap:12px;font-size:13px}
+  .toolbar b{font-family:var(--serif)} .toolbar .sp{margin-left:auto;opacity:.6;font-size:11px}
+  .toolbar button{background:var(--cta);color:#13141B;border:0;font-weight:700;padding:7px 14px;border-radius:999px;cursor:pointer;font-family:var(--sans);font-size:12.5px}
+  .doc{max-width:820px;margin:0 auto;padding:24px 16px 60px}
+  .page{background:var(--paper);border:1px solid var(--line);border-radius:6px;box-shadow:0 8px 24px rgba(19,20,27,.10);padding:44px 46px;margin-bottom:22px;min-height:1000px;position:relative;display:flex;flex-direction:column}
+  .pnum{position:absolute;bottom:20px;right:30px;font-family:var(--mono);font-size:10px;color:var(--dim)}
+  .pfoot{position:absolute;bottom:18px;left:46px;font-size:9.5px;color:var(--dim);font-family:var(--mono)}
+  .tag{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.04em}
+  .t-calc{background:#2E9E6B1c;color:var(--dn)} .t-real{background:#4338CA14;color:var(--accent)} .t-search{background:#6366F11c;color:var(--accent2)}
+  .t-pred{background:#F0A23C24;color:#9A6512} .t-wait{background:#D6455A16;color:var(--up)} .t-note{background:#7A809620;color:var(--sub)}
+  .kicker{font-family:var(--mono);font-size:10.5px;color:var(--cap);letter-spacing:.14em;text-transform:uppercase;margin-bottom:auto}
+  h2.ph{font-family:var(--serif);font-size:24px;font-weight:700;margin:6px 0 4px;line-height:1.3}
+  .lead{color:var(--sub);font-size:13.5px;line-height:1.7;margin:0 0 20px}
+  .hr{height:1px;background:var(--dash);border:0;margin:16px 0}
+  .verdict-badge{display:inline-block;font-family:var(--serif);font-weight:700;font-size:22px;color:#fff;padding:9px 22px;border-radius:999px}
+  .reason{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+  .reason .no{font-family:var(--mono);font-weight:700;color:var(--accent);font-size:14px;flex-shrink:0}
+  .reason .txt{font-size:13.5px;color:var(--ink);line-height:1.6} .reason .txt b{color:var(--up)} .reason .txt .g{color:var(--dn)}
+  .kv{display:grid;grid-template-columns:1fr auto;gap:8px 14px;font-size:13.5px;padding:10px 0;border-bottom:1px dashed var(--dash)}
+  .kv .k{color:var(--sub)} .kv .v{font-family:var(--mono);font-weight:600;text-align:right}
+  .big2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 18px}
+  .cell{border:1px solid var(--line);border-radius:12px;padding:15px 17px} .cell.dark{background:var(--ink);color:#EDEEF2;border-color:var(--ink)}
+  .cell .l{font-size:11.5px;color:var(--cap)} .cell.dark .l{color:#A5AABB} .cell .n{font-family:var(--mono);font-size:26px;font-weight:600;margin-top:4px}
+  .formula{background:#7A809614;border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--sub);line-height:1.9}
+  .formula b{color:var(--ink)} .formula .h{display:block;font-family:var(--sans);font-weight:700;font-size:11px;color:var(--cap);margin-bottom:4px;letter-spacing:.04em}
+  svg{display:block;width:100%;overflow:visible} text{font-family:var(--sans)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  th{text-align:left;color:var(--cap);font-weight:600;font-size:11px;padding:8px 6px;border-bottom:1.5px solid var(--line)}
+  td{padding:9px 6px;border-bottom:1px solid var(--line)} td.n{font-family:var(--mono);text-align:right}
+  .wait{border:1.5px dashed var(--dash);border-radius:14px;padding:26px;text-align:center;color:var(--cap);font-size:13px;margin-top:10px;line-height:1.7}
+  .sign{font-size:13px;line-height:1.9;color:var(--sub)} .sign b{color:var(--ink)} .sign li{margin-bottom:9px}
+  .cover-top{font-family:var(--serif);font-size:14px;color:var(--accent);font-weight:700}
+  .cover-zone{font-family:var(--serif);font-size:38px;font-weight:700;line-height:1.15;margin:10px 0 2px}
+  .cover-meta{font-family:var(--mono);font-size:12.5px;color:var(--cap);margin-bottom:26px}
+  @media(prefers-color-scheme:dark){:root{--bg:#15161D;--paper:#1B1D26;--ink:#EDEEF2;--sub:#B9BECC;--cap:#8990A2;--dim:#5F6676;--line:#2C2F3C;--dash:#333747}}
+  @media print{
+    body{background:#fff} .toolbar{display:none} .doc{max-width:none;padding:0}
+    .page{box-shadow:none;border:0;border-radius:0;margin:0;min-height:auto;height:100vh;page-break-after:always;padding:16mm 18mm}
+    @page{size:A4;margin:0}
+  }
+</style>
+
+<div class="toolbar"><b>사장님인사이트</b> 상권 리포트 <span class="sp" id="sp"></span><button onclick="window.print()">PDF로 저장 / 인쇄</button></div>
+<div class="doc" id="doc"></div>
+
+<script id="RD" type="application/json">{"zone": "신우어린이공원", "ind": "한식음식점", "quarter": "2026 2분기", "n_ind": 1072, "perstore": 5636, "belowPct": 40, "Q": {"p25": 4589, "p40": 5641, "p50": 6319, "p75": 8214, "p90": 10913}, "stores": 33, "we": 29, "fm": 27, "unit": 28074, "rent_area": 20, "rent_won": 475, "rent_k": 71.8, "rent_name": "종로(도심)", "labor": 600, "etc": 200, "cogs": 38, "invest": 12000, "fixed": 1275, "bep": 2056, "failN": 4, "newExp": 5371, "similar": [{"z": "벌말어린이공원", "perstore": 5747, "stores": 51, "we": 30, "cos": 0.98}, {"z": "온수역 1번", "perstore": 4063, "stores": 24, "we": 27, "cos": 0.96}, {"z": "갈산공원", "perstore": 8399, "stores": 15, "we": 28, "cos": 0.95}, {"z": "방화초등학교", "perstore": 4790, "stores": 60, "we": 29, "cos": 0.95}, {"z": "효창공원앞역 6번", "perstore": 6935, "stores": 72, "we": 29, "cos": 0.95}]}</script>
+<script>
+const R=JSON.parse(document.getElementById('RD').textContent);
+const won=n=>n>=10000?(n/10000).toFixed(n>=100000?0:1)+'억':Math.round(n).toLocaleString()+'만';
+document.getElementById('sp').textContent=`${R.zone} · ${R.ind} · ${R.quarter}`;
+const failN=R.failN, margin=R.newExp-R.bep;
+const vd=margin<0?{l:'위험합니다',c:'#D6455A'}:failN<=50?{l:'들어가도 됩니다',c:'#2E9E6B'}:failN<=75?{l:'조건부',c:'#C2871B'}:{l:'위험합니다',c:'#D6455A'};
+const we=R.we,fm=R.fm;
+const when=we>=45?'주말 장사':we<=32?'평일 장사':'평일·주말 고른 장사';
+const who=fm>=60?'여성 중심':fm<=35?'남성 중심':'남녀 고른';
+const character=`${when} · ${who} 고객 — ${we<=32&&fm<=35?'직장인 점심·회식 상권으로 읽힙니다':we>=45?'주말 나들이·모임 상권입니다':'생활 밀착 상권입니다'}`;
+const dayRev=Math.round(R.bep/26), cust=Math.round(dayRev*1e4/R.unit);
+
+function distSVG(bep){
+  const Q=R.Q,W=680,H=70,pl=8,pr=8,cw=W-pl-pr,lo=Q.p25*.6,hi=Q.p90*1.25,X=v=>pl+Math.max(0,Math.min(1,(v-lo)/(hi-lo)))*cw;
+  const seg=(a,b,c)=>`<rect x="${X(a)}" y="26" width="${Math.max(1,X(b)-X(a))}" height="16" fill="${c}" rx="2"/>`;
+  const bx=X(bep),nx=X(R.newExp);
+  let s=seg(lo,Q.p25,'#DADDE7')+seg(Q.p25,Q.p50,'#B7C0E8')+seg(Q.p50,Q.p75,'#8E9BDD')+seg(Q.p75,hi,'#6366F1');
+  s+=`<rect x="${pl}" y="26" width="${Math.max(0,bx-pl)}" height="16" fill="#D6455A" opacity="0.13"/>`;
+  s+=`<polygon points="${nx-5},24 ${nx+5},24 ${nx},16" fill="#4338CA"/><text x="${nx}" y="13" font-size="9.5" fill="#4338CA" text-anchor="middle" font-family="var(--mono)">신규점 예상</text>`;
+  s+=`<line x1="${bx}" y1="18" x2="${bx}" y2="50" stroke="#D6455A" stroke-width="2.5"/><text x="${bx}" y="62" font-size="11" fill="#D6455A" font-weight="700" text-anchor="middle" font-family="var(--mono)">손익분기 ${won(bep)}</text>`;
+  [['하위25%',Q.p25],['중앙',Q.p50],['상위25%',Q.p75]].forEach(([l,v])=>s+=`<text x="${X(v)}" y="22" font-size="8.5" fill="var(--cap)" text-anchor="middle" font-family="var(--mono)">${won(v)}</text>`);
+  return `<svg viewBox="0 0 ${W} ${H}">${s}</svg>`;
+}
+const P=(n,tag,tagcls,kicker,title,body)=>`<div class="page">
+  <div class="kicker">${kicker} <span class="tag ${tagcls}">${tag}</span></div>
+  <h2 class="ph">${title}</h2>${body}
+  <div class="pfoot">사장님인사이트 · ${R.zone} · ${R.ind}</div><div class="pnum">${n} / 8</div></div>`;
+
+const pages=[
+ `<div class="page">
+   <div class="cover-top">상권 진단 리포트</div>
+   <div class="cover-zone">${R.zone}<br><span style="font-size:22px;color:var(--sub)">${R.ind}</span></div>
+   <div class="cover-meta">서울 상권분석 ${R.quarter} · 실측 ${R.n_ind.toLocaleString()}개 점포 기준</div>
+   <div style="margin:8px 0 20px"><span class="verdict-badge" style="background:${vd.c}">${vd.l}</span>
+     <span class="tag t-calc" style="margin-left:10px;vertical-align:middle">계산 · 오차 0</span></div>
+   <div class="reason"><div class="no">1</div><div class="txt">이 업종에서 <b>하위 ${failN}%</b>에 들지 않아야 손익분기를 넘깁니다. <span class="g">(손익분기 ${won(R.bep)} vs 점포당 매출 분포)</span></div></div>
+   <div class="reason"><div class="no">2</div><div class="txt">점포 <b>${R.stores}곳</b>이 이 매출을 나눠 갖습니다 — 포화도 점검 필요. <span style="color:var(--cap)">(3쪽)</span></div></div>
+   <div class="reason"><div class="no">3</div><div class="txt">${character}. <span style="color:var(--cap)">(5쪽)</span></div></div>
+   <div class="reason"><div class="no">4</div><div class="txt">초기투자 ${won(R.invest)} 회수: 목표 순이익 기준 별도 계산 <span style="color:var(--cap)">(2쪽)</span></div></div>
+   <div style="margin-top:20px;font-size:11.5px;color:var(--cap);line-height:1.7">각 쪽에 <b style="color:var(--sub)">계산·실측·검색·예측·고지</b> 태그가 붙어 근거의 성격을 밝힙니다. 마지막 8쪽 <b style="color:var(--sub)">"이것만 믿고 계약하지 마십시오"</b>를 반드시 함께 읽으십시오.</div>
+   <div class="pfoot">사장님인사이트 · ${R.zone}</div><div class="pnum">1 / 8</div></div>`,
+ P(2,'계산','t-calc','수익성',' 손익분기와 필요 순위',`
+   <p class="lead">고정비를 원가율로 나눈 값이 손익분기입니다. 예측이 아니라 산수입니다.</p>
+   <div class="kv"><span class="k">월 임대료 <span class="tag t-real">부동산원</span> · ${R.rent_name} ${R.rent_area}평</span><span class="v">${R.rent_won.toLocaleString()}만</span></div>
+   <div class="kv"><span class="k">월 인건비 <span class="tag t-note">가정</span></span><span class="v">${R.labor}만</span></div>
+   <div class="kv"><span class="k">기타 고정비 <span class="tag t-note">가정</span></span><span class="v">${R.etc}만</span></div>
+   <div class="kv"><span class="k">= 고정비 합계</span><span class="v">${R.fixed.toLocaleString()}만</span></div>
+   <div class="big2" style="margin-top:16px">
+     <div class="cell dark"><div class="l">월 손익분기 매출</div><div class="n">${won(R.bep)}<span style="font-size:14px">원</span></div></div>
+     <div class="cell"><div class="l">하위 몇 %에 들면 미달</div><div class="n" style="color:${vd.c}">${failN}<span style="font-size:15px">%</span></div></div>
+   </div>
+   <div class="formula"><span class="h">계산 방법 (전부 산수)</span>
+     손익분기 매출 = <b>고정비 ÷ (1 − 원가율)</b> = ${R.fixed.toLocaleString()} ÷ (1 − 0.${R.cogs}) = <b>${won(R.bep)}원/월</b><br>
+     하루 필요매출 = 손익분기 ÷ 영업일수(26일) = <b>${won(dayRev*1e4/1e4)}원/일</b> · 하루 필요손님 = 하루매출 ÷ 객단가(${R.unit.toLocaleString()}원) = <b>${cust}명</b><br>
+     회수기간 = 초기투자 ÷ 월 순이익 · 필요순위 = 손익분기가 업종 점포당매출 분포에서 놓인 위치</div>
+   <div style="font-size:12px;color:var(--sub);font-weight:600;margin:16px 0 4px">점포당 월매출 분포 속 손익분기 위치</div>
+   ${distSVG(R.bep)}
+   <p style="font-size:11.5px;color:var(--cap);margin-top:14px;line-height:1.6">신규점은 상권 평균의 <b>85%</b>에서 시작한다고 보수적으로 봅니다(가정). 실제 폐업률 데이터가 들어오면 이 기준을 교체합니다.</p>`),
+ P(3,'계산','t-calc','경쟁',' 포화도 — 몇으로 나눠 갖나',`
+   <p class="lead">같은 매출을 몇 개 점포가 나눠 갖는지가 포화도입니다.</p>
+   <div class="big2">
+     <div class="cell"><div class="l">이 상권 · 이 업종 점포 수</div><div class="n">${R.stores}<span style="font-size:15px">곳</span></div></div>
+     <div class="cell"><div class="l">점포당 월매출 (업종 내 위치)</div><div class="n">${won(R.perstore)}</div><div style="font-size:11px;color:var(--cap);margin-top:3px">하위 ${R.belowPct}% 수준</div></div>
+   </div>
+   <hr class="hr">
+   <div class="kv"><span class="k">업종 중앙값 대비</span><span class="v">${R.perstore>=R.Q.p50?'+':''}${won(R.perstore-R.Q.p50)}</span></div>
+   <div class="kv"><span class="k">업종 상위 25% 문턱(p75)</span><span class="v">${won(R.Q.p75)}</span></div>
+   <p style="font-size:12.5px;color:var(--sub);line-height:1.7;margin-top:16px">${R.perstore<R.Q.p40?'점포 대비 점포당 매출이 낮은 편 — <b style="color:var(--up)">포화 신호</b>. 등급이 높아도 실제로 나눠 갖는 몫은 작을 수 있습니다.':'점포 수 대비 점포당 매출이 무너지지 않았습니다 — 포화 압력은 아직 낮은 편.'}</p>
+   <p style="font-size:11px;color:var(--cap);margin-top:10px">※ 개업·폐업 순증감을 붙이면 포화가 <b>악화 중인지 개선 중인지</b>까지 판정됩니다(6쪽).</p>`),
+ P(4,'검색','t-search','비교',' 닮은 상권 5곳',`
+   <p class="lead">6개 축(점포당매출·거래량·점포수·주말·여성·객단가)의 프로필 유사도입니다. 예측이 아니라 <b>검색</b>이라 오차가 없습니다.</p>
+   <table><thead><tr><th>상권</th><th style="text-align:right">점포당매출</th><th style="text-align:right">점포수</th><th style="text-align:right">주말%</th><th style="text-align:right">유사도</th></tr></thead>
+   <tbody>${R.similar.map(s=>`<tr><td>${s.z}</td><td class="n">${won(s.perstore)}</td><td class="n">${s.stores}</td><td class="n">${s.we}%</td><td class="n">${s.cos}</td></tr>`).join('')}</tbody></table>
+   <p style="font-size:12px;color:var(--sub);margin-top:16px;line-height:1.7">이전·2호점을 고민한다면, <b>닮은 상권들이 실제로 어떻게 됐는지</b>가 가장 강한 참고자료입니다. 개·폐업 데이터가 붙으면 각 상권의 <b>생존/폐업 결과</b>를 이 표에 함께 표시합니다.</p>`),
+ P(5,'실측','t-real','고객',' 고객 구성과 장사 성격',`
+   <p class="lead">이미 이 상권에서 일어난 실제 매출의 구성입니다.</p>
+   <div class="big2">
+     <div class="cell"><div class="l">주말 매출 비중</div><div class="n">${we}<span style="font-size:15px">%</span></div><div style="font-size:11px;color:var(--cap);margin-top:3px">${we<=32?'평일 중심':we>=45?'주말 중심':'고름'}</div></div>
+     <div class="cell"><div class="l">여성 고객 비중</div><div class="n">${fm}<span style="font-size:15px">%</span></div><div style="font-size:11px;color:var(--cap);margin-top:3px">${fm<=35?'남성 중심':fm>=60?'여성 중심':'고름'}</div></div>
+   </div>
+   <div class="cell" style="margin-top:6px"><div class="l">객단가 (실측 · 매출÷거래건수)</div><div class="n">${R.unit.toLocaleString()}<span style="font-size:15px">원</span></div></div>
+   <div style="margin-top:20px;padding:16px 18px;border-left:3px solid var(--accent);background:#4338CA0a;border-radius:0 10px 10px 0">
+     <div style="font-size:12px;color:var(--cap);margin-bottom:4px">이 자리는</div>
+     <div style="font-family:var(--serif);font-size:17px;font-weight:700;line-height:1.5">${character}</div>
+   </div>`),
+ P(6,'데이터 대기','t-wait','추세',' 개업·폐업 추이',`
+   <p class="lead">최근 4분기 순증감은 어떤 예측보다 설득력 있는 신호입니다 — "빠져나가는 상권"인지 "들어오는 상권"인지.</p>
+   <div class="wait">📥 <b style="color:var(--sub)">데이터 수집 예정</b><br>
+   개업·폐업 수는 <b>소진공 상권정보시스템(전국)</b>에 있습니다. 수집 파이프라인을 붙이면<br>
+   "최근 4분기 순감 −N곳" 같은 실측 추세가 이 자리에 들어가고, <b>폐업위험 모델</b>의 재료가 됩니다.<br>
+   <span style="font-size:11px;color:var(--dim)">지어낸 숫자를 넣지 않기 위해 비워 둡니다.</span></div>`),
+ P(7,'예측 · 약한 신호','t-pred','참고',' 통계 모델 구간 (참고용)',`
+   <p class="lead">아래는 <b>참고</b>입니다. 이 리포트의 판정은 위 계산에 근거하며, 모델 예측은 보조일 뿐입니다.</p>
+   <div class="kv"><span class="k">성공확률 분류기 정확도</span><span class="v">AUC 0.66</span></div>
+   <div class="kv"><span class="k">예상 매출 회귀</span><span class="v">R² 0.36</span></div>
+   <div class="kv"><span class="k">검증 방식</span><span class="v">공간 홀드아웃(처음 보는 상권)</span></div>
+   <p style="font-size:12.5px;color:var(--sub);line-height:1.7;margin-top:16px">무료 공공데이터는 상권 단위 집계라 개별 점포의 성패를 가르는 변수(브랜드·운영·목·임대차 조건)를 담지 못합니다. 그래서 모델은 <b>"동전던지기보단 낫다"</b> 수준이며, 정확한 액수 예측이 아니라 <b>순위·경향의 보조 지표</b>로만 씁니다. 누출 피처(거래건수·점포당매출)는 성능을 부풀리므로 학습에서 제외했습니다.</p>`),
+ `<div class="page">
+   <div class="kicker">고지 <span class="tag t-note">서명</span></div>
+   <h2 class="ph" style="font-size:26px">이것만 믿고 계약하지 마십시오</h2>
+   <p class="lead">이 리포트가 <b>말할 수 없는 것</b>을 밝힙니다. 이 페이지가 이 문서의 서명입니다.</p>
+   <ul class="sign">
+     <li><b>가정값이 섞여 있습니다.</b> 인건비·기타 고정비·원가율·초기투자·신규점 85%·판정 기준선(50/75%)은 <b>출처 없는 추정</b>입니다. 실제 조건으로 반드시 바꿔 계산하십시오.</li>
+     <li><b>매출 분포는 살아남은 가게 기준</b>입니다. 이미 폐업한 가게는 빠져 있어 <b>실제보다 낙관적</b>입니다.</li>
+     <li><b>임대료는 상권 평균</b>(부동산원)입니다. 같은 상권이라도 층·목·면적에 따라 실제 임대료는 크게 다릅니다.</li>
+     <li><b>개인 점포의 성패는 데이터 밖에 있습니다.</b> 브랜드·운영·메뉴·서비스·임대차 협상력이 절반 이상을 결정합니다.</li>
+     <li><b>이 문서는 참고자료입니다.</b> 은행 대출 상담·임대차 협상의 근거로 쓰되, 최종 판단은 현장 확인 후 하십시오.</li>
+   </ul>
+   <div style="margin-top:auto;padding-top:20px;border-top:1px solid var(--line);font-size:11px;color:var(--cap);font-family:var(--mono)">사장님인사이트 · 실측=서울 상권분석·부동산원 · 계산=오차0 · 지어낸 수치 없음 · ${R.quarter}</div>
+   <div class="pnum">8 / 8</div></div>`,
+];
+document.getElementById('doc').innerHTML=pages.join('');
+</script>
