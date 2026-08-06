@@ -28,3 +28,4 @@ backend/app/data/real_data/
 # OS Files
 .DS_Store
 Thumbs.db
+backend/app/data/market/*.csv

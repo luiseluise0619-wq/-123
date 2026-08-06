@@ -35,7 +35,18 @@ def trending_for_business(geo: str = "KR"):
 
 @router.get("/food-price")
 def food_price(item: str = "양파"):
-    return M.food_price(item)
+    """공판장 실가격 기반 분석+예측(로컬 CSV). KAMIS 키 있으면 실시간도 가능."""
+    from app.services import foodprice_engine as FP
+    res = FP.analyze(item)
+    if not res.get("available"):  # CSV 없으면 KAMIS 실시간 폴백
+        return M.food_price(item)
+    return res
+
+
+@router.get("/food-items")
+def food_items():
+    from app.services import foodprice_engine as FP
+    return {"items": FP.items()}
 
 
 @router.get("/season")
