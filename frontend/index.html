@@ -41,6 +41,36 @@
   .selwrap{display:flex;align-items:center}.selwrap::after{content:"";width:8px;height:8px;border-right:2px solid var(--ink3);border-bottom:2px solid var(--ink3);transform:rotate(45deg);margin-left:8px;flex-shrink:0}
   .selwrap select{appearance:none;-webkit-appearance:none}
   .inl{display:flex;align-items:baseline;gap:6px}.inl input{text-align:left;font-family:var(--mono);width:auto;flex:1}.inl .u{color:var(--ink3);font-size:15px}
+  /* 피커 행 */
+  .pk{width:100%;text-align:left;background:transparent;border:0;cursor:pointer;font-family:var(--sans);color:var(--ink)}
+  .pk:active{background:var(--surface2)}
+  .pkv{margin-left:auto;font-size:17px;font-weight:500;color:var(--ink);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chev{width:8px;height:8px;border-right:2px solid var(--ink3);border-bottom:2px solid var(--ink3);transform:rotate(-45deg);flex-shrink:0;margin-left:10px}
+  /* 선택 시트 */
+  .sheet-bg{position:fixed;inset:0;background:rgba(17,17,20,.34);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}
+  .sheet-bg.on{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:0;right:0;bottom:0;max-width:460px;margin:0 auto;background:var(--surface);border-radius:22px 22px 0 0;z-index:41;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);max-height:82vh;display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(17,17,20,.16);padding-bottom:env(safe-area-inset-bottom)}
+  .sheet.on{transform:translateY(0)}
+  @media(prefers-reduced-motion:reduce){.sheet,.sheet-bg{transition:none}}
+  .sheet-grab{width:38px;height:5px;border-radius:3px;background:var(--line);margin:9px auto 4px}
+  .sheet-title{font-size:17px;font-weight:600;text-align:center;padding:6px 20px 12px}
+  .sheet-searchwrap{padding:0 16px 10px}
+  .sheet-search{width:100%;background:var(--surface2);border:0;border-radius:11px;padding:12px 14px;font-size:16px;color:var(--ink);font-family:var(--sans)}
+  .sheet-search:focus{outline:2px solid var(--accent);outline-offset:0}
+  .sheet-list{overflow-y:auto;padding:0 12px 14px;-webkit-overflow-scrolling:touch}
+  .sheet-gl{font-size:12px;font-weight:600;color:var(--ink3);padding:14px 10px 6px;position:sticky;top:0;background:var(--surface)}
+  .sheet-item{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:transparent;border:0;padding:13px 12px;border-radius:12px;font-size:16px;color:var(--ink);font-family:var(--sans);cursor:pointer}
+  .sheet-item>span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sheet-item:active{background:var(--surface2)}
+  .sheet-item.on{color:var(--accent);font-weight:600}
+  .sheet-item .ck{width:19px;height:19px;flex-shrink:0}
+  .sheet-empty{text-align:center;color:var(--ink3);padding:30px;font-size:14px}
+  /* 데스크톱: 시트를 중앙 팝오버로 */
+  @media(min-width:900px){
+    .sheet{max-width:420px;left:50%;transform:translate(-50%,20px) scale(.98);bottom:auto;top:50%;margin-top:-38vh;border-radius:20px;max-height:74vh}
+    .sheet.on{transform:translate(-50%,-50%) scale(1)}
+    .sheet-grab{display:none}
+  }
   /* 히어로 결과 */
   .hero{padding:26px 22px;text-align:center}
   .ring{position:relative;width:132px;height:132px;margin:2px auto 4px}
@@ -86,6 +116,13 @@
   .tabbtn .tt{font-size:10.5px;font-weight:500;letter-spacing:.01em}
   .tabbtn.on{color:var(--accent)}
   .heat{display:grid;grid-template-columns:1fr;gap:0}
+  /* 데이터셋 카드 */
+  .dset{background:var(--surface);border:.5px solid var(--line);border-radius:18px;padding:18px 20px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .dset-h{display:flex;align-items:center;gap:10px;margin-bottom:3px}
+  .dset-t{font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .dset-src{font-size:12.5px;color:var(--ink3);margin-bottom:15px;line-height:1.5}
+  .dmeta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:.5px solid var(--line2);padding-top:14px}
+  .dmeta div{display:flex;flex-direction:column;gap:3px}.dmeta span{font-size:11px;color:var(--ink3)}.dmeta b{font-size:15px;font-weight:600}
   /* 리포트 문서 */
   .rpaper{background:var(--surface);border:.5px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:26px 24px;margin-top:14px}
   .rp-kick{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.02em}
@@ -117,7 +154,7 @@
     .nav .eyebrow{display:none}.nav .navtitle{font-size:28px}
     .screen{padding:8px 46px 66px;max-width:920px}.sec:first-child{margin-top:26px}
     .tiles{grid-template-columns:repeat(4,1fr)}
-    .hscroll{margin:0;padding:2px 0 6px;flex-wrap:wrap}.place{flex:1 1 150px}
+    .hscroll{margin:0;padding:2px 0 8px}
   }
   /* 인쇄 — 리포트만 A4 */
   @media print{
@@ -157,8 +194,8 @@
   <section class="screen" id="s-analyze">
     <div class="sec">무엇을, 어디서</div>
     <div class="list">
-      <div class="row field"><label>업종</label><div class="selwrap"><select id="ind"></select></div></div>
-      <div class="row field"><label>상권 · 전국 276곳</label><div class="selwrap"><select id="sang"></select></div></div>
+      <button class="row pk" id="pk-ind"><span class="rl">업종</span><span class="pkv" id="v-ind"></span><i class="chev"></i></button>
+      <button class="row pk" id="pk-sang"><span class="rl">상권 · 전국 276곳</span><span class="pkv" id="v-sang"></span><i class="chev"></i></button>
       <div class="row"><span class="rl">가게 면적</span><span class="rv inl" style="max-width:120px"><input type="number" id="area" value="15" inputmode="numeric"><span class="u">평</span></span></div>
     </div>
     <details class="disc"><summary>임대료·인건비·원가율 직접 맞추기</summary>
@@ -197,22 +234,51 @@
     <details class="disc"><summary>이 분석은 어떻게 나왔나 · 근거와 한계</summary><div class="caption" id="honest" style="padding:0 2px 8px"></div></details>
   </section>
 
-  <!-- 지도(지역) -->
-  <section class="screen" id="s-map">
+  <!-- 데이터 (근거 라이브러리) -->
+  <section class="screen" id="s-data">
+    <p class="sectsub" style="margin:22px 2px 4px;font-size:14px;color:var(--ink2)">이 서비스가 쓰는 소상공인·자영업 데이터입니다. 전부 공공·국가승인 통계이며, 지어낸 수치는 없습니다.</p>
+
+    <div class="sec">데이터셋</div>
+    <div class="dset">
+      <div class="dset-h"><span class="dset-t">임대료 · 공실률</span><span class="pill good">국가승인통계</span></div>
+      <div class="dset-src">한국부동산원 상업용부동산 임대동향조사 · 승인번호 408001</div>
+      <div class="dmeta"><div><span>커버리지</span><b class="num" id="d-rentN"></b></div><div><span>단위</span><b>상권 · 분기</b></div><div><span>지역</span><b>전국 17개 시도</b></div></div>
+    </div>
+    <div class="dset">
+      <div class="dset-h"><span class="dset-t">상권 점포당 매출 · 객단가</span><span class="pill good">공공</span></div>
+      <div class="dset-src">서울시 우리마을가게 상권분석서비스 · 카드매출 기반 추정</div>
+      <div class="dmeta"><div><span>업종</span><b class="num" id="d-indN"></b></div><div><span>단위</span><b>상권×업종 · 분기</b></div><div><span>지역</span><b>서울</b></div></div>
+    </div>
+    <div class="dset">
+      <div class="dset-h"><span class="dset-t">폐업 통계</span><span class="pill good">공공</span></div>
+      <div class="dset-src">국세청 국세통계 · 통계청 · 자치구·연도</div>
+      <div class="dmeta"><div><span>2024 서울</span><b class="num" id="d-closeN"></b></div><div><span>기간</span><b>2022–2024</b></div><div><span>지역</span><b>25개 자치구</b></div></div>
+    </div>
+
+    <div class="sec">폐업 사유 · 서울 2024</div>
+    <div class="card pad"><div id="data-reasons"></div>
+      <div class="caption" style="margin-top:10px">절반이 <b style="color:var(--ink2)">사업부진</b>입니다. 그래서 이 서비스는 화려한 예측보다 ‘본전’부터 봅니다.</div></div>
+
     <div class="sec">자치구별 폐업 · 2024</div>
     <div class="card pad" style="padding:18px">
-      <div class="caption" style="margin:0 0 14px">색이 진할수록 폐업이 많고, 우측은 3년 추세입니다. 빠져나가는 동네인지 들어오는 동네인지 봅니다.</div>
+      <div class="caption" style="margin:0 0 12px">색이 진할수록 폐업이 많고, 우측은 3년 추세입니다.</div>
       <div class="heat" id="heat"></div>
     </div>
-    <div class="caption" style="padding:0 4px">서울 25개 자치구 · 국세청. 특정 골목 상권까지의 정밀 연결은 상권 데이터 결합 후 제공됩니다.</div>
+
+    <div class="sec">방법론</div>
+    <div class="card pad"><div class="caption" style="margin:0;line-height:1.8">
+      · 손익분기 = 고정비 ÷ (1 − 변동비율). 관리회계 표준 BEP 공식.<br>
+      · 점포당 매출 = 상권 추정 총매출 ÷ 점포 수. 분포는 영업 중인 가게 기준(폐업 제외)이라 다소 낙관적이라, 신규점을 평균의 85%로 보정.<br>
+      · 원가율·인건비·초기투자는 <b style="color:var(--ink2)">가정값</b>으로 표기하며 사용자가 실제 값으로 교체.
+    </div></div>
   </section>
 
   <!-- 리포트 -->
   <section class="screen" id="s-report">
     <div class="sec">리포트 만들기</div>
     <div class="list">
-      <div class="row field"><label>업종</label><div class="selwrap"><select id="indR"></select></div></div>
-      <div class="row field"><label>상권 · 전국 276곳</label><div class="selwrap"><select id="sangR"></select></div></div>
+      <button class="row pk" id="pk-indR"><span class="rl">업종</span><span class="pkv" id="v-indR"></span><i class="chev"></i></button>
+      <button class="row pk" id="pk-sangR"><span class="rl">상권 · 전국 276곳</span><span class="pkv" id="v-sangR"></span><i class="chev"></i></button>
       <div class="row"><span class="rl">가게 면적</span><span class="rv inl" style="max-width:120px"><input type="number" id="areaR" value="15" inputmode="numeric"><span class="u">평</span></span></div>
     </div>
     <div id="reportOut">
@@ -223,12 +289,20 @@
   </section>
 
   </main>
+  <!-- 선택 시트 -->
+  <div class="sheet-bg" id="sheetbg"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-title" id="sheet-title"></div>
+    <div class="sheet-searchwrap"><input class="sheet-search" id="sheet-search" placeholder="검색" inputmode="search"></div>
+    <div class="sheet-list" id="sheet-list"></div>
+  </div>
   <!-- 탭바 / 데스크톱 사이드바 -->
   <nav class="tabbar">
     <button class="tabbtn on" data-s="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg><span class="tt">홈</span></button>
     <button class="tabbtn" data-s="analyze"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><span class="tt">분석</span></button>
-    <button class="tabbtn" data-s="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4-6 2.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg><span class="tt">지역</span></button>
     <button class="tabbtn" data-s="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg><span class="tt">리포트</span></button>
+    <button class="tabbtn" data-s="data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="7" ry="2.7"/><path d="M5 5.5v6c0 1.5 3.1 2.7 7 2.7s7-1.2 7-2.7v-6"/><path d="M5 11.5v6c0 1.5 3.1 2.7 7 2.7s7-1.2 7-2.7v-6"/></svg><span class="tt">데이터</span></button>
   </nav>
 </div>
 
@@ -239,15 +313,28 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const won=n=>n>=10000?(n/10000).toFixed(n>=100000?0:1)+'억':Math.round(n).toLocaleString()+'만';
 const cv=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 // 탭
-const titles={home:'홈',analyze:'분석',map:'지역',report:'리포트'};
+const titles={home:'홈',analyze:'분석',report:'리포트',data:'데이터'};
 $$('.tabbtn').forEach(b=>b.onclick=()=>{const s=b.dataset.s;$$('.tabbtn').forEach(x=>x.classList.toggle('on',x===b));$$('.screen').forEach(x=>x.classList.remove('on'));$('#s-'+s).classList.add('on');$('#navtitle').textContent=titles[s];window.scrollTo(0,0)});
 // 업종·상권 셀렉트
-const inds=Object.keys(IND),si=$('#ind');inds.forEach(i=>{const o=document.createElement('option');o.value=i;o.textContent=i;si.appendChild(o)});
+const inds=Object.keys(IND);
 const byS={};Object.entries(RENT).forEach(([k,d])=>{if(d.sido==='전국')return;(byS[d.sido]=byS[d.sido]||[]).push([k,d])});
 const order=['서울','경기','인천','부산','대구','대전','광주','울산','세종','강원','충북','충남','전북','전남','경북','경남','제주'];
-const ss=$('#sang');order.filter(s=>byS[s]).forEach(s=>{const og=document.createElement('optgroup');og.label=s;byS[s].sort((a,b)=>b[1].rent-a[1].rent).forEach(([k,d])=>{const o=document.createElement('option');o.value=k;o.textContent=k.replace(s+'·','');og.appendChild(o)});ss.appendChild(og)});
+Object.values(byS).forEach(a=>a.sort((x,y)=>y[1].rent-x[1].rent));
+const sangLabel=k=>k.replace(/^[^·]+·/,'');
+const indGroups=[{label:'',items:inds.map(i=>({v:i,t:i}))}];
+const sangGroups=order.filter(s=>byS[s]).map(s=>({label:s,items:byS[s].map(([k,d])=>({v:k,t:sangLabel(k)+' · '+d.rent+'천원/㎡'}))}));
 let curInd=inds[0],curSang=Object.keys(RENT).find(k=>k.includes('강남대로'))||Object.keys(RENT)[1];
+let repInd=inds[0],repSang=curSang;
 const NEW_RATIO=0.85;
+// 선택 시트(테마 커스텀 드롭다운)
+function openSheet(title,groups,current,onPick,searchable){
+  $('#sheet-title').textContent=title;const sc=$('#sheet-search');$('.sheet-searchwrap').style.display=searchable?'block':'none';sc.value='';
+  const render=q=>{q=(q||'').trim();let h='';groups.forEach(g=>{const it=g.items.filter(x=>!q||x.t.includes(q));if(!it.length)return;if(g.label)h+=`<div class="sheet-gl">${g.label}</div>`;it.forEach(x=>h+=`<button class="sheet-item${x.v===current?' on':''}" data-v="${x.v}"><span>${x.t}</span>${x.v===current?'<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':''}</button>`)});$('#sheet-list').innerHTML=h||'<div class="sheet-empty">결과 없음</div>';$$('#sheet-list .sheet-item').forEach(b=>b.onclick=()=>{onPick(b.dataset.v);closeSheet()})};
+  sc.oninput=()=>render(sc.value);render('');$('#sheet-list').scrollTop=0;
+  $('#sheetbg').classList.add('on');$('#sheet').classList.add('on');
+}
+function closeSheet(){$('#sheetbg').classList.remove('on');$('#sheet').classList.remove('on')}
+$('#sheetbg').onclick=closeSheet;
 
 function fillInd(){const x=IND[curInd];$('#unit').value=x.unit||'';$('#cogs').value=x.cogs;$('#labor').value=x.labor;$('#etc').value=x.etc;$('#invest').value=x.invest;}
 function fillRent(){const r=RENT[curSang],a=+$('#area').value||0;if(r)$('#rent').value=Math.round(r.rent*1000*a*3.3058/1e4);}
@@ -290,8 +377,8 @@ function drawDist(x,bep){
 // 홈
 (function home(){
   const seoul=Object.entries(RENT).filter(([k,d])=>d.sido==='서울'&&d.vacancy!=null);
-  const stable=seoul.slice().sort((a,b)=>a[1].vacancy-b[1].vacancy).slice(0,6);
-  $('#home-places').innerHTML=stable.map(([k,d])=>`<div class="place"><div class="pn">${k.replace('서울·','')}</div><div class="pg">${d.gwon}</div>
+  const stable=seoul.slice().sort((a,b)=>a[1].vacancy-b[1].vacancy).slice(0,9);
+  $('#home-places').innerHTML=stable.slice(1).map(([k,d])=>`<div class="place"><div class="pn">${k.replace('서울·','')}</div><div class="pg">${d.gwon}</div>
     <div class="pm"><span>공실률</span><b>${d.vacancy}%</b></div><div class="pm"><span>임대료</span><b>${d.rent}<span style="font-weight:400;color:var(--ink3)"> 천원/㎡</span></b></div></div>`).join('');
   $('#home-close').textContent=DA.seoul_close.toLocaleString()+'곳';
   const ent=Object.entries(REASONS).sort((a,b)=>b[1]-a[1]).slice(0,4),mx=ent[0][1];
@@ -301,7 +388,16 @@ function drawDist(x,bep){
   $('#home-insight').textContent=`${top[0].replace('서울·','')}, 공실률 ${top[1].vacancy}%로 가장 안정적입니다`;
   $('#home-insight-sub').textContent=`서울 주요 상권 중 빈 점포가 가장 적은 곳. 아래에서 다른 자리도 살펴보세요.`;
 })();
-// 지역 히트
+// 데이터 탭
+(function data(){
+  $('#d-rentN').textContent=Object.keys(RENT).filter(k=>RENT[k].sido!=='전국').length+'개 상권';
+  $('#d-indN').textContent=Object.keys(IND).length+'개';
+  $('#d-closeN').textContent=DA.seoul_close.toLocaleString()+'곳';
+  const ent=Object.entries(REASONS).sort((a,b)=>b[1]-a[1]).slice(0,6),mx=ent[0][1];
+  const cols=[cv('--risk'),cv('--warn'),cv('--accent'),'#8E9BDD',cv('--ink3'),cv('--ink3')];
+  $('#data-reasons').innerHTML=ent.map(([k,v],i)=>`<div class="barline"><span class="bn">${k}</span><span class="bt"><span class="bf" style="width:${v/mx*100}%;background:${cols[i]}"></span></span><span class="bv num">${(v/1000).toFixed(0)}천</span></div>`).join('');
+})();
+// 지역 히트(데이터 탭 내)
 (function heat(){
   const ent=Object.entries(GU).sort((a,b)=>b[1].y2024-a[1].y2024),mx=ent[0][1].y2024;
   $('#heat').innerHTML=ent.map(([g,d])=>{const t=d.y2024/mx;const bg=`color-mix(in srgb, ${cv('--risk')} ${Math.round(t*60+8)}%, transparent)`;
@@ -312,12 +408,9 @@ function drawDist(x,bep){
       <span class="num" style="font-size:12.5px;font-weight:600;color:${tc};min-width:44px;text-align:right">${d.trend>=0?'+':''}${d.trend}%</span>
     </div>`}).join('');
 })();
-// 리포트: 자체 선택 + 생성
-const siR=$('#indR');inds.forEach(i=>{const o=document.createElement('option');o.value=i;o.textContent=i;siR.appendChild(o)});
-const ssR=$('#sangR');order.filter(s=>byS[s]).forEach(s=>{const og=document.createElement('optgroup');og.label=s;byS[s].sort((a,b)=>b[1].rent-a[1].rent).forEach(([k,d])=>{const o=document.createElement('option');o.value=k;o.textContent=k.replace(s+'·','');og.appendChild(o)});ssR.appendChild(og)});
-ssR.value=curSang;
+// 리포트
 function genReport(){
-  const it=siR.value,sk=ssR.value,x=IND[it],r=RENT[sk],area=+$('#areaR').value||15;
+  const it=repInd,sk=repSang,x=IND[it],r=RENT[sk],area=+$('#areaR').value||15;
   const rent=r?Math.round(r.rent*1000*area*3.3058/1e4):0;
   const cogs=x.cogs/100,fixed=rent+x.labor+x.etc,bep=fixed/(1-cogs),dayRev=bep/26,cust=Math.round(dayRev*1e4/x.unit);
   const newExp=x.p50*NEW_RATIO,margin=newExp-bep,failN=pctBelow(x,bep);
@@ -358,13 +451,15 @@ function genReport(){
   s+=`<line x1="${bx}" y1="16" x2="${bx}" y2="44" stroke="${cv('--warn')}" stroke-width="2.5"/><text x="${bx}" y="11" font-size="11" fill="${cv('--warn')}" font-weight="700" text-anchor="middle" class="num">내 본전 ${won(bep)}</text><text x="${X(x.p50)}" y="52" font-size="10.5" fill="${cv('--ink3')}" text-anchor="middle" class="num">평균 ${won(x.p50)}</text>`;
   $('#rp-dist').innerHTML=`<svg viewBox="0 0 ${W} ${H}">${s}</svg>`;
 }
-siR.onchange=genReport;ssR.onchange=genReport;$('#areaR').addEventListener('input',genReport);
+$('#areaR').addEventListener('input',genReport);
 $('#printBtn').onclick=()=>window.print();
-genReport();
-si.onchange=()=>{curInd=si.value;fillInd();fillRent();analyze()};
-ss.onchange=()=>{curSang=ss.value;fillRent();analyze()};
+$('#pk-ind').onclick=()=>openSheet('업종',indGroups,curInd,v=>{curInd=v;$('#v-ind').textContent=v;fillInd();fillRent();analyze()});
+$('#pk-sang').onclick=()=>openSheet('상권',sangGroups,curSang,v=>{curSang=v;$('#v-sang').textContent=sangLabel(v);fillRent();analyze()},true);
+$('#pk-indR').onclick=()=>openSheet('업종',indGroups,repInd,v=>{repInd=v;$('#v-indR').textContent=v;genReport()});
+$('#pk-sangR').onclick=()=>openSheet('상권',sangGroups,repSang,v=>{repSang=v;$('#v-sangR').textContent=sangLabel(v);genReport()},true);
 $('#area').addEventListener('input',()=>{fillRent();analyze()});
 ['rent','labor','etc','cogs','unit','days','goal','invest'].forEach(id=>$('#'+id).oninput=analyze);
-ss.value=curSang;fillInd();fillRent();analyze();
+$('#v-ind').textContent=curInd;$('#v-sang').textContent=sangLabel(curSang);$('#v-indR').textContent=repInd;$('#v-sangR').textContent=sangLabel(repSang);
+fillInd();fillRent();analyze();genReport();
 </script>
 </body></html>
