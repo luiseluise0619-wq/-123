@@ -50,10 +50,11 @@ def food_items():
 
 
 @router.get("/food-price-live")
-def food_price_live(start_day: str = None, end_day: str = None):
-    """aT 일별 도소매 가격 실시간 조회(자동갱신). DATA_GO_KR_KEY 필요."""
+def food_price_live(item: str = "배추", days: int = 7, se_cd: str = "01"):
+    """aT 일별 도소매 가격 실시간 조회(자동갱신). DATA_GO_KR_KEY 필요.
+    se_cd: 01 소매 / 02 중도매."""
     from app.services import foodprice_engine as FP
-    return FP.live_price(start_day, end_day)
+    return FP.live_price(item=item, days=days, se_cd=se_cd)
 
 
 @router.get("/season")

@@ -37,12 +37,24 @@ def items() -> List[str]:
 
 # ---------------------------------------------------------------- 라이브 자동갱신
 AT_ENDPOINT = "https://apis.data.go.kr/B552845/perDay/price"
+_CODES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "..", "data", "market", "at_item_codes.json")
 
 
-def live_price(start_day: str = None, end_day: str = None, **extra) -> Dict[str, Any]:
-    """한국농수산식품유통공사 '일별 도,소매 가격정보' 실시간 조회 (자동갱신용).
-    엔드포인트: B552845/perDay/price. 키: 환경변수 DATA_GO_KR_KEY (코드에 넣지 말 것).
-    param 이름은 API 명세(첨부 zip) 기준 — 실패 시 응답을 그대로 반환해 조정 가능.
+@functools.lru_cache(maxsize=1)
+def _item_codes():
+    import json
+    try:
+        return json.load(open(_CODES_PATH, encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def live_price(item: str = "배추", days: int = 7, se_cd: str = "01",
+               start_day: str = None, end_day: str = None) -> Dict[str, Any]:
+    """aT '일별 도,소매 가격정보' 실시간 조회 (자동갱신). 명세(B552845/perDay/price) 준수.
+    필수 cond: 조사일자 범위(exmn_ymd GTE/LTE), 부류코드(ctgry_cd), 품목코드(item_cd).
+    se_cd: 01 소매(기본) / 02 중도매. 키: 환경변수 DATA_GO_KR_KEY (코드에 안 넣음).
     """
     import os
     import datetime
@@ -54,27 +66,35 @@ def live_price(start_day: str = None, end_day: str = None, **extra) -> Dict[str,
     if not key:
         return {"available": False,
                 "message": "DATA_GO_KR_KEY 환경변수 없음. export DATA_GO_KR_KEY=발급키 후 사용."}
+    codes = _item_codes()
+    code = codes.get(item)
+    if not code:
+        return {"available": False, "item": item,
+                "message": f"'{item}' 품목코드 없음. 예: 배추/양파/사과 등. (총 {len(codes)}품목)"}
     today = datetime.date.today()
-    end = end_day or today.strftime("%Y%m%d")
-    start = start_day or (today - datetime.timedelta(days=7)).strftime("%Y%m%d")
-    # 표준 data.go.kr 파라미터(명세와 다르면 extra 로 덮어쓰기)
-    params = {"serviceKey": key, "returnType": "json", "numOfRows": 100, "pageNo": 1,
-              "startDay": start, "endDay": end}
-    params.update(extra)
+    gte = start_day or (today - datetime.timedelta(days=days)).strftime("%Y%m%d")
+    lte = end_day or today.strftime("%Y%m%d")
+    # 명세 파라미터(cond[field::OP] 형식) — urlencode 가 대괄호/콜론 인코딩 처리
+    params = {
+        "serviceKey": key, "returnType": "json", "pageNo": 1, "numOfRows": 500,
+        "cond[exmn_ymd::GTE]": gte, "cond[exmn_ymd::LTE]": lte,
+        "cond[ctgry_cd::EQ]": code["ctgry"], "cond[item_cd::EQ]": code["item"],
+        "cond[se_cd::EQ]": se_cd,
+    }
     url = AT_ENDPOINT + "?" + urllib.parse.urlencode(params, safe="%")
     try:
         raw = urllib.request.urlopen(url, timeout=20).read().decode("utf-8", "ignore")
         try:
             data = _json.loads(raw)
         except Exception:
-            return {"available": True, "format": "xml_or_text", "raw": raw[:2000],
-                    "note": "JSON 파싱 실패 — 명세의 param/returnType 확인용 원본."}
-        return {"available": True, "source": "aT_perDay_price", "period": f"{start}~{end}",
-                "data": data}
+            return {"available": True, "format": "non_json", "raw": raw[:1500]}
+        body = (data.get("response", {}) or data).get("body", data)
+        return {"available": True, "source": "aT_perDay_price", "item": item,
+                "codes": code, "se": "소매" if se_cd == "01" else "중도매",
+                "period": f"{gte}~{lte}", "result": body}
     except Exception as e:
-        return {"available": False, "endpoint": AT_ENDPOINT,
-                "message": f"호출 실패({str(e)[:90]}). 명세(첨부 zip)의 정확한 param 이름으로 "
-                           "extra 인자를 넘겨 조정하세요. (여기 샌드박스는 data.go.kr 차단)"}
+        return {"available": False, "endpoint": AT_ENDPOINT, "item": item,
+                "message": f"호출 실패({str(e)[:90]}). (샌드박스는 data.go.kr 차단 — 네 PC에서 동작)"}
 
 
 def analyze(item: str) -> Dict[str, Any]:
