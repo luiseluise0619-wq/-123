@@ -246,13 +246,17 @@ const areaGroups=[{label:'',items:[10,13,15,20,25,30,40,50].map(v=>({v:''+v,t:v+
 let curInd=inds[0],curSang=Object.keys(RENT).find(k=>k.includes('강남대로'))||Object.keys(RENT)[1],curArea=15;
 const NEW_RATIO=0.85;
 // 시트
-function openSheet(title,groups,current,onPick,searchable){
-  $('#sheet-title').textContent=title;const sc=$('#sheet-search');$('.sheet-searchwrap').style.display=searchable?'block':'none';sc.value='';
+function openSheet(title,groups,current,onPick){
+  const total=groups.reduce((n,g)=>n+g.items.length,0);
+  $('#sheet-title').textContent=title;const sc=$('#sheet-search');$('.sheet-searchwrap').style.display=total>8?'block':'none';sc.value='';
   const render=q=>{q=(q||'').trim();let h='';groups.forEach(g=>{const it=g.items.filter(x=>!q||x.t.includes(q));if(!it.length)return;if(g.label)h+=`<div class="sheet-gl">${g.label}</div>`;it.forEach(x=>h+=`<button class="sheet-item${x.v===current?' on':''}" data-v="${x.v}"><span>${x.t}</span>${x.v===current?'<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':''}</button>`)});$('#sheet-list').innerHTML=h||'<div class="sheet-empty">결과 없음</div>';$$('#sheet-list .sheet-item').forEach(b=>b.onclick=()=>{onPick(b.dataset.v);closeSheet()})};
-  sc.oninput=()=>render(sc.value);render('');$('#sheet-list').scrollTop=0;$('#sheetbg').classList.add('on');$('#sheet').classList.add('on');
+  sc.oninput=()=>render(sc.value);render('');$('#sheet-list').scrollTop=0;
+  document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';
+  $('#sheetbg').classList.add('on');$('#sheet').classList.add('on');
 }
-function closeSheet(){$('#sheetbg').classList.remove('on');$('#sheet').classList.remove('on')}
+function closeSheet(){document.documentElement.style.overflow='';document.body.style.overflow='';$('#sheetbg').classList.remove('on');$('#sheet').classList.remove('on')}
 $('#sheetbg').onclick=closeSheet;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 // 탭
 const titles={home:'홈',analyze:'분석',data:'데이터'};
 function go(s){$$('.tabbtn').forEach(x=>x.classList.toggle('on',x.dataset.s===s));$$('.screen').forEach(x=>x.classList.remove('on'));$('#s-'+s).classList.add('on');$('#navtitle').textContent=titles[s];window.scrollTo(0,0);if(s==='analyze')raf(animAnalyze);if(s==='data')raf(animData);}
@@ -329,7 +333,8 @@ function buildReport(){
 (function home(){
   $('#h-close').textContent=DA.seoul_close.toLocaleString();
   const seoul=Object.entries(RENT).filter(([k,d])=>d.sido==='서울'&&d.vacancy!=null).sort((a,b)=>a[1].vacancy-b[1].vacancy).slice(0,8);
-  $('#home-places').innerHTML=seoul.map(([k,d])=>`<button class="place" onclick="pickHome('${k}')"><div class="pn">${sangLabel(k)}</div><div class="pg">${d.gwon}</div><div class="pm"><span>공실률</span><b>${d.vacancy}%</b></div><div class="pm"><span>임대료</span><b>${d.rent}<span style="font-weight:400;color:var(--ink3)"> 천</span></b></div></button>`).join('');
+  $('#home-places').innerHTML=seoul.map(([k,d])=>`<button class="place" data-k="${k}"><div class="pn">${sangLabel(k)}</div><div class="pg">${d.gwon}</div><div class="pm"><span>공실률</span><b>${d.vacancy}%</b></div><div class="pm"><span>임대료</span><b>${d.rent}<span style="font-weight:400;color:var(--ink3)"> 천</span></b></div></button>`).join('');
+  $('#home-places').addEventListener('click',e=>{const b=e.target.closest('.place[data-k]');if(b)pickHome(b.dataset.k)});
 })();
 function pickHome(k){curSang=k;$('#v-sang').textContent=sangLabel(k);fillRent();analyze();go('analyze')}
 // 애니 막대 헬퍼
