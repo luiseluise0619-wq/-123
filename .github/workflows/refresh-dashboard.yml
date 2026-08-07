@@ -25,6 +25,7 @@ jobs:
 
       - name: 대시보드 재생성
         working-directory: backend
+        continue-on-error: true       # 식자재 CSV(gitignore)가 없으면 실패하지만 지도 수집은 계속돼야 함
         env:
           # 있으면 aT 실시간가로 최신값 갱신(없으면 CSV 기준). Actions Secrets 에 등록.
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
