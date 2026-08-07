@@ -41,9 +41,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
 #map{width:100%;height:100%;background:var(--line)}
 .maptitle{position:absolute;top:16px;left:16px;z-index:5;background:var(--panel);
   border:1px solid var(--line);border-radius:12px;padding:10px 14px;box-shadow:var(--sh)}
+.maptitle{min-width:280px}
 .maptitle b{font-size:15px;font-weight:700}
 .maptitle span{display:block;font-size:11px;color:var(--ink2);margin-top:2px}
-.layers{display:flex;gap:6px;margin-top:10px}
+.searchbox{position:relative;margin-top:10px}
+.searchbox .sicon{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+  stroke:var(--ink3);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}
+.searchbox input{width:100%;font:inherit;font-size:13px;padding:9px 30px 9px 33px;border:1px solid var(--line);
+  border-radius:10px;background:var(--bg);color:var(--ink);outline:none;transition:.15s}
+.searchbox input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,58,95,.12);background:var(--panel)}
+.sclear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:var(--line);
+  color:var(--ink2);width:18px;height:18px;border-radius:50%;font-size:10px;cursor:pointer;line-height:1}
+.layers{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 .lbtn{font:inherit;font-size:12px;font-weight:600;padding:6px 11px;border:1px solid var(--line);
   border-radius:8px;background:var(--panel);color:var(--ink2);cursor:pointer;transition:.15s}
 .lbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
@@ -140,13 +149,19 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
   <div class="main">
     <div class="mapcol">
       <div class="maptitle">
-        <b>서울 자치구 상권 지도</b><span id="mt-sub">원 크기 = 지표값 · 클릭하면 하단 분석 갱신</span>
+        <b>서울 자치구 상권 지도</b><span id="mt-sub">자치구 검색하거나 지도를 클릭하세요</span>
+        <div class="searchbox">
+          <svg viewBox="0 0 24 24" class="sicon"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="gu-search" list="gu-list" placeholder="자치구 검색 (예: 강남구)" autocomplete="off">
+          <datalist id="gu-list"></datalist>
+          <button id="gu-clear" class="sclear" title="지우기" style="display:none">✕</button>
+        </div>
         <div class="layers">
           <button class="lbtn on" data-metric="close">폐업</button>
           <button class="lbtn" data-metric="bus">대중교통</button>
           <button class="lbtn" data-metric="rent">임대료</button>
           <button class="lbtn" data-metric="pop" id="lbtn-pop" style="display:none">유동인구</button>
-        <button class="lbtn" data-metric="park" id="lbtn-park" style="display:none">주차</button>
+          <button class="lbtn" data-metric="park" id="lbtn-park" style="display:none">주차</button>
         </div>
       </div>
       <div id="map"></div>
@@ -394,9 +409,35 @@ function redraw(metricKey){
   drawLegend(m);
   document.querySelectorAll('.lbtn').forEach(b=>b.classList.toggle('on',b.dataset.metric===metricKey));
 }
+let MAP=null;
+function selectGu(name){
+  if(!DATA.gu[name])return false;
+  selected=name; renderPanel(name);
+  const g=DATA.gu[name];
+  if(MAP) MAP.panTo(new kakao.maps.LatLng(g.lat,g.lng));
+  // 선택 강조: 잠깐 테두리 굵게
+  const hit=circles.find(c=>c.name===name);
+  if(hit){hit.circle.setOptions({strokeWeight:3,strokeColor:'#2A78D6',strokeOpacity:1});
+    setTimeout(()=>hit.circle.setOptions({strokeWeight:1,strokeColor:'#1E3A5F',strokeOpacity:.5}),1600);}
+  return true;
+}
+function initSearch(){
+  const inp=document.getElementById('gu-search'), dl=document.getElementById('gu-list'), clr=document.getElementById('gu-clear');
+  dl.innerHTML=Object.keys(DATA.gu).map(n=>`<option value="${n}">`).join('');
+  const run=()=>{const v=inp.value.trim(); clr.style.display=v?'block':'none';
+    if(DATA.gu[v]){selectGu(v); inp.blur();}};
+  inp.addEventListener('change',run);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){
+    // 부분일치 첫 자치구 허용
+    const v=inp.value.trim(); if(!DATA.gu[v]){const m=Object.keys(DATA.gu).find(n=>n.includes(v));if(m){inp.value=m;}}
+    run();}});
+  inp.addEventListener('input',()=>{clr.style.display=inp.value?'block':'none';});
+  clr.onclick=()=>{inp.value='';clr.style.display='none';selected=null;renderPanel(null);inp.focus();};
+}
 function initMap(){
   const c=document.getElementById('map');
   const map=new kakao.maps.Map(c,{center:new kakao.maps.LatLng(37.5636,126.9976),level:8});
+  MAP=map;
   Object.entries(DATA.gu).forEach(([name,g])=>{
     const circle=new kakao.maps.Circle({
       center:new kakao.maps.LatLng(g.lat,g.lng),radius:600,
@@ -406,8 +447,7 @@ function initMap(){
     circle.setMap(map);
     new kakao.maps.CustomOverlay({map,position:new kakao.maps.LatLng(g.lat,g.lng),yAnchor:.5,
       content:`<div style="font:600 11px -apple-system;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap">${name}</div>`});
-    kakao.maps.event.addListener(circle,'click',()=>{selected=name;renderPanel(name);
-      map.panTo(new kakao.maps.LatLng(g.lat,g.lng));});
+    kakao.maps.event.addListener(circle,'click',()=>{selectGu(name);});
     circles.push({circle,g,name});
   });
   document.querySelectorAll('.lbtn').forEach(b=>b.onclick=()=>redraw(b.dataset.metric));
@@ -428,7 +468,7 @@ function loadPop(){
 }
 function boot(){
   Object.entries(DATA.gu).forEach(([k,g])=>{g.name=k;});
-  fillIndSelect(); renderReasons();
+  fillIndSelect(); renderReasons(); initSearch();
   document.getElementById('p-q').textContent=DATA.quarter;
   loadPop().then(()=>{renderPanel(selected);renderFoot();});
   renderFoot();
