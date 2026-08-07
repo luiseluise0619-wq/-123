@@ -93,6 +93,7 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
         <button class="lbtn on" data-metric="close">폐업</button>
         <button class="lbtn" data-metric="bus">대중교통</button>
         <button class="lbtn" data-metric="rent">임대료</button>
+        <button class="lbtn" data-metric="pop" id="lbtn-pop" style="display:none">유동인구</button>
       </div>
     </div>
     <div id="map"></div>
@@ -121,6 +122,11 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
     <div class="sec">
       <h2>3년 폐업 추이 <span class="src">국세청 폐업통계</span></h2>
       <div class="bars" id="trend-bars"></div>
+    </div>
+
+    <div class="sec" id="pop-sec" style="display:none">
+      <h2>유동인구 연령분포 <span class="src" id="pop-src">서울 생활인구</span></h2>
+      <div class="bars" id="pop-bars"></div>
     </div>
 
     <div class="sec">
@@ -185,6 +191,22 @@ function renderPanel(name){
     const s=k=>g.reduce((a,x)=>a+x[k],0);
     bars(document.getElementById('trend-bars'),[['2022',s('y2022')],['2023',s('y2023')],['2024',s('y2024')]],num);
   }
+  renderPop(name);
+}
+function renderPop(name){
+  const sec=document.getElementById('pop-sec');
+  if(!POP){sec.style.display='none';return;}
+  let src, agg;
+  if(name&&POP.gu[name]){ src=POP.gu[name]; document.getElementById('pop-src').textContent='서울 생활인구 · '+name; }
+  else{ // 서울 전체 합산
+    src={a10:0,a20:0,a30:0,a40:0,a50:0,a60:0,m:0,f:0};
+    Object.values(POP.gu).forEach(d=>['a10','a20','a30','a40','a50','a60','m','f'].forEach(k=>src[k]+=d[k]||0));
+    document.getElementById('pop-src').textContent='서울 생활인구 · 전체';
+  }
+  sec.style.display='';
+  bars(document.getElementById('pop-bars'),
+    [['10대',src.a10],['20대',src.a20],['30대',src.a30],['40대',src.a40],['50대',src.a50],['60대+',src.a60]],
+    v=>num(v)+'명');
 }
 
 // ---- BEP ----
@@ -231,10 +253,12 @@ function calcBEP(){
 }
 
 // ---- Kakao map ----
+let POP=null; // livepop_gu.json (있으면 유동인구 레이어 활성)
 const METRICS={
   close:{get:g=>g.y2024,label:'누적 폐업 (2024)',unit:'건',rev:false},
   bus:{get:g=>g.bus,label:'대중교통 정류소',unit:'개',rev:true},
-  rent:{get:g=>RENT.rent,label:'서울 임대료(구별 동일)',unit:'만원/㎡',rev:false}
+  rent:{get:g=>RENT.rent,label:'서울 임대료(구별 동일)',unit:'만원/㎡',rev:false},
+  pop:{get:g=>(POP&&POP.gu[g.name]?POP.gu[g.name].tot:0),label:'유동인구(생활인구)',unit:'명',rev:true}
 };
 let circles=[], curMetric='close';
 function drawLegend(m){
@@ -279,12 +303,24 @@ function initMap(){
   document.querySelectorAll('.lbtn').forEach(b=>b.onclick=()=>redraw(b.dataset.metric));
   redraw('close');
 }
-function boot(){
-  fillIndSelect(); renderPanel(null); renderReasons();
-  document.getElementById('p-q').textContent=DATA.quarter;
+function renderFoot(){
   document.getElementById('foot').innerHTML=
-    '출처: 국세청 폐업통계(자치구·사유), 한국부동산원 상업용부동산 임대동향('+DATA.quarter+'), 서울 상권분석서비스 추정매출. '+
+    '출처: 국세청 폐업통계(자치구·사유), 한국부동산원 상업용부동산 임대동향('+DATA.quarter+'), 서울 상권분석서비스 추정매출, '+
+    '서울시 버스·마을버스·선착장 정류소 좌표('+num(DATA.bus_total)+'개)'+(POP?(', 서울 생활인구('+POP.hour+'시, '+POP.stdr_date+')'):'')+'. '+
     '임대료·객단가·중위매출은 통계 추정치이며 개별 점포와 다를 수 있습니다. 손익분기 값은 입력값 기준 정확 계산입니다.';
+}
+function loadPop(){
+  return fetch('livepop_gu.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{
+    if(d&&d.gu&&Object.keys(d.gu).length){POP=d;
+      document.getElementById('lbtn-pop').style.display='';}
+  }).catch(()=>{});
+}
+function boot(){
+  Object.entries(DATA.gu).forEach(([k,g])=>{g.name=k;});
+  fillIndSelect(); renderReasons();
+  document.getElementById('p-q').textContent=DATA.quarter;
+  loadPop().then(()=>{renderPanel(selected);renderFoot();});
+  renderFoot();
   if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
   else{document.getElementById('mapfail').classList.add('on');}
 }
