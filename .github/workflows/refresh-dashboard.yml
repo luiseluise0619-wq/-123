@@ -37,14 +37,21 @@ jobs:
           SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
         run: python collect_livepop.py
 
+      - name: 주차장(입지 접근성) 수집 → 자치구 집계
+        working-directory: backend
+        continue-on-error: true
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: python collect_parking.py
+
       - name: 변경분 커밋
         run: |
           git config user.name  "dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add frontend/dashboard.html frontend/livepop_gu.json 2>/dev/null || true
+          git add frontend/dashboard.html frontend/livepop_gu.json frontend/parking_gu.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "변경 없음 — 커밋 생략"
           else
-            git commit -m "chore: 대시보드·유동인구 자동 갱신 ($(date -u +%Y-%m-%d))"
+            git commit -m "chore: 대시보드·유동인구·주차 자동 갱신 ($(date -u +%Y-%m-%d))"
             git push
           fi

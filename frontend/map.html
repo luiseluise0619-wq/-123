@@ -146,6 +146,7 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
           <button class="lbtn" data-metric="bus">대중교통</button>
           <button class="lbtn" data-metric="rent">임대료</button>
           <button class="lbtn" data-metric="pop" id="lbtn-pop" style="display:none">유동인구</button>
+        <button class="lbtn" data-metric="park" id="lbtn-park" style="display:none">주차</button>
         </div>
       </div>
       <div id="map"></div>
@@ -172,6 +173,7 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
           <div class="kpi"><div class="l">누적 폐업 (2024)</div><div class="v" id="k-close">—</div><div class="s" id="k-trend"></div></div>
           <div class="kpi"><div class="l">서울 평균 임대료</div><div class="v" id="k-rent">—</div><div class="s" id="k-vac"></div></div>
           <div class="kpi"><div class="l">대중교통 정류소</div><div class="v" id="k-bus">—</div><div class="s" id="k-bussub"></div></div>
+          <div class="kpi" id="kpi-park" style="display:none"><div class="l">주차장</div><div class="v" id="k-park">—</div><div class="s" id="k-parksub"></div></div>
         </div>
       </div>
       <!-- 차트 -->
@@ -249,8 +251,23 @@ function renderPanel(name){
     const s=k=>g.reduce((a,x)=>a+x[k],0);
     bars(document.getElementById('trend-bars'),[['2022',s('y2022')],['2023',s('y2023')],['2024',s('y2024')]],num);
   }
+  renderPark(name);
   renderPop(name);
   renderAI(name);
+}
+function renderPark(name){
+  const card=document.getElementById('kpi-park');
+  if(!PARK){card.style.display='none';return;}
+  card.style.display='';
+  if(name&&PARK.gu[name]){
+    const d=PARK.gu[name];
+    const rank=Object.values(PARK.gu).map(x=>x.lots).sort((a,b)=>b-a).indexOf(d.lots)+1;
+    document.getElementById('k-park').textContent=num(d.lots)+'곳';
+    document.getElementById('k-parksub').innerHTML=`<span style="color:var(--ink3)">구획 ${num(d.slots)}면 · 25개 중 ${rank}위</span>`;
+  }else{
+    document.getElementById('k-park').textContent=num(PARK.total_lots)+'곳';
+    document.getElementById('k-parksub').innerHTML='<span style="color:var(--ink3)">서울 전체 · 공영/민영</span>';
+  }
 }
 function renderAI(name){
   const box=document.getElementById('ai-box');
@@ -344,12 +361,14 @@ function calcBEP(){
 }
 
 // ---- Kakao map ----
-let POP=null; // livepop_gu.json (있으면 유동인구 레이어 활성)
+let POP=null;   // livepop_gu.json
+let PARK=null;  // parking_gu.json
 const METRICS={
   close:{get:g=>g.y2024,label:'누적 폐업 (2024)',unit:'건',rev:false},
   bus:{get:g=>g.bus,label:'대중교통 정류소',unit:'개',rev:true},
   rent:{get:g=>RENT.rent,label:'서울 임대료(구별 동일)',unit:'만원/㎡',rev:false},
-  pop:{get:g=>(POP&&POP.gu[g.name]?POP.gu[g.name].tot:0),label:'유동인구(생활인구)',unit:'명',rev:true}
+  pop:{get:g=>(POP&&POP.gu[g.name]?POP.gu[g.name].tot:0),label:'유동인구(생활인구)',unit:'명',rev:true},
+  park:{get:g=>(PARK&&PARK.gu[g.name]?PARK.gu[g.name].lots:0),label:'주차장 수',unit:'곳',rev:true}
 };
 let circles=[], curMetric='close';
 function drawLegend(m){
@@ -397,14 +416,15 @@ function initMap(){
 function renderFoot(){
   document.getElementById('foot').innerHTML=
     '출처: 국세청 폐업통계(자치구·사유), 한국부동산원 상업용부동산 임대동향('+DATA.quarter+'), 서울 상권분석서비스 추정매출, '+
-    '서울시 버스·마을버스·선착장 정류소 좌표('+num(DATA.bus_total)+'개)'+(POP?(', 서울 생활인구('+POP.hour+'시, '+POP.stdr_date+')'):'')+'. '+
+    '서울시 버스·마을버스·선착장 정류소 좌표('+num(DATA.bus_total)+'개)'+(POP?(', 서울 생활인구('+POP.hour+'시, '+POP.stdr_date+')'):'')+(PARK?(', 전국주차장 표준데이터('+num(PARK.total_lots)+'곳)'):'')+'. '+
     '임대료·객단가·중위매출은 통계 추정치이며 개별 점포와 다를 수 있습니다. 손익분기 값은 입력값 기준 정확 계산입니다.';
 }
+function loadJSON(file){return fetch(file,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
 function loadPop(){
-  return fetch('livepop_gu.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{
-    if(d&&d.gu&&Object.keys(d.gu).length){POP=d;
-      document.getElementById('lbtn-pop').style.display='';}
-  }).catch(()=>{});
+  return Promise.all([loadJSON('livepop_gu.json'),loadJSON('parking_gu.json')]).then(([p,k])=>{
+    if(p&&p.gu&&Object.keys(p.gu).length){POP=p;document.getElementById('lbtn-pop').style.display='';}
+    if(k&&k.gu&&Object.keys(k.gu).length){PARK=k;document.getElementById('lbtn-park').style.display='';}
+  });
 }
 function boot(){
   Object.entries(DATA.gu).forEach(([k,g])=>{g.name=k;});
