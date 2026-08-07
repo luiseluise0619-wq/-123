@@ -59,12 +59,24 @@ jobs:
           SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
         run: python collect_stores.py
 
+      - name: 매출 다분기 이력 수집(예측 학습용, 증분)
+        working-directory: backend
+        continue-on-error: true
+        env:
+          SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
+        run: python collect_sales_history.py
+
+      - name: 매출예측 백테스트(관성 이길 때만 예측)
+        working-directory: backend
+        continue-on-error: true
+        run: python forecast_sales.py
+
       - name: 변경분 커밋
         run: |
           git config user.name  "dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
           # 파일별로 개별 add — 하나가 없어도(수집 실패) 나머지는 정상 스테이징
-          for f in frontend/dashboard.html frontend/livepop_gu.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/updates.json; do
+          for f in frontend/dashboard.html frontend/livepop_gu.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/sales_history.json frontend/sales_forecast.json frontend/updates.json; do
             [ -f "$f" ] && git add "$f" || true
           done
           if git diff --cached --quiet; then
