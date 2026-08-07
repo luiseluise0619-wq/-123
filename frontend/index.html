@@ -1,363 +1,489 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>상권 분석</title>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>상권 인텔리전스 · 지도</title>
 <style>
-  :root{
-    --bg:#FBFBFC;--surface:#FFFFFF;--surface2:#F3F4F6;--ink:#0F0F12;--ink2:#5A5A62;--ink3:#84848C;
-    --line:#EAEAEE;--line2:#F1F1F4;--accent:#2A4A86;--accent-soft:#2A4A8614;
-    --good:#1E7A56;--good-soft:#1E7A5614;--warn:#9A6712;--warn-soft:#9A671214;--risk:#B23A2E;--risk-soft:#B23A2E12;
-    --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;
-    --mono:ui-monospace,"SF Mono",Menlo,monospace;
-    --sh:0 1px 2px rgba(15,15,18,.03),0 8px 24px rgba(15,15,18,.045);
-    --ease:cubic-bezier(.2,.8,.2,1);
-  }
-  html[data-theme=dark]{--bg:#0B0B0E;--surface:#161619;--surface2:#202024;--ink:#F4F4F6;--ink2:#A6A6AE;--ink3:#74747C;--line:#26262B;--line2:#1D1D21;--accent:#7BA1DE;--accent-soft:#7BA1DE1a;--good:#4FB088;--good-soft:#4FB0881c;--warn:#D3A24E;--warn-soft:#D3A24E1c;--risk:#E4685B;--risk-soft:#E4685B1c;--sh:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.3);}
-  @media(prefers-color-scheme:dark){:root{--bg:#0B0B0E;--surface:#161619;--surface2:#202024;--ink:#F4F4F6;--ink2:#A6A6AE;--ink3:#74747C;--line:#26262B;--line2:#1D1D21;--accent:#7BA1DE;--accent-soft:#7BA1DE1a;--good:#4FB088;--good-soft:#4FB0881c;--warn:#D3A24E;--warn-soft:#D3A24E1c;--risk:#E4685B;--risk-soft:#E4685B1c;--sh:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.3);}}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);word-break:keep-all;-webkit-font-smoothing:antialiased;letter-spacing:-.01em;line-height:1.5}
-  .num{font-variant-numeric:tabular-nums}
-  .app{max-width:460px;margin:0 auto;min-height:100vh;padding-bottom:82px;position:relative}
-  .nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line);padding:15px 22px 12px}
-  .nav .navtitle{font-size:23px;font-weight:700;letter-spacing:-.03em}
-  .screen{padding:14px 22px 28px;display:none}.screen.on{display:block}
-  .sec{font-size:13px;font-weight:600;color:var(--ink2);margin:30px 2px 12px}.sec:first-child{margin-top:20px}
-  .card{background:var(--surface);border:.5px solid var(--line);border-radius:20px;box-shadow:var(--sh)}.pad{padding:20px}
-  /* 홈 히어로 */
-  .hero{padding:24px 22px;background:var(--ink);color:#F4F4F6;border:0}
-  .hero .hl{font-size:13px;color:#B9B9C2;font-weight:500}
-  .hero .ht{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.35;margin:8px 0 18px;text-wrap:balance}
-  .hero .hb{display:inline-flex;align-items:center;gap:7px;background:#F4F4F6;color:#0F0F12;font-weight:600;font-size:15px;padding:12px 20px;border-radius:999px;border:0;cursor:pointer;font-family:var(--sans)}
-  .hero .hb svg{width:16px;height:16px}
-  .hscroll{display:flex;gap:12px;overflow-x:auto;padding:2px 22px 6px;margin:0 -22px;scrollbar-width:none}.hscroll::-webkit-scrollbar{display:none}
-  .place{flex:0 0 auto;width:172px;background:var(--surface);border:.5px solid var(--line);border-radius:18px;padding:16px 17px;box-shadow:var(--sh);cursor:pointer;text-align:left;font-family:var(--sans);color:inherit}
-  .place .pn{font-size:16px;font-weight:600}.place .pg{font-size:12.5px;color:var(--ink3);margin-top:2px}
-  .place .pm{font-size:13px;color:var(--ink2);margin-top:12px;display:flex;justify-content:space-between}.place .pm b{font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
-  /* 칩 */
-  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:.5px solid var(--line);border-radius:999px;padding:9px 15px;font-size:15px;font-weight:500;color:var(--ink);cursor:pointer;font-family:var(--sans);box-shadow:var(--sh)}
-  .chip::after{content:"";width:6px;height:6px;border-right:1.6px solid var(--ink3);border-bottom:1.6px solid var(--ink3);transform:rotate(45deg);margin-left:1px}
-  .chip.plain::after{display:none}
-  /* 판정 히어로 */
-  .vhero{display:flex;align-items:center;gap:14px;margin:6px 2px 18px}
-  .vicon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .vicon svg{width:27px;height:27px}
-  .vword{font-size:27px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
-  .vline{font-size:14px;color:var(--ink2);margin-top:3px;line-height:1.4}
-  /* 비교(주인공) */
-  .cmp{padding:20px 20px 18px}
-  .cmp-h{font-size:13px;color:var(--ink2);font-weight:500;margin-bottom:18px}.cmp-h b{color:var(--ink);font-weight:600}
-  .cmp-track{position:relative;height:46px;margin:0 4px}
-  .cmp-base{position:absolute;left:0;right:0;top:20px;height:7px;border-radius:4px;background:var(--surface2)}
-  .cmp-band{position:absolute;top:20px;height:7px;border-radius:4px;background:var(--accent);opacity:.28;width:0;transition:width .8s var(--ease),left .8s var(--ease)}
-  .cmp-mark{position:absolute;top:10px;width:0;transition:left .8s var(--ease);opacity:0}
-  .cmp-mark.show{opacity:1}
-  .cmp-mark .ml{position:absolute;left:0;top:0;width:2.5px;height:27px;background:var(--warn);transform:translateX(-50%);border-radius:2px}
-  .cmp-mark .mt{position:absolute;left:0;top:-16px;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:700;color:var(--warn)}
-  .cmp-avg{position:absolute;top:32px;font-size:10.5px;color:var(--ink3);transform:translateX(-50%);white-space:nowrap}
-  .cmp-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-top:12px}
-  /* 타일 */
-  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:12px}
-  .tile{background:var(--surface);border:.5px solid var(--line);border-radius:16px;padding:15px 16px;box-shadow:var(--sh)}
-  .tile .tl{font-size:12px;color:var(--ink2)}.tile .tv{font-size:23px;font-weight:700;letter-spacing:-.02em;margin-top:5px}.tile .tv .u{font-size:13px;font-weight:500;color:var(--ink2)}
-  .tile .tc{font-size:11.5px;color:var(--ink3);margin-top:3px}
-  /* 액션 */
-  .acts{display:flex;gap:10px;margin-top:16px}
-  .act{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans);border:.5px solid var(--line);background:var(--surface);color:var(--ink)}
-  .act.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .act svg{width:16px;height:16px}
-  /* 접기 */
-  details{border-top:.5px solid var(--line);margin-top:8px}
-  details summary{cursor:pointer;list-style:none;font-size:14px;color:var(--ink2);font-weight:500;padding:15px 2px;display:flex;align-items:center;justify-content:space-between}
-  details summary::-webkit-details-marker{display:none}
-  details summary::after{content:"";width:7px;height:7px;border-right:1.6px solid var(--ink3);border-bottom:1.6px solid var(--ink3);transform:rotate(45deg)}
-  details[open] summary::after{transform:rotate(-135deg)}
-  .advgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:4px 0 14px}
-  .fld label{display:block;font-size:12px;color:var(--ink3);margin-bottom:6px}
-  .fld .inl{display:flex;align-items:baseline;gap:5px;border:.5px solid var(--line);border-radius:11px;padding:11px 13px;background:var(--surface)}
-  .fld input{border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-size:15px;font-weight:600;width:100%;padding:0}.fld input:focus{outline:none}.fld .u{color:var(--ink3);font-size:13px}
-  .tagm{font-size:10px;font-weight:600;padding:1px 6px;border-radius:999px;margin-left:5px}.tm-real{color:var(--good);background:var(--good-soft)}.tm-ass{color:var(--warn);background:var(--warn-soft)}
-  .note{font-size:12.5px;color:var(--ink2);line-height:1.7;padding:2px 2px 14px}.note b{color:var(--ink)}
-  /* 데이터 */
-  .dset{background:var(--surface);border:.5px solid var(--line);border-radius:18px;padding:18px 20px;margin-bottom:12px;box-shadow:var(--sh)}
-  .dset-h{display:flex;align-items:center;gap:9px;margin-bottom:3px}.dset-t{font-size:16.5px;font-weight:600}
-  .pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px}.pill.good{color:var(--good);background:var(--good-soft)}
-  .dset-src{font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.5}
-  .barline{display:grid;grid-template-columns:88px 1fr 60px;gap:10px;align-items:center;font-size:13px;padding:9px 0;border-bottom:.5px solid var(--line2)}.barline:last-child{border-bottom:0}
-  .barline .bn{color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .bt{height:8px;border-radius:4px;background:var(--surface2);overflow:hidden}
-  .bf{height:100%;border-radius:4px;width:0;transition:width .9s var(--ease)}
-  .barline .bv{text-align:right;color:var(--ink3);font-variant-numeric:tabular-nums;font-size:12px}
-  .caption{font-size:12.5px;color:var(--ink2);line-height:1.7}
-  .heat-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:11px 4px;border-bottom:.5px solid var(--line2)}
-  @media(prefers-reduced-motion:reduce){.cmp-band,.cmp-mark,.bf{transition:none}}
-  /* 선택 시트 */
-  .sheet-bg{position:fixed;inset:0;background:rgba(15,15,18,.36);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}.sheet-bg.on{opacity:1;pointer-events:auto}
-  .sheet{position:fixed;left:0;right:0;bottom:0;max-width:460px;margin:0 auto;background:var(--surface);border-radius:22px 22px 0 0;z-index:41;transform:translateY(100%);transition:transform .34s var(--ease);max-height:82vh;display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(15,15,18,.18);padding-bottom:env(safe-area-inset-bottom)}.sheet.on{transform:translateY(0)}
-  @media(prefers-reduced-motion:reduce){.sheet,.sheet-bg{transition:none}}
-  .sheet-grab{width:38px;height:5px;border-radius:3px;background:var(--line);margin:9px auto 4px}
-  .sheet-title{font-size:17px;font-weight:600;text-align:center;padding:6px 20px 12px}
-  .sheet-searchwrap{padding:0 16px 10px}
-  .sheet-search{width:100%;background:var(--surface2);border:0;border-radius:11px;padding:12px 14px;font-size:16px;color:var(--ink);font-family:var(--sans)}.sheet-search:focus{outline:2px solid var(--accent)}
-  .sheet-list{overflow-y:auto;padding:0 12px 14px}
-  .sheet-gl{font-size:12px;font-weight:600;color:var(--ink3);padding:14px 10px 6px;position:sticky;top:0;background:var(--surface)}
-  .sheet-item{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:transparent;border:0;padding:13px 12px;border-radius:12px;font-size:16px;color:var(--ink);font-family:var(--sans);cursor:pointer}.sheet-item>span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sheet-item:active{background:var(--surface2)}.sheet-item.on{color:var(--accent);font-weight:600}.sheet-item .ck{width:19px;height:19px;flex-shrink:0}
-  .sheet-empty{text-align:center;color:var(--ink3);padding:30px}
-  /* 탭바 */
-  .tabbar{position:fixed;bottom:0;left:0;right:0;max-width:460px;margin:0 auto;background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line);display:flex;padding:8px 20px calc(8px + env(safe-area-inset-bottom));z-index:30}
-  .tabbtn{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;color:var(--ink3);font-family:var(--sans)}.tabbtn svg{width:25px;height:25px}.tabbtn .tt{font-size:10.5px;font-weight:500}.tabbtn.on{color:var(--accent)}
-  /* 리포트(인쇄 전용) */
-  #rpaper{display:none}
-  @media(min-width:900px){
-    body{background:var(--surface2)}
-    .app{max-width:1160px;padding-bottom:0;display:grid;grid-template-columns:236px 1fr;align-items:start;min-height:100vh;box-shadow:0 0 0 .5px var(--line),0 30px 80px rgba(15,15,18,.07)}
-    .main{min-width:0}
-    .tabbar{order:-1;position:sticky;top:0;height:100vh;max-width:none;margin:0;flex-direction:column;justify-content:flex-start;gap:4px;border-top:0;border-right:.5px solid var(--line);padding:26px 16px;backdrop-filter:none;background:transparent}
-    .tabbar::before{content:"상권 분석";display:block;font-size:17px;font-weight:700;padding:4px 12px 22px}
-    .tabbtn{flex:none;flex-direction:row;justify-content:flex-start;gap:13px;padding:11px 13px;border-radius:12px;width:100%}.tabbtn:hover{background:var(--surface2)}.tabbtn.on{background:var(--accent-soft)}.tabbtn svg{width:21px;height:21px}.tabbtn .tt{font-size:15px}
-    .nav{position:static;background:transparent;backdrop-filter:none;border-bottom:0;padding:30px 46px 4px}.nav .navtitle{font-size:28px}
-    .screen{padding:10px 46px 60px;max-width:900px}.tiles{grid-template-columns:repeat(4,1fr)}.hscroll{margin:0;padding:2px 0 8px}
-    .sheet{max-width:420px;left:50%;top:50%;bottom:auto;margin-top:-37vh;transform:translate(-50%,20px);border-radius:20px;max-height:74vh}.sheet.on{transform:translate(-50%,-50%)}.sheet-grab{display:none}
-  }
-  @media print{
-    body>*{display:none!important}#rpaper{display:block!important}
-    #rpaper{font-family:var(--sans)}
-    .rp-title{font-size:26px;font-weight:700;margin:0 0 2px}.rp-meta{font-size:12px;color:#666;font-family:var(--mono);margin-bottom:18px}
-    .rp-badge{display:inline-block;padding:6px 14px;border-radius:999px;color:#fff;font-weight:700;font-size:16px;margin-bottom:14px}
-    .rp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
-    .rp-cell{border:1px solid #e5e5e5;border-radius:10px;padding:12px 14px}.rp-l{font-size:11px;color:#666}.rp-v{font-size:17px;font-weight:700;margin-top:3px}
-    .rp-sec{font-size:12px;font-weight:700;color:#444;margin:18px 0 7px}
-    .rp-note{font-size:12px;color:#333;line-height:1.7;padding-left:16px}
-    .rp-src td{font-size:11px;padding:5px 8px 5px 0;color:#555;vertical-align:top}.rp-src td:first-child{font-weight:600;width:34%}
-    .rp-foot{margin-top:20px;padding-top:12px;border-top:1px solid #e5e5e5;font-size:10.5px;color:#888;font-family:var(--mono)}
-    @page{size:A4;margin:15mm}
-  }
-</style></head><body>
-<div class="app">
-  <main class="main">
-  <div class="nav"><div class="navtitle" id="navtitle">홈</div></div>
-
-  <!-- 홈 -->
-  <section class="screen on" id="s-home">
-    <div class="hero card">
-      <div class="hl">2024년 서울</div>
-      <div class="ht"><span class="num" id="h-close"></span>곳이 문을 닫았습니다.<br>당신 자리는 본전을 넘길까요?</div>
-      <button class="hb" onclick="go('analyze')">내 자리 분석하기
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-    </div>
-    <div class="sec">눈여겨볼 자리 · 공실 낮은 상권</div>
-    <div class="hscroll" id="home-places"></div>
-    <div class="sec">지금 살펴보기</div>
-    <button class="place" style="width:auto;display:block" onclick="go('data')">
-      <div class="pn">데이터 · 근거 보기</div><div class="pg" style="margin-top:6px">임대료·매출·폐업 통계와 출처를 도표로</div></button>
-  </section>
-
-  <!-- 분석 -->
-  <section class="screen" id="s-analyze">
-    <div class="chips">
-      <button class="chip" id="c-ind"><span id="v-ind"></span></button>
-      <button class="chip" id="c-sang"><span id="v-sang"></span></button>
-      <button class="chip" id="c-area"><span id="v-area">15평</span></button>
-    </div>
-
-    <div class="vhero">
-      <div class="vicon" id="v-icon"></div>
-      <div><div class="vword" id="v-word"></div><div class="vline" id="v-line"></div></div>
-    </div>
-
-    <div class="card cmp">
-      <div class="cmp-h" id="cmp-h"></div>
-      <div class="cmp-track">
-        <div class="cmp-base"></div>
-        <div class="cmp-band" id="cmp-band"></div>
-        <div class="cmp-avg" id="cmp-avg">평균</div>
-        <div class="cmp-mark" id="cmp-mark"><div class="ml"></div><div class="mt" id="cmp-mt"></div></div>
-      </div>
-      <div class="cmp-ends"><span id="cmp-lo"></span><span id="cmp-hi"></span></div>
-    </div>
-
-    <div class="tiles">
-      <div class="tile"><div class="tl">월 손익분기</div><div class="tv num" id="t-bep"></div><div class="tc">이만큼 팔아야 본전</div></div>
-      <div class="tile"><div class="tl">하루 필요</div><div class="tv num" id="t-day"></div><div class="tc" id="t-dayc"></div></div>
-      <div class="tile"><div class="tl">예상 매출대</div><div class="tv num" id="t-range" style="font-size:19px"></div><div class="tc">비슷한 가게 실측</div></div>
-      <div class="tile"><div class="tl">상권 공실률</div><div class="tv num" id="t-vac"></div><div class="tc" id="t-vacc"></div></div>
-    </div>
-
-    <div class="acts">
-      <button class="act primary" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>리포트 PDF</button>
-      <button class="act" id="altBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>임대료 낮은 대안</button>
-    </div>
-
-    <details><summary>임대료·인건비·원가율 직접 맞추기</summary>
-      <div class="advgrid">
-        <div class="fld"><label>월 임대료<span class="tagm tm-real">실</span></label><div class="inl"><input type="number" id="rent"><span class="u">만</span></div></div>
-        <div class="fld"><label>월 인건비<span class="tagm tm-ass">가정</span></label><div class="inl"><input type="number" id="labor"><span class="u">만</span></div></div>
-        <div class="fld"><label>기타 고정비<span class="tagm tm-ass">가정</span></label><div class="inl"><input type="number" id="etc"><span class="u">만</span></div></div>
-        <div class="fld"><label>원가율<span class="tagm tm-ass">가정</span></label><div class="inl"><input type="number" id="cogs"><span class="u">%</span></div></div>
-        <div class="fld"><label>객단가<span class="tagm tm-real">실</span></label><div class="inl"><input type="number" id="unit"><span class="u">원</span></div></div>
-        <div class="fld"><label>가져갈 월수입</label><div class="inl"><input type="number" id="goal" value="300"><span class="u">만</span></div></div>
-      </div>
-    </details>
-    <details><summary>이 분석의 근거와 한계</summary><div class="note" id="honest"></div></details>
-  </section>
-
-  <!-- 데이터 -->
-  <section class="screen" id="s-data">
-    <p class="note" style="padding:18px 2px 2px">이 서비스가 쓰는 소상공인·자영업 데이터입니다. 전부 공공·국가승인 통계이며 지어낸 수치는 없습니다.</p>
-    <div class="sec">데이터셋</div>
-    <div class="dset"><div class="dset-h"><span class="dset-t">임대료 · 공실률</span><span class="pill good">국가승인통계 408001</span></div><div class="dset-src">한국부동산원 상업용부동산 임대동향조사 · 전국 17개 시도 · 분기</div><div id="d-rent"></div></div>
-    <div class="dset"><div class="dset-h"><span class="dset-t">업종별 점포당 매출</span><span class="pill good">공공</span></div><div class="dset-src">서울시 우리마을가게 상권분석서비스 · 카드매출 기반 추정 · 분기</div><div id="d-sales"></div></div>
-    <div class="dset"><div class="dset-h"><span class="dset-t">폐업 통계</span><span class="pill good">공공</span></div><div class="dset-src">국세청·통계청 · 서울 25개 자치구 · 2022–2024</div>
-      <div style="font-size:12px;color:var(--ink2);font-weight:500;margin:4px 0 8px">폐업 사유 · 서울 2024</div><div id="d-reasons"></div></div>
-
-    <div class="sec">자치구별 폐업 · 2024</div>
-    <div class="card pad"><div class="caption" style="margin:0 0 12px">색이 진할수록 폐업이 많고, 우측은 3년 추세입니다.</div><div id="d-heat"></div></div>
-
-    <div class="sec">방법론</div>
-    <div class="card pad"><div class="note" style="padding:0">· 손익분기 = 고정비 ÷ (1 − 변동비율). 관리회계 표준 공식.<br>· 점포당 매출 = 상권 추정 총매출 ÷ 점포 수. 영업 중인 가게 기준(폐업 제외)이라 신규점은 평균의 85%로 보정.<br>· 원가율·인건비·초기투자는 <b>가정값</b>으로 표기하며 사용자가 실제 값으로 교체합니다.</div></div>
-  </section>
-  </main>
-
-  <div class="sheet-bg" id="sheetbg"></div>
-  <div class="sheet" id="sheet"><div class="sheet-grab"></div><div class="sheet-title" id="sheet-title"></div><div class="sheet-searchwrap"><input class="sheet-search" id="sheet-search" placeholder="검색" inputmode="search"></div><div class="sheet-list" id="sheet-list"></div></div>
-
-  <nav class="tabbar">
-    <button class="tabbtn on" data-s="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg><span class="tt">홈</span></button>
-    <button class="tabbtn" data-s="analyze"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="tt">분석</span></button>
-    <button class="tabbtn" data-s="data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="7" ry="2.7"/><path d="M5 5.5v6c0 1.5 3.1 2.7 7 2.7s7-1.2 7-2.7v-6M5 11.5v6c0 1.5 3.1 2.7 7 2.7s7-1.2 7-2.7v-6"/></svg><span class="tt">데이터</span></button>
+:root{
+  --bg:#F7F8FA;--panel:#FFFFFF;--ink:#111827;--ink2:#6B7280;--ink3:#9CA3AF;
+  --line:#E5E7EB;--navy:#1E3A5F;--navy2:#2E5A8F;--r:14px;
+  --good:#15803D;--warn:#B45309;--bad:#B91C1C;
+  --sh:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#0E1116;--panel:#161A20;--ink:#F3F4F6;--ink2:#9CA3AF;--ink3:#6B7280;
+  --line:#242A32;--navy:#5B8FD6;--navy2:#7BA8E0;--sh:0 1px 3px rgba(0,0,0,.4);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",Inter,sans-serif;
+  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden}
+/* SHELL: sidebar | (map / analytics) */
+.wrap{display:grid;grid-template-columns:60px 1fr;height:100vh}
+.sidebar{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;
+  align-items:center;padding:12px 0;gap:4px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--navy);color:#fff;display:flex;
+  align-items:center;justify-content:center;font-weight:800;font-size:15px;margin-bottom:10px}
+.nav{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  color:var(--ink3);position:relative;cursor:default}
+.nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.nav.on{background:var(--navy);color:#fff}
+.nav.dis{opacity:.5}
+.nav .tip{position:absolute;left:52px;white-space:nowrap;background:var(--ink);color:var(--panel);
+  font-size:11px;font-weight:600;padding:5px 9px;border-radius:7px;opacity:0;pointer-events:none;
+  transform:translateX(-4px);transition:.15s;z-index:20}
+.nav:hover .tip{opacity:1;transform:translateX(0)}
+.main{display:grid;grid-template-rows:1fr 340px;height:100vh;min-width:0}
+/* MAP */
+.mapcol{position:relative;min-height:0}
+#map{width:100%;height:100%;background:var(--line)}
+.maptitle{position:absolute;top:16px;left:16px;z-index:5;background:var(--panel);
+  border:1px solid var(--line);border-radius:12px;padding:10px 14px;box-shadow:var(--sh)}
+.maptitle{min-width:280px}
+.maptitle b{font-size:15px;font-weight:700}
+.maptitle span{display:block;font-size:11px;color:var(--ink2);margin-top:2px}
+.searchbox{position:relative;margin-top:10px}
+.searchbox .sicon{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+  stroke:var(--ink3);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}
+.searchbox input{width:100%;font:inherit;font-size:13px;padding:9px 30px 9px 33px;border:1px solid var(--line);
+  border-radius:10px;background:var(--bg);color:var(--ink);outline:none;transition:.15s}
+.searchbox input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,58,95,.12);background:var(--panel)}
+.sclear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:var(--line);
+  color:var(--ink2);width:18px;height:18px;border-radius:50%;font-size:10px;cursor:pointer;line-height:1}
+.layers{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.lbtn{font:inherit;font-size:12px;font-weight:600;padding:6px 11px;border:1px solid var(--line);
+  border-radius:8px;background:var(--panel);color:var(--ink2);cursor:pointer;transition:.15s}
+.lbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.legend{position:absolute;bottom:16px;left:16px;z-index:5;background:var(--panel);
+  border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--sh);font-size:11px}
+.legend b{font-size:11px;color:var(--ink2);font-weight:600;display:block;margin-bottom:8px}
+.legrow{display:flex;align-items:center;gap:8px;margin-top:5px}
+.legdot{border-radius:50%;background:var(--navy);opacity:.7;flex:none}
+.mapfail{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;text-align:center;padding:32px;z-index:4;background:var(--bg)}
+.mapfail.on{display:flex}
+.mapfail h3{font-size:16px}.mapfail p{font-size:13px;color:var(--ink2);line-height:1.6;max-width:360px}
+.mapfail code{background:var(--line);padding:2px 6px;border-radius:6px;font-size:12px}
+/* ANALYTICS STRIP (bottom): AI | KPI | Charts | Info */
+.analytics{border-top:1px solid var(--line);background:var(--panel);display:grid;
+  grid-template-columns:1.1fr 1fr 1.2fr 1.3fr;min-width:0;overflow:hidden}
+.acol{padding:16px 18px;overflow-y:auto;border-left:1px solid var(--line)}
+.acol:first-child{border-left:none}
+.acap{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;
+  margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.acap .dot{width:6px;height:6px;border-radius:50%;background:var(--navy)}
+.phead{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.phead h1{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.phead .q{font-size:11px;color:var(--ink3)}
+.hint{font-size:11.5px;color:var(--ink2);margin-top:3px;margin-bottom:12px}
+.kpis{display:flex;flex-direction:column;gap:8px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--bg)}
+.kpi .l{font-size:11px;color:var(--ink2);font-weight:600}
+.kpi .v{font-size:20px;font-weight:700;margin-top:3px;letter-spacing:-.02em}
+.kpi .s{font-size:11px;margin-top:2px}
+.up{color:var(--bad)}.down{color:var(--good)}
+/* AI insight */
+.ai{font-size:13px;line-height:1.65;color:var(--ink)}
+.ai .lead{font-weight:700;font-size:14px;margin-bottom:8px}
+.ai ul{list-style:none;margin-top:10px;display:flex;flex-direction:column;gap:9px}
+.ai li{display:flex;gap:9px;font-size:12.5px;color:var(--ink2);line-height:1.5}
+.ai li b{color:var(--ink);font-weight:700}
+.ai .mk{flex:none;width:5px;height:5px;border-radius:50%;background:var(--navy);margin-top:7px}
+.aibadge{display:inline-block;font-size:9.5px;font-weight:700;color:var(--navy2);
+  border:1px solid var(--line);border-radius:6px;padding:2px 6px;margin-bottom:10px}
+.sec{margin-top:20px}
+.sec:first-child{margin-top:0}
+.sec h2{font-size:12px;font-weight:700;color:var(--ink2);text-transform:none;letter-spacing:.02em;
+  display:flex;justify-content:space-between;align-items:center}
+.sec h2 .src{font-size:10px;color:var(--ink3);font-weight:500}
+.bars{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:10px;font-size:12px}
+.bar .bl{color:var(--ink2)}
+.track{height:9px;background:var(--line);border-radius:5px;overflow:hidden}
+.fill{height:100%;border-radius:5px;background:var(--navy);transform-origin:left;
+  transform:scaleX(0);animation:grow .7s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes grow{to{transform:scaleX(1)}}
+.bar .bv{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink)}
+/* BEP */
+.field{margin-top:12px}
+.field label{font-size:11px;color:var(--ink2);font-weight:600;display:block;margin-bottom:5px}
+select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px solid var(--line);
+  border-radius:10px;background:var(--panel);color:var(--ink);appearance:none}
+.bepout{margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.beprow{display:flex;justify-content:space-between;padding:11px 13px;font-size:13px;border-top:1px solid var(--line)}
+.beprow:first-child{border-top:none;background:var(--bg)}
+.beprow .bk{color:var(--ink2)}
+.beprow .bvv{font-weight:700;font-variant-numeric:tabular-nums}
+.verdict{margin-top:12px;border-radius:12px;padding:13px 15px;font-size:13px;line-height:1.5;font-weight:600}
+.verdict.g{background:rgba(21,128,61,.1);color:var(--good)}
+.verdict.w{background:rgba(180,83,9,.1);color:var(--warn)}
+.verdict.b{background:rgba(185,28,28,.1);color:var(--bad)}
+.foot{margin-top:24px;font-size:10.5px;color:var(--ink3);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
+@media(max-width:1100px){.analytics{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){
+  .wrap{grid-template-columns:48px 1fr}
+  .main{grid-template-rows:52vh 1fr}
+  .analytics{grid-template-columns:1fr;overflow-y:auto}
+  .acol{border-left:none;border-top:1px solid var(--line)}
+  .acol:first-child{border-top:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="sidebar">
+    <div class="logo">상</div>
+    <div class="nav on"><span class="tip">지도</span><svg viewBox="0 0 24 24"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg></div>
+    <div class="nav dis"><span class="tip">시장분석 · 준비중</span><svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="4" y2="12"/><line x1="10" y1="20" x2="10" y2="6"/><line x1="16" y1="20" x2="16" y2="10"/><line x1="21" y1="20" x2="3" y2="20"/></svg></div>
+    <div class="nav dis"><span class="tip">입지분석 · 부분</span><svg viewBox="0 0 24 24"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+    <div class="nav dis"><span class="tip">소비자 · 유동인구만</span><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
+    <div class="nav dis"><span class="tip">경쟁사 · 준비중</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+    <div class="nav dis"><span class="tip">매출예측 · 불가(정직)</span><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+    <div class="nav dis"><span class="tip">AI상담 · 준비중</span><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+    <a class="nav" href="data.html" style="text-decoration:none;color:var(--ink3)"><span class="tip">데이터룸 리포트</span><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></a>
+    <div class="nav dis" style="margin-top:auto"><span class="tip">설정</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
   </nav>
-</div>
-<div id="rpaper"></div>
 
-<script id="D" type="application/json">{"ind":{"한식음식점":{"n":1072,"unit":37087,"cogs":38,"labor":600,"etc":200,"invest":12000,"p25":4589,"p40":5641,"p50":6319,"p75":8214,"p90":10913},"미용실":{"n":1057,"unit":37111,"cogs":18,"labor":250,"etc":100,"invest":6000,"p25":559,"p40":744,"p50":856,"p75":1239,"p90":1970},"커피-음료":{"n":1057,"unit":7150,"cogs":30,"labor":300,"etc":120,"invest":8000,"p25":963,"p40":1422,"p50":1818,"p75":2922,"p90":4477},"슈퍼마켓":{"n":1019,"unit":10770,"cogs":75,"labor":500,"etc":150,"invest":9000,"p25":4770,"p40":7639,"p50":9628,"p75":16015,"p90":27779},"분식전문점":{"n":993,"unit":11361,"cogs":35,"labor":350,"etc":130,"invest":7000,"p25":1209,"p40":1823,"p50":2187,"p75":3689,"p90":5340},"호프-간이주점":{"n":988,"unit":51585,"cogs":32,"labor":400,"etc":180,"invest":10000,"p25":1891,"p40":2502,"p50":3077,"p75":4842,"p90":7267},"의약품":{"n":952,"unit":15170,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":9259,"p40":13206,"p50":15693,"p75":24826,"p90":38512},"일반의류":{"n":942,"unit":88512,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":487,"p40":823,"p50":1152,"p75":2604,"p90":6003},"편의점":{"n":923,"unit":7151,"cogs":73,"labor":500,"etc":150,"invest":9000,"p25":20055,"p40":28612,"p50":34829,"p75":57967,"p90":96137},"일반교습학원":{"n":911,"unit":320396,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":660,"p40":1132,"p50":1495,"p75":3044,"p90":5595},"스포츠 강습":{"n":876,"unit":265805,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":413,"p40":639,"p50":800,"p75":1566,"p90":2648},"일반의원":{"n":865,"unit":28564,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":9538,"p40":12913,"p50":15136,"p75":22384,"p90":31306},"예술학원":{"n":861,"unit":182630,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":409,"p40":705,"p50":908,"p75":1618,"p90":2931},"세탁소":{"n":854,"unit":18845,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":308,"p40":472,"p50":605,"p75":1143,"p90":1956},"중식음식점":{"n":844,"unit":26350,"cogs":40,"labor":600,"etc":200,"invest":12000,"p25":1708,"p40":2538,"p50":3265,"p75":5718,"p90":8183},"치킨전문점":{"n":832,"unit":30307,"cogs":43,"labor":400,"etc":180,"invest":10000,"p25":1814,"p40":2918,"p50":3542,"p75":6454,"p90":12313},"제과점":{"n":824,"unit":11126,"cogs":38,"labor":300,"etc":120,"invest":8000,"p25":2155,"p40":3438,"p50":4526,"p75":7860,"p90":12944},"화장품":{"n":818,"unit":73508,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":293,"p40":573,"p50":823,"p75":2197,"p90":4746},"노래방":{"n":814,"unit":67735,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":1241,"p40":1515,"p50":1703,"p75":2332,"p90":3208},"치과의원":{"n":809,"unit":131839,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":6474,"p40":8598,"p50":10099,"p75":14763,"p90":19800},"자동차수리":{"n":792,"unit":190966,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":3099,"p40":4865,"p50":6049,"p75":10934,"p90":18538},"육류판매":{"n":787,"unit":37954,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":3532,"p40":6166,"p50":7761,"p75":14086,"p90":24020},"당구장":{"n":773,"unit":16774,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":376,"p40":587,"p50":728,"p75":1245,"p90":1911},"패스트푸드점":{"n":752,"unit":14775,"cogs":40,"labor":350,"etc":130,"invest":7000,"p25":1479,"p40":2502,"p50":3536,"p75":8137,"p90":18943},"한의원":{"n":735,"unit":26563,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":2702,"p40":3758,"p50":4360,"p75":6450,"p90":9480},"피부관리실":{"n":718,"unit":157321,"cogs":38,"labor":250,"etc":100,"invest":6000,"p25":75,"p40":134,"p50":196,"p75":496,"p90":1187},"반찬가게":{"n":680,"unit":16664,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":735,"p40":1559,"p50":2133,"p75":6374,"p90":16373},"화초":{"n":655,"unit":38300,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":194,"p40":319,"p50":443,"p75":1131,"p90":2325},"스포츠클럽":{"n":630,"unit":271639,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":359,"p40":732,"p50":1133,"p75":2479,"p90":4846},"일식음식점":{"n":620,"unit":44354,"cogs":42,"labor":600,"etc":200,"invest":12000,"p25":1310,"p40":1997,"p50":2611,"p75":4944,"p90":7724},"청과상":{"n":588,"unit":18260,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":1172,"p40":2572,"p50":3711,"p75":8704,"p90":17315},"문구":{"n":580,"unit":18197,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":269,"p40":722,"p50":1302,"p75":6180,"p90":24635},"안경":{"n":573,"unit":101362,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":2086,"p40":3392,"p50":4291,"p75":8327,"p90":14605},"철물점":{"n":562,"unit":20764,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":304,"p40":577,"p50":884,"p75":2576,"p90":7275},"양식음식점":{"n":522,"unit":36887,"cogs":40,"labor":600,"etc":200,"invest":12000,"p25":734,"p40":1371,"p50":1957,"p75":4474,"p90":8330},"네일숍":{"n":515,"unit":71380,"cogs":20,"labor":250,"etc":100,"invest":6000,"p25":63,"p40":114,"p50":143,"p75":338,"p90":819},"인테리어":{"n":514,"unit":46662,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":115,"p40":431,"p50":739,"p75":2006,"p90":4836},"시계및귀금속":{"n":498,"unit":214131,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":340,"p40":622,"p50":804,"p75":1653,"p90":4278},"여관":{"n":471,"unit":49173,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":276,"p40":690,"p50":880,"p75":1742,"p90":3234},"조명용품":{"n":456,"unit":34881,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":243,"p40":590,"p50":1225,"p75":6481,"p90":25099},"서적":{"n":410,"unit":43866,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":297,"p40":673,"p50":986,"p75":3023,"p90":10595},"핸드폰":{"n":408,"unit":23877,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":97,"p40":246,"p50":435,"p75":1892,"p90":5278},"섬유제품":{"n":359,"unit":72036,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":249,"p40":572,"p50":826,"p75":2030,"p90":3978},"수산물판매":{"n":359,"unit":22039,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":2140,"p40":3850,"p50":5597,"p75":11484,"p90":19658},"의료기기":{"n":359,"unit":313737,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":686,"p40":1367,"p50":1975,"p75":5309,"p90":17749},"골프연습장":{"n":355,"unit":37282,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":778,"p40":1339,"p50":1878,"p75":3387,"p90":6612},"운동/경기용품":{"n":346,"unit":150605,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":403,"p40":1054,"p50":1613,"p75":6771,"p90":16135},"애완동물":{"n":314,"unit":39461,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":170,"p40":323,"p50":484,"p75":1247,"p90":2646},"가구":{"n":304,"unit":364245,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":435,"p40":839,"p50":1221,"p75":4505,"p90":11328},"PC방":{"n":299,"unit":5822,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":3066,"p40":5063,"p50":6778,"p75":11230,"p90":19096},"신발":{"n":295,"unit":55831,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":331,"p40":583,"p50":769,"p75":2074,"p90":5095},"미곡판매":{"n":263,"unit":38918,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":1033,"p40":1799,"p50":3113,"p75":11319,"p90":28192},"자동차미용":{"n":248,"unit":71099,"cogs":38,"labor":250,"etc":100,"invest":6000,"p25":288,"p40":598,"p50":812,"p75":1712,"p90":4014},"전자상거래업":{"n":234,"unit":53778,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":23,"p40":62,"p50":141,"p75":565,"p90":1698},"컴퓨터및주변장치판매":{"n":233,"unit":91486,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":220,"p40":461,"p50":782,"p75":2950,"p90":8558},"가전제품수리":{"n":197,"unit":72587,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":59,"p40":141,"p50":252,"p75":1000,"p90":2134},"외국어학원":{"n":187,"unit":310891,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":509,"p40":1083,"p50":1664,"p75":4451,"p90":11955},"가전제품":{"n":167,"unit":268177,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":427,"p40":1137,"p50":1769,"p75":9180,"p90":34096},"자전거 및 기타운송장비":{"n":128,"unit":78634,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":545,"p40":863,"p50":1301,"p75":3443,"p90":10463},"가방":{"n":116,"unit":32814,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":97,"p40":144,"p50":195,"p75":741,"p90":2740},"부동산중개업":{"n":46,"unit":22078,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":13,"p40":81,"p50":141,"p75":531,"p90":755},"완구":{"n":46,"unit":37267,"cogs":38,"labor":350,"etc":130,"invest":8000,"p25":180,"p40":984,"p50":1602,"p75":7316,"p90":15033}},"rent":{"전국":{"sido":"전국","gwon":"전국","rent":20.6,"vacancy":8.5},"서울":{"sido":"서울","gwon":"서울","rent":52.8,"vacancy":6.4},"서울·도심":{"sido":"서울","gwon":"도심","rent":74.1,"vacancy":4.6},"서울·광화문":{"sido":"서울","gwon":"도심","rent":92.4,"vacancy":0.9},"서울·남대문":{"sido":"서울","gwon":"도심","rent":77.4,"vacancy":6.1},"서울·동대문":{"sido":"서울","gwon":"도심","rent":52.8,"vacancy":9.8},"서울·명동":{"sido":"서울","gwon":"도심","rent":152.2,"vacancy":5.3},"서울·방산시장":{"sido":"서울","gwon":"도심","rent":71.2,"vacancy":9.9},"서울·북촌":{"sido":"서울","gwon":"도심","rent":100.9,"vacancy":0.0},"서울·서촌":{"sido":"서울","gwon":"도심","rent":45.1,"vacancy":8.6},"서울·시청":{"sido":"서울","gwon":"도심","rent":97.1,"vacancy":8.1},"서울·을지로":{"sido":"서울","gwon":"도심","rent":68.8,"vacancy":2.6},"서울·종로":{"sido":"서울","gwon":"도심","rent":71.8,"vacancy":0.0},"서울·충무로":{"sido":"서울","gwon":"도심","rent":51.7,"vacancy":1.0},"서울·강남":{"sido":"서울","gwon":"강남","rent":64.6,"vacancy":2.8},"서울·강남대로":{"sido":"서울","gwon":"강남","rent":85.5,"vacancy":0.0},"서울·교대역":{"sido":"서울","gwon":"강남","rent":46.4,"vacancy":0.5},"서울·남부터미널":{"sido":"서울","gwon":"강남","rent":44.3,"vacancy":4.9},"서울·논현역":{"sido":"서울","gwon":"강남","rent":70.4,"vacancy":0.0},"서울·도산대로":{"sido":"서울","gwon":"강남","rent":55.9,"vacancy":0.0},"서울·신사역":{"sido":"서울","gwon":"강남","rent":74.6,"vacancy":14.9},"서울·압구정":{"sido":"서울","gwon":"강남","rent":61.9,"vacancy":0.0},"서울·청담":{"sido":"서울","gwon":"강남","rent":68.9,"vacancy":2.0},"서울·테헤란로":{"sido":"서울","gwon":"강남","rent":73.0,"vacancy":1.0},"서울·영등포신촌":{"sido":"서울","gwon":"영등포신촌","rent":48.5,"vacancy":7.0},"서울·공덕역":{"sido":"서울","gwon":"영등포신촌","rent":59.8,"vacancy":4.5},"서울·당산역":{"sido":"서울","gwon":"영등포신촌","rent":41.8,"vacancy":0.0},"서울·동교/연남":{"sido":"서울","gwon":"영등포신촌","rent":56.6,"vacancy":0.0},"서울·망원역":{"sido":"서울","gwon":"영등포신촌","rent":41.3,"vacancy":1.0},"서울·신촌/이대":{"sido":"서울","gwon":"영등포신촌","rent":40.8,"vacancy":19.5},"서울·영등포역":{"sido":"서울","gwon":"영등포신촌","rent":38.5,"vacancy":3.1},"서울·홍대/합정":{"sido":"서울","gwon":"영등포신촌","rent":63.6,"vacancy":14.9},"서울·기타":{"sido":"서울","gwon":"기타","rent":45.1,"vacancy":7.2},"서울·가락시장":{"sido":"서울","gwon":"기타","rent":31.6,"vacancy":4.9},"서울·건대입구":{"sido":"서울","gwon":"기타","rent":51.5,"vacancy":11.2},"서울·경희대":{"sido":"서울","gwon":"기타","rent":50.4,"vacancy":4.3},"서울·군자":{"sido":"서울","gwon":"기타","rent":36.6,"vacancy":6.8},"서울·까치산역":{"sido":"서울","gwon":"기타","rent":31.8,"vacancy":3.8},"서울·노량진":{"sido":"서울","gwon":"기타","rent":30.5,"vacancy":1.7},"서울·독산/시흥":{"sido":"서울","gwon":"기타","rent":31.8,"vacancy":15.4},"서울·뚝섬":{"sido":"서울","gwon":"기타","rent":65.0,"vacancy":8.0},"서울·목동":{"sido":"서울","gwon":"기타","rent":41.9,"vacancy":1.6},"서울·미아사거리":{"sido":"서울","gwon":"기타","rent":40.5,"vacancy":9.0},"서울·불광역":{"sido":"서울","gwon":"기타","rent":38.0,"vacancy":7.1},"서울·사당":{"sido":"서울","gwon":"기타","rent":48.1,"vacancy":3.4},"서울·상계역":{"sido":"서울","gwon":"기타","rent":24.4,"vacancy":0.0},"서울·상봉역":{"sido":"서울","gwon":"기타","rent":45.9,"vacancy":0.0},"서울·서울대입구역":{"sido":"서울","gwon":"기타","rent":68.8,"vacancy":10.4},"서울·성신여대":{"sido":"서울","gwon":"기타","rent":58.4,"vacancy":0.0},"서울·수유":{"sido":"서울","gwon":"기타","rent":39.6,"vacancy":14.2},"서울·숙명여대":{"sido":"서울","gwon":"기타","rent":45.0,"vacancy":8.0},"서울·신림역":{"sido":"서울","gwon":"기타","rent":67.9,"vacancy":2.7},"서울·약수역":{"sido":"서울","gwon":"기타","rent":75.1,"vacancy":8.0},"서울·연신내":{"sido":"서울","gwon":"기타","rent":44.8,"vacancy":3.0},"서울·오류동역":{"sido":"서울","gwon":"기타","rent":55.7,"vacancy":10.5},"서울·왕십리":{"sido":"서울","gwon":"기타","rent":43.9,"vacancy":0.0},"서울·용산역":{"sido":"서울","gwon":"기타","rent":40.3,"vacancy":12.0},"서울·이태원":{"sido":"서울","gwon":"기타","rent":69.2,"vacancy":3.9},"서울·잠실/송파":{"sido":"서울","gwon":"기타","rent":36.0,"vacancy":6.6},"서울·잠실새내역":{"sido":"서울","gwon":"기타","rent":34.3,"vacancy":19.1},"서울·장안동":{"sido":"서울","gwon":"기타","rent":34.5,"vacancy":12.6},"서울·천호":{"sido":"서울","gwon":"기타","rent":57.6,"vacancy":5.0},"서울·청량리":{"sido":"서울","gwon":"기타","rent":40.6,"vacancy":7.0},"서울·혜화동":{"sido":"서울","gwon":"기타","rent":60.0,"vacancy":2.1},"서울·화곡":{"sido":"서울","gwon":"기타","rent":30.1,"vacancy":9.2},"부산":{"sido":"부산","gwon":"부산","rent":26.3,"vacancy":8.6},"부산·개금역":{"sido":"부산","gwon":"개금역","rent":19.7,"vacancy":6.2},"부산·경성대/부경대":{"sido":"부산","gwon":"경성대/부경대","rent":32.9,"vacancy":4.1},"부산·광안리":{"sido":"부산","gwon":"광안리","rent":32.2,"vacancy":10.4},"부산·구서동/금정구청":{"sido":"부산","gwon":"구서동/금정구청","rent":31.9,"vacancy":10.0},"부산·남포동":{"sido":"부산","gwon":"남포동","rent":43.1,"vacancy":15.5},"부산·남항동":{"sido":"부산","gwon":"남항동","rent":12.7,"vacancy":9.7},"부산·덕천역":{"sido":"부산","gwon":"덕천역","rent":30.4,"vacancy":23.9},"부산·동래역":{"sido":"부산","gwon":"동래역","rent":25.5,"vacancy":9.4},"부산·부산대학앞":{"sido":"부산","gwon":"부산대학앞","rent":33.5,"vacancy":20.9},"부산·부산역":{"sido":"부산","gwon":"부산역","rent":25.0,"vacancy":2.3},"부산·부전시장":{"sido":"부산","gwon":"부전시장","rent":37.4,"vacancy":17.1},"부산·사상역":{"sido":"부산","gwon":"사상역","rent":23.6,"vacancy":5.9},"부산·사직야구장":{"sido":"부산","gwon":"사직야구장","rent":26.3,"vacancy":4.9},"부산·서면/전포":{"sido":"부산","gwon":"서면/전포","rent":29.2,"vacancy":4.1},"부산·송정해수욕장":{"sido":"부산","gwon":"송정해수욕장","rent":20.8,"vacancy":3.2},"부산·수영역":{"sido":"부산","gwon":"수영역","rent":26.7,"vacancy":5.1},"부산·연산로터리":{"sido":"부산","gwon":"연산로터리","rent":21.8,"vacancy":3.0},"부산·온천장":{"sido":"부산","gwon":"온천장","rent":19.7,"vacancy":10.4},"부산·하단역":{"sido":"부산","gwon":"하단역","rent":25.9,"vacancy":0.0},"부산·해운대":{"sido":"부산","gwon":"해운대","rent":41.9,"vacancy":4.8},"부산·현대백화점주변":{"sido":"부산","gwon":"현대백화점주변","rent":19.5,"vacancy":0.0},"대구":{"sido":"대구","gwon":"대구","rent":20.6,"vacancy":10.8},"대구·경북대북문":{"sido":"대구","gwon":"경북대북문","rent":17.5,"vacancy":5.8},"대구·동대구":{"sido":"대구","gwon":"동대구","rent":11.3,"vacancy":8.0},"대구·동성로중심":{"sido":"대구","gwon":"동성로중심","rent":26.8,"vacancy":12.8},"대구·두류감삼역":{"sido":"대구","gwon":"두류감삼역","rent":19.8,"vacancy":3.7},"대구·들안길":{"sido":"대구","gwon":"들안길","rent":18.5,"vacancy":17.0},"대구·삼덕/대봉":{"sido":"대구","gwon":"삼덕/대봉","rent":27.2,"vacancy":0.0},"대구·상인/월배":{"sido":"대구","gwon":"상인/월배","rent":28.6,"vacancy":6.6},"대구·서문시장/청라언덕":{"sido":"대구","gwon":"서문시장/청라언덕","rent":17.3,"vacancy":10.1},"대구·수성범어":{"sido":"대구","gwon":"수성범어","rent":24.6,"vacancy":19.4},"대구·시지지구":{"sido":"대구","gwon":"시지지구","rent":21.7,"vacancy":8.2},"대구·월촌/안지랑":{"sido":"대구","gwon":"월촌/안지랑","rent":16.5,"vacancy":13.7},"대구·죽전역":{"sido":"대구","gwon":"죽전역","rent":18.3,"vacancy":14.9},"대구·칠곡":{"sido":"대구","gwon":"칠곡","rent":22.2,"vacancy":0.0},"인천":{"sido":"인천","gwon":"인천","rent":21.4,"vacancy":10.6},"인천·간석오거리":{"sido":"인천","gwon":"간석오거리","rent":19.0,"vacancy":5.5},"인천·검단사거리완정역":{"sido":"인천","gwon":"검단사거리완정역","rent":23.7,"vacancy":15.2},"인천·계양계산":{"sido":"인천","gwon":"계양계산","rent":24.3,"vacancy":3.7},"인천·구월":{"sido":"인천","gwon":"구월","rent":20.1,"vacancy":15.1},"인천·부평":{"sido":"인천","gwon":"부평","rent":35.4,"vacancy":6.5},"인천·석남/가정중앙시장":{"sido":"인천","gwon":"석남/가정중앙시장","rent":17.0,"vacancy":7.8},"인천·신포동":{"sido":"인천","gwon":"신포동","rent":17.9,"vacancy":18.1},"인천·인천서구청":{"sido":"인천","gwon":"인천서구청","rent":17.7,"vacancy":14.7},"인천·주안":{"sido":"인천","gwon":"주안","rent":17.6,"vacancy":15.5},"광주":{"sido":"광주","gwon":"광주","rent":16.7,"vacancy":9.6},"광주·금남로/충장로":{"sido":"광주","gwon":"금남로/충장로","rent":19.1,"vacancy":15.0},"광주·금호지구":{"sido":"광주","gwon":"금호지구","rent":27.6,"vacancy":0.0},"광주·봉선동":{"sido":"광주","gwon":"봉선동","rent":11.2,"vacancy":7.9},"광주·상무지구":{"sido":"광주","gwon":"상무지구","rent":19.0,"vacancy":0.0},"광주·송정동지구":{"sido":"광주","gwon":"송정동지구","rent":19.3,"vacancy":18.1},"광주·양산지구":{"sido":"광주","gwon":"양산지구","rent":14.5,"vacancy":5.6},"광주·용봉동":{"sido":"광주","gwon":"용봉동","rent":13.0,"vacancy":3.5},"광주·월산동지구":{"sido":"광주","gwon":"월산동지구","rent":15.8,"vacancy":4.7},"광주·전남대":{"sido":"광주","gwon":"전남대","rent":21.9,"vacancy":30.1},"광주·첨단1지구":{"sido":"광주","gwon":"첨단1지구","rent":21.0,"vacancy":6.0},"대전":{"sido":"대전","gwon":"대전","rent":15.1,"vacancy":7.8},"대전·노은":{"sido":"대전","gwon":"노은","rent":17.9,"vacancy":0.0},"대전·대전원도심":{"sido":"대전","gwon":"대전원도심","rent":15.7,"vacancy":9.8},"대전·복합터미널":{"sido":"대전","gwon":"복합터미널","rent":11.3,"vacancy":14.5},"대전·서대전네거리":{"sido":"대전","gwon":"서대전네거리","rent":20.5,"vacancy":6.5},"대전·용문/한민시장":{"sido":"대전","gwon":"용문/한민시장","rent":14.6,"vacancy":4.4},"대전·유성온천역":{"sido":"대전","gwon":"유성온천역","rent":10.7,"vacancy":17.4},"울산":{"sido":"울산","gwon":"울산","rent":14.0,"vacancy":5.9},"울산·삼산동":{"sido":"울산","gwon":"삼산동","rent":14.1,"vacancy":1.8},"울산·성남옥교동":{"sido":"울산","gwon":"성남옥교동","rent":12.3,"vacancy":6.6},"울산·신정동":{"sido":"울산","gwon":"신정동","rent":14.0,"vacancy":1.9},"울산·울산농소":{"sido":"울산","gwon":"울산농소","rent":15.9,"vacancy":20.1},"울산·울산대":{"sido":"울산","gwon":"울산대","rent":16.7,"vacancy":23.8},"울산·전하동":{"sido":"울산","gwon":"전하동","rent":15.5,"vacancy":10.6},"세종":{"sido":"세종","gwon":"세종","rent":15.8,"vacancy":9.0},"세종·조치원":{"sido":"세종","gwon":"조치원","rent":13.0,"vacancy":4.1},"경기":{"sido":"경기","gwon":"경기","rent":23.9,"vacancy":7.6},"경기·고양시청":{"sido":"경기","gwon":"고양시청","rent":20.7,"vacancy":4.9},"경기·광명철산":{"sido":"경기","gwon":"광명철산","rent":37.8,"vacancy":3.6},"경기·광주시가지":{"sido":"경기","gwon":"광주시가지","rent":23.9,"vacancy":3.2},"경기·구리역":{"sido":"경기","gwon":"구리역","rent":35.0,"vacancy":0.0},"경기·기흥역":{"sido":"경기","gwon":"기흥역","rent":29.8,"vacancy":7.2},"경기·김량장동":{"sido":"경기","gwon":"김량장동","rent":21.7,"vacancy":5.8},"경기·동두천중앙로":{"sido":"경기","gwon":"동두천중앙로","rent":14.1,"vacancy":17.4},"경기·모란":{"sido":"경기","gwon":"모란","rent":45.7,"vacancy":0.0},"경기·병점역":{"sido":"경기","gwon":"병점역","rent":24.7,"vacancy":0.0},"경기·부천역":{"sido":"경기","gwon":"부천역","rent":28.5,"vacancy":2.1},"경기·성남구시가지":{"sido":"경기","gwon":"성남구시가지","rent":27.9,"vacancy":11.4},"경기·수원역":{"sido":"경기","gwon":"수원역","rent":51.0,"vacancy":10.6},"경기·수원파장동":{"sido":"경기","gwon":"수원파장동","rent":19.9,"vacancy":0.0},"경기·신장/지산/서정":{"sido":"경기","gwon":"신장/지산/서정","rent":16.6,"vacancy":3.9},"경기·신천역":{"sido":"경기","gwon":"신천역","rent":20.4,"vacancy":15.9},"경기·안성 서인사거리":{"sido":"경기","gwon":"안성 서인사거리","rent":12.8,"vacancy":18.2},"경기·안양역":{"sido":"경기","gwon":"안양역","rent":32.5,"vacancy":7.8},"경기·양주덕정역":{"sido":"경기","gwon":"양주덕정역","rent":22.3,"vacancy":14.8},"경기·여주시청":{"sido":"경기","gwon":"여주시청","rent":17.4,"vacancy":23.5},"경기·오산시청":{"sido":"경기","gwon":"오산시청","rent":19.2,"vacancy":0.0},"경기·용인수지":{"sido":"경기","gwon":"용인수지","rent":25.3,"vacancy":0.0},"경기·의정부역":{"sido":"경기","gwon":"의정부역","rent":34.4,"vacancy":11.9},"경기·이천종합터미널":{"sido":"경기","gwon":"이천종합터미널","rent":17.1,"vacancy":1.4},"경기·인계동":{"sido":"경기","gwon":"인계동","rent":25.7,"vacancy":0.0},"경기·인덕원":{"sido":"경기","gwon":"인덕원","rent":31.7,"vacancy":9.7},"경기·탄현역":{"sido":"경기","gwon":"탄현역","rent":20.1,"vacancy":0.0},"경기·파주시청":{"sido":"경기","gwon":"파주시청","rent":23.5,"vacancy":4.9},"경기·팔달문로터리":{"sido":"경기","gwon":"팔달문로터리","rent":30.4,"vacancy":17.1},"경기·평택역":{"sido":"경기","gwon":"평택역","rent":20.0,"vacancy":15.9},"경기·포천소흘읍":{"sido":"경기","gwon":"포천소흘읍","rent":17.6,"vacancy":11.9},"경기·포천시외버스터미널":{"sido":"경기","gwon":"포천시외버스터미널","rent":13.7,"vacancy":14.6},"경기·하남원도심":{"sido":"경기","gwon":"하남원도심","rent":39.0,"vacancy":0.0},"경기·화성남양읍":{"sido":"경기","gwon":"화성남양읍","rent":18.2,"vacancy":0.0},"경기·화성봉담읍":{"sido":"경기","gwon":"화성봉담읍","rent":24.7,"vacancy":1.4},"강원":{"sido":"강원","gwon":"강원","rent":13.3,"vacancy":7.8},"강원·강릉교동":{"sido":"강원","gwon":"강릉교동","rent":18.4,"vacancy":0.0},"강원·강릉중부":{"sido":"강원","gwon":"강릉중부","rent":9.8,"vacancy":9.8},"강원·묵호항":{"sido":"강원","gwon":"묵호항","rent":11.1,"vacancy":5.9},"강원·삼척중앙시장":{"sido":"강원","gwon":"삼척중앙시장","rent":9.8,"vacancy":2.4},"강원·속초중앙시장":{"sido":"강원","gwon":"속초중앙시장","rent":18.3,"vacancy":13.1},"강원·영월경찰서":{"sido":"강원","gwon":"영월경찰서","rent":10.6,"vacancy":0.0},"강원·원주중앙/일산":{"sido":"강원","gwon":"원주중앙/일산","rent":16.2,"vacancy":7.6},"강원·주문진항":{"sido":"강원","gwon":"주문진항","rent":10.6,"vacancy":9.9},"강원·춘천명동":{"sido":"강원","gwon":"춘천명동","rent":14.0,"vacancy":11.0},"강원·태백중앙시장":{"sido":"강원","gwon":"태백중앙시장","rent":10.6,"vacancy":4.7},"충북":{"sido":"충북","gwon":"충북","rent":12.6,"vacancy":10.8},"충북·봉명사거리":{"sido":"충북","gwon":"봉명사거리","rent":14.7,"vacancy":20.3},"충북·제천역":{"sido":"충북","gwon":"제천역","rent":6.2,"vacancy":4.5},"충북·제천중앙":{"sido":"충북","gwon":"제천중앙","rent":13.2,"vacancy":10.8},"충북·증평광장로":{"sido":"충북","gwon":"증평광장로","rent":12.6,"vacancy":19.8},"충북·청주성안길":{"sido":"충북","gwon":"청주성안길","rent":19.4,"vacancy":11.9},"충북·충북대학교":{"sido":"충북","gwon":"충북대학교","rent":15.7,"vacancy":12.6},"충북·충주연수칠금":{"sido":"충북","gwon":"충주연수칠금","rent":11.0,"vacancy":15.7},"충북·충주자유시장":{"sido":"충북","gwon":"충주자유시장","rent":8.3,"vacancy":16.8},"충남":{"sido":"충남","gwon":"충남","rent":12.9,"vacancy":7.3},"충남·공주대":{"sido":"충남","gwon":"공주대","rent":12.9,"vacancy":11.1},"충남·공주웅진동":{"sido":"충남","gwon":"공주웅진동","rent":14.6,"vacancy":6.2},"충남·논산시외버스터미널":{"sido":"충남","gwon":"논산시외버스터미널","rent":13.4,"vacancy":6.1},"충남·당진시청":{"sido":"충남","gwon":"당진시청","rent":16.0,"vacancy":3.7},"충남·두정":{"sido":"충남","gwon":"두정","rent":14.4,"vacancy":0.0},"충남·배방읍":{"sido":"충남","gwon":"배방읍","rent":16.9,"vacancy":9.9},"충남·보령문화의전당":{"sido":"충남","gwon":"보령문화의전당","rent":11.9,"vacancy":9.9},"충남·서산터미널":{"sido":"충남","gwon":"서산터미널","rent":14.8,"vacancy":9.1},"충남·아산온양":{"sido":"충남","gwon":"아산온양","rent":12.9,"vacancy":4.6},"충남·예산시장":{"sido":"충남","gwon":"예산시장","rent":7.9,"vacancy":20.6},"충남·천안역":{"sido":"충남","gwon":"천안역","rent":15.2,"vacancy":9.5},"충남·천안종합버스터미널":{"sido":"충남","gwon":"천안종합버스터미널","rent":22.2,"vacancy":7.1},"충남·태안터미널":{"sido":"충남","gwon":"태안터미널","rent":10.4,"vacancy":7.8},"충남·합덕버스터미널":{"sido":"충남","gwon":"합덕버스터미널","rent":8.8,"vacancy":2.8},"전북":{"sido":"전북","gwon":"전북","rent":10.9,"vacancy":9.2},"전북·군산수송동조촌동":{"sido":"전북","gwon":"군산수송동조촌동","rent":8.9,"vacancy":1.5},"전북·군산원도심":{"sido":"전북","gwon":"군산원도심","rent":6.8,"vacancy":14.3},"전북·김제시장":{"sido":"전북","gwon":"김제시장","rent":7.8,"vacancy":10.9},"전북·남원광한루":{"sido":"전북","gwon":"남원광한루","rent":8.8,"vacancy":4.9},"전북·송천동":{"sido":"전북","gwon":"송천동","rent":12.8,"vacancy":16.3},"전북·영등부송":{"sido":"전북","gwon":"영등부송","rent":9.4,"vacancy":0.0},"전북·익산역":{"sido":"전북","gwon":"익산역","rent":8.3,"vacancy":18.1},"전북·전주동부":{"sido":"전북","gwon":"전주동부","rent":12.9,"vacancy":6.1},"전북·전주서부":{"sido":"전북","gwon":"전주서부","rent":13.6,"vacancy":7.0},"전북·전주한옥마을":{"sido":"전북","gwon":"전주한옥마을","rent":39.7,"vacancy":0.0},"전북·정읍중심":{"sido":"전북","gwon":"정읍중심","rent":12.3,"vacancy":13.3},"전남":{"sido":"전남","gwon":"전남","rent":10.9,"vacancy":10.5},"전남·광양읍":{"sido":"전남","gwon":"광양읍","rent":7.3,"vacancy":11.6},"전남·광양중동":{"sido":"전남","gwon":"광양중동","rent":9.8,"vacancy":5.2},"전남·나주구시가지":{"sido":"전남","gwon":"나주구시가지","rent":8.5,"vacancy":0.6},"전남·목포구도심":{"sido":"전남","gwon":"목포구도심","rent":7.6,"vacancy":14.0},"전남·무선지구":{"sido":"전남","gwon":"무선지구","rent":9.1,"vacancy":3.7},"전남·순천법원":{"sido":"전남","gwon":"순천법원","rent":12.4,"vacancy":15.4},"전남·순천원도심":{"sido":"전남","gwon":"순천원도심","rent":11.6,"vacancy":10.5},"전남·여수여문":{"sido":"전남","gwon":"여수여문","rent":9.8,"vacancy":12.9},"전남·여수원도심":{"sido":"전남","gwon":"여수원도심","rent":18.8,"vacancy":24.2},"전남·여수학동":{"sido":"전남","gwon":"여수학동","rent":10.1,"vacancy":0.0},"전남·조례":{"sido":"전남","gwon":"조례","rent":15.0,"vacancy":7.1},"전남·하당신도심":{"sido":"전남","gwon":"하당신도심","rent":10.3,"vacancy":22.5},"경북":{"sido":"경북","gwon":"경북","rent":13.1,"vacancy":10.0},"경북·가흥택지개발지구":{"sido":"경북","gwon":"가흥택지개발지구","rent":12.3,"vacancy":6.3},"경북·경산시청":{"sido":"경북","gwon":"경산시청","rent":14.4,"vacancy":5.6},"경북·경주도심":{"sido":"경북","gwon":"경주도심","rent":20.9,"vacancy":22.2},"경북·구미산업단지":{"sido":"경북","gwon":"구미산업단지","rent":16.0,"vacancy":18.8},"경북·구미선주원남동":{"sido":"경북","gwon":"구미선주원남동","rent":11.9,"vacancy":0.0},"경북·구미역":{"sido":"경북","gwon":"구미역","rent":14.2,"vacancy":6.8},"경북·문경점촌흥덕":{"sido":"경북","gwon":"문경점촌흥덕","rent":9.5,"vacancy":18.5},"경북·상주동문동":{"sido":"경북","gwon":"상주동문동","rent":10.1,"vacancy":29.7},"경북·안동구도심":{"sido":"경북","gwon":"안동구도심","rent":12.5,"vacancy":7.6},"경북·양덕동":{"sido":"경북","gwon":"양덕동","rent":9.8,"vacancy":9.1},"경북·영일대해수욕장":{"sido":"경북","gwon":"영일대해수욕장","rent":17.8,"vacancy":0.0},"경북·영주중앙":{"sido":"경북","gwon":"영주중앙","rent":8.5,"vacancy":19.8},"경북·옥동사거리":{"sido":"경북","gwon":"옥동사거리","rent":11.2,"vacancy":0.0},"경북·포항원도심":{"sido":"경북","gwon":"포항원도심","rent":10.9,"vacancy":3.5},"경북·포항중앙":{"sido":"경북","gwon":"포항중앙","rent":11.9,"vacancy":20.8},"경북·포항효자동":{"sido":"경북","gwon":"포항효자동","rent":17.4,"vacancy":0.0},"경북·황리단길":{"sido":"경북","gwon":"황리단길","rent":39.1,"vacancy":0.0},"경남":{"sido":"경남","gwon":"경남","rent":13.0,"vacancy":9.9},"경남·거제고현":{"sido":"경남","gwon":"거제고현","rent":14.4,"vacancy":13.4},"경남·거제옥포":{"sido":"경남","gwon":"거제옥포","rent":11.9,"vacancy":16.1},"경남·김해시청/동상시장":{"sido":"경남","gwon":"김해시청/동상시장","rent":12.2,"vacancy":13.7},"경남·마산동서동":{"sido":"경남","gwon":"마산동서동","rent":14.5,"vacancy":9.4},"경남·마산역버스터미널":{"sido":"경남","gwon":"마산역버스터미널","rent":15.9,"vacancy":7.7},"경남·밀양원도심/삼문동":{"sido":"경남","gwon":"밀양원도심/삼문동","rent":11.3,"vacancy":20.2},"경남·양산구도심":{"sido":"경남","gwon":"양산구도심","rent":9.8,"vacancy":11.1},"경남·용원동":{"sido":"경남","gwon":"용원동","rent":12.0,"vacancy":3.1},"경남·진주중앙시장":{"sido":"경남","gwon":"진주중앙시장","rent":14.2,"vacancy":25.3},"경남·진주하대동":{"sido":"경남","gwon":"진주하대동","rent":13.6,"vacancy":0.0},"경남·진해석동":{"sido":"경남","gwon":"진해석동","rent":18.8,"vacancy":0.0},"경남·창원시청":{"sido":"경남","gwon":"창원시청","rent":10.7,"vacancy":0.0},"경남·창원역":{"sido":"경남","gwon":"창원역","rent":16.5,"vacancy":0.0},"경남·창원월영동":{"sido":"경남","gwon":"창원월영동","rent":22.4,"vacancy":12.4},"경남·창원의창구청":{"sido":"경남","gwon":"창원의창구청","rent":9.4,"vacancy":5.9},"경남·통영 강구안":{"sido":"경남","gwon":"통영 강구안","rent":19.4,"vacancy":11.8},"경남·통영시청":{"sido":"경남","gwon":"통영시청","rent":17.2,"vacancy":0.0},"경남·평거동":{"sido":"경남","gwon":"평거동","rent":12.4,"vacancy":0.0},"경남·활천동":{"sido":"경남","gwon":"활천동","rent":10.9,"vacancy":1.8},"제주":{"sido":"제주","gwon":"제주","rent":14.8,"vacancy":2.5},"제주·광양사거리":{"sido":"제주","gwon":"광양사거리","rent":11.9,"vacancy":3.9},"제주·노형오거리":{"sido":"제주","gwon":"노형오거리","rent":19.9,"vacancy":0.0},"제주·서귀포도심":{"sido":"제주","gwon":"서귀포도심","rent":16.4,"vacancy":1.9},"제주·중앙사거리":{"sido":"제주","gwon":"중앙사거리","rent":11.8,"vacancy":5.9}},"gu":{"강남구":{"y2022":15308,"y2023":17189,"y2024":18435,"trend":20.4},"강동구":{"y2022":6622,"y2023":7544,"y2024":7718,"trend":16.6},"강북구":{"y2022":4159,"y2023":4796,"y2024":4751,"trend":14.2},"강서구":{"y2022":3367,"y2023":3755,"y2024":4123,"trend":22.5},"관악구":{"y2022":7036,"y2023":7554,"y2024":7974,"trend":13.3},"광진구":{"y2022":5786,"y2023":6608,"y2024":6198,"trend":7.1},"구로구":{"y2022":7283,"y2023":7752,"y2024":7645,"trend":5.0},"금천구":{"y2022":5928,"y2023":6437,"y2024":6753,"trend":13.9},"노원구":{"y2022":5763,"y2023":6755,"y2024":6889,"trend":19.5},"도봉구":{"y2022":3684,"y2023":4253,"y2024":4126,"trend":12.0},"동대문구":{"y2022":6044,"y2023":7271,"y2024":7233,"trend":19.7},"동작구":{"y2022":4550,"y2023":5240,"y2024":5413,"trend":19.0},"마포구":{"y2022":9110,"y2023":9629,"y2024":9806,"trend":7.6},"서대문구":{"y2022":4620,"y2023":5241,"y2024":5301,"trend":14.7},"서초구":{"y2022":9809,"y2023":10644,"y2024":10986,"trend":12.0},"성동구":{"y2022":5227,"y2023":5524,"y2024":5810,"trend":11.2},"성북구":{"y2022":5108,"y2023":5543,"y2024":5713,"trend":11.8},"송파구":{"y2022":11851,"y2023":13027,"y2024":12806,"trend":8.1},"양천구":{"y2022":5916,"y2023":6439,"y2024":6076,"trend":2.7},"영등포구":{"y2022":11065,"y2023":12608,"y2024":12400,"trend":12.1},"용산구":{"y2022":4651,"y2023":5032,"y2024":5091,"trend":9.5},"은평구":{"y2022":6069,"y2023":6858,"y2024":6850,"trend":12.9},"종로구":{"y2022":5336,"y2023":5676,"y2024":5601,"trend":5.0},"중구":{"y2022":2753,"y2023":2999,"y2024":3100,"trend":12.6},"중랑구":{"y2022":5405,"y2023":6072,"y2024":6567,"trend":21.5}},"reasons":{"사업부진":98558,"행정처분":984,"계절사업":155,"법인전환":1316,"면세포기·적용":76,"양도·인수":6544,"해산·합병":1192,"기타":87386},"seoul_close":196211,"quarter":"2026 2분기"}</script>
+  <div class="main">
+    <div class="mapcol">
+      <div class="maptitle">
+        <b>서울 자치구 상권 지도</b><span id="mt-sub">자치구 검색하거나 지도를 클릭하세요</span>
+        <div class="searchbox">
+          <svg viewBox="0 0 24 24" class="sicon"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="gu-search" list="gu-list" placeholder="자치구 검색 (예: 강남구)" autocomplete="off">
+          <datalist id="gu-list"></datalist>
+          <button id="gu-clear" class="sclear" title="지우기" style="display:none">✕</button>
+        </div>
+        <div class="layers">
+          <button class="lbtn on" data-metric="close">폐업</button>
+          <button class="lbtn" data-metric="bus">대중교통</button>
+          <button class="lbtn" data-metric="rent">임대료</button>
+          <button class="lbtn" data-metric="pop" id="lbtn-pop" style="display:none">유동인구</button>
+          <button class="lbtn" data-metric="park" id="lbtn-park" style="display:none">주차</button>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div class="legend" id="legend"></div>
+      <div class="mapfail" id="mapfail">
+        <h3>지도를 불러오지 못했어요</h3>
+        <p>카카오 개발자 콘솔에서 <b>이 사이트 도메인이 등록</b>되어 있어야 지도가 뜹니다.
+        developers.kakao.com → 내 애플리케이션 → 앱 설정 → 플랫폼 → Web →
+        사이트 도메인에 현재 주소를 추가하세요. (아래 분석은 지도와 무관하게 정상 동작합니다.)</p>
+      </div>
+    </div>
+
+    <div class="analytics">
+      <!-- AI 인사이트 -->
+      <div class="acol">
+        <div class="acap"><span class="dot"></span>AI 인사이트</div>
+        <div class="ai" id="ai-box"></div>
+      </div>
+      <!-- KPI -->
+      <div class="acol">
+        <div class="phead"><h1 id="p-title">서울 전체</h1><span class="q" id="p-q"></span></div>
+        <p class="hint" id="p-hint">지도에서 자치구를 클릭하세요.</p>
+        <div class="kpis">
+          <div class="kpi"><div class="l">누적 폐업 (2024)</div><div class="v" id="k-close">—</div><div class="s" id="k-trend"></div></div>
+          <div class="kpi"><div class="l">서울 평균 임대료</div><div class="v" id="k-rent">—</div><div class="s" id="k-vac"></div></div>
+          <div class="kpi"><div class="l">대중교통 정류소</div><div class="v" id="k-bus">—</div><div class="s" id="k-bussub"></div></div>
+          <div class="kpi" id="kpi-park" style="display:none"><div class="l">주차장</div><div class="v" id="k-park">—</div><div class="s" id="k-parksub"></div></div>
+        </div>
+      </div>
+      <!-- 차트 -->
+      <div class="acol">
+        <div class="sec">
+          <h2>3년 폐업 추이 <span class="src">국세청</span></h2>
+          <div class="bars" id="trend-bars"></div>
+        </div>
+        <div class="sec" id="pop-sec" style="display:none">
+          <h2>유동인구 연령분포 <span class="src" id="pop-src">서울 생활인구</span></h2>
+          <div class="bars" id="pop-bars"></div>
+        </div>
+        <div class="sec">
+          <h2>폐업 사유 (서울) <span class="src">국세청</span></h2>
+          <div class="bars" id="reason-bars"></div>
+        </div>
+      </div>
+      <!-- 정보/계산기 -->
+      <div class="acol">
+        <div class="sec">
+          <h2>손익분기 계산기 <span class="src">계산 · 오차 0</span></h2>
+          <div class="field"><label>업종</label><select id="bep-ind"></select></div>
+          <div class="field"><label>월 고정비 (임대료+인건비+기타, 만원)</label><input id="bep-fix" type="number" inputmode="numeric"></div>
+          <div class="field"><label>초기 투자 (만원)</label><input id="bep-inv" type="number" inputmode="numeric"></div>
+          <div class="bepout" id="bep-out"></div>
+          <div class="verdict" id="bep-verdict"></div>
+        </div>
+        <div class="foot" id="foot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-const DA=JSON.parse(document.getElementById('D').textContent),IND=DA.ind,RENT=DA.rent,GU=DA.gu,REASONS=DA.reasons;
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const won=n=>n>=10000?(n/10000).toFixed(n>=100000?0:1)+'억':Math.round(n).toLocaleString()+'만';
-const cv=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const raf=fn=>requestAnimationFrame(()=>requestAnimationFrame(fn));
-// 데이터 준비
-const inds=Object.keys(IND);
-const byS={};Object.entries(RENT).forEach(([k,d])=>{if(d.sido==='전국')return;(byS[d.sido]=byS[d.sido]||[]).push([k,d])});
-const order=['서울','경기','인천','부산','대구','대전','광주','울산','세종','강원','충북','충남','전북','전남','경북','경남','제주'];
-Object.values(byS).forEach(a=>a.sort((x,y)=>y[1].rent-x[1].rent));
-const sangLabel=k=>k.replace(/^[^·]+·/,'');
-const indGroups=[{label:'',items:inds.map(i=>({v:i,t:i}))}];
-const sangGroups=order.filter(s=>byS[s]).map(s=>({label:s,items:byS[s].map(([k,d])=>({v:k,t:sangLabel(k)+' · '+d.rent+'천원/㎡'}))}));
-const areaGroups=[{label:'',items:[10,13,15,20,25,30,40,50].map(v=>({v:''+v,t:v+'평'}))}];
-let curInd=inds[0],curSang=Object.keys(RENT).find(k=>k.includes('강남대로'))||Object.keys(RENT)[1],curArea=15;
-const NEW_RATIO=0.85;
-// 시트
-function openSheet(title,groups,current,onPick){
-  const total=groups.reduce((n,g)=>n+g.items.length,0);
-  $('#sheet-title').textContent=title;const sc=$('#sheet-search');$('.sheet-searchwrap').style.display=total>8?'block':'none';sc.value='';
-  const render=q=>{q=(q||'').trim();let h='';groups.forEach(g=>{const it=g.items.filter(x=>!q||x.t.includes(q));if(!it.length)return;if(g.label)h+=`<div class="sheet-gl">${g.label}</div>`;it.forEach(x=>h+=`<button class="sheet-item${x.v===current?' on':''}" data-v="${x.v}"><span>${x.t}</span>${x.v===current?'<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':''}</button>`)});$('#sheet-list').innerHTML=h||'<div class="sheet-empty">결과 없음</div>';$$('#sheet-list .sheet-item').forEach(b=>b.onclick=()=>{onPick(b.dataset.v);closeSheet()})};
-  sc.oninput=()=>render(sc.value);render('');$('#sheet-list').scrollTop=0;
-  document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';
-  $('#sheetbg').classList.add('on');$('#sheet').classList.add('on');
+const DATA={"ind": {"한식음식점": {"n": 1072, "unit": 37087, "cogs": 38, "labor": 600, "etc": 200, "invest": 12000, "p25": 4589, "p40": 5641, "p50": 6319, "p75": 8214, "p90": 10913}, "미용실": {"n": 1057, "unit": 37111, "cogs": 18, "labor": 250, "etc": 100, "invest": 6000, "p25": 559, "p40": 744, "p50": 856, "p75": 1239, "p90": 1970}, "커피-음료": {"n": 1057, "unit": 7150, "cogs": 30, "labor": 300, "etc": 120, "invest": 8000, "p25": 963, "p40": 1422, "p50": 1818, "p75": 2922, "p90": 4477}, "슈퍼마켓": {"n": 1019, "unit": 10770, "cogs": 75, "labor": 500, "etc": 150, "invest": 9000, "p25": 4770, "p40": 7639, "p50": 9628, "p75": 16015, "p90": 27779}, "분식전문점": {"n": 993, "unit": 11361, "cogs": 35, "labor": 350, "etc": 130, "invest": 7000, "p25": 1209, "p40": 1823, "p50": 2187, "p75": 3689, "p90": 5340}, "호프-간이주점": {"n": 988, "unit": 51585, "cogs": 32, "labor": 400, "etc": 180, "invest": 10000, "p25": 1891, "p40": 2502, "p50": 3077, "p75": 4842, "p90": 7267}, "의약품": {"n": 952, "unit": 15170, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 9259, "p40": 13206, "p50": 15693, "p75": 24826, "p90": 38512}, "일반의류": {"n": 942, "unit": 88512, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 487, "p40": 823, "p50": 1152, "p75": 2604, "p90": 6003}, "편의점": {"n": 923, "unit": 7151, "cogs": 73, "labor": 500, "etc": 150, "invest": 9000, "p25": 20055, "p40": 28612, "p50": 34829, "p75": 57967, "p90": 96137}, "일반교습학원": {"n": 911, "unit": 320396, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 660, "p40": 1132, "p50": 1495, "p75": 3044, "p90": 5595}, "스포츠 강습": {"n": 876, "unit": 265805, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 413, "p40": 639, "p50": 800, "p75": 1566, "p90": 2648}, "일반의원": {"n": 865, "unit": 28564, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 9538, "p40": 12913, "p50": 15136, "p75": 22384, "p90": 31306}, "예술학원": {"n": 861, "unit": 182630, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 409, "p40": 705, "p50": 908, "p75": 1618, "p90": 2931}, "세탁소": {"n": 854, "unit": 18845, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 308, "p40": 472, "p50": 605, "p75": 1143, "p90": 1956}, "중식음식점": {"n": 844, "unit": 26350, "cogs": 40, "labor": 600, "etc": 200, "invest": 12000, "p25": 1708, "p40": 2538, "p50": 3265, "p75": 5718, "p90": 8183}, "치킨전문점": {"n": 832, "unit": 30307, "cogs": 43, "labor": 400, "etc": 180, "invest": 10000, "p25": 1814, "p40": 2918, "p50": 3542, "p75": 6454, "p90": 12313}, "제과점": {"n": 824, "unit": 11126, "cogs": 38, "labor": 300, "etc": 120, "invest": 8000, "p25": 2155, "p40": 3438, "p50": 4526, "p75": 7860, "p90": 12944}, "화장품": {"n": 818, "unit": 73508, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 293, "p40": 573, "p50": 823, "p75": 2197, "p90": 4746}, "노래방": {"n": 814, "unit": 67735, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 1241, "p40": 1515, "p50": 1703, "p75": 2332, "p90": 3208}, "치과의원": {"n": 809, "unit": 131839, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 6474, "p40": 8598, "p50": 10099, "p75": 14763, "p90": 19800}, "자동차수리": {"n": 792, "unit": 190966, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 3099, "p40": 4865, "p50": 6049, "p75": 10934, "p90": 18538}, "육류판매": {"n": 787, "unit": 37954, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 3532, "p40": 6166, "p50": 7761, "p75": 14086, "p90": 24020}, "당구장": {"n": 773, "unit": 16774, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 376, "p40": 587, "p50": 728, "p75": 1245, "p90": 1911}, "패스트푸드점": {"n": 752, "unit": 14775, "cogs": 40, "labor": 350, "etc": 130, "invest": 7000, "p25": 1479, "p40": 2502, "p50": 3536, "p75": 8137, "p90": 18943}, "한의원": {"n": 735, "unit": 26563, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 2702, "p40": 3758, "p50": 4360, "p75": 6450, "p90": 9480}, "피부관리실": {"n": 718, "unit": 157321, "cogs": 38, "labor": 250, "etc": 100, "invest": 6000, "p25": 75, "p40": 134, "p50": 196, "p75": 496, "p90": 1187}, "반찬가게": {"n": 680, "unit": 16664, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 735, "p40": 1559, "p50": 2133, "p75": 6374, "p90": 16373}, "화초": {"n": 655, "unit": 38300, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 194, "p40": 319, "p50": 443, "p75": 1131, "p90": 2325}, "스포츠클럽": {"n": 630, "unit": 271639, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 359, "p40": 732, "p50": 1133, "p75": 2479, "p90": 4846}, "일식음식점": {"n": 620, "unit": 44354, "cogs": 42, "labor": 600, "etc": 200, "invest": 12000, "p25": 1310, "p40": 1997, "p50": 2611, "p75": 4944, "p90": 7724}, "청과상": {"n": 588, "unit": 18260, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 1172, "p40": 2572, "p50": 3711, "p75": 8704, "p90": 17315}, "문구": {"n": 580, "unit": 18197, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 269, "p40": 722, "p50": 1302, "p75": 6180, "p90": 24635}, "안경": {"n": 573, "unit": 101362, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 2086, "p40": 3392, "p50": 4291, "p75": 8327, "p90": 14605}, "철물점": {"n": 562, "unit": 20764, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 304, "p40": 577, "p50": 884, "p75": 2576, "p90": 7275}, "양식음식점": {"n": 522, "unit": 36887, "cogs": 40, "labor": 600, "etc": 200, "invest": 12000, "p25": 734, "p40": 1371, "p50": 1957, "p75": 4474, "p90": 8330}, "네일숍": {"n": 515, "unit": 71380, "cogs": 20, "labor": 250, "etc": 100, "invest": 6000, "p25": 63, "p40": 114, "p50": 143, "p75": 338, "p90": 819}, "인테리어": {"n": 514, "unit": 46662, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 115, "p40": 431, "p50": 739, "p75": 2006, "p90": 4836}, "시계및귀금속": {"n": 498, "unit": 214131, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 340, "p40": 622, "p50": 804, "p75": 1653, "p90": 4278}, "여관": {"n": 471, "unit": 49173, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 276, "p40": 690, "p50": 880, "p75": 1742, "p90": 3234}, "조명용품": {"n": 456, "unit": 34881, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 243, "p40": 590, "p50": 1225, "p75": 6481, "p90": 25099}, "서적": {"n": 410, "unit": 43866, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 297, "p40": 673, "p50": 986, "p75": 3023, "p90": 10595}, "핸드폰": {"n": 408, "unit": 23877, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 97, "p40": 246, "p50": 435, "p75": 1892, "p90": 5278}, "섬유제품": {"n": 359, "unit": 72036, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 249, "p40": 572, "p50": 826, "p75": 2030, "p90": 3978}, "수산물판매": {"n": 359, "unit": 22039, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 2140, "p40": 3850, "p50": 5597, "p75": 11484, "p90": 19658}, "의료기기": {"n": 359, "unit": 313737, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 686, "p40": 1367, "p50": 1975, "p75": 5309, "p90": 17749}, "골프연습장": {"n": 355, "unit": 37282, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 778, "p40": 1339, "p50": 1878, "p75": 3387, "p90": 6612}, "운동/경기용품": {"n": 346, "unit": 150605, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 403, "p40": 1054, "p50": 1613, "p75": 6771, "p90": 16135}, "애완동물": {"n": 314, "unit": 39461, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 170, "p40": 323, "p50": 484, "p75": 1247, "p90": 2646}, "가구": {"n": 304, "unit": 364245, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 435, "p40": 839, "p50": 1221, "p75": 4505, "p90": 11328}, "PC방": {"n": 299, "unit": 5822, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 3066, "p40": 5063, "p50": 6778, "p75": 11230, "p90": 19096}, "신발": {"n": 295, "unit": 55831, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 331, "p40": 583, "p50": 769, "p75": 2074, "p90": 5095}, "미곡판매": {"n": 263, "unit": 38918, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 1033, "p40": 1799, "p50": 3113, "p75": 11319, "p90": 28192}, "자동차미용": {"n": 248, "unit": 71099, "cogs": 38, "labor": 250, "etc": 100, "invest": 6000, "p25": 288, "p40": 598, "p50": 812, "p75": 1712, "p90": 4014}, "전자상거래업": {"n": 234, "unit": 53778, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 23, "p40": 62, "p50": 141, "p75": 565, "p90": 1698}, "컴퓨터및주변장치판매": {"n": 233, "unit": 91486, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 220, "p40": 461, "p50": 782, "p75": 2950, "p90": 8558}, "가전제품수리": {"n": 197, "unit": 72587, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 59, "p40": 141, "p50": 252, "p75": 1000, "p90": 2134}, "외국어학원": {"n": 187, "unit": 310891, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 509, "p40": 1083, "p50": 1664, "p75": 4451, "p90": 11955}, "가전제품": {"n": 167, "unit": 268177, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 427, "p40": 1137, "p50": 1769, "p75": 9180, "p90": 34096}, "자전거 및 기타운송장비": {"n": 128, "unit": 78634, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 545, "p40": 863, "p50": 1301, "p75": 3443, "p90": 10463}, "가방": {"n": 116, "unit": 32814, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 97, "p40": 144, "p50": 195, "p75": 741, "p90": 2740}, "부동산중개업": {"n": 46, "unit": 22078, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 13, "p40": 81, "p50": 141, "p75": 531, "p90": 755}, "완구": {"n": 46, "unit": 37267, "cogs": 38, "labor": 350, "etc": 130, "invest": 8000, "p25": 180, "p40": 984, "p50": 1602, "p75": 7316, "p90": 15033}}, "gu": {"강남구": {"y2022": 15308, "y2023": 17189, "y2024": 18435, "trend": 20.4, "lat": 37.4959, "lng": 127.0664, "bus": 345}, "강동구": {"y2022": 6622, "y2023": 7544, "y2024": 7718, "trend": 16.6, "lat": 37.5301, "lng": 127.1238, "bus": 595}, "강북구": {"y2022": 4159, "y2023": 4796, "y2024": 4751, "trend": 14.2, "lat": 37.6396, "lng": 127.0257, "bus": 634}, "강서구": {"y2022": 3367, "y2023": 3755, "y2024": 4123, "trend": 22.5, "lat": 37.5509, "lng": 126.8495, "bus": 644}, "관악구": {"y2022": 7036, "y2023": 7554, "y2024": 7974, "trend": 13.3, "lat": 37.4784, "lng": 126.9516, "bus": 542}, "광진구": {"y2022": 5786, "y2023": 6608, "y2024": 6198, "trend": 7.1, "lat": 37.5385, "lng": 127.0823, "bus": 353}, "구로구": {"y2022": 7283, "y2023": 7752, "y2024": 7645, "trend": 5.0, "lat": 37.4954, "lng": 126.8874, "bus": 458}, "금천구": {"y2022": 5928, "y2023": 6437, "y2024": 6753, "trend": 13.9, "lat": 37.4569, "lng": 126.8956, "bus": 347}, "노원구": {"y2022": 5763, "y2023": 6755, "y2024": 6889, "trend": 19.5, "lat": 37.6542, "lng": 127.0568, "bus": 393}, "도봉구": {"y2022": 3684, "y2023": 4253, "y2024": 4126, "trend": 12.0, "lat": 37.6688, "lng": 127.0471, "bus": 225}, "동대문구": {"y2022": 6044, "y2023": 7271, "y2024": 7233, "trend": 19.7, "lat": 37.5744, "lng": 127.0396, "bus": 319}, "동작구": {"y2022": 4550, "y2023": 5240, "y2024": 5413, "trend": 19.0, "lat": 37.5124, "lng": 126.9393, "bus": 570}, "마포구": {"y2022": 9110, "y2023": 9629, "y2024": 9806, "trend": 7.6, "lat": 37.5663, "lng": 126.9019, "bus": 441}, "서대문구": {"y2022": 4620, "y2023": 5241, "y2024": 5301, "trend": 14.7, "lat": 37.5791, "lng": 126.9368, "bus": 432}, "서초구": {"y2022": 9809, "y2023": 10644, "y2024": 10986, "trend": 12.0, "lat": 37.4837, "lng": 127.0324, "bus": 624}, "성동구": {"y2022": 5227, "y2023": 5524, "y2024": 5810, "trend": 11.2, "lat": 37.5634, "lng": 127.0369, "bus": 376}, "성북구": {"y2022": 5108, "y2023": 5543, "y2024": 5713, "trend": 11.8, "lat": 37.5894, "lng": 127.0167, "bus": 501}, "송파구": {"y2022": 11851, "y2023": 13027, "y2024": 12806, "trend": 8.1, "lat": 37.5145, "lng": 127.1059, "bus": 427}, "양천구": {"y2022": 5916, "y2023": 6439, "y2024": 6076, "trend": 2.7, "lat": 37.517, "lng": 126.8664, "bus": 580}, "영등포구": {"y2022": 11065, "y2023": 12608, "y2024": 12400, "trend": 12.1, "lat": 37.5264, "lng": 126.8963, "bus": 272}, "용산구": {"y2022": 4651, "y2023": 5032, "y2024": 5091, "trend": 9.5, "lat": 37.5324, "lng": 126.99, "bus": 394}, "은평구": {"y2022": 6069, "y2023": 6858, "y2024": 6850, "trend": 12.9, "lat": 37.6027, "lng": 126.9291, "bus": 550}, "종로구": {"y2022": 5336, "y2023": 5676, "y2024": 5601, "trend": 5.0, "lat": 37.573, "lng": 126.9794, "bus": 441}, "중구": {"y2022": 2753, "y2023": 2999, "y2024": 3100, "trend": 12.6, "lat": 37.5636, "lng": 126.9976, "bus": 206}, "중랑구": {"y2022": 5405, "y2023": 6072, "y2024": 6567, "trend": 21.5, "lat": 37.6063, "lng": 127.0925, "bus": 570}}, "rent": {"전국": {"sido": "전국", "gwon": "전국", "rent": 20.6, "vacancy": 8.5}, "서울": {"sido": "서울", "gwon": "서울", "rent": 52.8, "vacancy": 6.4}, "서울·도심": {"sido": "서울", "gwon": "도심", "rent": 74.1, "vacancy": 4.6}, "서울·광화문": {"sido": "서울", "gwon": "도심", "rent": 92.4, "vacancy": 0.9}, "서울·남대문": {"sido": "서울", "gwon": "도심", "rent": 77.4, "vacancy": 6.1}, "서울·동대문": {"sido": "서울", "gwon": "도심", "rent": 52.8, "vacancy": 9.8}, "서울·명동": {"sido": "서울", "gwon": "도심", "rent": 152.2, "vacancy": 5.3}, "서울·방산시장": {"sido": "서울", "gwon": "도심", "rent": 71.2, "vacancy": 9.9}, "서울·북촌": {"sido": "서울", "gwon": "도심", "rent": 100.9, "vacancy": 0.0}, "서울·서촌": {"sido": "서울", "gwon": "도심", "rent": 45.1, "vacancy": 8.6}, "서울·시청": {"sido": "서울", "gwon": "도심", "rent": 97.1, "vacancy": 8.1}, "서울·을지로": {"sido": "서울", "gwon": "도심", "rent": 68.8, "vacancy": 2.6}, "서울·종로": {"sido": "서울", "gwon": "도심", "rent": 71.8, "vacancy": 0.0}, "서울·충무로": {"sido": "서울", "gwon": "도심", "rent": 51.7, "vacancy": 1.0}, "서울·강남": {"sido": "서울", "gwon": "강남", "rent": 64.6, "vacancy": 2.8}, "서울·강남대로": {"sido": "서울", "gwon": "강남", "rent": 85.5, "vacancy": 0.0}, "서울·교대역": {"sido": "서울", "gwon": "강남", "rent": 46.4, "vacancy": 0.5}, "서울·남부터미널": {"sido": "서울", "gwon": "강남", "rent": 44.3, "vacancy": 4.9}, "서울·논현역": {"sido": "서울", "gwon": "강남", "rent": 70.4, "vacancy": 0.0}, "서울·도산대로": {"sido": "서울", "gwon": "강남", "rent": 55.9, "vacancy": 0.0}, "서울·신사역": {"sido": "서울", "gwon": "강남", "rent": 74.6, "vacancy": 14.9}, "서울·압구정": {"sido": "서울", "gwon": "강남", "rent": 61.9, "vacancy": 0.0}, "서울·청담": {"sido": "서울", "gwon": "강남", "rent": 68.9, "vacancy": 2.0}, "서울·테헤란로": {"sido": "서울", "gwon": "강남", "rent": 73.0, "vacancy": 1.0}, "서울·영등포신촌": {"sido": "서울", "gwon": "영등포신촌", "rent": 48.5, "vacancy": 7.0}, "서울·공덕역": {"sido": "서울", "gwon": "영등포신촌", "rent": 59.8, "vacancy": 4.5}, "서울·당산역": {"sido": "서울", "gwon": "영등포신촌", "rent": 41.8, "vacancy": 0.0}, "서울·동교/연남": {"sido": "서울", "gwon": "영등포신촌", "rent": 56.6, "vacancy": 0.0}, "서울·망원역": {"sido": "서울", "gwon": "영등포신촌", "rent": 41.3, "vacancy": 1.0}, "서울·신촌/이대": {"sido": "서울", "gwon": "영등포신촌", "rent": 40.8, "vacancy": 19.5}, "서울·영등포역": {"sido": "서울", "gwon": "영등포신촌", "rent": 38.5, "vacancy": 3.1}, "서울·홍대/합정": {"sido": "서울", "gwon": "영등포신촌", "rent": 63.6, "vacancy": 14.9}, "서울·기타": {"sido": "서울", "gwon": "기타", "rent": 45.1, "vacancy": 7.2}, "서울·가락시장": {"sido": "서울", "gwon": "기타", "rent": 31.6, "vacancy": 4.9}, "서울·건대입구": {"sido": "서울", "gwon": "기타", "rent": 51.5, "vacancy": 11.2}, "서울·경희대": {"sido": "서울", "gwon": "기타", "rent": 50.4, "vacancy": 4.3}, "서울·군자": {"sido": "서울", "gwon": "기타", "rent": 36.6, "vacancy": 6.8}, "서울·까치산역": {"sido": "서울", "gwon": "기타", "rent": 31.8, "vacancy": 3.8}, "서울·노량진": {"sido": "서울", "gwon": "기타", "rent": 30.5, "vacancy": 1.7}, "서울·독산/시흥": {"sido": "서울", "gwon": "기타", "rent": 31.8, "vacancy": 15.4}, "서울·뚝섬": {"sido": "서울", "gwon": "기타", "rent": 65.0, "vacancy": 8.0}, "서울·목동": {"sido": "서울", "gwon": "기타", "rent": 41.9, "vacancy": 1.6}, "서울·미아사거리": {"sido": "서울", "gwon": "기타", "rent": 40.5, "vacancy": 9.0}, "서울·불광역": {"sido": "서울", "gwon": "기타", "rent": 38.0, "vacancy": 7.1}, "서울·사당": {"sido": "서울", "gwon": "기타", "rent": 48.1, "vacancy": 3.4}, "서울·상계역": {"sido": "서울", "gwon": "기타", "rent": 24.4, "vacancy": 0.0}, "서울·상봉역": {"sido": "서울", "gwon": "기타", "rent": 45.9, "vacancy": 0.0}, "서울·서울대입구역": {"sido": "서울", "gwon": "기타", "rent": 68.8, "vacancy": 10.4}, "서울·성신여대": {"sido": "서울", "gwon": "기타", "rent": 58.4, "vacancy": 0.0}, "서울·수유": {"sido": "서울", "gwon": "기타", "rent": 39.6, "vacancy": 14.2}, "서울·숙명여대": {"sido": "서울", "gwon": "기타", "rent": 45.0, "vacancy": 8.0}, "서울·신림역": {"sido": "서울", "gwon": "기타", "rent": 67.9, "vacancy": 2.7}, "서울·약수역": {"sido": "서울", "gwon": "기타", "rent": 75.1, "vacancy": 8.0}, "서울·연신내": {"sido": "서울", "gwon": "기타", "rent": 44.8, "vacancy": 3.0}, "서울·오류동역": {"sido": "서울", "gwon": "기타", "rent": 55.7, "vacancy": 10.5}, "서울·왕십리": {"sido": "서울", "gwon": "기타", "rent": 43.9, "vacancy": 0.0}, "서울·용산역": {"sido": "서울", "gwon": "기타", "rent": 40.3, "vacancy": 12.0}, "서울·이태원": {"sido": "서울", "gwon": "기타", "rent": 69.2, "vacancy": 3.9}, "서울·잠실/송파": {"sido": "서울", "gwon": "기타", "rent": 36.0, "vacancy": 6.6}, "서울·잠실새내역": {"sido": "서울", "gwon": "기타", "rent": 34.3, "vacancy": 19.1}, "서울·장안동": {"sido": "서울", "gwon": "기타", "rent": 34.5, "vacancy": 12.6}, "서울·천호": {"sido": "서울", "gwon": "기타", "rent": 57.6, "vacancy": 5.0}, "서울·청량리": {"sido": "서울", "gwon": "기타", "rent": 40.6, "vacancy": 7.0}, "서울·혜화동": {"sido": "서울", "gwon": "기타", "rent": 60.0, "vacancy": 2.1}, "서울·화곡": {"sido": "서울", "gwon": "기타", "rent": 30.1, "vacancy": 9.2}, "부산": {"sido": "부산", "gwon": "부산", "rent": 26.3, "vacancy": 8.6}, "부산·개금역": {"sido": "부산", "gwon": "개금역", "rent": 19.7, "vacancy": 6.2}, "부산·경성대/부경대": {"sido": "부산", "gwon": "경성대/부경대", "rent": 32.9, "vacancy": 4.1}, "부산·광안리": {"sido": "부산", "gwon": "광안리", "rent": 32.2, "vacancy": 10.4}, "부산·구서동/금정구청": {"sido": "부산", "gwon": "구서동/금정구청", "rent": 31.9, "vacancy": 10.0}, "부산·남포동": {"sido": "부산", "gwon": "남포동", "rent": 43.1, "vacancy": 15.5}, "부산·남항동": {"sido": "부산", "gwon": "남항동", "rent": 12.7, "vacancy": 9.7}, "부산·덕천역": {"sido": "부산", "gwon": "덕천역", "rent": 30.4, "vacancy": 23.9}, "부산·동래역": {"sido": "부산", "gwon": "동래역", "rent": 25.5, "vacancy": 9.4}, "부산·부산대학앞": {"sido": "부산", "gwon": "부산대학앞", "rent": 33.5, "vacancy": 20.9}, "부산·부산역": {"sido": "부산", "gwon": "부산역", "rent": 25.0, "vacancy": 2.3}, "부산·부전시장": {"sido": "부산", "gwon": "부전시장", "rent": 37.4, "vacancy": 17.1}, "부산·사상역": {"sido": "부산", "gwon": "사상역", "rent": 23.6, "vacancy": 5.9}, "부산·사직야구장": {"sido": "부산", "gwon": "사직야구장", "rent": 26.3, "vacancy": 4.9}, "부산·서면/전포": {"sido": "부산", "gwon": "서면/전포", "rent": 29.2, "vacancy": 4.1}, "부산·송정해수욕장": {"sido": "부산", "gwon": "송정해수욕장", "rent": 20.8, "vacancy": 3.2}, "부산·수영역": {"sido": "부산", "gwon": "수영역", "rent": 26.7, "vacancy": 5.1}, "부산·연산로터리": {"sido": "부산", "gwon": "연산로터리", "rent": 21.8, "vacancy": 3.0}, "부산·온천장": {"sido": "부산", "gwon": "온천장", "rent": 19.7, "vacancy": 10.4}, "부산·하단역": {"sido": "부산", "gwon": "하단역", "rent": 25.9, "vacancy": 0.0}, "부산·해운대": {"sido": "부산", "gwon": "해운대", "rent": 41.9, "vacancy": 4.8}, "부산·현대백화점주변": {"sido": "부산", "gwon": "현대백화점주변", "rent": 19.5, "vacancy": 0.0}, "대구": {"sido": "대구", "gwon": "대구", "rent": 20.6, "vacancy": 10.8}, "대구·경북대북문": {"sido": "대구", "gwon": "경북대북문", "rent": 17.5, "vacancy": 5.8}, "대구·동대구": {"sido": "대구", "gwon": "동대구", "rent": 11.3, "vacancy": 8.0}, "대구·동성로중심": {"sido": "대구", "gwon": "동성로중심", "rent": 26.8, "vacancy": 12.8}, "대구·두류감삼역": {"sido": "대구", "gwon": "두류감삼역", "rent": 19.8, "vacancy": 3.7}, "대구·들안길": {"sido": "대구", "gwon": "들안길", "rent": 18.5, "vacancy": 17.0}, "대구·삼덕/대봉": {"sido": "대구", "gwon": "삼덕/대봉", "rent": 27.2, "vacancy": 0.0}, "대구·상인/월배": {"sido": "대구", "gwon": "상인/월배", "rent": 28.6, "vacancy": 6.6}, "대구·서문시장/청라언덕": {"sido": "대구", "gwon": "서문시장/청라언덕", "rent": 17.3, "vacancy": 10.1}, "대구·수성범어": {"sido": "대구", "gwon": "수성범어", "rent": 24.6, "vacancy": 19.4}, "대구·시지지구": {"sido": "대구", "gwon": "시지지구", "rent": 21.7, "vacancy": 8.2}, "대구·월촌/안지랑": {"sido": "대구", "gwon": "월촌/안지랑", "rent": 16.5, "vacancy": 13.7}, "대구·죽전역": {"sido": "대구", "gwon": "죽전역", "rent": 18.3, "vacancy": 14.9}, "대구·칠곡": {"sido": "대구", "gwon": "칠곡", "rent": 22.2, "vacancy": 0.0}, "인천": {"sido": "인천", "gwon": "인천", "rent": 21.4, "vacancy": 10.6}, "인천·간석오거리": {"sido": "인천", "gwon": "간석오거리", "rent": 19.0, "vacancy": 5.5}, "인천·검단사거리완정역": {"sido": "인천", "gwon": "검단사거리완정역", "rent": 23.7, "vacancy": 15.2}, "인천·계양계산": {"sido": "인천", "gwon": "계양계산", "rent": 24.3, "vacancy": 3.7}, "인천·구월": {"sido": "인천", "gwon": "구월", "rent": 20.1, "vacancy": 15.1}, "인천·부평": {"sido": "인천", "gwon": "부평", "rent": 35.4, "vacancy": 6.5}, "인천·석남/가정중앙시장": {"sido": "인천", "gwon": "석남/가정중앙시장", "rent": 17.0, "vacancy": 7.8}, "인천·신포동": {"sido": "인천", "gwon": "신포동", "rent": 17.9, "vacancy": 18.1}, "인천·인천서구청": {"sido": "인천", "gwon": "인천서구청", "rent": 17.7, "vacancy": 14.7}, "인천·주안": {"sido": "인천", "gwon": "주안", "rent": 17.6, "vacancy": 15.5}, "광주": {"sido": "광주", "gwon": "광주", "rent": 16.7, "vacancy": 9.6}, "광주·금남로/충장로": {"sido": "광주", "gwon": "금남로/충장로", "rent": 19.1, "vacancy": 15.0}, "광주·금호지구": {"sido": "광주", "gwon": "금호지구", "rent": 27.6, "vacancy": 0.0}, "광주·봉선동": {"sido": "광주", "gwon": "봉선동", "rent": 11.2, "vacancy": 7.9}, "광주·상무지구": {"sido": "광주", "gwon": "상무지구", "rent": 19.0, "vacancy": 0.0}, "광주·송정동지구": {"sido": "광주", "gwon": "송정동지구", "rent": 19.3, "vacancy": 18.1}, "광주·양산지구": {"sido": "광주", "gwon": "양산지구", "rent": 14.5, "vacancy": 5.6}, "광주·용봉동": {"sido": "광주", "gwon": "용봉동", "rent": 13.0, "vacancy": 3.5}, "광주·월산동지구": {"sido": "광주", "gwon": "월산동지구", "rent": 15.8, "vacancy": 4.7}, "광주·전남대": {"sido": "광주", "gwon": "전남대", "rent": 21.9, "vacancy": 30.1}, "광주·첨단1지구": {"sido": "광주", "gwon": "첨단1지구", "rent": 21.0, "vacancy": 6.0}, "대전": {"sido": "대전", "gwon": "대전", "rent": 15.1, "vacancy": 7.8}, "대전·노은": {"sido": "대전", "gwon": "노은", "rent": 17.9, "vacancy": 0.0}, "대전·대전원도심": {"sido": "대전", "gwon": "대전원도심", "rent": 15.7, "vacancy": 9.8}, "대전·복합터미널": {"sido": "대전", "gwon": "복합터미널", "rent": 11.3, "vacancy": 14.5}, "대전·서대전네거리": {"sido": "대전", "gwon": "서대전네거리", "rent": 20.5, "vacancy": 6.5}, "대전·용문/한민시장": {"sido": "대전", "gwon": "용문/한민시장", "rent": 14.6, "vacancy": 4.4}, "대전·유성온천역": {"sido": "대전", "gwon": "유성온천역", "rent": 10.7, "vacancy": 17.4}, "울산": {"sido": "울산", "gwon": "울산", "rent": 14.0, "vacancy": 5.9}, "울산·삼산동": {"sido": "울산", "gwon": "삼산동", "rent": 14.1, "vacancy": 1.8}, "울산·성남옥교동": {"sido": "울산", "gwon": "성남옥교동", "rent": 12.3, "vacancy": 6.6}, "울산·신정동": {"sido": "울산", "gwon": "신정동", "rent": 14.0, "vacancy": 1.9}, "울산·울산농소": {"sido": "울산", "gwon": "울산농소", "rent": 15.9, "vacancy": 20.1}, "울산·울산대": {"sido": "울산", "gwon": "울산대", "rent": 16.7, "vacancy": 23.8}, "울산·전하동": {"sido": "울산", "gwon": "전하동", "rent": 15.5, "vacancy": 10.6}, "세종": {"sido": "세종", "gwon": "세종", "rent": 15.8, "vacancy": 9.0}, "세종·조치원": {"sido": "세종", "gwon": "조치원", "rent": 13.0, "vacancy": 4.1}, "경기": {"sido": "경기", "gwon": "경기", "rent": 23.9, "vacancy": 7.6}, "경기·고양시청": {"sido": "경기", "gwon": "고양시청", "rent": 20.7, "vacancy": 4.9}, "경기·광명철산": {"sido": "경기", "gwon": "광명철산", "rent": 37.8, "vacancy": 3.6}, "경기·광주시가지": {"sido": "경기", "gwon": "광주시가지", "rent": 23.9, "vacancy": 3.2}, "경기·구리역": {"sido": "경기", "gwon": "구리역", "rent": 35.0, "vacancy": 0.0}, "경기·기흥역": {"sido": "경기", "gwon": "기흥역", "rent": 29.8, "vacancy": 7.2}, "경기·김량장동": {"sido": "경기", "gwon": "김량장동", "rent": 21.7, "vacancy": 5.8}, "경기·동두천중앙로": {"sido": "경기", "gwon": "동두천중앙로", "rent": 14.1, "vacancy": 17.4}, "경기·모란": {"sido": "경기", "gwon": "모란", "rent": 45.7, "vacancy": 0.0}, "경기·병점역": {"sido": "경기", "gwon": "병점역", "rent": 24.7, "vacancy": 0.0}, "경기·부천역": {"sido": "경기", "gwon": "부천역", "rent": 28.5, "vacancy": 2.1}, "경기·성남구시가지": {"sido": "경기", "gwon": "성남구시가지", "rent": 27.9, "vacancy": 11.4}, "경기·수원역": {"sido": "경기", "gwon": "수원역", "rent": 51.0, "vacancy": 10.6}, "경기·수원파장동": {"sido": "경기", "gwon": "수원파장동", "rent": 19.9, "vacancy": 0.0}, "경기·신장/지산/서정": {"sido": "경기", "gwon": "신장/지산/서정", "rent": 16.6, "vacancy": 3.9}, "경기·신천역": {"sido": "경기", "gwon": "신천역", "rent": 20.4, "vacancy": 15.9}, "경기·안성 서인사거리": {"sido": "경기", "gwon": "안성 서인사거리", "rent": 12.8, "vacancy": 18.2}, "경기·안양역": {"sido": "경기", "gwon": "안양역", "rent": 32.5, "vacancy": 7.8}, "경기·양주덕정역": {"sido": "경기", "gwon": "양주덕정역", "rent": 22.3, "vacancy": 14.8}, "경기·여주시청": {"sido": "경기", "gwon": "여주시청", "rent": 17.4, "vacancy": 23.5}, "경기·오산시청": {"sido": "경기", "gwon": "오산시청", "rent": 19.2, "vacancy": 0.0}, "경기·용인수지": {"sido": "경기", "gwon": "용인수지", "rent": 25.3, "vacancy": 0.0}, "경기·의정부역": {"sido": "경기", "gwon": "의정부역", "rent": 34.4, "vacancy": 11.9}, "경기·이천종합터미널": {"sido": "경기", "gwon": "이천종합터미널", "rent": 17.1, "vacancy": 1.4}, "경기·인계동": {"sido": "경기", "gwon": "인계동", "rent": 25.7, "vacancy": 0.0}, "경기·인덕원": {"sido": "경기", "gwon": "인덕원", "rent": 31.7, "vacancy": 9.7}, "경기·탄현역": {"sido": "경기", "gwon": "탄현역", "rent": 20.1, "vacancy": 0.0}, "경기·파주시청": {"sido": "경기", "gwon": "파주시청", "rent": 23.5, "vacancy": 4.9}, "경기·팔달문로터리": {"sido": "경기", "gwon": "팔달문로터리", "rent": 30.4, "vacancy": 17.1}, "경기·평택역": {"sido": "경기", "gwon": "평택역", "rent": 20.0, "vacancy": 15.9}, "경기·포천소흘읍": {"sido": "경기", "gwon": "포천소흘읍", "rent": 17.6, "vacancy": 11.9}, "경기·포천시외버스터미널": {"sido": "경기", "gwon": "포천시외버스터미널", "rent": 13.7, "vacancy": 14.6}, "경기·하남원도심": {"sido": "경기", "gwon": "하남원도심", "rent": 39.0, "vacancy": 0.0}, "경기·화성남양읍": {"sido": "경기", "gwon": "화성남양읍", "rent": 18.2, "vacancy": 0.0}, "경기·화성봉담읍": {"sido": "경기", "gwon": "화성봉담읍", "rent": 24.7, "vacancy": 1.4}, "강원": {"sido": "강원", "gwon": "강원", "rent": 13.3, "vacancy": 7.8}, "강원·강릉교동": {"sido": "강원", "gwon": "강릉교동", "rent": 18.4, "vacancy": 0.0}, "강원·강릉중부": {"sido": "강원", "gwon": "강릉중부", "rent": 9.8, "vacancy": 9.8}, "강원·묵호항": {"sido": "강원", "gwon": "묵호항", "rent": 11.1, "vacancy": 5.9}, "강원·삼척중앙시장": {"sido": "강원", "gwon": "삼척중앙시장", "rent": 9.8, "vacancy": 2.4}, "강원·속초중앙시장": {"sido": "강원", "gwon": "속초중앙시장", "rent": 18.3, "vacancy": 13.1}, "강원·영월경찰서": {"sido": "강원", "gwon": "영월경찰서", "rent": 10.6, "vacancy": 0.0}, "강원·원주중앙/일산": {"sido": "강원", "gwon": "원주중앙/일산", "rent": 16.2, "vacancy": 7.6}, "강원·주문진항": {"sido": "강원", "gwon": "주문진항", "rent": 10.6, "vacancy": 9.9}, "강원·춘천명동": {"sido": "강원", "gwon": "춘천명동", "rent": 14.0, "vacancy": 11.0}, "강원·태백중앙시장": {"sido": "강원", "gwon": "태백중앙시장", "rent": 10.6, "vacancy": 4.7}, "충북": {"sido": "충북", "gwon": "충북", "rent": 12.6, "vacancy": 10.8}, "충북·봉명사거리": {"sido": "충북", "gwon": "봉명사거리", "rent": 14.7, "vacancy": 20.3}, "충북·제천역": {"sido": "충북", "gwon": "제천역", "rent": 6.2, "vacancy": 4.5}, "충북·제천중앙": {"sido": "충북", "gwon": "제천중앙", "rent": 13.2, "vacancy": 10.8}, "충북·증평광장로": {"sido": "충북", "gwon": "증평광장로", "rent": 12.6, "vacancy": 19.8}, "충북·청주성안길": {"sido": "충북", "gwon": "청주성안길", "rent": 19.4, "vacancy": 11.9}, "충북·충북대학교": {"sido": "충북", "gwon": "충북대학교", "rent": 15.7, "vacancy": 12.6}, "충북·충주연수칠금": {"sido": "충북", "gwon": "충주연수칠금", "rent": 11.0, "vacancy": 15.7}, "충북·충주자유시장": {"sido": "충북", "gwon": "충주자유시장", "rent": 8.3, "vacancy": 16.8}, "충남": {"sido": "충남", "gwon": "충남", "rent": 12.9, "vacancy": 7.3}, "충남·공주대": {"sido": "충남", "gwon": "공주대", "rent": 12.9, "vacancy": 11.1}, "충남·공주웅진동": {"sido": "충남", "gwon": "공주웅진동", "rent": 14.6, "vacancy": 6.2}, "충남·논산시외버스터미널": {"sido": "충남", "gwon": "논산시외버스터미널", "rent": 13.4, "vacancy": 6.1}, "충남·당진시청": {"sido": "충남", "gwon": "당진시청", "rent": 16.0, "vacancy": 3.7}, "충남·두정": {"sido": "충남", "gwon": "두정", "rent": 14.4, "vacancy": 0.0}, "충남·배방읍": {"sido": "충남", "gwon": "배방읍", "rent": 16.9, "vacancy": 9.9}, "충남·보령문화의전당": {"sido": "충남", "gwon": "보령문화의전당", "rent": 11.9, "vacancy": 9.9}, "충남·서산터미널": {"sido": "충남", "gwon": "서산터미널", "rent": 14.8, "vacancy": 9.1}, "충남·아산온양": {"sido": "충남", "gwon": "아산온양", "rent": 12.9, "vacancy": 4.6}, "충남·예산시장": {"sido": "충남", "gwon": "예산시장", "rent": 7.9, "vacancy": 20.6}, "충남·천안역": {"sido": "충남", "gwon": "천안역", "rent": 15.2, "vacancy": 9.5}, "충남·천안종합버스터미널": {"sido": "충남", "gwon": "천안종합버스터미널", "rent": 22.2, "vacancy": 7.1}, "충남·태안터미널": {"sido": "충남", "gwon": "태안터미널", "rent": 10.4, "vacancy": 7.8}, "충남·합덕버스터미널": {"sido": "충남", "gwon": "합덕버스터미널", "rent": 8.8, "vacancy": 2.8}, "전북": {"sido": "전북", "gwon": "전북", "rent": 10.9, "vacancy": 9.2}, "전북·군산수송동조촌동": {"sido": "전북", "gwon": "군산수송동조촌동", "rent": 8.9, "vacancy": 1.5}, "전북·군산원도심": {"sido": "전북", "gwon": "군산원도심", "rent": 6.8, "vacancy": 14.3}, "전북·김제시장": {"sido": "전북", "gwon": "김제시장", "rent": 7.8, "vacancy": 10.9}, "전북·남원광한루": {"sido": "전북", "gwon": "남원광한루", "rent": 8.8, "vacancy": 4.9}, "전북·송천동": {"sido": "전북", "gwon": "송천동", "rent": 12.8, "vacancy": 16.3}, "전북·영등부송": {"sido": "전북", "gwon": "영등부송", "rent": 9.4, "vacancy": 0.0}, "전북·익산역": {"sido": "전북", "gwon": "익산역", "rent": 8.3, "vacancy": 18.1}, "전북·전주동부": {"sido": "전북", "gwon": "전주동부", "rent": 12.9, "vacancy": 6.1}, "전북·전주서부": {"sido": "전북", "gwon": "전주서부", "rent": 13.6, "vacancy": 7.0}, "전북·전주한옥마을": {"sido": "전북", "gwon": "전주한옥마을", "rent": 39.7, "vacancy": 0.0}, "전북·정읍중심": {"sido": "전북", "gwon": "정읍중심", "rent": 12.3, "vacancy": 13.3}, "전남": {"sido": "전남", "gwon": "전남", "rent": 10.9, "vacancy": 10.5}, "전남·광양읍": {"sido": "전남", "gwon": "광양읍", "rent": 7.3, "vacancy": 11.6}, "전남·광양중동": {"sido": "전남", "gwon": "광양중동", "rent": 9.8, "vacancy": 5.2}, "전남·나주구시가지": {"sido": "전남", "gwon": "나주구시가지", "rent": 8.5, "vacancy": 0.6}, "전남·목포구도심": {"sido": "전남", "gwon": "목포구도심", "rent": 7.6, "vacancy": 14.0}, "전남·무선지구": {"sido": "전남", "gwon": "무선지구", "rent": 9.1, "vacancy": 3.7}, "전남·순천법원": {"sido": "전남", "gwon": "순천법원", "rent": 12.4, "vacancy": 15.4}, "전남·순천원도심": {"sido": "전남", "gwon": "순천원도심", "rent": 11.6, "vacancy": 10.5}, "전남·여수여문": {"sido": "전남", "gwon": "여수여문", "rent": 9.8, "vacancy": 12.9}, "전남·여수원도심": {"sido": "전남", "gwon": "여수원도심", "rent": 18.8, "vacancy": 24.2}, "전남·여수학동": {"sido": "전남", "gwon": "여수학동", "rent": 10.1, "vacancy": 0.0}, "전남·조례": {"sido": "전남", "gwon": "조례", "rent": 15.0, "vacancy": 7.1}, "전남·하당신도심": {"sido": "전남", "gwon": "하당신도심", "rent": 10.3, "vacancy": 22.5}, "경북": {"sido": "경북", "gwon": "경북", "rent": 13.1, "vacancy": 10.0}, "경북·가흥택지개발지구": {"sido": "경북", "gwon": "가흥택지개발지구", "rent": 12.3, "vacancy": 6.3}, "경북·경산시청": {"sido": "경북", "gwon": "경산시청", "rent": 14.4, "vacancy": 5.6}, "경북·경주도심": {"sido": "경북", "gwon": "경주도심", "rent": 20.9, "vacancy": 22.2}, "경북·구미산업단지": {"sido": "경북", "gwon": "구미산업단지", "rent": 16.0, "vacancy": 18.8}, "경북·구미선주원남동": {"sido": "경북", "gwon": "구미선주원남동", "rent": 11.9, "vacancy": 0.0}, "경북·구미역": {"sido": "경북", "gwon": "구미역", "rent": 14.2, "vacancy": 6.8}, "경북·문경점촌흥덕": {"sido": "경북", "gwon": "문경점촌흥덕", "rent": 9.5, "vacancy": 18.5}, "경북·상주동문동": {"sido": "경북", "gwon": "상주동문동", "rent": 10.1, "vacancy": 29.7}, "경북·안동구도심": {"sido": "경북", "gwon": "안동구도심", "rent": 12.5, "vacancy": 7.6}, "경북·양덕동": {"sido": "경북", "gwon": "양덕동", "rent": 9.8, "vacancy": 9.1}, "경북·영일대해수욕장": {"sido": "경북", "gwon": "영일대해수욕장", "rent": 17.8, "vacancy": 0.0}, "경북·영주중앙": {"sido": "경북", "gwon": "영주중앙", "rent": 8.5, "vacancy": 19.8}, "경북·옥동사거리": {"sido": "경북", "gwon": "옥동사거리", "rent": 11.2, "vacancy": 0.0}, "경북·포항원도심": {"sido": "경북", "gwon": "포항원도심", "rent": 10.9, "vacancy": 3.5}, "경북·포항중앙": {"sido": "경북", "gwon": "포항중앙", "rent": 11.9, "vacancy": 20.8}, "경북·포항효자동": {"sido": "경북", "gwon": "포항효자동", "rent": 17.4, "vacancy": 0.0}, "경북·황리단길": {"sido": "경북", "gwon": "황리단길", "rent": 39.1, "vacancy": 0.0}, "경남": {"sido": "경남", "gwon": "경남", "rent": 13.0, "vacancy": 9.9}, "경남·거제고현": {"sido": "경남", "gwon": "거제고현", "rent": 14.4, "vacancy": 13.4}, "경남·거제옥포": {"sido": "경남", "gwon": "거제옥포", "rent": 11.9, "vacancy": 16.1}, "경남·김해시청/동상시장": {"sido": "경남", "gwon": "김해시청/동상시장", "rent": 12.2, "vacancy": 13.7}, "경남·마산동서동": {"sido": "경남", "gwon": "마산동서동", "rent": 14.5, "vacancy": 9.4}, "경남·마산역버스터미널": {"sido": "경남", "gwon": "마산역버스터미널", "rent": 15.9, "vacancy": 7.7}, "경남·밀양원도심/삼문동": {"sido": "경남", "gwon": "밀양원도심/삼문동", "rent": 11.3, "vacancy": 20.2}, "경남·양산구도심": {"sido": "경남", "gwon": "양산구도심", "rent": 9.8, "vacancy": 11.1}, "경남·용원동": {"sido": "경남", "gwon": "용원동", "rent": 12.0, "vacancy": 3.1}, "경남·진주중앙시장": {"sido": "경남", "gwon": "진주중앙시장", "rent": 14.2, "vacancy": 25.3}, "경남·진주하대동": {"sido": "경남", "gwon": "진주하대동", "rent": 13.6, "vacancy": 0.0}, "경남·진해석동": {"sido": "경남", "gwon": "진해석동", "rent": 18.8, "vacancy": 0.0}, "경남·창원시청": {"sido": "경남", "gwon": "창원시청", "rent": 10.7, "vacancy": 0.0}, "경남·창원역": {"sido": "경남", "gwon": "창원역", "rent": 16.5, "vacancy": 0.0}, "경남·창원월영동": {"sido": "경남", "gwon": "창원월영동", "rent": 22.4, "vacancy": 12.4}, "경남·창원의창구청": {"sido": "경남", "gwon": "창원의창구청", "rent": 9.4, "vacancy": 5.9}, "경남·통영 강구안": {"sido": "경남", "gwon": "통영 강구안", "rent": 19.4, "vacancy": 11.8}, "경남·통영시청": {"sido": "경남", "gwon": "통영시청", "rent": 17.2, "vacancy": 0.0}, "경남·평거동": {"sido": "경남", "gwon": "평거동", "rent": 12.4, "vacancy": 0.0}, "경남·활천동": {"sido": "경남", "gwon": "활천동", "rent": 10.9, "vacancy": 1.8}, "제주": {"sido": "제주", "gwon": "제주", "rent": 14.8, "vacancy": 2.5}, "제주·광양사거리": {"sido": "제주", "gwon": "광양사거리", "rent": 11.9, "vacancy": 3.9}, "제주·노형오거리": {"sido": "제주", "gwon": "노형오거리", "rent": 19.9, "vacancy": 0.0}, "제주·서귀포도심": {"sido": "제주", "gwon": "서귀포도심", "rent": 16.4, "vacancy": 1.9}, "제주·중앙사거리": {"sido": "제주", "gwon": "중앙사거리", "rent": 11.8, "vacancy": 5.9}}, "reasons": {"사업부진": 98558, "행정처분": 984, "계절사업": 155, "법인전환": 1316, "면세포기·적용": 76, "양도·인수": 6544, "해산·합병": 1192, "기타": 87386}, "quarter": "2026 2분기", "seoul_close": 196211, "bus_total": 11239};
+const won=n=>n>=10000?(n/10000).toFixed(n>=100000?0:1)+'억':n>=1?n.toLocaleString()+'만':Math.round(n*10000).toLocaleString()+'원';
+const num=n=>Math.round(n).toLocaleString();
+let selected=null;
+const RENT=(Array.isArray(DATA.rent)?DATA.rent.find(r=>r.sido==='서울'):DATA.rent['서울'])||{rent:52.8,vacancy:6.4};
+
+// ---- panel render ----
+function bars(el,rows,fmt){
+  const max=Math.max(...rows.map(r=>r[1]))||1;
+  el.innerHTML=rows.map((r,i)=>`<div class="bar"><span class="bl">${r[0]}</span>
+    <span class="track"><span class="fill" style="width:${(r[1]/max*100).toFixed(1)}%;animation-delay:${i*60}ms"></span></span>
+    <span class="bv">${fmt(r[1])}</span></div>`).join('');
 }
-function closeSheet(){document.documentElement.style.overflow='';document.body.style.overflow='';$('#sheetbg').classList.remove('on');$('#sheet').classList.remove('on')}
-$('#sheetbg').onclick=closeSheet;
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
-// 탭
-const titles={home:'홈',analyze:'분석',data:'데이터'};
-function go(s){$$('.tabbtn').forEach(x=>x.classList.toggle('on',x.dataset.s===s));$$('.screen').forEach(x=>x.classList.remove('on'));$('#s-'+s).classList.add('on');$('#navtitle').textContent=titles[s];window.scrollTo(0,0);if(s==='analyze')raf(animAnalyze);if(s==='data')raf(animData);}
-$$('.tabbtn').forEach(b=>b.onclick=()=>go(b.dataset.s));
-// 판정
-const ICON={good:'<path d="M20 6 9 17l-5-5"/>',warn:'<path d="M5 12h14"/>',risk:'<path d="M18 6 6 18M6 6l12 12"/>'};
-function fillInd(){const x=IND[curInd];$('#unit').value=x.unit||'';$('#cogs').value=x.cogs;$('#labor').value=x.labor;$('#etc').value=x.etc;}
-function fillRent(){const r=RENT[curSang];if(r)$('#rent').value=Math.round(r.rent*1000*curArea*3.3058/1e4);}
-function pctBelow(x,bep){const p=[[0,x.p25*.7],[25,x.p25],[40,x.p40],[50,x.p50],[75,x.p75],[90,x.p90],[100,x.p90*1.4]];for(let i=1;i<p.length;i++)if(bep<=p[i][1]){const[a,av]=p[i-1],[b,bv]=p[i];return Math.round(a+(b-a)*(bep-av)/((bv-av)||1))}return 98}
-let LAST={};
-function analyze(){
-  const x=IND[curInd],r=RENT[curSang];
-  const rent=+$('#rent').value||0,labor=+$('#labor').value||0,etc=+$('#etc').value||0;
-  const cogs=(+$('#cogs').value||0)/100,unit=+$('#unit').value||1,goal=+$('#goal').value||0;
-  const fixed=rent+labor+etc,bep=cogs<1?fixed/(1-cogs):0,dayRev=bep/26,cust=Math.round(dayRev*1e4/unit);
-  const newExp=x.p50*NEW_RATIO,margin=newExp-bep,failN=pctBelow(x,bep);
-  const b=margin<0?{k:'risk',w:'부정',c:cv('--risk'),bg:cv('--risk-soft'),t:'본전 매출이 높아 여유가 없습니다.'}
-    :failN<=50?{k:'good',w:'긍정',c:cv('--good'),bg:cv('--good-soft'),t:`이 상권 ${curInd} 대부분이 넘기는 수준입니다.`}
-    :failN<=75?{k:'warn',w:'중립',c:cv('--warn'),bg:cv('--warn-soft'),t:'넘길 순 있지만 초기 자금 여유가 필요합니다.'}
-    :{k:'risk',w:'부정',c:cv('--risk'),bg:cv('--risk-soft'),t:'이 업종 상권 절반 이상이 이 본전에 못 미칩니다.'};
-  $('#v-icon').style.background=b.bg;$('#v-icon').innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="${b.c}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICON[b.k]}</svg>`;
-  $('#v-word').textContent=b.w;$('#v-word').style.color=b.c;$('#v-line').textContent=b.t;
-  $('#cmp-h').innerHTML=`이 동네 ${curInd} 매출 분포에서, 내 본전 <b>${won(bep)}</b>은 <b style="color:${b.c}">${failN<=50?'낮은 편':failN<=75?'중간':'높은 편'}</b>입니다`;
-  $('#t-bep').innerHTML=won(bep).replace('만','')+'<span class="u"> 만원</span>';
-  $('#t-day').innerHTML=won(dayRev).replace('만','')+'<span class="u"> 만</span>';$('#t-dayc').textContent=`손님 ${cust.toLocaleString()}명`;
-  $('#t-range').textContent=won(x.p25)+'~'+won(x.p75);
-  const vac=r&&r.vacancy;$('#t-vac').innerHTML=(vac!=null?vac:'—')+'<span class="u"> %</span>';$('#t-vacc').textContent=vac==null?'':vac>=10?'높음 · 주의':vac>=6?'보통':'낮음 · 안정';
-  $('#honest').innerHTML=`임대료·매출·공실률은 <b>실데이터</b>, 원가율·인건비는 <b>가정값</b>입니다. 매출 분포는 영업 중인 가게 기준이라(폐업 제외) 다소 낙관적이라 신규점을 평균의 85%로 봅니다. 판정은 본전이 매출 분포에서 놓인 위치이며, 매출 보장이 아니라 '될 자리인가' 판단용입니다.`;
-  LAST={x,bep,r,failN,b};
-  if($('#s-analyze').classList.contains('on'))raf(animAnalyze);
+function renderReasons(){
+  const r=DATA.reasons, top=Object.entries(r).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  bars(document.getElementById('reason-bars'),top,num);
 }
-function animAnalyze(){
-  const {x,bep}=LAST;if(!x)return;
-  const lo=x.p25*.6,hi=x.p90*1.25,X=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
-  const band=$('#cmp-band'),mk=$('#cmp-mark');
-  band.style.width='0';mk.classList.remove('show');
-  $('#cmp-avg').style.left=X(x.p50)+'%';$('#cmp-avg').textContent='평균 '+won(x.p50);
-  $('#cmp-lo').textContent=won(x.p25);$('#cmp-hi').textContent=won(x.p90);
-  $('#cmp-mt').textContent='내 본전 '+won(bep);
-  raf(()=>{band.style.left=X(x.p25)+'%';band.style.width=(X(x.p75)-X(x.p25))+'%';mk.style.left=X(bep)+'%';mk.classList.add('show')});
+function renderPanel(name){
+  const t=document.getElementById('p-title'),h=document.getElementById('p-hint');
+  document.getElementById('p-q').textContent=DATA.quarter;
+  document.getElementById('k-rent').textContent=RENT.rent.toFixed(1)+'만/㎡';
+  document.getElementById('k-vac').innerHTML='공실률 '+RENT.vacancy+'%';
+  const guN=Object.keys(DATA.gu).length;
+  if(name&&DATA.gu[name]){
+    const g=DATA.gu[name]; t.textContent=name; h.textContent='국세청 자치구별 폐업 통계 기준';
+    document.getElementById('k-close').textContent=num(g.y2024)+'건';
+    const dir=g.trend>=0?'up':'down', arr=g.trend>=0?'▲':'▼';
+    document.getElementById('k-trend').innerHTML=`<span class="${dir}">${arr} ${Math.abs(g.trend)}% (22→24)</span>`;
+    document.getElementById('k-bus').textContent=num(g.bus||0)+'개';
+    const busR=Object.values(DATA.gu).map(x=>x.bus).sort((a,b)=>b-a);
+    const rank=busR.indexOf(g.bus)+1;
+    document.getElementById('k-bussub').innerHTML=`<span style="color:var(--ink3)">25개 중 ${rank}위</span>`;
+    bars(document.getElementById('trend-bars'),[['2022',g.y2022],['2023',g.y2023],['2024',g.y2024]],num);
+  }else{
+    t.textContent='서울 전체'; h.textContent='지도에서 자치구를 클릭하세요.';
+    document.getElementById('k-close').textContent=num(DATA.seoul_close)+'건';
+    document.getElementById('k-trend').innerHTML='<span style="color:var(--ink3)">25개 자치구 합계</span>';
+    document.getElementById('k-bus').textContent=num(DATA.bus_total)+'개';
+    document.getElementById('k-bussub').innerHTML='<span style="color:var(--ink3)">버스·마을버스·선착장</span>';
+    const g=Object.values(DATA.gu);
+    const s=k=>g.reduce((a,x)=>a+x[k],0);
+    bars(document.getElementById('trend-bars'),[['2022',s('y2022')],['2023',s('y2023')],['2024',s('y2024')]],num);
+  }
+  renderPark(name);
+  renderPop(name);
+  renderAI(name);
 }
-// 칩 피커
-$('#c-ind').onclick=()=>openSheet('업종',indGroups,curInd,v=>{curInd=v;$('#v-ind').textContent=v;fillInd();fillRent();analyze()});
-$('#c-sang').onclick=()=>openSheet('상권',sangGroups,curSang,v=>{curSang=v;$('#v-sang').textContent=sangLabel(v);fillRent();analyze()},true);
-$('#c-area').onclick=()=>openSheet('가게 면적',areaGroups,''+curArea,v=>{curArea=+v;$('#v-area').textContent=v+'평';fillRent();analyze()});
-['rent','labor','etc','cogs','unit','goal'].forEach(id=>$('#'+id).oninput=analyze);
-// 대안: 같은 업종·더 싼 임대료 상권 top
-$('#altBtn').onclick=()=>{
-  const cur=RENT[curSang],items=Object.entries(RENT).filter(([k,d])=>d.sido!=='전국'&&d.rent<(cur?cur.rent:999)).sort((a,b)=>b[1].rent-a[1].rent).slice(0,40).map(([k,d])=>({v:k,t:sangLabel(k)+' · '+d.rent+'천원/㎡'+(d.vacancy!=null?' · 공실 '+d.vacancy+'%':'')}));
-  openSheet('임대료가 더 낮은 상권',[{label:'',items}],curSang,v=>{curSang=v;$('#v-sang').textContent=sangLabel(v);fillRent();analyze()},true);
+function renderPark(name){
+  const card=document.getElementById('kpi-park');
+  if(!PARK){card.style.display='none';return;}
+  card.style.display='';
+  if(name&&PARK.gu[name]){
+    const d=PARK.gu[name];
+    const rank=Object.values(PARK.gu).map(x=>x.lots).sort((a,b)=>b-a).indexOf(d.lots)+1;
+    document.getElementById('k-park').textContent=num(d.lots)+'곳';
+    document.getElementById('k-parksub').innerHTML=`<span style="color:var(--ink3)">구획 ${num(d.slots)}면 · 25개 중 ${rank}위</span>`;
+  }else{
+    document.getElementById('k-park').textContent=num(PARK.total_lots)+'곳';
+    document.getElementById('k-parksub').innerHTML='<span style="color:var(--ink3)">서울 전체 · 공영/민영</span>';
+  }
+}
+function renderAI(name){
+  const box=document.getElementById('ai-box');
+  const guArr=Object.values(DATA.gu);
+  const badge='<span class="aibadge">자동 요약 · 규칙 기반</span>';
+  if(!(name&&DATA.gu[name])){
+    box.innerHTML=badge+`<div class="lead">서울 25개 자치구 요약</div>
+      <div>2024년 누적 폐업 <b>${num(DATA.seoul_close)}건</b>. 자치구를 클릭하면 그 지역의
+      폐업 추세·대중교통·유동인구를 근거와 함께 풀어서 설명합니다.</div>
+      <ul>
+        <li><span class="mk"></span><span>폐업 사유 1위는 <b>사업부진</b>(${num(DATA.reasons['사업부진'])}건) — 입지·수요 문제일 가능성.</span></li>
+        <li><span class="mk"></span><span>손익분기 계산기로 <b>업종별 필요 매출·손님 수</b>를 오차 없이 계산할 수 있습니다.</span></li>
+      </ul>`;
+    return;
+  }
+  const g=DATA.gu[name];
+  const closeRank=guArr.map(x=>x.y2024).sort((a,b)=>b-a).indexOf(g.y2024)+1;
+  const busRank=guArr.map(x=>x.bus).sort((a,b)=>b-a).indexOf(g.bus)+1;
+  const trendTxt=g.trend>=0?`2년간 폐업이 <b>${g.trend}% 증가</b>(악화)`:`2년간 폐업이 <b>${Math.abs(g.trend)}% 감소</b>(개선)`;
+  const li=[];
+  li.push(`<span class="mk"></span><span>폐업 규모 <b>25개구 중 ${closeRank}위</b>(2024년 ${num(g.y2024)}건), ${trendTxt}.</span>`);
+  li.push(`<span class="mk"></span><span>대중교통 접근성 <b>${busRank}위</b>(정류소 ${num(g.bus)}개) — ${busRank<=8?'접근성 우수':busRank<=17?'보통':'상대적 열위'}.</span>`);
+  if(POP&&POP.gu[name]){
+    const d=POP.gu[name];
+    const ages=[['10대',d.a10],['20대',d.a20],['30대',d.a30],['40대',d.a40],['50대',d.a50],['60대+',d.a60]];
+    const topAge=ages.sort((a,b)=>b[1]-a[1])[0][0];
+    li.push(`<span class="mk"></span><span>유동인구 <b>${num(d.tot)}명</b>(${POP.hour}시), 주 연령대 <b>${topAge}</b> — 타깃 업종 선정 근거.</span>`);
+  }
+  const verdict = g.trend<0 ? '폐업이 줄어드는 안정 상권' : (closeRank<=8?'폐업 규모가 큰 경쟁 과열 지역':'주의가 필요한 지역');
+  box.innerHTML=badge+`<div class="lead">${name} — ${verdict}</div>
+    <div>아래 KPI·차트는 모두 이 지역 기준으로 갱신됩니다. 판단은 공식 통계에 근거하며, 추정치는 '추정'으로 표기합니다.</div>
+    <ul>${li.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+}
+function renderPop(name){
+  const sec=document.getElementById('pop-sec');
+  if(!POP){sec.style.display='none';return;}
+  let src, agg;
+  if(name&&POP.gu[name]){ src=POP.gu[name]; document.getElementById('pop-src').textContent='서울 생활인구 · '+name; }
+  else{ // 서울 전체 합산
+    src={a10:0,a20:0,a30:0,a40:0,a50:0,a60:0,m:0,f:0};
+    Object.values(POP.gu).forEach(d=>['a10','a20','a30','a40','a50','a60','m','f'].forEach(k=>src[k]+=d[k]||0));
+    document.getElementById('pop-src').textContent='서울 생활인구 · 전체';
+  }
+  sec.style.display='';
+  bars(document.getElementById('pop-bars'),
+    [['10대',src.a10],['20대',src.a20],['30대',src.a30],['40대',src.a40],['50대',src.a50],['60대+',src.a60]],
+    v=>num(v)+'명');
+}
+
+// ---- BEP ----
+function fillIndSelect(){
+  const sel=document.getElementById('bep-ind');
+  sel.innerHTML=Object.keys(DATA.ind).map(k=>`<option>${k}</option>`).join('');
+  sel.value='한식음식점'; onIndChange();
+  sel.onchange=onIndChange;
+  document.getElementById('bep-fix').oninput=calcBEP;
+  document.getElementById('bep-inv').oninput=calcBEP;
+}
+function onIndChange(){
+  const k=document.getElementById('bep-ind').value, i=DATA.ind[k];
+  document.getElementById('bep-fix').value=Math.round((i.labor+i.etc)+ (RENT.rent*33)); // 대략 33㎡ 가정 임대료 포함
+  document.getElementById('bep-inv').value=i.invest;
+  calcBEP();
+}
+function calcBEP(){
+  const k=document.getElementById('bep-ind').value, i=DATA.ind[k];
+  const fix=+document.getElementById('bep-fix').value||0;
+  const inv=+document.getElementById('bep-inv').value||0;
+  const cogs=i.cogs/100;                 // 원가율
+  const bep=fix/(1-cogs);                // 월 손익분기 매출 (만원)
+  const days=25;
+  const dayRev=bep/days;                 // 하루 필요매출(만원)
+  const unit=i.unit/10000;               // 객단가(만원)
+  const cust=dayRev/unit;                // 하루 필요손님
+  const med=i.p50;                       // 점포당 중위매출(만원/월)
+  const profit=med*(1-cogs)-fix;         // 예상 월 순이익(만원)
+  const payback=profit>0?inv/profit:null;
+  document.getElementById('bep-out').innerHTML=`
+    <div class="beprow"><span class="bk">월 손익분기 매출</span><span class="bvv">${won(bep)}</span></div>
+    <div class="beprow"><span class="bk">하루 필요 매출</span><span class="bvv">${won(dayRev)}</span></div>
+    <div class="beprow"><span class="bk">하루 필요 손님 (객단가 ${num(i.unit)}원)</span><span class="bvv">${Math.ceil(cust)}명</span></div>
+    <div class="beprow"><span class="bk">업종 중위매출 (점포당/월)</span><span class="bvv">${won(med)}</span></div>`;
+  const v=document.getElementById('bep-verdict');
+  if(profit>0){
+    v.className='verdict g';
+    v.innerHTML=`중위 점포 기준 월 순이익 <b>${won(profit)}</b>, 투자 회수 <b>${payback.toFixed(1)}개월</b>.<br>필요 매출이 업종 중위(${won(med)}) 이하 → 통계상 해볼 만함.`;
+  }else{
+    v.className='verdict b';
+    v.innerHTML=`중위 점포 매출로도 고정비를 못 넘김 (월 <b>${won(-profit)}</b> 적자).<br>고정비를 낮추거나 객단가·회전을 올려야 함.`;
+  }
+}
+
+// ---- Kakao map ----
+let POP=null;   // livepop_gu.json
+let PARK=null;  // parking_gu.json
+const METRICS={
+  close:{get:g=>g.y2024,label:'누적 폐업 (2024)',unit:'건',rev:false},
+  bus:{get:g=>g.bus,label:'대중교통 정류소',unit:'개',rev:true},
+  rent:{get:g=>RENT.rent,label:'서울 임대료(구별 동일)',unit:'만원/㎡',rev:false},
+  pop:{get:g=>(POP&&POP.gu[g.name]?POP.gu[g.name].tot:0),label:'유동인구(생활인구)',unit:'명',rev:true},
+  park:{get:g=>(PARK&&PARK.gu[g.name]?PARK.gu[g.name].lots:0),label:'주차장 수',unit:'곳',rev:true}
 };
-// 리포트 PDF
-$('#saveBtn').onclick=()=>{buildReport();window.print()};
-function buildReport(){
-  const {x,bep,r,failN,b}=LAST,rent=+$('#rent').value||0,labor=+$('#labor').value||0,etc=+$('#etc').value||0,cogs=+$('#cogs').value||0;
-  $('#rpaper').innerHTML=`<div class="rp-title">${sangLabel(curSang)}</div><div class="rp-meta">${r?r.sido:''} · ${curInd} · ${curArea}평 · ${DA.quarter} · 실측 ${x.n.toLocaleString()}개 점포</div>
-    <span class="rp-badge" style="background:${b.c}">${b.w}</span><span style="margin-left:10px;font-size:13px;color:#444">이 업종에서 하위 ${failN}%에 들지 않으면 본전은 넘깁니다.</span>
-    <div class="rp-grid"><div class="rp-cell"><div class="rp-l">월 손익분기</div><div class="rp-v">${won(bep)}원</div></div>
-    <div class="rp-cell"><div class="rp-l">예상 매출대 (비슷한 가게)</div><div class="rp-v">${won(x.p25)}~${won(x.p75)}</div></div>
-    <div class="rp-cell"><div class="rp-l">하루 필요 매출</div><div class="rp-v">${won(bep/26)} · 손님 ${Math.round(bep/26*1e4/(+$('#unit').value||1))}명</div></div>
-    <div class="rp-cell"><div class="rp-l">상권 공실률</div><div class="rp-v">${r&&r.vacancy!=null?r.vacancy+'%':'—'}</div></div></div>
-    <div class="rp-sec">계산 방법</div><div style="font-family:var(--mono);font-size:11px;color:#555">손익분기 = 고정비 ÷ (1 − 원가율) = ${Math.round(rent+labor+etc).toLocaleString()}만 ÷ (1 − 0.${cogs}) = ${won(bep)}원 · 임대료 ${rent.toLocaleString()}만(부동산원 ${r?r.rent:'-'}천원/㎡ × ${curArea}평)</div>
-    <div class="rp-sec">근거 · 공식 출처</div><table class="rp-src">
-      <tr><td>임대료·공실률</td><td>한국부동산원 상업용부동산 임대동향조사 (국가승인통계 408001)</td></tr>
-      <tr><td>점포당 매출·객단가</td><td>서울시 우리마을가게 상권분석서비스 (카드매출 기반 추정)</td></tr>
-      <tr><td>손익분기 공식</td><td>고정비 ÷ (1 − 변동비율) — 관리회계 표준 BEP</td></tr></table>
-    <div class="rp-sec">이 리포트가 못 말하는 것</div><ul class="rp-note">
-      <li>인건비·원가율·초기투자는 가정값입니다. 실제 조건으로 다시 계산하세요.</li>
-      <li>매출 분포는 영업 중인 가게 기준이라 다소 낙관적입니다.</li>
-      <li>임대료는 상권 평균이라 층·목·면적에 따라 실제와 다릅니다.</li></ul>
-    <div class="rp-foot">사장님인사이트 · 부동산원·서울 상권분석·국세청 · 최종 판단과 책임은 사장님에게 있습니다.</div>`;
+let circles=[], curMetric='close';
+function drawLegend(m){
+  const vals=Object.values(DATA.gu).map(m.get);
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  const good=m.rev?'많을수록 좋음':'낮을수록 좋음';
+  document.getElementById('legend').innerHTML=
+    `<b>${m.label} · ${good}</b>
+     <div class="legrow"><span class="legdot" style="width:10px;height:10px"></span>${num(mn)}${m.unit}</div>
+     <div class="legrow"><span class="legdot" style="width:18px;height:18px"></span>${num((mn+mx)/2)}${m.unit}</div>
+     <div class="legrow"><span class="legdot" style="width:26px;height:26px"></span>${num(mx)}${m.unit}</div>`;
 }
-// 홈
-(function home(){
-  $('#h-close').textContent=DA.seoul_close.toLocaleString();
-  const seoul=Object.entries(RENT).filter(([k,d])=>d.sido==='서울'&&d.vacancy!=null).sort((a,b)=>a[1].vacancy-b[1].vacancy).slice(0,8);
-  $('#home-places').innerHTML=seoul.map(([k,d])=>`<button class="place" data-k="${k}"><div class="pn">${sangLabel(k)}</div><div class="pg">${d.gwon}</div><div class="pm"><span>공실률</span><b>${d.vacancy}%</b></div><div class="pm"><span>임대료</span><b>${d.rent}<span style="font-weight:400;color:var(--ink3)"> 천</span></b></div></button>`).join('');
-  $('#home-places').addEventListener('click',e=>{const b=e.target.closest('.place[data-k]');if(b)pickHome(b.dataset.k)});
-})();
-function pickHome(k){curSang=k;$('#v-sang').textContent=sangLabel(k);fillRent();analyze();go('analyze')}
-// 애니 막대 헬퍼
-function bars(el,rows,fmt){el.innerHTML=rows.map(r=>`<div class="barline"><span class="bn">${r.n}</span><span class="bt"><span class="bf" data-w="${r.w}" style="background:${r.c}"></span></span><span class="bv num">${r.v}</span></div>`).join('')}
-function animData(){$$('#s-data .bf').forEach(e=>{e.style.width='0';raf(()=>e.style.width=e.dataset.w+'%')})}
-(function data(){
-  const A=cv('--accent'),RK=cv('--risk'),WN=cv('--warn'),G=cv('--ink3');
-  // 임대료 상위
-  const rent=Object.entries(RENT).filter(([k,d])=>d.sido!=='전국').sort((a,b)=>b[1].rent-a[1].rent).slice(0,8);
-  const rmx=rent[0][1].rent;bars($('#d-rent'),rent.map(([k,d])=>({n:sangLabel(k),w:d.rent/rmx*100,c:A,v:d.rent+'천'})));
-  // 업종 매출 top
-  const sales=Object.entries(IND).sort((a,b)=>b[1].p50-a[1].p50).slice(0,8),smx=sales[0][1].p50;
-  bars($('#d-sales'),sales.map(([k,d])=>({n:k,w:d.p50/smx*100,c:A,v:won(d.p50)})));
-  // 폐업 사유
-  const rs=Object.entries(REASONS).sort((a,b)=>b[1]-a[1]).slice(0,6),rmx2=rs[0][1];
-  bars($('#d-reasons'),rs.map(([k,v],i)=>({n:k,w:v/rmx2*100,c:i===0?RK:i===1?WN:A,v:(v/1000).toFixed(0)+'천'})));
-  // 자치구 히트
-  const gu=Object.entries(GU).sort((a,b)=>b[1].y2024-a[1].y2024),gmx=gu[0][1].y2024;
-  $('#d-heat').innerHTML=gu.map(([g,d])=>{const t=d.y2024/gmx,tc=d.trend>=15?RK:d.trend>=8?WN:G;
-    return `<div class="heat-row"><span style="font-size:15px;font-weight:500">${g}</span><span class="num" style="font-size:13px;color:var(--ink2)">${d.y2024.toLocaleString()}곳</span><span class="num" style="font-size:12.5px;font-weight:600;color:${tc};min-width:46px;text-align:right">${d.trend>=0?'+':''}${d.trend}%</span></div>`}).join('');
-})();
-// init
-$('#v-ind').textContent=curInd;$('#v-sang').textContent=sangLabel(curSang);
-fillInd();fillRent();analyze();
+function redraw(metricKey){
+  curMetric=metricKey; const m=METRICS[metricKey];
+  const vals=Object.values(DATA.gu).map(m.get);
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  circles.forEach(({circle,g})=>{
+    const raw=(m.get(g)-mn)/(mx-mn||1);
+    const t=m.rev?raw:raw;               // size by value magnitude
+    circle.setRadius(350+t*1050);
+    circle.setOptions({fillOpacity:.22+t*0.45});
+  });
+  drawLegend(m);
+  document.querySelectorAll('.lbtn').forEach(b=>b.classList.toggle('on',b.dataset.metric===metricKey));
+}
+let MAP=null;
+function selectGu(name){
+  if(!DATA.gu[name])return false;
+  selected=name; renderPanel(name);
+  const g=DATA.gu[name];
+  if(MAP) MAP.panTo(new kakao.maps.LatLng(g.lat,g.lng));
+  // 선택 강조: 잠깐 테두리 굵게
+  const hit=circles.find(c=>c.name===name);
+  if(hit){hit.circle.setOptions({strokeWeight:3,strokeColor:'#2A78D6',strokeOpacity:1});
+    setTimeout(()=>hit.circle.setOptions({strokeWeight:1,strokeColor:'#1E3A5F',strokeOpacity:.5}),1600);}
+  return true;
+}
+function initSearch(){
+  const inp=document.getElementById('gu-search'), dl=document.getElementById('gu-list'), clr=document.getElementById('gu-clear');
+  dl.innerHTML=Object.keys(DATA.gu).map(n=>`<option value="${n}">`).join('');
+  const run=()=>{const v=inp.value.trim(); clr.style.display=v?'block':'none';
+    if(DATA.gu[v]){selectGu(v); inp.blur();}};
+  inp.addEventListener('change',run);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){
+    // 부분일치 첫 자치구 허용
+    const v=inp.value.trim(); if(!DATA.gu[v]){const m=Object.keys(DATA.gu).find(n=>n.includes(v));if(m){inp.value=m;}}
+    run();}});
+  inp.addEventListener('input',()=>{clr.style.display=inp.value?'block':'none';});
+  clr.onclick=()=>{inp.value='';clr.style.display='none';selected=null;renderPanel(null);inp.focus();};
+}
+function initMap(){
+  const c=document.getElementById('map');
+  const map=new kakao.maps.Map(c,{center:new kakao.maps.LatLng(37.5636,126.9976),level:8});
+  MAP=map;
+  Object.entries(DATA.gu).forEach(([name,g])=>{
+    const circle=new kakao.maps.Circle({
+      center:new kakao.maps.LatLng(g.lat,g.lng),radius:600,
+      strokeWeight:1,strokeColor:'#1E3A5F',strokeOpacity:.5,
+      fillColor:'#1E3A5F',fillOpacity:.3
+    });
+    circle.setMap(map);
+    new kakao.maps.CustomOverlay({map,position:new kakao.maps.LatLng(g.lat,g.lng),yAnchor:.5,
+      content:`<div style="font:600 11px -apple-system;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap">${name}</div>`});
+    kakao.maps.event.addListener(circle,'click',()=>{selectGu(name);});
+    circles.push({circle,g,name});
+  });
+  document.querySelectorAll('.lbtn').forEach(b=>b.onclick=()=>redraw(b.dataset.metric));
+  redraw('close');
+}
+function renderFoot(){
+  document.getElementById('foot').innerHTML=
+    '출처: 국세청 폐업통계(자치구·사유), 한국부동산원 상업용부동산 임대동향('+DATA.quarter+'), 서울 상권분석서비스 추정매출, '+
+    '서울시 버스·마을버스·선착장 정류소 좌표('+num(DATA.bus_total)+'개)'+(POP?(', 서울 생활인구('+POP.hour+'시, '+POP.stdr_date+')'):'')+(PARK?(', 전국주차장 표준데이터('+num(PARK.total_lots)+'곳)'):'')+'. '+
+    '임대료·객단가·중위매출은 통계 추정치이며 개별 점포와 다를 수 있습니다. 손익분기 값은 입력값 기준 정확 계산입니다.';
+}
+function loadJSON(file){return fetch(file,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
+function loadPop(){
+  return Promise.all([loadJSON('livepop_gu.json'),loadJSON('parking_gu.json')]).then(([p,k])=>{
+    if(p&&p.gu&&Object.keys(p.gu).length){POP=p;document.getElementById('lbtn-pop').style.display='';}
+    if(k&&k.gu&&Object.keys(k.gu).length){PARK=k;document.getElementById('lbtn-park').style.display='';}
+  });
+}
+function boot(){
+  Object.entries(DATA.gu).forEach(([k,g])=>{g.name=k;});
+  fillIndSelect(); renderReasons(); initSearch();
+  document.getElementById('p-q').textContent=DATA.quarter;
+  loadPop().then(()=>{renderPanel(selected);renderFoot();});
+  renderFoot();
+  if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
+  else{document.getElementById('mapfail').classList.add('on');}
+}
 </script>
-</body></html>
+<!-- 카카오 지도: a3de8803a1a0c9388bbb205e62cf40c5 를 발급키로 교체하고, 콘솔에 배포 도메인 등록 -->
+<script>
+(function(){
+  const s=document.createElement('script');
+  s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey=a3de8803a1a0c9388bbb205e62cf40c5&autoload=false';
+  s.onload=boot; s.onerror=function(){document.getElementById('mapfail').classList.add('on');boot();};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
