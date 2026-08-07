@@ -19,6 +19,7 @@
 """
 import os, sys, json, time, datetime, urllib.request, urllib.parse
 import xml.etree.ElementTree as ET
+from collect_util import load_json, apply_quarter_diff, push_update
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -96,11 +97,19 @@ def main():
     out={"service":SERVICE,"quarter":qu,
          "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d"),
          "ind":dict(sorted(ind.items(), key=lambda x:-x[1]["stores"]))}
+    old=load_json(OUT)
+    changes=apply_quarter_diff(old, out, ["close_rate","stores"])
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
     risky=sorted(ind.items(), key=lambda x:-x[1]["close_rate"])[:3]
     print("저장:", OUT, "· 업종", len(ind), "개")
     print("폐업률 상위:", [(k, v["close_rate"], "%") for k,v in risky])
+    if changes:
+        big=[c for c in changes if c[1]>0][:3]   # 폐업률 상승 큰 업종
+        note="폐업률 변화("+out.get("prev_quarter","")+"→"+qu+"): "+", ".join(
+            f"{n} {'+' if d>=0 else ''}{round(d,1)}%p" for n,d,_,_ in big)
+        push_update(ROOT, "점포·폐업", qu, note)
+        print("변경 기록:", note)
     return 0
 
 if __name__ == "__main__":

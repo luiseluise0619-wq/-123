@@ -1,10 +1,10 @@
 name: 대시보드 자동 갱신
 
-# 가격(식자재)은 매일 바뀌므로 매일 06:10 KST(=21:10 UTC) 재생성.
-# 상권 원본은 분기별이라 매일 돌려도 그날 새 값만 반영됨(정직).
+# 상권 데이터(매출·점포·임대료)는 분기별, 폐업·생존율은 연간 갱신이라
+# 매주 1회면 충분(매일은 API 콜 낭비). 매주 월요일 06:10 KST(=21:10 UTC 일).
 on:
   schedule:
-    - cron: "10 21 * * *"        # 매일 06:10 KST
+    - cron: "10 21 * * 0"        # 매주 월요일 06:10 KST
   workflow_dispatch: {}          # 수동 실행 버튼
 
 permissions:
@@ -64,7 +64,7 @@ jobs:
           git config user.name  "dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
           # 파일별로 개별 add — 하나가 없어도(수집 실패) 나머지는 정상 스테이징
-          for f in frontend/dashboard.html frontend/livepop_gu.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json; do
+          for f in frontend/dashboard.html frontend/livepop_gu.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/updates.json; do
             [ -f "$f" ] && git add "$f" || true
           done
           if git diff --cached --quiet; then

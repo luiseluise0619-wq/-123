@@ -21,6 +21,7 @@
 """
 import os, sys, json, time, datetime, urllib.request, urllib.parse
 import xml.etree.ElementTree as ET
+from collect_util import load_json, apply_quarter_diff, push_update
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -114,11 +115,20 @@ def main():
     out={"service":SERVICE,"quarter":qu,
          "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d"),
          "ind":dict(sorted(ind.items(), key=lambda x:-x[1]["amt"]))}
+    # 값 통째로 덮지 않기: 이전 분기 값 보존 + 변경 기록
+    old=load_json(OUT)
+    changes=apply_quarter_diff(old, out, ["unit","amt"])
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
     top=list(out["ind"].items())[:3]
     print("저장:", OUT, "· 업종", len(ind), "개")
     print("매출 상위:", [(k, round(v["amt"]/1e8), "억", "객단가", v["unit"], "원") for k,v in top])
+    if changes:
+        mv=[c for c in changes if c[3]>0][:3]
+        note="객단가 변화("+out.get("prev_quarter","")+"→"+qu+"): "+", ".join(
+            f"{n} {'+' if d>=0 else ''}{round(d):,}원" for n,d,_,_ in mv)
+        push_update(ROOT, "추정매출", qu, note)
+        print("변경 기록:", note)
     return 0
 
 if __name__ == "__main__":
