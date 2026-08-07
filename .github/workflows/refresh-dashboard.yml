@@ -1,10 +1,10 @@
 name: 대시보드 자동 갱신
 
-# 가격(식자재)은 매일 바뀌므로 매일 06:10 KST(=21:10 UTC) 재생성.
-# 상권 원본은 분기별이라 매일 돌려도 그날 새 값만 반영됨(정직).
+# 상권 데이터(매출·점포·임대료)는 분기별, 폐업·생존율은 연간 갱신이라
+# 매주 1회면 충분(매일은 API 콜 낭비). 매주 월요일 06:10 KST(=21:10 UTC 일).
 on:
   schedule:
-    - cron: "10 21 * * *"        # 매일 06:10 KST
+    - cron: "10 21 * * 0"        # 매주 월요일 06:10 KST
   workflow_dispatch: {}          # 수동 실행 버튼
 
 permissions:
@@ -25,19 +25,51 @@ jobs:
 
       - name: 대시보드 재생성
         working-directory: backend
+        continue-on-error: true       # 식자재 CSV(gitignore)가 없으면 실패하지만 지도 수집은 계속돼야 함
         env:
           # 있으면 aT 실시간가로 최신값 갱신(없으면 CSV 기준). Actions Secrets 에 등록.
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
         run: python refresh_dashboard.py
 
+      - name: 유동인구(생활인구) 수집 → 자치구 집계
+        working-directory: backend
+        continue-on-error: true       # 키 없거나 API 장애 시 지도는 기존 데이터로 동작
+        env:
+          SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
+        run: python collect_livepop.py
+
+      - name: 주차장(입지 접근성) 수집 → 자치구 집계
+        working-directory: backend
+        continue-on-error: true
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: python collect_parking.py
+
+      - name: 추정매출(업종별 시간대·요일·연령) 수집
+        working-directory: backend
+        continue-on-error: true
+        env:
+          SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
+        run: python collect_sales.py
+
+      - name: 점포·개폐업(업종별 폐업률·프랜차이즈) 수집
+        working-directory: backend
+        continue-on-error: true
+        env:
+          SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
+        run: python collect_stores.py
+
       - name: 변경분 커밋
         run: |
           git config user.name  "dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
-          if git diff --quiet -- frontend/dashboard.html; then
+          # 파일별로 개별 add — 하나가 없어도(수집 실패) 나머지는 정상 스테이징
+          for f in frontend/dashboard.html frontend/livepop_gu.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/updates.json; do
+            [ -f "$f" ] && git add "$f" || true
+          done
+          if git diff --cached --quiet; then
             echo "변경 없음 — 커밋 생략"
           else
-            git add frontend/dashboard.html
-            git commit -m "chore: 대시보드 자동 갱신 ($(date -u +%Y-%m-%d))"
+            git commit -m "chore: 대시보드·유동인구·주차 자동 갱신 ($(date -u +%Y-%m-%d))"
             git push
           fi
