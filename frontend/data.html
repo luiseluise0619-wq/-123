@@ -124,7 +124,7 @@ let POP=null,SALES=null,STORES=null,FORECAST=null;
 
 function rampBars(rows,fmt,ramp){
   const vals=rows.map(r=>r[1]),max=Math.max(...vals)||1,min=Math.min(...vals);
-  return `<div class="bars">`+rows.map((r,i)=>{const t=(r[1]-min)/((max-min)||1),step=Math.round(1+t*5);
+  return `<div class="bars">`+rows.map((r,i)=>{const t=(r[1]-min)/((max-min)||1),step=Math.round(2+t*4);
     return `<div class="bar"><span class="bl">${r[0]}</span>
       <span class="track"><span class="fill" style="width:${(r[1]/max*100).toFixed(1)}%;background:var(--${ramp}${step});animation-delay:${i*45}ms"></span></span>
       <span class="bv">${fmt(r[1])}</span></div>`;}).join('')+`</div>`;
@@ -142,7 +142,8 @@ function donut(rows,fmt){
     <text x="70" y="84" text-anchor="middle" font-size="15" font-weight="800" fill="var(--ink)">${fmt(tot)}</text>
     </svg><div class="legend">${leg}</div></div>`;
 }
-function lineChart(labels,vals){
+function lineChart(labels,vals,unit){
+  unit=unit==null?'%':unit;
   const W=440,H=150,pl=8,pt=14,iw=W-16,ih=H-40,max=Math.max(...vals)||1;
   const xs=vals.map((_,i)=>pl+i/(vals.length-1)*iw), ys=vals.map(v=>pt+ih-(v/max)*ih);
   const pts=xs.map((x,i)=>`${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
@@ -153,9 +154,34 @@ function lineChart(labels,vals){
     <stop offset="0" stop-color="var(--s1)" stop-opacity="0.28"/><stop offset="1" stop-color="var(--s1)" stop-opacity="0.02"/></linearGradient></defs>
     <polygon points="${pl},${pt+ih} ${pts} ${pl+iw},${pt+ih}" fill="url(#ag)"/>
     <polyline points="${pts}" fill="none" stroke="var(--s1)" stroke-width="2.5" stroke-linejoin="round"/>
-    ${dots}<text x="${xs[peak].toFixed(1)}" y="${(ys[peak]-9).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--s1)">${vals[peak]}%</text>${xlab}</svg>`;
+    ${dots}<text x="${xs[peak].toFixed(1)}" y="${(ys[peak]-9).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--s1)">${vals[peak].toLocaleString()}${unit}</text>${xlab}</svg>`;
 }
 
+// 값 크기 → 상태색(초록 낮음 → 주황 → 빨강 높음)
+function statusColor(t){ return t<.34?'var(--s3)':t<.67?'var(--s4)':'var(--w4)'; }
+// 카테고리별 다른 색 막대(연령 등 소분류)
+function catBars(rows,fmt){
+  const cols=['--s1','--s2','--s3','--s4','--s5','--b4','--w3'];
+  const max=Math.max(...rows.map(r=>r[1]))||1;
+  return `<div class="bars">`+rows.map((r,i)=>`<div class="bar"><span class="bl">${r[0]}</span>
+    <span class="track"><span class="fill" style="width:${(r[1]/max*100).toFixed(1)}%;background:var(${cols[i%cols.length]});animation-delay:${i*45}ms"></span></span>
+    <span class="bv">${fmt(r[1])}</span></div>`).join('')+`</div>`;
+}
+// 산점도 — 두 변수 관계, 점마다 상태색 + 사분면 안내
+function scatter(pts,xl,yl,note){
+  const W=460,H=300,ml=44,mr=14,mt=14,mb=40,iw=W-ml-mr,ih=H-mt-mb;
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  const xmax=Math.max(...xs)*1.05,ymax=Math.max(...ys)*1.1;
+  const X=v=>ml+v/xmax*iw, Y=v=>mt+ih-v/ymax*ih;
+  const gx=[0,.25,.5,.75,1].map(f=>{const v=xmax*f;return `<line x1="${X(v)}" y1="${mt}" x2="${X(v)}" y2="${mt+ih}" stroke="var(--line)" stroke-width="1"/><text x="${X(v)}" y="${H-14}" text-anchor="middle" font-size="9.5" fill="var(--ink3)">${Math.round(v).toLocaleString()}</text>`;}).join('');
+  const gy=[0,.5,1].map(f=>{const v=ymax*f;return `<line x1="${ml}" y1="${Y(v)}" x2="${ml+iw}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${ml-6}" y="${Y(v)+3}" text-anchor="end" font-size="9.5" fill="var(--ink3)">${v.toFixed(v<10?1:0)}</text>`;}).join('');
+  const dots=pts.map(p=>{const t=p.y/ymax; return `<circle cx="${X(p.x).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="6" fill="${statusColor(t)}" fill-opacity="0.82" stroke="var(--panel)" stroke-width="1.5"><title>${p.label}: ${xl} ${Math.round(p.x).toLocaleString()}, ${yl} ${p.y}</title></circle>`;}).join('');
+  const lab=pts.slice().sort((a,b)=>b.y-a.y).slice(0,3).map(p=>`<text x="${(X(p.x)+8).toFixed(1)}" y="${(Y(p.y)+3).toFixed(1)}" font-size="10" font-weight="700" fill="var(--ink)">${p.label}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${gy}${gx}${dots}${lab}
+    <text x="${ml+iw/2}" y="${H-1}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink2)">${xl} →</text>
+    <text transform="translate(11,${mt+ih/2}) rotate(-90)" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink2)">${yl} →</text>
+  </svg>${note?`<div class="note">${note}</div>`:''}`;
+}
 function tBench(){
   const b=DATA.bench||{};
   const stats=[['--s3',b.survival?b.survival.y1+'%':'—','1년 생존율','5년 '+(b.survival?b.survival.y5:'—')+'%'],
@@ -168,28 +194,50 @@ function tBench(){
     src:'통계청 기업생멸행정통계(2024 잠정) · 2022 소상공인실태조사(통계청·중기부). 전국 전산업 평균이며 업종·지역별로 크게 다릅니다.'};
 }
 function tClosure(){
-  const guClose=Object.entries(DATA.gu).map(([k,v])=>[k,v.y2024]).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const guAll=Object.entries(DATA.gu);
+  const guClose=guAll.map(([k,v])=>[k,v.y2024]).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const worsen=guAll.map(([k,v])=>[k,v.trend]).sort((a,b)=>b[1]-a[1]);
   const R=Object.entries(DATA.reasons).sort((a,b)=>b[1]-a[1]);
   const rTot=R.reduce((a,x)=>a+x[1],0);
   const dR=[R[0],['양도·인수',DATA.reasons['양도·인수']||0],['법인전환',DATA.reasons['법인전환']||0],
     ['기타',rTot-R[0][1]-(DATA.reasons['양도·인수']||0)-(DATA.reasons['법인전환']||0)]];
   const sabu=Math.round(DATA.reasons['사업부진']/rTot*100);
-  return {exec:'어느 자치구에서, 왜 문을 닫는가 — 국세청 폐업 통계.',
-    insight:`2024년 서울 폐업 <b>${num(DATA.seoul_close)}건</b>. 가장 많은 곳은 <b>${guClose[0][0]}</b>(${num(guClose[0][1])}건). 폐업 사유의 <b>${sabu}%</b>가 '사업부진'으로 대부분 입지·수요 문제입니다.`,
-    body:`<div class="grid2">
-      <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>자치구별 폐업 상위 10</h3><div class="unit">2024 · 건</div>${rampBars(guClose,num,'w')}</div>
-      <div class="card"><h3><span class="dot" style="background:var(--s2)"></span>폐업 사유 구성</h3><div class="unit">전국</div>${donut(dR,num)}</div></div>`,
-    src:'국세청 국세통계 — 자치구별·사유별 폐업(연간).'};
+  const s=k=>guAll.reduce((a,[,v])=>a+v[k],0);
+  const y22=s('y2022'),y23=s('y2023'),y24=s('y2024');
+  const growth=Math.round((y24-y22)/y22*100);
+  const surv=(DATA.bench&&DATA.bench.survival)||{y1:64.4,y5:36.4};
+  const stat=[['--w4',num(DATA.seoul_close),'2024 서울 폐업(건)','전년비 '+(y24>=y23?'+':'')+Math.round((y24-y23)/y23*100)+'%'],
+    ['--s2',sabu+'%','사업부진 비중','폐업 사유 1위'],
+    ['--w4',surv.y5+'%','5년 생존율','1년 '+surv.y1+'%'],
+    ['--s4',worsen[0][0],'폐업 최고 증가구','2년 +'+worsen[0][1]+'%']];
+  return {exec:'어느 자치구에서, 얼마나, 왜 문을 닫는가 — 국세청 폐업 통계와 생존율.',
+    insight:`2024년 서울 폐업 <b>${num(DATA.seoul_close)}건</b>으로 2년 새 <b>${growth>=0?'+':''}${growth}%</b> 변했습니다. 폐업이 가장 많은 곳은 <b>${guClose[0][0]}</b>(${num(guClose[0][1])}건), 가장 빠르게 는 곳은 <b>${worsen[0][0]}</b>(+${worsen[0][1]}%). 사유의 <b>${sabu}%</b>가 '사업부진' — 대부분 입지·수요 문제이고, 창업 5년 뒤 살아남는 곳은 전국 <b>${surv.y5}%</b>뿐입니다.`,
+    body:`<div class="stats" style="grid-template-columns:repeat(4,1fr)">${stat.map(x=>`<div class="stat" style="--sbar:var(${x[0]})"><div class="n">${x[1]}</div><div class="l">${x[2]}</div><div class="s">${x[3]}</div></div>`).join('')}</div>
+      <div class="grid2 sect">
+      <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>자치구별 폐업 상위 10</h3><div class="unit">2024 · 건 · 진할수록 많음</div>${rampBars(guClose,num,'w')}</div>
+      <div class="card"><h3><span class="dot" style="background:var(--s2)"></span>폐업 사유 구성</h3><div class="unit">전국</div>${donut(dR,num)}</div>
+      <div class="card"><h3><span class="dot" style="background:var(--s1)"></span>서울 폐업 3년 추이</h3><div class="unit">천 건 · 2022→2024</div>${lineChart(['2022','2023','2024'],[y22,y23,y24].map(v=>Math.round(v/1000)),'천건')}<div class="note">3년간 ${growth>=0?'증가':'감소'} 추세.</div></div>
+      <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>폐업 빠르게 느는 자치구</h3><div class="unit">2년 증가율 % · 상위</div>${rampBars(worsen.slice(0,8).map(x=>[x[0],x[1]]),v=>(v>=0?'+':'')+v+'%','w')}</div></div>`,
+    src:'국세청 국세통계 — 자치구별·사유별 폐업(연간) · 통계청 기업생멸(생존율).'};
 }
 function tRent(){
-  const rentArr=Object.entries(DATA.rent).filter(([k,v])=>v&&v.rent&&k!=='전국').map(([k,v])=>[k,v.rent,v.vacancy]);
+  const rentArr=Object.entries(DATA.rent).filter(([k,v])=>v&&v.rent&&k!=='전국'&&v.vacancy!=null).map(([k,v])=>[k,v.rent,v.vacancy]);
   const rentTop=rentArr.slice().sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const vacTop=rentArr.filter(x=>x[2]!=null).sort((a,b)=>b[2]-a[2]).slice(0,10);
-  return {exec:'고정비의 핵심 임대료와, 상권 위험 신호인 공실률.',
-    insight:`임대료 최고 상권은 <b>${rentTop[0][0]}</b>(${rentTop[0][1].toFixed(1)}만원/㎡). 공실률이 높은 상권은 빈 점포가 많다는 뜻이라 수요를 꼭 확인해야 합니다.`,
-    body:`<div class="grid2">
-      <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>임대료 상위 상권</h3><div class="unit">만원/㎡</div>${rampBars(rentTop.map(x=>[x[0],x[1]]),v=>v.toFixed(1),'w')}</div>
-      <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>공실률 상위 상권</h3><div class="unit">% · 높을수록 위험</div>${rampBars(vacTop.map(x=>[x[0],x[2]]),v=>v.toFixed(1)+'%','w')}</div></div>`,
+  const avgRent=(rentArr.reduce((a,x)=>a+x[1],0)/rentArr.length);
+  const avgVac=(rentArr.reduce((a,x)=>a+x[2],0)/rentArr.length);
+  const seoul=DATA.rent['서울']||{rent:52.8,vacancy:6.4};
+  const hiVac=rentArr.slice().sort((a,b)=>b[2]-a[2])[0];
+  const pts=rentArr.map(x=>({x:x[1],y:x[2],label:x[0]}));
+  const stat=[['--s2',seoul.rent.toFixed(1),'서울 임대료(만원/㎡)','전국평균 '+avgRent.toFixed(1)],
+    ['--w4',seoul.vacancy+'%','서울 공실률','전국평균 '+avgVac.toFixed(1)+'%'],
+    ['--w4',hiVac[0],'공실 최고 상권',hiVac[2].toFixed(1)+'%'],
+    ['--s2',rentTop[0][0],'임대료 최고',rentTop[0][1].toFixed(1)+'만원/㎡']];
+  return {exec:'고정비의 핵심 임대료와, 상권 위험 신호인 공실률의 관계.',
+    insight:`임대료가 비싸다고 좋은 상권은 아닙니다. 정말 봐야 할 건 <b>공실률</b> — 오른쪽 위(임대료 높고 공실도 높은)에 있는 상권은 비싼데 빈 점포가 많다는 <b>위험 신호</b>입니다. 서울 임대료는 <b>${seoul.rent.toFixed(1)}만원/㎡</b>, 공실률 <b>${seoul.vacancy}%</b>입니다.`,
+    body:`<div class="stats" style="grid-template-columns:repeat(4,1fr)">${stat.map(x=>`<div class="stat" style="--sbar:var(${x[0]})"><div class="n">${x[1]}</div><div class="l">${x[2]}</div><div class="s">${x[3]}</div></div>`).join('')}</div>
+      <div class="grid2 sect">
+      <div class="card"><h3><span class="dot" style="background:var(--s2)"></span>임대료 × 공실률 관계</h3><div class="unit">점=상권 · 초록 안전 → 빨강 위험</div>${scatter(pts,'임대료(만원/㎡)','공실률(%)','오른쪽 위일수록 비싸고 빈 점포 많음 = 주의. 색은 공실률 위험도.')}</div>
+      <div class="card"><h3><span class="dot" style="background:var(--s2)"></span>임대료 상위 상권</h3><div class="unit">만원/㎡ · 진할수록 비쌈</div>${rampBars(rentTop.map(x=>[x[0],x[1]]),v=>v.toFixed(1),'w')}</div></div>`,
     src:'한국부동산원 상업용부동산 임대동향(국가승인통계, 분기) · 전국 '+rentArr.length+'개 상권.'};
 }
 function tConsumer(){
@@ -199,12 +247,19 @@ function tConsumer(){
   Object.values(g).forEach(d=>{Object.keys(age).forEach(k=>age[k]+=d[k]||0);gen.m+=d.m||0;gen.f+=d.f||0;});
   const ageRows=[['10대',age.a10],['20대',age.a20],['30대',age.a30],['40대',age.a40],['50대',age.a50],['60대+',age.a60]];
   const topAge=ageRows.slice().sort((a,b)=>b[1]-a[1])[0];
+  const totPop=Object.values(g).reduce((a,d)=>a+d.tot,0);
+  const fPct=Math.round(gen.f/(gen.m+gen.f)*100);
+  const stat=[['--s1',won(Math.round(totPop/10000))+'명','서울 총 유동인구',POP.hour+'시 기준'],
+    ['--b4',guTot[0][0],'유동인구 1위 자치구',num(guTot[0][1])+'명'],
+    ['--s4',topAge[0],'주 연령대',Math.round(topAge[1]/Object.values(age).reduce((a,b)=>a+b,0)*100)+'%'],
+    ['--s5',fPct+'%','여성 비중','남성 '+(100-fPct)+'%']];
   return {exec:`서울 생활인구 ${POP.hour}시 기준 — 어디에 사람이 모이고 누가 다니는가.`,
-    insight:`유동인구 최다 자치구는 <b>${guTot[0][0]}</b>(${num(guTot[0][1])}명). 서울에서 가장 많이 다니는 연령대는 <b>${topAge[0]}</b> — 타깃 업종 선정의 근거입니다.`,
-    body:`<div class="grid2">
-      <div class="card"><h3><span class="dot" style="background:var(--b4)"></span>자치구별 유동인구</h3><div class="unit">명 · ${POP.hour}시</div>${rampBars(guTot,num,'b')}</div>
+    insight:`유동인구 최다 자치구는 <b>${guTot[0][0]}</b>(${num(guTot[0][1])}명)로 서울 전체 <b>${won(Math.round(totPop/10000))}명</b>이 움직입니다. 가장 많이 다니는 연령대는 <b>${topAge[0]}</b>, 여성 비중은 <b>${fPct}%</b> — 타깃 업종·메뉴 선정의 근거입니다.`,
+    body:`<div class="stats" style="grid-template-columns:repeat(4,1fr)">${stat.map(x=>`<div class="stat" style="--sbar:var(${x[0]})"><div class="n">${x[1]}</div><div class="l">${x[2]}</div><div class="s">${x[3]}</div></div>`).join('')}</div>
+      <div class="grid2 sect">
+      <div class="card"><h3><span class="dot" style="background:var(--b4)"></span>자치구별 유동인구</h3><div class="unit">명 · ${POP.hour}시 · 진할수록 많음</div>${rampBars(guTot,num,'b')}</div>
       <div class="card"><h3><span class="dot" style="background:var(--s1)"></span>성별 구성</h3><div class="unit">서울 전체</div>${donut([['남성',gen.m],['여성',gen.f]],num)}</div>
-      <div class="card" style="grid-column:1/-1"><h3><span class="dot" style="background:var(--b4)"></span>연령대 분포</h3><div class="unit">명 · 서울 전체</div>${rampBars(ageRows,num,'b')}</div></div>`,
+      <div class="card" style="grid-column:1/-1"><h3><span class="dot" style="background:var(--s3)"></span>연령대 분포</h3><div class="unit">명 · 서울 전체 · 연령별 색</div>${catBars(ageRows,num)}</div></div>`,
     src:'서울 열린데이터광장 집계구 단위 생활인구(내국인) API · 기준일 '+POP.stdr_date+'.'};
 }
 function tSales(){
@@ -225,21 +280,32 @@ window.renderSales=function(name){
     <div class="card"><h3><span class="dot" style="background:var(--s1)"></span>시간대별 매출</h3><div class="unit">% · 언제 팔리나</div>${lineChart(tmz,d.tmzon)}</div>
     <div class="card"><h3><span class="dot" style="background:var(--b4)"></span>요일별 매출</h3><div class="unit">%</div>${rampBars(dow.map((l,i)=>[l,d.dow[i]]),v=>v+'%','b')}</div>
     <div class="card"><h3><span class="dot" style="background:var(--s5)"></span>성별 구성</h3><div class="unit">매출 비중</div>${donut([['남성',d.gender[0]],['여성',d.gender[1]]],v=>v+'%')}</div>
-    <div class="card"><h3><span class="dot" style="background:var(--b4)"></span>연령대 구성</h3><div class="unit">매출 비중</div>${rampBars(ageR,v=>v+'%','b')}</div></div>
+    <div class="card"><h3><span class="dot" style="background:var(--s3)"></span>연령대 구성</h3><div class="unit">매출 비중 · 연령별 색</div>${catBars(ageR,v=>v+'%')}</div></div>
     <div class="note">실측 객단가 <b style="color:var(--ink)">${num(d.unit)}원</b> · 서울 전체 당월매출 <b style="color:var(--ink)">${won(Math.round(d.amt/10000))}</b>${st?` · 점포 <b style="color:var(--ink)">${num(st.stores)}개</b> · 폐업률 <b style="color:var(--w4)">${st.close_rate}%</b> · 프랜차이즈 ${st.fr_share}%`:''}</div>`;
 };
 function tStores(){
   if(!STORES)return {pending:'점포·개폐업(서울 상권분석 API) 수집 대기 — 매주 자동 갱신됩니다.'};
   const si=Object.entries(STORES.ind);
-  const closeTop=si.filter(([k,v])=>v.stores>=200).map(([k,v])=>[k,v.close_rate]).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const big=si.filter(([k,v])=>v.stores>=200);
+  const closeTop=big.map(([k,v])=>[k,v.close_rate]).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const storeTop=si.map(([k,v])=>[k,v.stores]).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const frTop=si.filter(([k,v])=>v.stores>=200).map(([k,v])=>[k,v.fr_share]).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  return {exec:`폐업률 높은 업종은 실패가 많다는 뜻, 점포 많은 업종은 경쟁이 치열합니다(${STORES.quarter}).`,
-    insight:`폐업률 1위는 <b>${closeTop[0][0]}</b>(${closeTop[0][1]}%). 점포수 1위 <b>${storeTop[0][0]}</b>(${num(storeTop[0][1])}개)는 그만큼 경쟁이 셉니다.`,
-    body:`<div class="grid2">
-      <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>폐업률 높은 업종</h3><div class="unit">% · 점포 200+</div>${rampBars(closeTop,v=>v+'%','w')}</div>
-      <div class="card"><h3><span class="dot" style="background:var(--b4)"></span>점포 많은 업종</h3><div class="unit">개</div>${rampBars(storeTop,num,'b')}</div>
-      <div class="card" style="grid-column:1/-1"><h3><span class="dot" style="background:var(--s4)"></span>프랜차이즈 비중 높은 업종</h3><div class="unit">%</div>${rampBars(frTop,v=>v+'%','b')}</div></div>`,
+  const frTop=big.map(([k,v])=>[k,v.fr_share]).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const pts=big.map(([k,v])=>({x:v.stores,y:v.close_rate,label:k}));
+  const avgClose=(big.reduce((a,[,v])=>a+v.close_rate,0)/big.length);
+  const totStores=si.reduce((a,[,v])=>a+v.stores,0);
+  const safe=big.slice().sort((a,b)=>a[1].close_rate-b[1].close_rate)[0];
+  const stat=[['--w4',closeTop[0][1]+'%','폐업률 최고 업종',closeTop[0][0]],
+    ['--s3',safe[1].close_rate+'%','폐업률 최저 업종',safe[0]],
+    ['--b4',num(storeTop[0][1]),'점포 최다 업종',storeTop[0][0]],
+    ['--s4',avgClose.toFixed(1)+'%','평균 폐업률','점포 200+ 업종']];
+  return {exec:`업종별 폐업률(위험)과 점포수(경쟁)를 함께 봐야 합니다 — ${STORES.quarter} 서울, 총 ${num(totStores)}개 점포.`,
+    insight:`좋은 업종은 <b>폐업률 낮고(안전)</b> 점포도 적당한 곳입니다. 오른쪽 위(점포 많고 폐업률도 높은)는 <b>경쟁 과열 + 위험</b> 조합. 폐업률 최고는 <b>${closeTop[0][0]}(${closeTop[0][1]}%)</b>, 최저는 <b>${safe[0]}(${safe[1].close_rate}%)</b>로 업종만 바꿔도 위험이 크게 달라집니다.`,
+    body:`<div class="stats" style="grid-template-columns:repeat(4,1fr)">${stat.map(x=>`<div class="stat" style="--sbar:var(${x[0]})"><div class="n">${x[1]}</div><div class="l">${x[2]}</div><div class="s">${x[3]}</div></div>`).join('')}</div>
+      <div class="grid2 sect">
+      <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>경쟁 × 위험 관계</h3><div class="unit">점=업종 · 초록 안전 → 빨강 위험</div>${scatter(pts,'점포 수(경쟁)','폐업률(%)','오른쪽 위 = 경쟁도 세고 폐업도 많은 업종. 왼쪽 아래가 유리.')}</div>
+      <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>폐업률 높은 업종</h3><div class="unit">% · 점포 200+ · 진할수록 위험</div>${rampBars(closeTop,v=>v+'%','w')}</div>
+      <div class="card"><h3><span class="dot" style="background:var(--b4)"></span>점포 많은 업종</h3><div class="unit">개 · 경쟁 강도</div>${rampBars(storeTop,num,'b')}</div>
+      <div class="card"><h3><span class="dot" style="background:var(--s4)"></span>프랜차이즈 비중</h3><div class="unit">% · 본사 브랜드 점유</div>${catBars(frTop,v=>v+'%')}</div></div>`,
     src:'서울시 상권분석서비스(점포-상권) API. 폐업률은 점포수 가중 실측값.'};
 }
 function tForecast(){
