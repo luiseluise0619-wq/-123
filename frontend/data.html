@@ -73,8 +73,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
 .bar{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:11px;font-size:13px}
 .bar .bl{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .track{height:11px;background:var(--line);border-radius:6px;overflow:hidden}
-.fill{height:100%;border-radius:6px;transform-origin:left;transform:scaleX(0);animation:grow .8s cubic-bezier(.2,.8,.2,1) forwards}
-@keyframes grow{to{transform:scaleX(1)}}
+.fill{height:100%;border-radius:6px}
 .bar .bv{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
 .donut{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .donut svg{flex:none}
@@ -199,8 +198,8 @@ function tClosure(){
   const worsen=guAll.map(([k,v])=>[k,v.trend]).sort((a,b)=>b[1]-a[1]);
   const R=Object.entries(DATA.reasons).sort((a,b)=>b[1]-a[1]);
   const rTot=R.reduce((a,x)=>a+x[1],0);
-  const dR=[R[0],['양도·인수',DATA.reasons['양도·인수']||0],['법인전환',DATA.reasons['법인전환']||0],
-    ['기타',rTot-R[0][1]-(DATA.reasons['양도·인수']||0)-(DATA.reasons['법인전환']||0)]];
+  const dR=R.slice(0,5).map(([k,v])=>[k==='기타'?'기타(미분류)':k, v]);  // 실제 사유명 상위 5
+  const etaPct=Math.round((DATA.reasons['기타']||0)/rTot*100);
   const sabu=Math.round(DATA.reasons['사업부진']/rTot*100);
   const s=k=>guAll.reduce((a,[,v])=>a+v[k],0);
   const y22=s('y2022'),y23=s('y2023'),y24=s('y2024');
@@ -215,7 +214,7 @@ function tClosure(){
     body:`<div class="stats" style="grid-template-columns:repeat(4,1fr)">${stat.map(x=>`<div class="stat" style="--sbar:var(${x[0]})"><div class="n">${x[1]}</div><div class="l">${x[2]}</div><div class="s">${x[3]}</div></div>`).join('')}</div>
       <div class="grid2 sect">
       <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>자치구별 폐업 상위 10</h3><div class="unit">2024 · 건 · 진할수록 많음</div>${rampBars(guClose,num,'w')}</div>
-      <div class="card"><h3><span class="dot" style="background:var(--s2)"></span>폐업 사유 구성</h3><div class="unit">전국</div>${donut(dR,num)}</div>
+      <div class="card"><h3><span class="dot" style="background:var(--s2)"></span>폐업 사유 구성</h3><div class="unit">전국 · 상위 5개 사유</div>${donut(dR,num)}<div class="note">'기타(미분류)' <b>${etaPct}%</b>는 국세청 폐업사유 분류에서 사업부진·양도 등 특정 항목에 안 잡힌 사유입니다(원본 데이터의 한계). 명확한 사유 1위는 <b>사업부진 ${sabu}%</b>.</div></div>
       <div class="card"><h3><span class="dot" style="background:var(--s1)"></span>서울 폐업 3년 추이</h3><div class="unit">천 건 · 2022→2024</div>${lineChart(['2022','2023','2024'],[y22,y23,y24].map(v=>Math.round(v/1000)),'천건')}<div class="note">3년간 ${growth>=0?'증가':'감소'} 추세.</div></div>
       <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>폐업 빠르게 느는 자치구</h3><div class="unit">2년 증가율 % · 상위</div>${rampBars(worsen.slice(0,8).map(x=>[x[0],x[1]]),v=>(v>=0?'+':'')+v+'%','w')}</div></div>`,
     src:'국세청 국세통계 — 자치구별·사유별 폐업(연간) · 통계청 기업생멸(생존율).'};
