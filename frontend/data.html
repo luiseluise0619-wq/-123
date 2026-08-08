@@ -73,7 +73,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
 .bar{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:11px;font-size:13px}
 .bar .bl{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .track{height:11px;background:var(--line);border-radius:6px;overflow:hidden}
-.fill{height:100%;border-radius:6px}
+.fill{height:100%;border-radius:6px;width:0;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+@media(prefers-reduced-motion:reduce){.fill{transition:none}}
 .bar .bv{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
 .donut{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .donut svg{flex:none}
@@ -125,8 +126,13 @@ function rampBars(rows,fmt,ramp){
   const vals=rows.map(r=>r[1]),max=Math.max(...vals)||1,min=Math.min(...vals);
   return `<div class="bars">`+rows.map((r,i)=>{const t=(r[1]-min)/((max-min)||1),step=Math.round(2+t*4);
     return `<div class="bar"><span class="bl">${r[0]}</span>
-      <span class="track"><span class="fill" style="width:${(r[1]/max*100).toFixed(1)}%;background:var(--${ramp}${step});animation-delay:${i*45}ms"></span></span>
+      <span class="track"><span class="fill" data-w="${(r[1]/max*100).toFixed(1)}%" style="background:var(--${ramp}${step});transition-delay:${i*45}ms"></span></span>
       <span class="bv">${fmt(r[1])}</span></div>`;}).join('')+`</div>`;
+}
+function animateFills(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('.fill[data-w]').forEach(el=>{el.style.width=el.dataset.w;});
+  }));
 }
 function donut(rows,fmt){
   const tot=rows.reduce((a,r)=>a+r[1],0)||1,R=54,C=2*Math.PI*R,cols=['--s1','--s2','--s3','--s4','--s5'];
@@ -163,7 +169,7 @@ function catBars(rows,fmt){
   const cols=['--s1','--s2','--s3','--s4','--s5','--b4','--w3'];
   const max=Math.max(...rows.map(r=>r[1]))||1;
   return `<div class="bars">`+rows.map((r,i)=>`<div class="bar"><span class="bl">${r[0]}</span>
-    <span class="track"><span class="fill" style="width:${(r[1]/max*100).toFixed(1)}%;background:var(${cols[i%cols.length]});animation-delay:${i*45}ms"></span></span>
+    <span class="track"><span class="fill" data-w="${(r[1]/max*100).toFixed(1)}%" style="background:var(${cols[i%cols.length]});transition-delay:${i*45}ms"></span></span>
     <span class="bv">${fmt(r[1])}</span></div>`).join('')+`</div>`;
 }
 // 산점도 — 두 변수 관계, 점마다 상태색 + 사분면 안내
@@ -299,6 +305,7 @@ window.renderSales=function(name){
     <div class="card"><h3><span class="dot" style="background:var(--s5)"></span>성별 구성</h3><div class="unit">매출 비중</div>${donut([['남성',d.gender[0]],['여성',d.gender[1]]],v=>v+'%')}</div>
     <div class="card"><h3><span class="dot" style="background:var(--s3)"></span>연령대 구성</h3><div class="unit">매출 비중 · 연령별 색</div>${catBars(ageR,v=>v+'%')}</div></div>
     <div class="note">실측 객단가 <b style="color:var(--ink)">${num(d.unit)}원</b> · 서울 전체 당월매출 <b style="color:var(--ink)">${won(Math.round(d.amt/10000))}</b>${st?` · 점포 <b style="color:var(--ink)">${num(st.stores)}개</b> · 폐업률 <b style="color:var(--w4)">${st.close_rate}%</b> · 프랜차이즈 ${st.fr_share}%`:''}</div>`;
+  animateFills();
 };
 function tStores(){
   if(!STORES)return {pending:'점포·개폐업(서울 상권분석 API) 수집 대기 — 매주 자동 갱신됩니다.'};
@@ -328,8 +335,8 @@ function tStores(){
 function tForecast(){
   if(!FORECAST)return {pending:'매출예측 백테스트 대기 — 매출 이력 수집 후 자동 생성됩니다.'};
   const beat=Object.entries(FORECAST.ind).filter(([k,v])=>v.beats_naive).sort((a,b)=>a[1].mape-b[1].mape);
-  const rows=beat.map(([k,v])=>`<div class="bar"><span class="bl" style="width:110px">${k}</span>
-    <span class="track"><span class="fill" style="width:${Math.max(6,100-v.mape*3).toFixed(0)}%;background:var(--b4)"></span></span>
+  const rows=beat.map(([k,v],i)=>`<div class="bar"><span class="bl" style="width:110px">${k}</span>
+    <span class="track"><span class="fill" data-w="${Math.max(6,100-v.mape*3).toFixed(0)}%" style="background:var(--b4);transition-delay:${i*45}ms"></span></span>
     <span class="bv">오차 ${v.mape}%</span></div>`).join('');
   return {exec:`2021~${FORECAST.quarters[FORECAST.quarters.length-1]} ${FORECAST.quarters.length}개 분기 백테스트 — 관성을 이기는 업종만 예측 제공.`,
     insight:`서울 <b>${FORECAST.n_industries}개 업종</b> 중 예측이 '전분기 유지(관성)'를 이긴 건 <b>${FORECAST.n_beat_naive}개(${Math.round(FORECAST.n_beat_naive/FORECAST.n_industries*100)}%)</b>뿐 — 전부 계절성이 신호였습니다. 나머지는 매출이 안정적이라 예측 대신 <b>손익분기 계산</b>이 정답입니다.`,
@@ -368,6 +375,7 @@ window.openTopic=function(id){
   document.getElementById('pdfbtn').style.display=r.pending?'none':'inline-block';
   window.scrollTo(0,0);
   if(r.after)r.after();
+  animateFills();
 };
 window.backToLib=function(){
   document.getElementById('topicview').classList.remove('on');
