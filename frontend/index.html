@@ -257,6 +257,7 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
           </div>
           <div class="bepout" id="bep-out"></div>
           <div class="verdict" id="bep-verdict"></div>
+          <a id="report-cta" href="report.html" style="display:flex;justify-content:center;margin-top:12px;font-size:13px;font-weight:700;color:#fff;background:var(--navy);padding:11px;border-radius:10px;text-decoration:none">이 지역·업종 진단 리포트 →</a>
         </div>
         <div class="foot" id="foot"></div>
       </div>
@@ -418,6 +419,8 @@ function calcBEP(){
     <div class="beprow"><span class="bk">− 기타 운영비</span><span class="bvv">${won(etc)}</span></div>
     <div class="beprow" style="background:var(--bg)"><span class="bk" style="font-weight:800;color:var(--ink)">월 순이익</span><span class="bvv" style="color:${pc};font-size:15px">${profit>=0?'':'−'}${won(Math.abs(profit))}</span></div>
     <div class="beprow"><span class="bk">손익분기 매출</span><span class="bvv">${won(bep)}</span></div>`;
+  const cta=document.getElementById('report-cta');
+  if(cta)cta.href='report.html?gu='+encodeURIComponent(selected||'강남구')+'&ind='+encodeURIComponent(k);
   const v=document.getElementById('bep-verdict');
   const vsB=profit-bench, dir=vsB>=0?'많음':'적음';
   if(profit>0){
