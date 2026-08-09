@@ -11,6 +11,16 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "POST only" });
   }
+  // 최소 방어: 같은 사이트(브라우저)에서 온 요청만 허용 → 외부 스크립트의 토큰 남용 차단.
+  // ALLOWED_ORIGIN 환경변수를 지정하면 그 도메인만, 없으면 자기 배포 도메인(*.vercel.app 등)만 허용.
+  const origin = req.headers.origin || "";
+  const host = req.headers.host || "";
+  const allow = process.env.ALLOWED_ORIGIN;
+  const sameSite = origin && (origin.endsWith(host) || (host && origin.includes(host.split(":")[0])));
+  const okOrigin = allow ? origin === allow : (sameSite || origin.endsWith(".vercel.app"));
+  if (!okOrigin) {
+    return res.status(403).json({ error: "이 사이트에서만 사용할 수 있습니다.", reply: "요청 출처가 허용되지 않았습니다." });
+  }
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
     return res.status(200).json({
