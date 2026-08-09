@@ -269,21 +269,24 @@ function tConsumer(){
 }
 function tRepop(){
   if(!REPOP)return {pending:'상주인구(서울 상권분석 API) 수집 대기 — 매주 자동 갱신됩니다.'};
-  const r=REPOP, ageR=[['10대',r.age[0]],['20대',r.age[1]],['30대',r.age[2]],['40대',r.age[3]],['50대',r.age[4]],['60대+',r.age[5]]];
+  const r=REPOP, aSum=r.age.reduce((a,b)=>a+b,0)||1;
+  const agePct=r.age.map(v=>Math.round(v/aSum*1000)/10);
+  const ageR=[['10대',agePct[0]],['20대',agePct[1]],['30대',agePct[2]],['40대',agePct[3]],['50대',agePct[4]],['60대+',agePct[5]]];
   const topAge=ageR.slice().sort((a,b)=>b[1]-a[1])[0];
-  const fPct=Math.round(r.f/(r.m+r.f)*100), aptPct=Math.round(r.apt/(r.apt+r.nonapt)*100);
-  const stat=[['--s1',won(Math.round(r.tot/10000))+'명','서울 상주인구','거주 기준'],
-    ['--s4',topAge[0],'주 거주 연령대',Math.round(topAge[1]/r.age.reduce((a,b)=>a+b,0)*100)+'%'],
-    ['--s5',fPct+'%','여성 비중','남성 '+(100-fPct)+'%'],
-    ['--s3',won(Math.round(r.hshld/10000))+'가구','총 가구수','아파트 '+aptPct+'%']];
-  return {exec:`유동인구(뜨내기)와 달리 '동네에 사는 주민' — 배후수요의 실체(${r.quarter}).`,
-    insight:`서울 상주인구는 <b>${won(Math.round(r.tot/10000))}명</b>, 주 거주 연령대는 <b>${topAge[0]}</b>입니다. 아파트 가구 비중이 <b>${aptPct}%</b> — 아파트가 많으면 배후 고정수요가 안정적이고, 비아파트(원룸·다세대)가 많으면 1인가구·유동 성향이 강합니다. 동네 장사(단골형)엔 상주인구, 목 좋은 장사(회전형)엔 유동인구를 보세요.`,
+  const fPct=Math.round(r.f/(r.m+r.f)*100);
+  const senior=Math.round((r.age[4]+r.age[5])/aSum*100), young=Math.round((r.age[1]+r.age[2])/aSum*100);
+  const stat=[['--s4',topAge[0],'주 거주 연령대',topAge[1]+'%'],
+    ['--s3',senior+'%','50대+ 비중','시니어 배후수요'],
+    ['--s1',young+'%','20~30대 비중','젊은 배후수요'],
+    ['--s5',fPct+'%','여성 비중','남성 '+(100-fPct)+'%']];
+  return {exec:`유동인구(뜨내기)와 달리 '동네에 사는 주민'의 연령·성별 구성 — 배후수요의 성격(${r.quarter}).`,
+    insight:`서울 상권의 거주민은 <b>${topAge[0]}가 최다(${topAge[1]}%)</b>, 50대 이상이 <b>${senior}%</b>로 <b>유동인구(30~40대 중심)보다 고령</b>입니다. 즉 '동네 단골 장사'는 시니어 취향(반찬·건강·병원 근처)이, '목 좋은 회전 장사'는 젊은 유동인구가 유리합니다. 어떤 손님을 노리느냐로 업종·메뉴가 갈립니다.`,
     body:`<div class="stats" style="grid-template-columns:repeat(4,1fr)">${stat.map(x=>`<div class="stat" style="--sbar:var(${x[0]})"><div class="n">${x[1]}</div><div class="l">${x[2]}</div><div class="s">${x[3]}</div></div>`).join('')}</div>
       <div class="grid2 sect">
-      <div class="card"><h3><span class="dot" style="background:var(--s3)"></span>거주민 연령 분포</h3><div class="unit">명 · 연령별 색</div>${catBars(ageR,num)}</div>
-      <div class="card"><h3><span class="dot" style="background:var(--s1)"></span>성별 구성</h3><div class="unit">서울 거주민</div>${donut([['남성',r.m],['여성',r.f]],num)}</div>
-      <div class="card" style="grid-column:1/-1"><h3><span class="dot" style="background:var(--s3)"></span>주거 형태 (배후수요 성격)</h3><div class="unit">가구</div>${donut([['아파트',r.apt],['비아파트(원룸·다세대 등)',r.nonapt]],num)}<div class="note">아파트 = 안정적 고정수요, 비아파트 = 1인가구·유동 성향.</div></div></div>`,
-    src:'서울시 상권분석서비스(상주인구-상권) API · '+r.quarter+' 분기.'};
+      <div class="card"><h3><span class="dot" style="background:var(--s3)"></span>거주민 연령 구성비</h3><div class="unit">% · 연령별 색</div>${catBars(ageR,v=>v+'%')}</div>
+      <div class="card"><h3><span class="dot" style="background:var(--s1)"></span>성별 구성</h3><div class="unit">서울 거주민</div>${donut([['남성',r.m],['여성',r.f]],num)}</div></div>
+      <div class="note">※ 상권 영역이 서로 겹쳐 거주민 <b>절대 수는 합산 시 과대</b>되므로, 여기서는 <b>구성비(연령·성별)만</b> 사용합니다. 주거형태(아파트) 필드는 원본이 0으로 제공해 제외했습니다 — 지어내지 않았습니다.</div>`,
+    src:'서울시 상권분석서비스(상주인구-상권) API · '+r.quarter+' 분기 · 구성비만 사용.'};
 }
 function tSales(){
   if(!SALES)return {pending:'추정매출(서울 상권분석 API) 수집 대기 — 매주 자동 갱신됩니다.'};
