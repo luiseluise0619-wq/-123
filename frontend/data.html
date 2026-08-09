@@ -39,14 +39,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
 .libcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
   cursor:pointer;transition:.18s;display:flex;flex-direction:column;box-shadow:var(--sh)}
 .libcard:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(16,24,40,.12);border-color:var(--cc,var(--navy2))}
-.libcard .cover{aspect-ratio:1/1;background:var(--cbg);display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid var(--line)}
-.libcard .cover .big{font-size:54px;filter:saturate(1.05)}
-.libcard .cover .cat{position:absolute;top:12px;left:12px;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:7px;
-  background:var(--panel);color:var(--cc,var(--navy2));box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.libcard .cover .st{position:absolute;top:12px;right:12px;font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:7px}
-.st.on{background:var(--s3);color:#fff}.st.wait{background:var(--panel);color:var(--ink3)}
+.libcard .cover{aspect-ratio:16/10;background:var(--cbg);display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid var(--line)}
+.libcard .cover .licon{width:30px;height:30px;stroke:var(--cc,var(--navy2));fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.libcard .cover .num{position:absolute;bottom:8px;right:12px;font-size:40px;font-weight:800;color:var(--cc,var(--navy2));opacity:.14;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.libcard .cover .cat{position:absolute;top:11px;left:12px;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--cc,var(--navy2))}
+.libcard .cover .st{position:absolute;top:11px;right:12px;font-size:9px;font-weight:700;letter-spacing:.04em}
+.st.on{color:var(--s3)}.st.wait{color:var(--ink3)}
 .libcard .body{padding:15px 16px 17px}
-.libcard h3{font-size:15px;font-weight:800;letter-spacing:-.01em;line-height:1.3}
+.libcard h3{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
 .libcard p{font-size:12px;color:var(--ink2);margin-top:5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .libcard .src{font-size:10.5px;color:var(--ink3);margin-top:9px;display:block}
 .topicview{display:none;padding:36px 0 70px}
@@ -100,7 +100,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
 <div class="top"><div class="wrap">
   <div class="brand" onclick="backToLib()"><span class="m">상</span>상권 데이터 라이브러리</div>
   <div class="topacts">
-    <button class="pdfbtn" id="pdfbtn" onclick="window.print()" style="display:none">📄 PDF 저장</button>
+    <button class="pdfbtn" id="pdfbtn" onclick="window.print()" style="display:none">PDF 저장</button>
     <a href="index.html">← 지도</a>
   </div>
 </div></div>
@@ -348,22 +348,33 @@ function tForecast(){
     src:'서울 추정매출 21분기 워크포워드 백테스트(관성 vs 계절 vs 추세).'};
 }
 
+const IC={
+  flag:'<path d="M5 21V4M5 4h11l-2 3.5L16 11H5"/>',
+  down:'<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/>',
+  bldg:'<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 21v-4h6v4"/><path d="M9 7h0M13 7h0M9 11h0M13 11h0"/>',
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
+  home:'<path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  card:'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',
+  store:'<path d="M4 4h16l1 5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M4 10v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-9"/>',
+  chart:'<polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/>',
+};
 const TOPICS=[
-  {id:'bench',ic:'🏁',c:'--s3',cat:'벤치마크',t:'전국 자영업 벤치마크',d:'생존율·창업비용·영업이익·부채 — 내 가게 비교 기준선',src:'통계청',fn:tBench,on:()=>true},
-  {id:'closure',ic:'📉',c:'--w4',cat:'리스크',t:'폐업·폐업사유',d:'자치구별 폐업 현황과 왜 문을 닫는지',src:'국세청',fn:tClosure,on:()=>true},
-  {id:'rent',ic:'🏢',c:'--s2',cat:'비용',t:'임대료·공실',d:'상권별 임대료와 위험 신호인 공실률',src:'부동산원',fn:tRent,on:()=>true},
-  {id:'consumer',ic:'🚶',c:'--s1',cat:'소비자',t:'유동인구',d:'자치구·연령·성별 — 누가 어디 다니나',src:'서울 생활인구',fn:tConsumer,on:()=>!!POP},
-  {id:'repop',ic:'🏠',c:'--s3',cat:'배후수요',t:'거주 인구',d:'동네 주민 연령·성별·주거형태 — 단골형 배후수요',src:'서울 상주인구',fn:tRepop,on:()=>!!REPOP},
-  {id:'sales',ic:'💳',c:'--b4',cat:'소비',t:'소비패턴·매출',d:'업종별 시간대·요일·연령 매출과 실측 객단가',src:'서울 추정매출',fn:tSales,on:()=>!!SALES},
-  {id:'stores',ic:'⚠️',c:'--w4',cat:'경쟁',t:'업종 위험도·경쟁',d:'업종별 폐업률·점포수·프랜차이즈 비중',src:'서울 점포',fn:tStores,on:()=>!!STORES},
-  {id:'forecast',ic:'🔮',c:'--b4',cat:'예측',t:'매출예측(정직)',d:'관성을 이기는 업종만 — 나머지는 손익분기',src:'백테스트',fn:tForecast,on:()=>!!FORECAST},
+  {id:'bench',ic:IC.flag,c:'--s3',cat:'BENCHMARK',t:'전국 자영업 벤치마크',d:'생존율·창업비용·영업이익·부채. 내 가게 비교 기준선',src:'통계청',fn:tBench,on:()=>true},
+  {id:'closure',ic:IC.down,c:'--w4',cat:'RISK',t:'폐업·폐업사유',d:'자치구별 폐업 현황과 문을 닫는 이유',src:'국세청',fn:tClosure,on:()=>true},
+  {id:'rent',ic:IC.bldg,c:'--s2',cat:'COST',t:'임대료·공실',d:'상권별 임대료와 위험 신호인 공실률',src:'부동산원',fn:tRent,on:()=>true},
+  {id:'consumer',ic:IC.users,c:'--s1',cat:'FLOW',t:'유동인구',d:'자치구·연령·성별 유동인구 분포',src:'서울 생활인구',fn:tConsumer,on:()=>!!POP},
+  {id:'repop',ic:IC.home,c:'--s3',cat:'RESIDENT',t:'거주 인구',d:'동네 주민 연령·성별 구성. 배후수요 성격',src:'서울 상주인구',fn:tRepop,on:()=>!!REPOP},
+  {id:'sales',ic:IC.card,c:'--b4',cat:'SALES',t:'소비패턴·매출',d:'업종별 시간대·요일·연령 매출과 실측 객단가',src:'서울 추정매출',fn:tSales,on:()=>!!SALES},
+  {id:'stores',ic:IC.store,c:'--w4',cat:'COMPETITION',t:'업종 위험도·경쟁',d:'업종별 폐업률·점포수·프랜차이즈 비중',src:'서울 점포',fn:tStores,on:()=>!!STORES},
+  {id:'forecast',ic:IC.chart,c:'--b4',cat:'FORECAST',t:'매출예측',d:'관성을 이기는 업종만. 나머지는 손익분기',src:'백테스트',fn:tForecast,on:()=>!!FORECAST},
 ];
 
 function buildLibrary(){
-  document.getElementById('libgrid').innerHTML=TOPICS.map(tp=>{
+  document.getElementById('libgrid').innerHTML=TOPICS.map((tp,i)=>{
     const ok=tp.on();
-    return `<div class="libcard" style="--cc:var(${tp.c});--cbg:color-mix(in srgb, var(${tp.c}) 15%, var(--panel))" onclick="openTopic('${tp.id}')">
-      <div class="cover"><span class="cat">${tp.cat}</span><span class="st ${ok?'on':'wait'}">${ok?'DATA':'대기'}</span><span class="big">${tp.ic}</span></div>
+    return `<div class="libcard" style="--cc:var(${tp.c});--cbg:color-mix(in srgb, var(${tp.c}) 9%, var(--panel))" onclick="openTopic('${tp.id}')">
+      <div class="cover"><span class="cat">${tp.cat}</span><span class="st ${ok?'on':'wait'}">${ok?'DATA':'준비중'}</span>
+        <svg class="licon" viewBox="0 0 24 24">${tp.ic}</svg><span class="num">${String(i+1).padStart(2,'0')}</span></div>
       <div class="body"><h3>${tp.t}</h3><p>${tp.d}</p><span class="src">${tp.src}</span></div>
     </div>`;}).join('');
 }
