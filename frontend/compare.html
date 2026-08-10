@@ -42,6 +42,14 @@ td .sub{font-size:11px;color:var(--ink3);margin-top:2px}
 .wintag{display:inline-block;font-size:10px;font-weight:800;color:var(--navy2);margin-left:5px;vertical-align:middle}
 .tally{display:flex;gap:10px;margin-top:16px;font-size:13px;font-weight:700;justify-content:center;color:var(--ink2)}
 .tally b{color:var(--navy2);font-size:18px}
+.tradeoff{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px}
+.tocol{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 13px;font-size:13px;color:var(--ink);line-height:1.5}
+.tohd{display:block;font-size:11px;font-weight:800;letter-spacing:.02em;margin-bottom:6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.chip{font:inherit;font-size:12.5px;font-weight:700;padding:7px 13px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink2);cursor:pointer}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.priline{margin-top:12px;padding:11px 14px;border-radius:10px;background:var(--winL);font-size:13.5px;color:var(--ink)}
+@media(max-width:560px){.tradeoff{grid-template-columns:1fr}}
 .foot{margin:26px 0 60px;font-size:11px;color:var(--ink3);border-top:1px solid var(--line);padding-top:14px;line-height:1.7}
 @media(max-width:560px){td .v{font-size:14px}.pick select{min-width:110px}}
 @media print{.top{position:static}.pick,.pdfbtn,.top a{display:none}body{background:#fff}}
@@ -73,47 +81,65 @@ const num=n=>Math.round(+n).toLocaleString();
 let POP=null,PARK=null;
 const RENT=(DATA.rent['서울']||{rent:5.3});
 
-// 지표 정의: key(값 추출), better(1=클수록 좋음,-1=작을수록), fmt, sub
+// 지표 정의: key(우선순위 식별), better(1=클수록 좋음,-1=작을수록,0=맥락), fmt, sub
 function metrics(){
   const M=[
-    {name:'폐업 추세 (2년 증감)',better:-1,fmt:v=>(v>=0?'+':'')+v+'%',get:g=>g.trend,sub:'낮을수록 안정'},
-    {name:'대중교통 정류소',better:1,fmt:v=>num(v)+'개',get:g=>g.bus,sub:'접근성'},
+    {key:'trend',name:'폐업 추세 (2년 증감)',better:-1,fmt:v=>(v>=0?'+':'')+v+'%',get:g=>g.trend,sub:'낮을수록 안정'},
+    {key:'bus',name:'대중교통 정류소',better:1,fmt:v=>num(v)+'개',get:g=>g.bus,sub:'접근성'},
   ];
-  if(POP)M.push({name:'유동인구',better:1,fmt:v=>num(v)+'명',get:g=>(POP.gu[g.name]?POP.gu[g.name].tot:0),sub:POP.hour+'시'});
-  if(PARK)M.push({name:'주차장',better:1,fmt:v=>num(v)+'곳',get:g=>(PARK.gu[g.name]?PARK.gu[g.name].lots:0),sub:'입지 편의'});
-  M.push({name:'2024 폐업 건수',better:0,fmt:v=>num(v)+'건',get:g=>g.y2024,sub:'규모 참고(클수록 큰 상권)'});
+  if(POP)M.push({key:'pop',name:'유동인구(체류 추계)',better:1,fmt:v=>num(v)+'명',get:g=>(POP.gu[g.name]?POP.gu[g.name].tot:0),sub:POP.hour+'시 · 통행량 아님'});
+  if(PARK)M.push({key:'park',name:'주차장',better:1,fmt:v=>num(v)+'곳',get:g=>(PARK.gu[g.name]?PARK.gu[g.name].lots:0),sub:'입지 편의'});
+  M.push({key:'close',name:'2024 폐업 건수',better:0,fmt:v=>num(v)+'건',get:g=>g.y2024,sub:'규모 참고(승패 제외)'});
   return M;
 }
+let PRIORITY=null; // 사용자가 고른 '가장 중요한 지표'
+window.setPriority=function(k){PRIORITY=(PRIORITY===k?null:k);render();};
+function pct(a,b){ if(!a&&!b)return 0; const base=Math.min(Math.abs(a),Math.abs(b))||Math.max(Math.abs(a),Math.abs(b))||1; return Math.round(Math.abs(a-b)/base*100); }
 function render(){
   const an=document.getElementById('a').value, bn=document.getElementById('b').value, ind=document.getElementById('ind').value;
   const A={...DATA.gu[an],name:an}, B={...DATA.gu[bn],name:bn};
-  const M=metrics(); let wa=0,wb=0;
+  const M=metrics();
+  const aWins=[], bWins=[], hold=[];
   const rows=M.map(m=>{
-    const va=m.get(A), vb=m.get(B); let winA=false,winB=false;
-    if(m.better!==0 && va!==vb){ const aBetter=m.better===1?va>vb:va<vb; winA=aBetter; winB=!aBetter; if(aBetter)wa++;else wb++; }
-    return `<tr>
+    const va=m.get(A), vb=m.get(B); let winA=false,winB=false,diff='';
+    if(m.better===0){ hold.push(m.name); }
+    else if(va===vb){ hold.push(m.name+'(동일)'); }
+    else { const aBetter=m.better===1?va>vb:va<vb; winA=aBetter; winB=!aBetter;
+      const d=pct(va,vb); diff=d?`<span class="wintag">▲ 우세 · +${d}%</span>`:`<span class="wintag">▲ 우세</span>`;
+      (aBetter?aWins:bWins).push(m.name); }
+    const hl=PRIORITY===m.key?' style="outline:2px solid var(--navy2);outline-offset:-2px"':'';
+    return `<tr${hl}>
       <td class="metric">${m.name}<div class="sub" style="color:var(--ink3);font-weight:400;margin-top:2px">${m.sub}</div></td>
-      <td class="${winA?'win':''}"><div class="v">${m.fmt(va)}${winA?'<span class="wintag">▲ 우세</span>':''}</div></td>
-      <td class="${winB?'win':''}"><div class="v">${m.fmt(vb)}${winB?'<span class="wintag">▲ 우세</span>':''}</div></td></tr>`;
+      <td class="${winA?'win':''}"><div class="v">${m.fmt(va)}${winA?diff:''}</div></td>
+      <td class="${winB?'win':''}"><div class="v">${m.fmt(vb)}${winB?diff:''}</div></td></tr>`;
   }).join('');
-  // 손익분기 순이익(업종 기준, 임대료=서울평균이라 두 구 동일 → 참고로 1회)
+  // 손익분기(업종 기준, 임대료=서울평균이라 두 구 동일 → 참고). 보수(하위25%) 기준으로 정직하게.
   const i=DATA.ind[ind], cogs=i.cogs/100, rentCost=Math.round(RENT.rent*15*3.3), fixed=rentCost+2*250+(i.etc||150);
-  const profit=Math.round(i.p50*(1-cogs)-fixed);
-  // 추천
-  let reco;
-  if(wa>wb) reco=`<b>${an}</b>가 ${wa}:${wb}로 우세합니다. 지표상 더 유리하지만, 실제 임대료·목(정확한 위치)은 직접 확인하세요.`;
-  else if(wb>wa) reco=`<b>${bn}</b>가 ${wb}:${wa}로 우세합니다. 지표상 더 유리하지만, 실제 임대료·목은 직접 확인하세요.`;
-  else reco=`두 후보지가 ${wa}:${wb}로 팽팽합니다. 임대료·유동 동선·업종 적합도 같은 현장 요소로 결정하세요.`;
+  const profLow=Math.round(i.p25*(1-cogs)-fixed);
+  // 우선순위 선택 시: 그 지표 기준 결론
+  const chips=M.filter(m=>m.better!==0).map(m=>`<button class="chip${PRIORITY===m.key?' on':''}" onclick="setPriority('${m.key}')">${m.name.split(' ')[0]}</button>`).join('');
+  let priLine='';
+  if(PRIORITY){ const m=M.find(x=>x.key===PRIORITY); if(m){ const va=m.get(A),vb=m.get(B);
+    if(va===vb) priLine=`'${m.name}'만 보면 <b>두 곳이 동일</b>합니다.`;
+    else{ const aB=m.better===1?va>vb:va<vb; priLine=`'${m.name}'이 가장 중요하다면 → <b>${aB?an:bn}</b> (${m.fmt(va)} vs ${m.fmt(vb)}, +${pct(va,vb)}%).`; } } }
+  // 트레이드오프 요약(점수·승패 없음)
+  const list=(arr)=>arr.length?arr.join(' · '):'—';
   document.getElementById('out').innerHTML=`
-    <div class="reco"><div class="t">종합 비교</div><h2>${wa>wb?an:wb>wa?bn:'막상막하'}</h2>
-      <p>${reco}</p>
-      <div class="tally"><span>${an} <b>${wa}</b></span><span style="color:var(--ink3)">승</span><span><b>${wb}</b> ${bn}</span></div></div>
+    <div class="reco"><div class="t">트레이드오프 — 종합 점수는 내지 않습니다</div>
+      <h2 style="font-size:18px">무엇이 더 중요한지는 사장님이 정하세요</h2>
+      <div class="tradeoff">
+        <div class="tocol"><span class="tohd" style="color:var(--navy2)">${an} 유리</span>${list(aWins)}</div>
+        <div class="tocol"><span class="tohd" style="color:var(--navy2)">${bn} 유리</span>${list(bWins)}</div>
+        <div class="tocol"><span class="tohd" style="color:var(--ink3)">판단 보류</span>${list(hold)}</div>
+      </div>
+      <div style="margin-top:14px;font-size:12.5px;color:var(--ink2)">가장 중요한 지표를 고르면, <b>그 기준의 결론</b>을 보여드립니다:</div>
+      <div class="chips">${chips}</div>
+      ${priLine?`<div class="priline">${priLine}</div>`:''}</div>
     <table><thead><tr><th class="metric">지표</th><th>${an}</th><th>${bn}</th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="reco" style="background:var(--panel);margin-top:14px"><div class="t">참고 · ${ind} 손익분기</div>
-      <p style="margin-top:6px">중위매출 기준 예상 월 순이익 <b style="color:${profit>=0?'var(--good)':'var(--bad)'}">${profit>=0?'':'−'}${won(Math.abs(profit))}</b>
-      (15평·직원2명·서울평균 임대료 기준). 두 자치구의 임대료 차이는 실제 계약값으로 <a href="report.html?gu=${encodeURIComponent(an)}&ind=${encodeURIComponent(ind)}" style="color:var(--navy2);font-weight:700">진단 리포트</a>에서 확인하세요.</p></div>
-    <div class="foot">비교 지표는 자치구 단위 공개 통계입니다. 폐업 건수는 상권 규모에 비례하므로 승패에서 제외(참고만)했고,
-    실제 창업 판단은 정확한 위치·임대료·동선을 현장에서 확인해야 합니다. 지어낸 값은 없습니다.</div>`;
+    <div class="reco" style="background:var(--panel);margin-top:14px"><div class="t">참고 · ${ind} 손익분기(보수·하위25%)</div>
+      <p style="margin-top:6px">하위 25% 매출 기준 예상 월 순이익 <b style="color:${profLow>=0?'var(--good)':'var(--bad)'}">${profLow>=0?'':'−'}${won(Math.abs(profLow))}</b>
+      (15평·직원2명·서울평균 임대료·단순 시뮬레이션). 두 자치구의 임대료·목 차이는 실제 계약값으로 <a href="report.html?gu=${encodeURIComponent(an)}&ind=${encodeURIComponent(ind)}" style="color:var(--navy2);font-weight:700">진단 리포트</a>에서 확인하세요.</p></div>
+    <div class="foot">지표별로 어느 쪽이 유리한지만 보여주고 <b>합산 점수·승패는 내지 않습니다</b> — 지표마다 중요도가 다르고, 상관된 지표(임대료↑↔유동인구↑)를 중복 계산하지 않기 위함입니다. 폐업 건수는 상권 규모에 비례해 판단 보류로 뒀습니다. 실제 창업 판단은 정확한 위치·임대료·동선을 현장에서 확인하세요. 지어낸 값은 없습니다.</div>`;
 }
 function loadJSON(f){return fetch(f,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
 function init(){
