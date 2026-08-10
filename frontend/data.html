@@ -107,7 +107,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
 
 <div class="wrap" id="library">
   <div class="hero">
-    <div class="eyebrow">SEOUL SMALL-BUSINESS DATA LIBRARY</div>
+    <div class="eyebrow">서울 자영업 데이터 라이브러리</div>
     <h1>주제별 상권 데이터 리포트</h1>
     <p>정부 승인통계와 공공 API로 만든 자영업 데이터. 궁금한 주제 카드를 열면 설명·도표·출처가 있고, PDF로 저장할 수 있습니다. 추정치는 '추정'으로 표기하고 지어낸 숫자는 없습니다.</p>
   </div>
@@ -359,14 +359,14 @@ const IC={
   chart:'<polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/>',
 };
 const TOPICS=[
-  {id:'bench',ic:IC.flag,c:'--s3',cat:'BENCHMARK',t:'전국 자영업 벤치마크',d:'생존율·창업비용·영업이익·부채. 내 가게 비교 기준선',src:'통계청',fn:tBench,on:()=>true},
-  {id:'closure',ic:IC.down,c:'--w4',cat:'RISK',t:'폐업·폐업사유',d:'자치구별 폐업 현황과 문을 닫는 이유',src:'국세청',fn:tClosure,on:()=>true},
-  {id:'rent',ic:IC.bldg,c:'--s2',cat:'COST',t:'임대료·공실',d:'상권별 임대료와 위험 신호인 공실률',src:'부동산원',fn:tRent,on:()=>true},
-  {id:'consumer',ic:IC.users,c:'--s1',cat:'FLOW',t:'유동인구',d:'자치구·연령·성별 유동인구 분포',src:'서울 생활인구',fn:tConsumer,on:()=>!!POP},
-  {id:'repop',ic:IC.home,c:'--s3',cat:'RESIDENT',t:'거주 인구',d:'동네 주민 연령·성별 구성. 배후수요 성격',src:'서울 상주인구',fn:tRepop,on:()=>!!REPOP},
-  {id:'sales',ic:IC.card,c:'--b4',cat:'SALES',t:'소비패턴·매출',d:'업종별 시간대·요일·연령 매출과 실측 객단가',src:'서울 추정매출',fn:tSales,on:()=>!!SALES},
-  {id:'stores',ic:IC.store,c:'--w4',cat:'COMPETITION',t:'업종 위험도·경쟁',d:'업종별 폐업률·점포수·프랜차이즈 비중',src:'서울 점포',fn:tStores,on:()=>!!STORES},
-  {id:'forecast',ic:IC.chart,c:'--b4',cat:'FORECAST',t:'매출예측',d:'관성을 이기는 업종만. 나머지는 손익분기',src:'백테스트',fn:tForecast,on:()=>!!FORECAST},
+  {id:'bench',ic:IC.flag,c:'--s3',cat:'벤치마크',t:'전국 자영업 벤치마크',d:'생존율·창업비용·영업이익·부채. 내 가게 비교 기준선',src:'통계청',fn:tBench,on:()=>true},
+  {id:'closure',ic:IC.down,c:'--w4',cat:'리스크',t:'폐업·폐업사유',d:'자치구별 폐업 현황과 문을 닫는 이유',src:'국세청',fn:tClosure,on:()=>true},
+  {id:'rent',ic:IC.bldg,c:'--s2',cat:'비용',t:'임대료·공실',d:'상권별 임대료와 위험 신호인 공실률',src:'부동산원',fn:tRent,on:()=>true},
+  {id:'consumer',ic:IC.users,c:'--s1',cat:'유동',t:'유동인구',d:'자치구·연령·성별 유동인구 분포',src:'서울 생활인구',fn:tConsumer,on:()=>!!POP},
+  {id:'repop',ic:IC.home,c:'--s3',cat:'거주',t:'거주 인구',d:'동네 주민 연령·성별 구성. 배후수요 성격',src:'서울 상주인구',fn:tRepop,on:()=>!!REPOP},
+  {id:'sales',ic:IC.card,c:'--b4',cat:'소비',t:'소비패턴·매출',d:'업종별 시간대·요일·연령 매출과 실측 객단가',src:'서울 추정매출',fn:tSales,on:()=>!!SALES},
+  {id:'stores',ic:IC.store,c:'--w4',cat:'경쟁',t:'업종 위험도·경쟁',d:'업종별 폐업률·점포수·프랜차이즈 비중',src:'서울 점포',fn:tStores,on:()=>!!STORES},
+  {id:'forecast',ic:IC.chart,c:'--b4',cat:'예측',t:'매출예측',d:'관성을 이기는 업종만. 나머지는 손익분기',src:'백테스트',fn:tForecast,on:()=>!!FORECAST},
 ];
 
 function buildLibrary(){
