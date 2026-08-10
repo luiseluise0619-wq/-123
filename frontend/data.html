@@ -80,7 +80,7 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
    최종 폭은 인라인 style에 고정(=JS 없이도 항상 색이 참) + 진입 애니는 순수 CSS */
 .fill{display:block;height:100%;border-radius:6px;animation:barGrow .8s cubic-bezier(.2,.8,.2,1) both}
 @keyframes barGrow{from{width:0}}
-@media(prefers-reduced-motion:reduce){.fill{animation:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
 .bar .bv{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
 .donut{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .donut svg{flex:none}
@@ -99,6 +99,16 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
   .brand{font-size:14px}
   .top .wrap>div:last-child{width:100%;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .top a,.top button{font-size:12.5px;white-space:nowrap}.pdfbtn{padding:7px 13px}}
+/* ── 폴리시: 진입 모션 · 정제 타이포 ── */
+@keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+body{animation:fadeIn .35s ease both}
+.hero h1,.topicview h1{letter-spacing:-.03em;text-wrap:pretty}
+.libcard{animation:riseIn .45s cubic-bezier(.2,.7,.3,1) both}
+.libcard:nth-child(2){animation-delay:.04s}.libcard:nth-child(3){animation-delay:.08s}.libcard:nth-child(4){animation-delay:.12s}
+.libcard:nth-child(5){animation-delay:.16s}.libcard:nth-child(6){animation-delay:.20s}.libcard:nth-child(7){animation-delay:.24s}
+.libcard:nth-child(8){animation-delay:.28s}.libcard:nth-child(9){animation-delay:.32s}.libcard:nth-child(n+10){animation-delay:.36s}
+.topicview.on{animation:fadeIn .35s ease both}
 @media print{
   .top{position:static} .topacts,.tcrumb{display:none} body{background:#fff}
   .card,.stat{box-shadow:none;break-inside:avoid} .grid2>*{break-inside:avoid}
