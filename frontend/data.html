@@ -161,7 +161,7 @@ function donut(rows,fmt,center){
 }
 function lineChart(labels,vals,unit){
   unit=unit==null?'%':unit;
-  const W=440,H=150,pl=8,pt=14,iw=W-16,ih=H-40,max=Math.max(...vals)||1;
+  const W=440,H=150,pl=8,pt=22,iw=W-16,ih=H-48,max=Math.max(...vals)||1;
   const xs=vals.map((_,i)=>pl+i/(vals.length-1)*iw), ys=vals.map(v=>pt+ih-(v/max)*ih);
   const pts=xs.map((x,i)=>`${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
   const peak=vals.indexOf(max);
@@ -171,7 +171,7 @@ function lineChart(labels,vals,unit){
     <stop offset="0" stop-color="var(--s1)" stop-opacity="0.28"/><stop offset="1" stop-color="var(--s1)" stop-opacity="0.02"/></linearGradient></defs>
     <polygon points="${pl},${pt+ih} ${pts} ${pl+iw},${pt+ih}" fill="url(#ag)"/>
     <polyline points="${pts}" fill="none" stroke="var(--s1)" stroke-width="2.5" stroke-linejoin="round"/>
-    ${dots}<text x="${xs[peak].toFixed(1)}" y="${(ys[peak]-9).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--s1)">${vals[peak].toLocaleString()}${unit}</text>${xlab}</svg>`;
+    ${dots}<text x="${xs[peak].toFixed(1)}" y="${Math.max(ys[peak]-9,11).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--s1)">${vals[peak].toLocaleString()}${unit}</text>${xlab}</svg>`;
 }
 
 // 값 크기 → 상태색(초록 낮음 → 주황 → 빨강 높음)

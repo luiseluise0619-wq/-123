@@ -653,7 +653,10 @@ function initSearch(){
   clr.onclick=()=>{inp.value='';clr.style.display='none';selected=null;renderPanel(null);resetView();inp.focus();};
   const mt=document.getElementById('maptitle'), tg=document.getElementById('mt-toggle');
   if(tg&&mt){
-    try{ if(localStorage.getItem('mtCollapsed')==='1') mt.classList.add('collapsed'); }catch(e){}
+    try{ const pref=localStorage.getItem('mtCollapsed');
+      // 저장된 선호 우선. 없으면 모바일에선 기본 접힘(지도를 먼저 보이게), 데스크톱은 펼침.
+      if(pref==='1' || (pref===null && window.matchMedia('(max-width:760px)').matches)) mt.classList.add('collapsed');
+    }catch(e){}
     const sync=()=>{const c=mt.classList.contains('collapsed');
       tg.setAttribute('aria-label',c?'검색창 펼치기':'검색창 접기');
       tg.title=c?'검색창 펼치기':'검색창 접기';};
