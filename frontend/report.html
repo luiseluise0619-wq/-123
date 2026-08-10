@@ -52,6 +52,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
 .bepbox{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:6px}
 .beprow{display:flex;justify-content:space-between;padding:11px 15px;font-size:13.5px;border-top:1px solid var(--line)}
 .beprow:first-child{border-top:none;background:var(--bg)}.beprow .bk{color:var(--ink2)}.beprow b{font-variant-numeric:tabular-nums}
+.bignum{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:6px;background:var(--navyL,var(--bg))}
+.bignum b{font-size:26px;font-weight:800;color:var(--navy2,var(--navy));font-variant-numeric:tabular-nums}
+.bignum span{display:block;font-size:12px;color:var(--ink3);margin-top:4px}
+.scen{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:10px}
+.scenrow{display:grid;grid-template-columns:1.3fr 1fr 1fr;align-items:center;padding:11px 15px;font-size:13.5px;border-top:1px solid var(--line)}
+.scenrow:first-child{border-top:none}
+.scenrow.head{background:var(--bg);color:var(--ink3);font-size:11.5px;font-weight:700}
+.scenrow.on{background:var(--navyL,var(--bg))}.scenrow.on>span:first-child{font-weight:800;color:var(--ink)}
+.scenrow span:nth-child(2),.scenrow b{text-align:right;font-variant-numeric:tabular-nums}
+.scenrow b{font-weight:800}
 .foot{margin-top:34px;font-size:11px;color:var(--ink3);border-top:1px solid var(--line);padding-top:14px;line-height:1.7}
 .pending{border:1px dashed var(--line);border-radius:12px;padding:16px;color:var(--ink2);font-size:13px;margin-top:6px}
 @media(max-width:640px){.tiles{grid-template-columns:1fr}.rhead h1{font-size:24px}}
@@ -105,9 +115,14 @@ function render(){
     S.push([v,`업종 폐업률 <b>${cr}%</b> — ${v>0?'낮음(안전)':v<0?'높음(위험)':'보통'}`]); }
   const cogs=i.cogs/100, rentCost=(+document.getElementById('p-rent').value||Math.round(RENT.rent*area*3.3)), laborCost=staff*250, etc=(i.etc||150);
   const fixed=rentCost+laborCost+etc, bep=fixed/(1-cogs);
-  const med=i.p50, profit=Math.round(med*(1-cogs)-fixed);
-  { const v=profit>0?(profit>258?1:0):-1; score+=v;
-    S.push([v,`중위매출 기준 월 순이익 <b>${profit>=0?'':'−'}${won(Math.abs(profit))}</b> — ${profit<=0?'적자 구간':profit>258?'전국평균 이상':'평균 이하'}`]); }
+  const prof=q=>Math.round(q*(1-cogs)-fixed);
+  const pLow=prof(i.p25), pMid=prof(i.p50), pHigh=prof(i.p75);   // 하위25% / 중위 / 상위25%
+  const unit=(SALES&&SALES.ind[ind]?SALES.ind[ind].unit:i.unit); // 객단가(원)
+  const needDay=Math.round(bep*10000/unit/26);                    // 하루 필요 객수(월 26 영업일)
+  const MINWAGE=215; // 2026 최저임금 월 환산(약, 209h) — 사장 본인 노동의 최소 보상선
+  // 신호는 '보수(하위25%)' 기준 — 신규 점포는 상권 평균 이하에서 시작하므로 과대판정 방지
+  { const v=pLow>MINWAGE?1:pLow>0?0:-1; score+=v;
+    S.push([v,`보수(하위25% 매출) 월 순이익 <b>${pLow>=0?'':'−'}${won(Math.abs(pLow))}</b> — ${pLow<=0?'적자 구간':pLow>MINWAGE?'최저임금 환산(월 215만) 이상':'최저임금에도 못 미침'}`]); }
   let cls,tag,head;
   if(score>=2){cls='g';tag='긍정적';head='통계상 해볼 만한 조합입니다';}
   else if(score<=-2){cls='b';tag='주의';head='통계상 신중해야 할 조합입니다';}
@@ -136,17 +151,24 @@ function render(){
   <div class="sec"><h3>업종 진단 · ${ind}</h3><div class="tiles">
     <div class="tile"><div class="l">업종 폐업률</div><div class="v">${STORES&&STORES.ind[ind]?STORES.ind[ind].close_rate+'%':'—'}</div><div class="s">${STORES&&STORES.ind[ind]?'점포 '+num(STORES.ind[ind].stores)+'개':'수집 대기'}</div></div>
     <div class="tile"><div class="l">객단가(실측)</div><div class="v">${SALES&&SALES.ind[ind]?num(SALES.ind[ind].unit)+'원':num(i.unit)+'원'}</div><div class="s">${SALES?'카드 실적':'추정'}</div></div>
-    <div class="tile"><div class="l">중위 월매출</div><div class="v">${won(i.p50)}</div><div class="s">점포당 · 추정</div></div>
+    <div class="tile"><div class="l">상권 평균매출의 중위</div><div class="v">${won(i.p50)}</div><div class="s">점포 아닌 상권 평균 · 추정</div></div>
   </div>${salesLine?`<div class="pending" style="border-style:solid">${salesLine}</div>`:''}</div>
 
-  <div class="sec"><h3>손익분기 · 순이익 (내 조건: ${area}평 · 직원 ${staff}명)</h3>
+  <div class="sec"><h3>손익분기 시뮬레이션 (내 조건: ${area}평 · 직원 ${staff}명)</h3>
+    <div class="pending" style="border-style:solid;margin-bottom:8px;border-color:var(--navy2,var(--navy))">이 값은 <b>사업계획서용 예상손익이 아니라</b>, 입력 조건에 따른 <b>단순 시뮬레이션</b>입니다. 배달·카드 수수료, 4대보험, 공과금, 광고·소모품, 부가세, 권리금·대출이자, 사장님 본인 노동비용 등은 빠져 있어 실제 순이익은 더 낮을 수 있습니다.</div>
+    <div class="bignum">본전까지 하루 <b>${needDay.toLocaleString()}명</b><span>객단가 ${num(unit)}원 · 월 26일 영업 기준 · 사장님이 직접 셀 수 있는 유일한 숫자</span></div>
     <div class="bepbox">
       <div class="beprow"><span class="bk">월 고정비 (임대료+인건비+기타)</span><b>${won(fixed)}</b></div>
       <div class="beprow"><span class="bk">손익분기 매출 (원가율 ${i.cogs}%)</span><b>${won(bep)}</b></div>
-      <div class="beprow"><span class="bk">업종 중위매출</span><b>${won(med)}</b></div>
-      <div class="beprow" style="background:var(--bg)"><span class="bk" style="font-weight:800;color:var(--ink)">예상 월 순이익</span><b style="color:${profit>=0?'var(--good)':'var(--bad)'};font-size:15px">${profit>=0?'':'−'}${won(Math.abs(profit))}</b></div>
     </div>
-    <div class="pending" style="border-style:solid;margin-top:10px">전국 평균 영업이익(월 258만)과 비교: <b style="color:var(--ink)">${profit-258>=0?'+':'−'}${won(Math.abs(profit-258))}</b> ${profit-258>=0?'많음':'적음'}.</div></div>
+    <div class="scen">
+      <div class="scenrow head"><span>시나리오</span><span>상권 평균매출</span><span>월 순이익</span></div>
+      <div class="scenrow on"><span>보수 (하위 25%) · 기본</span><span>${won(i.p25)}</span><b style="color:${pLow>=0?'var(--good)':'var(--bad)'}">${pLow>=0?'':'−'}${won(Math.abs(pLow))}</b></div>
+      <div class="scenrow"><span>기본 (중위)</span><span>${won(i.p50)}</span><b style="color:${pMid>=0?'var(--good)':'var(--bad)'}">${pMid>=0?'':'−'}${won(Math.abs(pMid))}</b></div>
+      <div class="scenrow"><span>낙관 (상위 25%)</span><span>${won(i.p75)}</span><b style="color:${pHigh>=0?'var(--good)':'var(--bad)'}">${pHigh>=0?'':'−'}${won(Math.abs(pHigh))}</b></div>
+    </div>
+    <div class="pending" style="border-style:solid;margin-top:10px">신규 점포는 통상 <b>상권 평균 이하</b>에서 시작하므로 <b>보수(하위 25%)를 기본</b>으로 봅니다. 위 매출은 개별 점포가 아니라 '<b>상권 평균매출의 분위값</b>'이라 실제와 다를 수 있습니다.</div>
+    <div class="pending" style="border-style:solid;margin-top:8px">전국 평균 영업이익 <b>월 258만</b>과 비교(보수 기준): <b style="color:var(--ink)">${pLow-258>=0?'+':'−'}${won(Math.abs(pLow-258))}</b> ${pLow-258>=0?'많음':'적음'}. <span style="color:var(--ink3)">※ 이 258만은 <b>지금 살아있는</b> 사업장만의 평균(폐업한 곳은 미포함, 생존자 편향)이고 <b>사장님 본인 인건비는 빠져</b> 있습니다. 최저임금 환산 근로소득(월 약 215만)과도 비교해 "이 돈 벌려고 이만큼 일하는가"를 함께 보세요.</span></div></div>
 
   <div class="sec"><h3>매출예측</h3><div class="pending" style="border-style:solid">${fcLine}</div></div>
 
