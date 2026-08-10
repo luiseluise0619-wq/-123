@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 :root{
-  --bg:#F5F4F0;--panel:#FFFFFF;--panel2:#EFEFEA;--ink:#111112;--ink2:#6E6E73;--ink3:#A1A1A6;
+  --bg:#F5F4F0;--panel:#FFFFFF;--panel2:#EFEFEA;--ink:#111112;--ink2:#6E6E73;--ink3:#8E8E93;
   --line:#EAEAE5;--line2:#DCDCD6;--navy:#1D1D1F;--navy2:#1F6FEB;--navyL:#DDE7F8;
   --sh:0 1px 2px rgba(28,28,30,.045),0 12px 30px rgba(28,28,30,.06);
   --good:#1F7A4D;--goodL:rgba(31,122,77,.10);--bad:#B3503C;--winL:rgba(31,111,235,.10);
@@ -27,7 +27,9 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
 .pdfbtn:hover{transform:translateY(-1px);box-shadow:0 4px 13px rgba(18,23,33,.24)}
 .pick{display:flex;gap:12px;flex-wrap:wrap;padding:26px 0 8px;align-items:end}
 .pick .f label{font-size:11px;font-weight:700;color:var(--ink2);display:block;margin-bottom:5px}
-.pick select{font:inherit;font-size:14px;font-weight:600;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);min-width:130px}
+.pick select{font:inherit;font-size:14px;font-weight:600;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--panel);color:var(--ink);min-width:130px;outline:none;transition:border-color .15s,box-shadow .15s}
+.pick select:hover{border-color:var(--ink3)}
+.pick select:focus{border-color:var(--navy2);box-shadow:0 0 0 3px var(--navyL)}
 .vs{font-weight:800;color:var(--ink3);padding-bottom:9px}
 .reco{margin:18px 0;border-radius:16px;padding:20px 22px;border:1px solid var(--line);background:var(--navyL)}
 .reco .t{font-size:12px;font-weight:800;color:var(--navy2);letter-spacing:.03em}
