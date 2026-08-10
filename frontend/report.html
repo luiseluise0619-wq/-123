@@ -142,7 +142,7 @@ function render(){
   const sc=v=>v>0?'var(--good)':v<0?'var(--bad)':'var(--ink3)';
   const H=`
   <div class="rhead"><div class="k">상권 진단 리포트 · 공공데이터 기반</div>
-    <h1>${gu} · ${ind}</h1><div class="date">${new Date().toLocaleDateString('ko-KR')} 생성 · 기준 ${DATA.quarter}</div></div>
+    <h1>${gu} · ${ind}</h1><div class="date">${new Date().toLocaleDateString('ko-KR')} 생성 · <b>기준시점은 지표마다 다릅니다</b>(폐업 2024년 · 임대료 ${DATA.quarter} · 유동 ${POP?POP.stdr_date:'수집 대기'} 등) — 각 항목에 표기</div></div>
   ${redFlag?`<div class="redflag">${redFlag}</div>`:''}
   <div class="verdict w"><span class="tag">판단 재료 · 공개 통계 기반</span><h2>결론은 합치지 않습니다 — 신호를 그대로 봅니다</h2>
     ${badges?`<div class="badges">${badges}</div>`:''}
@@ -151,8 +151,8 @@ function render(){
 
   <div class="sec"><h3>지역 진단 · ${gu}</h3><div class="tiles">
     <div class="tile"><div class="l">2024 폐업</div><div class="v">${num(g.y2024)}</div><div class="s ${g.trend>=0?'up':'dn'}">${g.trend>=0?'▲':'▼'} 2년 ${Math.abs(g.trend)}%</div></div>
-    <div class="tile"><div class="l">유동인구</div><div class="v">${POP&&POP.gu[gu]?num(POP.gu[gu].tot):'—'}</div><div class="s">${POP?POP.hour+'시 기준':'수집 대기'}</div></div>
-    <div class="tile"><div class="l">서울 임대료</div><div class="v">${RENT.rent.toFixed(1)}</div><div class="s">만원/㎡(서울평균) · 공실 ${RENT.vacancy||'—'}%</div></div>
+    <div class="tile"><div class="l">생활인구(체류)</div><div class="v">${POP&&POP.gu[gu]?num(POP.gu[gu].tot):'—'}</div><div class="s">${POP?POP.hour+'시 · '+POP.stdr_date:'수집 대기'} · 통행량 아님</div></div>
+    <div class="tile"><div class="l">서울 임대료</div><div class="v">${RENT.rent.toFixed(1)}</div><div class="s">만원/㎡(서울평균 ${DATA.quarter}) · 공실 ${RENT.vacancy||'—'}%(표본)</div></div>
   </div></div>
 
   <div class="sec"><h3>업종 진단 · ${ind}</h3><div class="tiles">
@@ -167,7 +167,9 @@ function render(){
     <div class="bepbox">
       <div class="beprow"><span class="bk">월 고정비 (임대료+인건비+기타)</span><b>${won(fixed)}</b></div>
       <div class="beprow"><span class="bk">손익분기 매출 (원가율 ${i.cogs}%)</span><b>${won(bep)}</b></div>
+      <div class="beprow"><span class="bk">임대료 부담률 <span style="color:var(--ink3)">보수매출 대비</span></span><b style="color:${rentCost/i.p25>0.2?'var(--bad)':'var(--ink)'}">${Math.round(rentCost/i.p25*100)}%</b></div>
     </div>
+    <div class="pending" style="border-style:solid;margin-top:8px;font-size:12px">임대료 부담률 = 월 임대료 ÷ 보수(하위25%) 매출. <b>절대 적정선은 업종·원가구조마다 달라</b> 단일 기준으로 판단하지 말고 <b>같은 업종끼리 비교</b>하세요(외식업은 통상 10%대를 넘으면 부담이 큰 편).</div>
     <div class="scen">
       <div class="scenrow head"><span>시나리오</span><span>상권 평균매출</span><span>월 순이익</span></div>
       <div class="scenrow on"><span>보수 (하위 25%) · 기본</span><span>${won(i.p25)}</span><b style="color:${pLow>=0?'var(--good)':'var(--bad)'}">${pLow>=0?'':'−'}${won(Math.abs(pLow))}</b></div>
@@ -191,6 +193,7 @@ function init(){
   const q=new URLSearchParams(location.search);
   if(q.get('gu')&&DATA.gu[q.get('gu')])gs.value=q.get('gu');
   if(q.get('ind')&&DATA.ind[q.get('ind')])is.value=q.get('ind'); else is.value='한식음식점';
+  if(q.get('area')&&+q.get('area')>0)document.getElementById('p-area').value=+q.get('area');
   ['p-gu','p-ind','p-area','p-staff','p-rent'].forEach(id=>document.getElementById(id).oninput=render);
   ['p-gu','p-ind'].forEach(id=>document.getElementById(id).onchange=render);
   render();
