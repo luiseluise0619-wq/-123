@@ -41,24 +41,35 @@ def fnum(x):
     try: return float(x)
     except: return 0.0
 
-def fetch(start, end, qu=""):
-    url = f"{BASE}/{urllib.parse.quote(KEY)}/xml/{SERVICE}/{start}/{end}/"
+# 소득소비 서비스명 후보(정확한 명칭이 문서마다 달라, 응답되는 것을 자동 선택).
+# 실제로 데이터가 오는 서비스명을 찾으면 SERVICE 에 확정.
+SERVICE_CANDIDATES = [
+    "VwsmTrdarIncmCnsmpQq",   # 최초 시도(실패 확인됨)
+    "VwsmTrdarIcmCnsmpQq",    # Incm→Icm 축약형
+    "VwsmTrdarSelngIncmQq",
+    "VwsmTrdarIncomeConsumeQq",
+]
+
+def fetch(service, start, end, qu=""):
+    url = f"{BASE}/{urllib.parse.quote(KEY)}/xml/{service}/{start}/{end}/"
     if qu: url += f"{qu}/"
     req = urllib.request.Request(url, headers={"User-Agent":"sangkwon-collector"})
     with urllib.request.urlopen(req, timeout=45) as r:
         return r.read().decode("utf-8")
 
-def latest_quarter():
+def resolve_service():
+    """응답되는 서비스명을 찾고, 그 서비스의 최신 분기를 반환."""
     y = datetime.date.today().year
-    for yy in (y, y-1, y-2):
-        for q in (4,3,2,1):
-            qu=f"{yy}{q}"
-            try:
-                rt=ET.fromstring(fetch(1,1,qu))
-                if rt.findtext(".//RESULT/CODE")=="INFO-000" and int(rt.findtext(".//list_total_count") or 0)>0:
-                    return qu, int(rt.findtext(".//list_total_count"))
-            except Exception: continue
-    return None, 0
+    for svc in SERVICE_CANDIDATES:
+        for yy in (y, y-1, y-2):
+            for q in (4,3,2,1):
+                qu=f"{yy}{q}"
+                try:
+                    rt=ET.fromstring(fetch(svc,1,1,qu))
+                    if rt.findtext(".//RESULT/CODE")=="INFO-000" and int(rt.findtext(".//list_total_count") or 0)>0:
+                        return svc, qu, int(rt.findtext(".//list_total_count"))
+                except Exception: continue
+    return None, None, 0
 
 def write_unavailable(reason):
     out={"service":SERVICE,"available":False,"reason":reason,
@@ -75,10 +86,10 @@ def main():
     if "--check" in sys.argv:
         print("SEOUL_API_KEY 존재 — 수집 가능"); return 0
 
-    qu, total = latest_quarter()
+    svc, qu, total = resolve_service()
     if not qu:
-        write_unavailable("최신 분기 탐색 실패"); return 2
-    print(f"최신 분기 {qu} · 총 {total:,}행")
+        write_unavailable("서비스명/분기 탐색 실패 — 후보 서비스명이 모두 응답 없음(정확한 소득소비 서비스명 필요)"); return 2
+    print(f"서비스 {svc} · 최신 분기 {qu} · 총 {total:,}행")
 
     inc_sum=0.0; inc_n=0
     spend=[0.0]*len(SPEND)
@@ -86,7 +97,7 @@ def main():
     for s in range(1, total+1, step):
         e=min(s+step-1, total)
         for attempt in range(4):
-            try: xml=fetch(s,e,qu); break
+            try: xml=fetch(svc,s,e,qu); break
             except Exception:
                 if attempt==3: raise
                 time.sleep(2*(attempt+1))
@@ -105,7 +116,7 @@ def main():
 
     spend_out=[{"name":n,"pct":round(100*spend[i]/tot_spend,1) if tot_spend>0 else 0.0}
                for i,(n,_) in enumerate(SPEND)]
-    out={"service":SERVICE,"quarter":qu,"available":True,
+    out={"service":svc,"quarter":qu,"available":True,
          "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d"),
          "income_avg":round(inc_sum/inc_n) if inc_n else None,
          "spend":spend_out}
