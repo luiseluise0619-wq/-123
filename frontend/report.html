@@ -123,7 +123,7 @@ function render(){
     S.push([v,`업종 폐업률 <b>${cr}%</b> — ${v>0?'낮음(안전)':v<0?'높음(위험)':'보통'}`,'업종 폐업률']); }
   // 경쟁강도: 점포당 배후 생활인구 = 생활인구 ÷ (그 자치구 그 업종 점포수). 실측 점포수(store_gu_ind) 있을 때만.
   if(STOREGU&&STOREGU.gu&&STOREGU.gu[gu]&&STOREGU.gu[gu].ind&&STOREGU.gu[gu].ind[ind]&&POP&&POP.gu[gu]){
-    const st=STOREGU.gu[gu].ind[ind].stores;
+    const si=STOREGU.gu[gu].ind[ind], st=(si.stores||0)+(si.fr||0);  // 총점포=일반+프랜차이즈
     if(st>0){ const per=Math.round(POP.gu[gu].tot/st);
       // 배후가 두터울수록(=점포당 사람 많을수록) 경쟁 여유. 서울 분위로 판단하지 않고 값+맥락만.
       S.push([0,`경쟁강도 — 점포당 배후 생활인구 <b>${num(per)}명</b> (${gu} ${ind} 점포 ${num(st)}개 기준) — 클수록 나눠먹을 사람이 많음`,'경쟁강도']); }
