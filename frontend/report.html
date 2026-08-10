@@ -4,19 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>상권 진단 리포트</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 :root{
-  --bg:#F7F8FA;--panel:#FFFFFF;--ink:#0F172A;--ink2:#64748B;--ink3:#94A3B8;
-  --line:#E5E7EB;--navy:#1E3A5F;--navy2:#2A78D6;--navyL:#EAF0F7;--r:14px;
-  --sh:0 1px 2px rgba(16,24,40,.04),0 4px 16px rgba(16,24,40,.05);
+  --bg:#F4F6F9;--panel:#FFFFFF;--panel2:#EEF1F6;--ink:#121722;--ink2:#59636F;--ink3:#95A0AD;
+  --line:#E4E8EF;--line2:#D4DAE3;--navy:#16202E;--navy2:#2B62C4;--navyL:#E9F0FB;--r:14px;
+  --sh:0 1px 2px rgba(18,23,33,.05),0 12px 30px rgba(18,23,33,.055);
   --good:#15803D;--goodL:rgba(21,128,61,.10);--warn:#B45309;--warnL:rgba(180,83,9,.10);--bad:#B91C1C;--badL:rgba(185,28,28,.10);
   --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){
-  --bg:#0B0E13;--panel:#141922;--ink:#F1F5F9;--ink2:#94A3B8;--ink3:#64748B;--line:#232B36;--navy:#6BA1E0;--navy2:#3987E5;--navyL:#182230;--sh:0 4px 16px rgba(0,0,0,.35);
+  --bg:#0C0F14;--panel:#141922;--panel2:#1B222C;--ink:#E9EEF5;--ink2:#98A4B3;--ink3:#5E6A78;--line:#232B36;--line2:#2E3846;--navy:#5E93E8;--navy2:#7BA8E0;--navyL:#152232;--sh:0 4px 16px rgba(0,0,0,.35);
   --good:#4ade80;--goodL:rgba(74,222,128,.12);--warn:#fbbf24;--warnL:rgba(251,191,36,.12);--bad:#f87171;--badL:rgba(248,113,113,.12);}}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",Inter,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.55}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;font-feature-settings:"tnum" 1;letter-spacing:-.01em;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.55}
 .wrap{max-width:860px;margin:0 auto;padding:0 22px}
 .top{border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:10}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}

@@ -4,21 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>상권 인텔리전스 · 지도</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 :root{
-  --bg:#F7F8FA;--panel:#FFFFFF;--ink:#111827;--ink2:#6B7280;--ink3:#9CA3AF;
-  --line:#E5E7EB;--navy:#1E3A5F;--navy2:#2E5A8F;--r:14px;
-  --good:#15803D;--warn:#B45309;--bad:#B91C1C;
-  --sh:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  --bg:#F4F6F9;--panel:#FFFFFF;--panel2:#EEF1F6;--ink:#121722;--ink2:#59636F;--ink3:#95A0AD;
+  --line:#E4E8EF;--line2:#D4DAE3;--navy:#16202E;--navy2:#2B62C4;--navyL:#E9F0FB;--r:15px;
+  --good:#157A4D;--warn:#A96E15;--bad:#C0392B;
+  --sh:0 1px 2px rgba(18,23,33,.05),0 12px 30px rgba(18,23,33,.055);
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){
-  --bg:#0E1116;--panel:#161A20;--ink:#F3F4F6;--ink2:#9CA3AF;--ink3:#6B7280;
-  --line:#242A32;--navy:#5B8FD6;--navy2:#7BA8E0;--sh:0 1px 3px rgba(0,0,0,.4);
+  --bg:#0C0F14;--panel:#141922;--panel2:#1B222C;--ink:#E9EEF5;--ink2:#98A4B3;--ink3:#5E6A78;
+  --line:#232B36;--line2:#2E3846;--navy:#0F1620;--navy2:#5E93E8;--navyL:#152232;
+  --good:#4FB782;--warn:#E0A84A;--bad:#E36A5A;--sh:0 1px 3px rgba(0,0,0,.5);
 }}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",Inter,sans-serif;
-  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden;
+  font-feature-settings:"tnum" 1;letter-spacing:-.01em}
 /* SHELL: sidebar | (map / analytics) */
 .wrap{display:grid;grid-template-columns:68px 1fr;height:100vh}
 .sidebar{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;

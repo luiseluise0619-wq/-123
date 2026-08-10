@@ -4,24 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>상권 데이터 라이브러리 · 서울 자영업</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 :root{
-  --bg:#F7F8FA;--panel:#FFFFFF;--ink:#0F172A;--ink2:#64748B;--ink3:#94A3B8;
-  --line:#E5E7EB;--navy:#1E3A5F;--navy2:#2A78D6;--navyL:#EAF0F7;--r:16px;
-  --sh:0 1px 2px rgba(16,24,40,.04),0 4px 16px rgba(16,24,40,.05);
+  --bg:#F4F6F9;--panel:#FFFFFF;--panel2:#EEF1F6;--ink:#121722;--ink2:#59636F;--ink3:#95A0AD;
+  --line:#E4E8EF;--line2:#D4DAE3;--navy:#16202E;--navy2:#2B62C4;--navyL:#E9F0FB;--r:16px;
+  --sh:0 1px 2px rgba(18,23,33,.05),0 12px 30px rgba(18,23,33,.055);
   --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;
   --b0:#cde2fb;--b1:#9ec5f4;--b2:#6da7ec;--b3:#3987e5;--b4:#256abf;--b5:#184f95;--b6:#0d366b;
   --w0:#fbdcdc;--w1:#f4abab;--w2:#ec7c7c;--w3:#e34948;--w4:#c22f2f;--w5:#9a2424;--w6:#6f1a1a;
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){
-  --bg:#0B0E13;--panel:#141922;--ink:#F1F5F9;--ink2:#94A3B8;--ink3:#64748B;
-  --line:#232B36;--navy:#6BA1E0;--navy2:#3987E5;--navyL:#182230;--sh:0 4px 16px rgba(0,0,0,.35);
+  --bg:#0C0F14;--panel:#141922;--panel2:#1B222C;--ink:#E9EEF5;--ink2:#98A4B3;--ink3:#5E6A78;
+  --line:#232B36;--line2:#2E3846;--navy:#5E93E8;--navy2:#7BA8E0;--navyL:#152232;--sh:0 4px 16px rgba(0,0,0,.35);
   --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;
   --b0:#12283f;--b1:#1c3a5f;--b2:#1c5cab;--b3:#256abf;--b4:#3987e5;--b5:#5598e7;--b6:#86b6ef;
   --w0:#3a1717;--w1:#5c1c1c;--w2:#8a2727;--w3:#c22f2f;--w4:#e34948;--w5:#ec7c7c;--w6:#f4abab;
 }}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",Inter,sans-serif;
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;font-feature-settings:"tnum" 1;letter-spacing:-.01em;
   background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
 .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
 .top{border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:10}
