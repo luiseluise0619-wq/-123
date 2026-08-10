@@ -80,9 +80,10 @@ def main():
         if not ind: continue
         d = gu.setdefault(g, {"ind":{}, "total":0})
         e = d["ind"].setdefault(ind, {"stores":0,"closed":0,"fr":0})
-        st = int(fnum(r.get("stor_co")))
+        # stor_co=일반(비프랜차이즈) 점포수, frc_stor_co=프랜차이즈 점포수(서로 배타). 총점포=stores+fr.
+        st = int(fnum(r.get("stor_co"))); frc = int(fnum(r.get("frc_stor_co")))
         e["stores"] += st; e["closed"] += int(fnum(r.get("clsbiz_stor_co")))
-        e["fr"] += int(fnum(r.get("frc_stor_co"))); d["total"] += st
+        e["fr"] += frc; d["total"] += st + frc
 
     if not gu:
         json.dump({"available":False,"reason":"상권→자치구 매핑 결과 0(좌표계/컬럼 확인)","quarter":q,

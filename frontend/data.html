@@ -128,7 +128,7 @@ const won=n=>{n=+n;return n>=1e8?(n/1e8).toFixed(1)+'조':n>=10000?(n/10000).toF
 const num=n=>Math.round(+n).toLocaleString();
 // 분기코드 정규화: "20261" → "2026 1분기" (이미 포맷된 값은 그대로)
 const qfmt=q=>{q=String(q||'');return /^\d{5}$/.test(q)?q.slice(0,4)+' '+q.slice(4)+'분기':q;};
-let POP=null,SALES=null,STORES=null,FORECAST=null,REPOP=null,WORK=null,INCOME=null;
+let POP=null,SALES=null,STORES=null,FORECAST=null,REPOP=null,WORK=null,INCOME=null,SALESGU=null,STOREGU=null;
 
 function rampBars(rows,fmt,ramp){
   const vals=rows.map(r=>r[1]),max=Math.max(...vals)||1,min=Math.min(...vals);
@@ -337,30 +337,68 @@ function tIncome(){
     src:'서울시 상권분석서비스(소득소비-상권) API · '+qfmt(c.quarter)+' · 소득=평균, 소비=구성비.'};
 }
 function tSales(){
-  if(!SALES)return {pending:'추정매출(서울 상권분석 API) 수집 대기 — 매주 자동 갱신됩니다.'};
-  const names=Object.keys(SALES.ind), def=names.includes('한식음식점')?'한식음식점':names[0];
-  return {exec:`업종마다 언제·누가 사는지 다릅니다. 카드 실적 기반 실측(${qfmt(SALES.quarter)}).`,
-    insight:'아래에서 업종을 고르면 시간대·요일·성별·연령 매출과 실측 객단가가 그 업종 기준으로 바뀝니다.',
-    body:`<select class="sel" id="sales-ind" onchange="renderSales(this.value)"></select><div id="sales-body"></div>`,
-    src:'서울시 상권분석서비스(추정매출-상권) API. 일부 업종은 본사매출 합산으로 과대추정 가능.',
-    after:()=>{const sel=document.getElementById('sales-ind');sel.innerHTML=names.map(n=>`<option>${n}</option>`).join('');sel.value=def;renderSales(def);}};
+  if(!SALES && !SALESGU)return {pending:'추정매출(서울 상권분석 API) 수집 대기 — 매주 자동 갱신됩니다.'};
+  const gus=SALESGU?Object.keys(SALESGU.gu).sort((a,b)=>a.localeCompare(b,'ko')):[];
+  let names;
+  if(SALES){names=Object.keys(SALES.ind);}
+  else{const set=new Set();gus.forEach(g=>Object.keys(SALESGU.gu[g]).forEach(n=>set.add(n)));names=[...set].sort((a,b)=>a.localeCompare(b,'ko'));}
+  const def=names.includes('한식음식점')?'한식음식점':names[0];
+  const q=(SALES&&SALES.quarter)||(SALESGU&&SALESGU.quarter);
+  const hasAll=!!SALES, defGu=hasAll?'':(gus.includes('강남구')?'강남구':(gus[0]||''));
+  return {exec:`업종·자치구마다 언제·누가·얼마 사는지 다릅니다. 카드 실적 기반 실측(${qfmt(q)}).`,
+    insight:'업종을 고르면 시간대·요일·성별·연령·객단가가 바뀝니다. <b>자치구를 함께 고르면</b> 그 지역 실측값과 <b>상권별 점포당 월매출 밴드(하위25~상위25%)</b>까지 보여줘요 — 같은 업종도 지역에 따라 크게 갈립니다.',
+    body:`<div style="display:flex;gap:8px;flex-wrap:wrap">${gus.length?`<select class="sel" id="sales-gu" onchange="renderSales()">${hasAll?'<option value="">서울 전체</option>':''}${gus.map(g=>`<option${g===defGu?' selected':''}>${g}</option>`).join('')}</select>`:''}<select class="sel" id="sales-ind" onchange="renderSales()"></select></div><div id="sales-body"></div>`,
+    src:'서울시 상권분석서비스(추정매출-상권) API. 일부 업종은 본사매출 합산으로 과대추정 가능. 점포당 밴드는 상권별 분위(평균 아님).',
+    after:()=>{const sel=document.getElementById('sales-ind');sel.innerHTML=names.map(n=>`<option>${n}</option>`).join('');sel.value=def;renderSales();}};
 }
-window.renderSales=function(name){
-  const d=SALES.ind[name];if(!d)return;
+window.renderSales=function(){
+  const isel=document.getElementById('sales-ind'), gsel=document.getElementById('sales-gu');
+  if(!isel)return;
+  const name=isel.value, gu=gsel?gsel.value:'';
+  let d, band=null, srcNote='서울 전체', store=null;
+  if(gu && SALESGU && SALESGU.gu[gu] && SALESGU.gu[gu][name]){
+    const g=SALESGU.gu[gu][name];
+    d={tmzon:g.tmz,dow:g.dow,gender:[g.ml,g.fml],age:g.age,unit:g.unit,amt:g.amt_man*10000};
+    band=g.perstore_q; srcNote=`${gu} · 상권 ${g.n_trdar}곳 실측`;
+    if(STOREGU&&STOREGU.gu[gu]&&STOREGU.gu[gu].ind&&STOREGU.gu[gu].ind[name]){
+      const s0=STOREGU.gu[gu].ind[name], tot=(s0.stores||0)+(s0.fr||0);
+      store={stores:tot,close_rate:tot?+(s0.closed/tot*100).toFixed(1):null,fr_share:tot?+(s0.fr/tot*100).toFixed(1):null};
+    }
+  } else if(SALES && SALES.ind[name]){
+    d=SALES.ind[name];
+    if(gu)srcNote=`${gu}엔 이 업종 실측 표본이 없어 서울 전체로 표시`;
+    const st0=STORES&&STORES.ind[name];
+    if(st0)store={stores:st0.stores,close_rate:st0.close_rate,fr_share:st0.fr_share};
+  } else {
+    document.getElementById('sales-body').innerHTML=`<div class="note">${gu?gu+' · ':''}${name}: 이 조합의 실측 표본이 아직 없습니다. 다른 자치구·업종을 골라보세요.</div>`;return;
+  }
   const tmz=['0-6시','6-11','11-14','14-17','17-21','21-24'], dow=['월','화','수','목','금','토','일'];
   const ageR=[['10대',d.age[0]],['20대',d.age[1]],['30대',d.age[2]],['40대',d.age[3]],['50대',d.age[4]],['60대+',d.age[5]]];
-  const st=STORES&&STORES.ind[name];
+  const bandCard=band?`<div class="card" style="grid-column:1/-1"><h3><span class="dot" style="background:var(--s4)"></span>점포당 월매출 밴드 <span style="font-weight:600;color:var(--ink3)">(실측·상권별 분위)</span></h3><div class="unit">만원/월 · 같은 자치구·업종도 상권/입지로 갈림</div>${rampBars([['하위 25%',band[0]],['중위',band[1]],['상위 25%',band[2]]],v=>won(v),'b')}<div class="note">이 지역·업종은 상권에 따라 <b style="color:var(--ink)">${won(band[0])}~${won(band[2])}</b>로 갈립니다. 손익분기·순이익은 <b>보수적으로 하위 25%(${won(band[0])})</b>를 기준으로 잡는 걸 권합니다.</div></div>`:'';
+  const closeR=store?(store.close_rate!=null?store.close_rate:(store.closed!=null&&store.stores?+(store.closed/store.stores*100).toFixed(1):null)):null;
   document.getElementById('sales-body').innerHTML=`<div class="grid2">
     <div class="card"><h3><span class="dot" style="background:var(--s1)"></span>시간대별 매출</h3><div class="unit">% · 언제 팔리나</div>${lineChart(tmz,d.tmzon)}</div>
     <div class="card"><h3><span class="dot" style="background:var(--b4)"></span>요일별 매출</h3><div class="unit">%</div>${rampBars(dow.map((l,i)=>[l,d.dow[i]]),v=>v+'%','b')}</div>
     <div class="card"><h3><span class="dot" style="background:var(--s5)"></span>성별 구성</h3><div class="unit">매출 비중</div>${donut([['남성',d.gender[0]],['여성',d.gender[1]]],v=>v+'%')}</div>
-    <div class="card"><h3><span class="dot" style="background:var(--s3)"></span>연령대 구성</h3><div class="unit">매출 비중 · 연령별 색</div>${catBars(ageR,v=>v+'%')}</div></div>
-    <div class="note">실측 객단가 <b style="color:var(--ink)">${num(d.unit)}원</b> · 서울 전체 당월매출 <b style="color:var(--ink)">${won(Math.round(d.amt/10000))}</b>${st?` · 점포 <b style="color:var(--ink)">${num(st.stores)}개</b> · 폐업률 <b style="color:var(--w4)">${st.close_rate}%</b> · 프랜차이즈 ${st.fr_share}%`:''}</div>`;
+    <div class="card"><h3><span class="dot" style="background:var(--s3)"></span>연령대 구성</h3><div class="unit">매출 비중 · 연령별 색</div>${catBars(ageR,v=>v+'%')}</div>${bandCard}</div>
+    <div class="note">실측 객단가 <b style="color:var(--ink)">${num(d.unit)}원</b> · 당월매출 <b style="color:var(--ink)">${won(Math.round(d.amt/10000))}</b> <span style="color:var(--ink3)">(${srcNote})</span>${store?` · 점포 <b style="color:var(--ink)">${num(store.stores)}개</b>${closeR!=null?` · 폐업률 <b style="color:var(--w4)">${closeR}%</b>`:''}${store.fr_share!=null?` · 프랜차이즈 ${store.fr_share}%`:''}`:''}</div>`;
   animateFills();
 };
 function tStores(){
-  if(!STORES)return {pending:'점포·개폐업(서울 상권분석 API) 수집 대기 — 매주 자동 갱신됩니다.'};
-  const si=Object.entries(STORES.ind);
+  if(!STORES && !STOREGU)return {pending:'점포·개폐업(서울 상권분석 API) 수집 대기 — 매주 자동 갱신됩니다.'};
+  let IND,QT,SRC;
+  if(STORES){IND=STORES.ind;QT=STORES.quarter;SRC='서울시 상권분석서비스(점포-상권) API. 폐업률은 점포수 가중 실측값.';}
+  else{
+    const agg={};
+    for(const g of Object.keys(STOREGU.gu)){const gi=(STOREGU.gu[g]&&STOREGU.gu[g].ind)||{};
+      for(const k of Object.keys(gi)){const v=gi[k],e=agg[k]||(agg[k]={stores:0,closed:0,fr:0});
+        e.stores+=v.stores||0;e.closed+=v.closed||0;e.fr+=v.fr||0;}}
+    // 원자료: stores=일반(비프랜차이즈) 점포수, fr=프랜차이즈 점포수(서로 배타) → 총점포=stores+fr
+    IND={};for(const k of Object.keys(agg)){const e=agg[k],tot=e.stores+e.fr;
+      IND[k]={stores:tot,close_rate:tot?+(e.closed/tot*100).toFixed(1):0,fr_share:tot?+(e.fr/tot*100).toFixed(1):0};}
+    QT=STOREGU.quarter;SRC='서울시 상권분석서비스(점포-상권) 자치구 집계. 총점포=일반+프랜차이즈, 폐업률=폐업/총점포, 프랜차이즈=프랜차이즈/총점포 (실측).';
+  }
+  const si=Object.entries(IND);
   const big=si.filter(([k,v])=>v.stores>=200);
   const closeTop=big.map(([k,v])=>[k,v.close_rate]).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const storeTop=si.map(([k,v])=>[k,v.stores]).sort((a,b)=>b[1]-a[1]).slice(0,10);
@@ -373,7 +411,7 @@ function tStores(){
     ['--s3',safe[1].close_rate+'%','폐업률 최저 업종',safe[0]],
     ['--b4',num(storeTop[0][1]),'점포 최다 업종',storeTop[0][0]],
     ['--s4',avgClose.toFixed(1)+'%','평균 폐업률','점포 200+ 업종']];
-  return {exec:`업종별 폐업률(위험)과 점포수(경쟁)를 함께 봐야 합니다 — ${qfmt(STORES.quarter)} 서울, 총 ${num(totStores)}개 점포.`,
+  return {exec:`업종별 폐업률(위험)과 점포수(경쟁)를 함께 봐야 합니다 — ${qfmt(QT)} 서울, 총 ${num(totStores)}개 점포.`,
     insight:`좋은 업종은 <b>폐업률 낮고(안전)</b> 점포도 적당한 곳입니다. 오른쪽 위(점포 많고 폐업률도 높은)는 <b>경쟁 과열 + 위험</b> 조합. 폐업률 최고는 <b>${closeTop[0][0]}(${closeTop[0][1]}%)</b>, 최저는 <b>${safe[0]}(${safe[1].close_rate}%)</b>로 업종만 바꿔도 위험이 크게 달라집니다.`,
     body:`<div class="stats" style="grid-template-columns:repeat(4,1fr)">${stat.map(x=>`<div class="stat" style="--sbar:var(${x[0]})"><div class="n">${x[1]}</div><div class="l">${x[2]}</div><div class="s">${x[3]}</div></div>`).join('')}</div>
       <div class="grid2 sect">
@@ -381,7 +419,7 @@ function tStores(){
       <div class="card"><h3><span class="dot" style="background:var(--w4)"></span>폐업률 높은 업종</h3><div class="unit">% · 점포 200+ · 진할수록 위험</div>${rampBars(closeTop,v=>v+'%','w')}</div>
       <div class="card"><h3><span class="dot" style="background:var(--b4)"></span>점포 많은 업종</h3><div class="unit">개 · 경쟁 강도</div>${rampBars(storeTop,num,'b')}</div>
       <div class="card"><h3><span class="dot" style="background:var(--s4)"></span>프랜차이즈 비중</h3><div class="unit">% · 본사 브랜드 점유</div>${catBars(frTop,v=>v+'%')}</div></div>`,
-    src:'서울시 상권분석서비스(점포-상권) API. 폐업률은 점포수 가중 실측값.'};
+    src:SRC};
 }
 function tForecast(){
   if(!FORECAST)return {pending:'매출예측 백테스트 대기 — 매출 이력 수집 후 자동 생성됩니다.'};
@@ -420,8 +458,8 @@ const TOPICS=[
   {id:'repop',ic:IC.home,c:'--s3',cat:'거주',t:'거주 인구',d:'동네 주민 연령·성별 구성. 배후수요 성격',src:'서울 상주인구',fn:tRepop,on:()=>!!REPOP},
   {id:'work',ic:IC.work,c:'--s4',cat:'직장',t:'직장 인구',d:'출근하는 직장인 연령·성별. 점심·퇴근 수요',src:'서울 직장인구',fn:tWork,on:()=>!!WORK},
   {id:'income',ic:IC.coin,c:'--s2',cat:'소득',t:'소득·소비',d:'평균 월소득과 지출 카테고리 구성비',src:'서울 소득소비',fn:tIncome,on:()=>!!INCOME},
-  {id:'sales',ic:IC.card,c:'--b4',cat:'소비',t:'소비패턴·매출',d:'업종별 시간대·요일·연령 매출과 실측 객단가',src:'서울 추정매출',fn:tSales,on:()=>!!SALES},
-  {id:'stores',ic:IC.store,c:'--w4',cat:'경쟁',t:'업종 위험도·경쟁',d:'업종별 폐업률·점포수·프랜차이즈 비중',src:'서울 점포',fn:tStores,on:()=>!!STORES},
+  {id:'sales',ic:IC.card,c:'--b4',cat:'소비',t:'소비패턴·매출',d:'자치구·업종별 시간대·요일·연령 매출과 점포당 매출 밴드',src:'서울 추정매출',fn:tSales,on:()=>!!(SALES||SALESGU)},
+  {id:'stores',ic:IC.store,c:'--w4',cat:'경쟁',t:'업종 위험도·경쟁',d:'업종별 폐업률·점포수·프랜차이즈 비중',src:'서울 점포',fn:tStores,on:()=>!!(STORES||STOREGU)},
   {id:'forecast',ic:IC.chart,c:'--b4',cat:'예측',t:'매출예측',d:'관성을 이기는 업종만. 나머지는 손익분기',src:'백테스트',fn:tForecast,on:()=>!!FORECAST},
 ];
 
@@ -462,7 +500,7 @@ function openFromHash(){
 }
 window.addEventListener('hashchange',openFromHash);
 function loadJSON(f){return fetch(f,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
-Promise.all([loadJSON('livepop_gu.json'),loadJSON('sales_by_industry.json'),loadJSON('stores_by_industry.json'),loadJSON('sales_forecast.json'),loadJSON('repop.json'),loadJSON('workpop.json'),loadJSON('income.json')]).then(([p,s,t,f,r,w,c])=>{
+Promise.all([loadJSON('livepop_gu.json'),loadJSON('sales_by_industry.json'),loadJSON('stores_by_industry.json'),loadJSON('sales_forecast.json'),loadJSON('repop.json'),loadJSON('workpop.json'),loadJSON('income.json'),loadJSON('sales_gu_ind.json'),loadJSON('store_gu_ind.json')]).then(([p,s,t,f,r,w,c,sg,tg])=>{
   if(p&&p.gu&&Object.keys(p.gu).length)POP=p;
   if(s&&s.ind&&Object.keys(s.ind).length)SALES=s;
   if(t&&t.ind&&Object.keys(t.ind).length)STORES=t;
@@ -470,6 +508,8 @@ Promise.all([loadJSON('livepop_gu.json'),loadJSON('sales_by_industry.json'),load
   if(r&&r.tot)REPOP=r;
   if(w&&w.available&&w.tot)WORK=w;
   if(c&&c.available&&(c.income_avg||(c.spend&&c.spend.length)))INCOME=c;
+  if(sg&&sg.available&&sg.gu&&Object.keys(sg.gu).length)SALESGU=sg;
+  if(tg&&tg.available&&tg.gu&&Object.keys(tg.gu).length)STOREGU=tg;
 }).finally(()=>{buildLibrary();openFromHash();});
 </script>
 </body>
