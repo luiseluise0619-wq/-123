@@ -209,7 +209,7 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
     </div>
     <div class="mapcol">
       <div class="maptitle">
-        <b>창업 전, 이 자리·업종이 될지 공공데이터로 확인</b><span id="mt-sub">지어낸 숫자 없음 · 자치구 검색하거나 지도를 클릭하세요 · <a href="#" onclick="document.getElementById('mapfail').classList.toggle('on');return false" style="color:var(--navy2);font-weight:600">지도 안 보이면?</a></span>
+        <b>창업 전, 이 자리·업종이 될지 공공데이터로 확인</b><span id="mt-sub">지어낸 숫자 없음 · 자치구 클릭 시 <b>행정동 경계</b>까지 표시 · <a href="#" onclick="document.getElementById('mapfail').classList.toggle('on');return false" style="color:var(--navy2);font-weight:600">지도 안 보이면?</a></span>
         <div class="searchbox">
           <svg viewBox="0 0 24 24" class="sicon"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="gu-search" list="gu-list" placeholder="자치구 검색 (예: 강남구)" autocomplete="off">
@@ -479,7 +479,7 @@ const METRICS={
   parkd:{get:g=>((PARK&&PARK.gu[g.name]?PARK.gu[g.name].lots:0))/gArea(g),label:'주차 밀도',unit:'곳/㎢',type:'seq',rev:true},
   pop:{get:g=>(POP&&POP.gu[g.name]?POP.gu[g.name].tot:0),label:'생활인구(체류)',unit:'명',type:'seq',rev:true}
 };
-let circles=[], polygons=[], curMetric='trend', GEO=null;
+let circles=[], polygons=[], curMetric='trend', GEO=null, DONG=null, dongShapes=[];
 // 순차(single-hue) 램프: 규모/밀도용
 const RAMP=['#EAF0F7','#C7D9EC','#9DBEE0','#6E9FD4','#4A82C3','#2E5A8F','#1E3A5F'];
 // diverging(두 극 + 중립): 증감률용 — 감소=파랑(안정), 증가=빨강(위험)
@@ -541,12 +541,33 @@ function redraw(metricKey){
   document.querySelectorAll('.lbtn').forEach(b=>b.classList.toggle('on',b.dataset.metric===metricKey));
 }
 let MAP=null;
+// 행정동 drill-down: 선택 자치구의 행정동 경계를 얇은 선으로 오버레이
+function clearDongs(){ dongShapes.forEach(s=>s.setMap(null)); dongShapes=[]; }
+function drawDongs(gu){
+  if(!MAP||!DONG||!DONG.features)return; clearDongs();
+  DONG.features.filter(f=>f.properties.gu===gu).forEach(f=>{
+    const parts=f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[f.geometry.coordinates];
+    let cx=0,cy=0,cn=0;
+    parts.forEach(poly=>{
+      const ring=poly[0]; if(!ring)return;
+      const path=ring.map(pt=>new kakao.maps.LatLng(pt[1],pt[0]));
+      const p=new kakao.maps.Polygon({path,strokeWeight:1,strokeColor:'#0F1826',strokeOpacity:.5,
+        fillColor:'#ffffff',fillOpacity:.04});
+      p.setMap(MAP); dongShapes.push(p);
+      ring.forEach(pt=>{cx+=pt[0];cy+=pt[1];cn++;});
+    });
+    if(cn){ const ov=new kakao.maps.CustomOverlay({map:MAP,yAnchor:.5,
+      position:new kakao.maps.LatLng(cy/cn,cx/cn),
+      content:`<div style="font:600 10px -apple-system;color:#0F1826;background:rgba(255,255,255,.72);padding:0 4px;border-radius:3px;pointer-events:none;white-space:nowrap">${f.properties.dong}</div>`});
+      dongShapes.push(ov); }
+  });
+}
 function selectGu(name){
   if(!DATA.gu[name])return false;
   selected=name; renderPanel(name);
   document.dispatchEvent(new CustomEvent('gu-selected',{detail:name}));
   const g=DATA.gu[name];
-  if(MAP) MAP.panTo(new kakao.maps.LatLng(g.lat,g.lng));
+  if(MAP){ MAP.panTo(new kakao.maps.LatLng(g.lat,g.lng)); MAP.setLevel(6); drawDongs(name); }
   // 선택 강조: 잠깐 테두리 굵게
   const hp=polygons.find(c=>c.name===name);
   if(hp){hp.poly.setOptions({strokeWeight:3.5,strokeColor:'#111827',strokeOpacity:1});
@@ -567,7 +588,7 @@ function initSearch(){
     const v=inp.value.trim(); if(!DATA.gu[v]){const m=Object.keys(DATA.gu).find(n=>n.includes(v));if(m){inp.value=m;}}
     run();}});
   inp.addEventListener('input',()=>{clr.style.display=inp.value?'block':'none';});
-  clr.onclick=()=>{inp.value='';clr.style.display='none';selected=null;renderPanel(null);inp.focus();};
+  clr.onclick=()=>{inp.value='';clr.style.display='none';selected=null;renderPanel(null);clearDongs();if(MAP)MAP.setLevel(8);inp.focus();};
 }
 function labelOverlay(map,g,name){
   new kakao.maps.CustomOverlay({map,position:new kakao.maps.LatLng(g.lat,g.lng),yAnchor:.5,
@@ -690,7 +711,9 @@ function boot(){
     if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
     else{document.getElementById('mapfail').classList.add('on');}
   };
-  loadJSON('seoul_gu.geojson').then(gj=>{GEO=gj; computeAreas(gj);}).finally(startMap);
+  Promise.all([loadJSON('seoul_gu.geojson'),loadJSON('seoul_dong.geojson')])
+    .then(([gj,dj])=>{GEO=gj; if(gj)computeAreas(gj); if(dj&&dj.features)DONG=dj;})
+    .finally(startMap);
 }
 </script>
 <!-- 카카오 지도: a3de8803a1a0c9388bbb205e62cf40c5 를 발급키로 교체하고, 콘솔에 배포 도메인 등록 -->
