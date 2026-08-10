@@ -28,10 +28,12 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
 .top{border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:10}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;cursor:pointer}
-.brand .m{width:28px;height:28px;border-radius:8px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px}
-.top a,.top button{font:inherit;font-size:13px;color:var(--navy2);text-decoration:none;font-weight:600;background:none;border:none;cursor:pointer}
+.brand .m{width:30px;height:30px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(18,23,33,.2);letter-spacing:-.02em}
+.top a,.top button{font:inherit;font-size:13px;color:var(--ink2);text-decoration:none;font-weight:700;background:none;border:none;cursor:pointer;transition:.15s;letter-spacing:-.01em}
+.top a:hover,.top button:hover{color:var(--navy2)}
 .topacts{display:flex;gap:16px;align-items:center}
-.pdfbtn{color:#fff!important;background:var(--navy)!important;padding:8px 14px;border-radius:9px}
+.pdfbtn{color:#fff!important;background:var(--navy)!important;padding:9px 16px;border-radius:10px;box-shadow:0 2px 8px rgba(18,23,33,.16);transition:.15s;letter-spacing:-.01em}
+.pdfbtn:hover{transform:translateY(-1px);box-shadow:0 4px 13px rgba(18,23,33,.24)}
 .hero{padding:48px 0 26px}
 .eyebrow{font-size:12px;font-weight:700;color:var(--navy2);letter-spacing:.06em;text-transform:uppercase}
 .hero h1{font-size:34px;font-weight:800;letter-spacing:-.02em;margin:12px 0 12px;line-height:1.15}
