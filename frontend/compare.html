@@ -61,6 +61,15 @@ td .sub{font-size:11px;color:var(--ink3);margin-top:2px}
   .top .wrap>div:last-child{width:100%;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .top a,.top button{font-size:12.5px;white-space:nowrap}.pdfbtn{padding:7px 13px}}
 @media print{.top{position:static}.pick,.pdfbtn,.top a{display:none}body{background:#fff}}
+/* ── 폴리시: 진입 모션 · 정제 타이포 · 카드 호버 ── */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
+body{animation:fadeIn .35s ease both}
+.tradeoff{animation:riseIn .5s cubic-bezier(.2,.7,.3,1) both}
+h1,.htitle,.rhead h1{letter-spacing:-.03em;text-wrap:pretty}
+.tcard{transition:transform .16s,box-shadow .16s}
+.tcard:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(28,28,30,.10)}
 </style>
 </head>
 <body>

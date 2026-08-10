@@ -78,6 +78,13 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
   .top .wrap>div:last-child{width:100%;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .top a,.top button{font-size:12.5px;white-space:nowrap}.pdfbtn{padding:7px 13px}}
 @media print{.top{position:static}.pick,.pdfbtn,.top a{display:none}body{background:#fff}.verdict,.tile,.bepbox{box-shadow:none;break-inside:avoid}.sec{break-inside:avoid}}
+/* ── 폴리시: 진입 모션 · 정제 타이포 · 카드 호버 ── */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
+body{animation:fadeIn .35s ease both}
+.rhead h1{letter-spacing:-.03em;text-wrap:pretty}
+.tile{transition:transform .16s,box-shadow .16s,border-color .16s}
+.tile:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(28,28,30,.10);border-color:var(--line2)}
 </style>
 </head>
 <body>
