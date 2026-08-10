@@ -247,8 +247,9 @@ function tRent(){
     body:`<div class="stats" style="grid-template-columns:repeat(4,1fr)">${stat.map(x=>`<div class="stat" style="--sbar:var(${x[0]})"><div class="n">${x[1]}</div><div class="l">${x[2]}</div><div class="s">${x[3]}</div></div>`).join('')}</div>
       <div class="grid2 sect">
       <div class="card"><h3><span class="dot" style="background:var(--s2)"></span>임대료 × 공실률 관계</h3><div class="unit">점=상권 · 초록 안전 → 빨강 위험</div>${scatter(pts,'임대료(만원/㎡)','공실률(%)','오른쪽 위일수록 비싸고 빈 점포 많음 = 주의. 색은 공실률 위험도.')}</div>
-      <div class="card"><h3><span class="dot" style="background:var(--s2)"></span>임대료 상위 상권</h3><div class="unit">만원/㎡ · 진할수록 비쌈</div>${rampBars(rentTop.map(x=>[x[0],x[1]]),v=>v.toFixed(1),'w')}</div></div>`,
-    src:'한국부동산원 상업용부동산 임대동향(국가승인통계, 분기) · 전국 '+rentArr.length+'개 상권.'};
+      <div class="card"><h3><span class="dot" style="background:var(--s2)"></span>임대료 상위 상권</h3><div class="unit">만원/㎡ · 진할수록 비쌈</div>${rampBars(rentTop.map(x=>[x[0],x[1]]),v=>v.toFixed(1),'w')}</div></div>
+      <div class="note">※ 공실률은 한국부동산원 <b>표본조사</b> 기준입니다 — 공실률 0%가 "그 상권 모든 건물에 빈 점포가 없다"는 뜻은 아니며, 조사 표본 안에서 공실이 관측되지 않았다는 의미입니다.</div>`,
+    src:'한국부동산원 상업용부동산 임대동향(국가승인통계·표본조사, 분기) · 전국 '+rentArr.length+'개 상권.'};
 }
 function tConsumer(){
   if(!POP)return {pending:'유동인구(서울 생활인구 API) 수집 대기 — 매주 자동 갱신되면 여기 채워집니다.'};
