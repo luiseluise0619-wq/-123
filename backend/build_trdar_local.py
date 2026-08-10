@@ -36,45 +36,15 @@ def read_csv_any(path):
             continue
     raise RuntimeError("인코딩 판별 실패: "+path)
 
-def load_gu_rings():
-    gj = json.load(open(GEOJSON, encoding="utf-8"))
-    gus = {}
-    for f in gj["features"]:
-        geom = f["geometry"]
-        rings = [p[0] for p in geom["coordinates"]] if geom["type"]=="MultiPolygon" else [geom["coordinates"][0]]
-        gus[f["properties"]["name"]] = rings
-    return gus
-
-def pip(x, y, ring):
-    inside=False; n=len(ring); j=n-1
-    for i in range(n):
-        xi,yi=ring[i]; xj,yj=ring[j]
-        if ((yi>y)!=(yj>y)) and (x < (xj-xi)*(y-yi)/((yj-yi) or 1e-12)+xi): inside=not inside
-        j=i
-    return inside
-
-def gu_of(lon, lat, gus):
-    for name, rings in gus.items():
-        for r in rings:
-            if pip(lon, lat, r): return name
-    return None
-
-# 영역-상권 좌표 후보 컬럼(파일마다 명칭이 달라 폭넓게 탐색)
-LON_KEYS = ["lon","lot","xcnts_value","x","경도","엑스좌표값","xcnts_valu"]
-LAT_KEYS = ["lat","ydnts_value","y","위도","와이좌표값","ydnts_valu"]
-
-def area_to_gu(area_rows, gus):
-    """trdar_cd -> 자치구. 좌표가 WGS84(경도126~127)면 point-in-polygon."""
+def area_to_gu(area_rows):
+    """trdar_cd -> (자치구명, 행정동명). 영역-상권에 SIGNGU_CD_NM이 직접 있어 좌표 불필요."""
     m = {}
     for row in area_rows:
         low = {k.lower():v for k,v in row.items()}
-        code = low.get("trdar_cd") or low.get("상권_코드")
-        if not code: continue
-        lon = next((fnum(low[k]) for k in LON_KEYS if k in low and fnum(low[k])), 0)
-        lat = next((fnum(low[k]) for k in LAT_KEYS if k in low and fnum(low[k])), 0)
-        if 126 < lon < 128 and 37 < lat < 38:
-            g = gu_of(lon, lat, gus)
-            if g: m[code] = g
+        code = (low.get("trdar_cd") or low.get("상권_코드") or "").strip()
+        gu = (low.get("signgu_cd_nm") or low.get("자치구_코드_명") or "").strip()
+        dong = (low.get("adstrd_cd_nm") or low.get("행정동_코드_명") or "").strip()
+        if code and gu: m[code] = (gu, dong)
     return m
 
 def main():
