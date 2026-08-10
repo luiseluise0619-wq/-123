@@ -217,11 +217,10 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
           <button id="gu-clear" class="sclear" title="지우기" style="display:none">✕</button>
         </div>
         <div class="layers">
-          <button class="lbtn on" data-metric="close">폐업</button>
-          <button class="lbtn" data-metric="bus">대중교통</button>
-          <button class="lbtn" data-metric="rent">임대료</button>
-          <button class="lbtn" data-metric="pop" id="lbtn-pop" style="display:none">유동인구</button>
-          <button class="lbtn" data-metric="park" id="lbtn-park" style="display:none">주차</button>
+          <button class="lbtn on" data-metric="trend">폐업 추세</button>
+          <button class="lbtn" data-metric="busd">교통밀도</button>
+          <button class="lbtn" data-metric="pop" id="lbtn-pop" style="display:none">생활인구</button>
+          <button class="lbtn" data-metric="parkd" id="lbtn-park" style="display:none">주차밀도</button>
         </div>
       </div>
       <div id="map"></div>
@@ -472,41 +471,73 @@ function calcBEP(){
 // ---- Kakao map ----
 let POP=null;   // livepop_gu.json
 let PARK=null;  // parking_gu.json
+const gArea=g=>g.areaKm2||1;   // GeoJSON에서 계산한 자치구 면적(㎢) — 절대값 왜곡 보정
+// 지표는 '면적·규모 보정' 후 색칠(절대 건수 금지). 폐업은 추세(증감%)로 diverging.
 const METRICS={
-  close:{get:g=>g.y2024,label:'누적 폐업 (2024)',unit:'건',rev:false},
-  bus:{get:g=>g.bus,label:'대중교통 정류소',unit:'개',rev:true},
-  rent:{get:g=>RENT.rent,label:'서울 임대료(구별 동일)',unit:'만원/㎡',rev:false},
-  pop:{get:g=>(POP&&POP.gu[g.name]?POP.gu[g.name].tot:0),label:'유동인구(생활인구)',unit:'명',rev:true},
-  park:{get:g=>(PARK&&PARK.gu[g.name]?PARK.gu[g.name].lots:0),label:'주차장 수',unit:'곳',rev:true}
+  trend:{get:g=>g.trend,label:'폐업 추세(2년 증감)',unit:'%',type:'div'},
+  busd:{get:g=>g.bus/gArea(g),label:'대중교통 밀도',unit:'개/㎢',type:'seq',rev:true},
+  parkd:{get:g=>((PARK&&PARK.gu[g.name]?PARK.gu[g.name].lots:0))/gArea(g),label:'주차 밀도',unit:'곳/㎢',type:'seq',rev:true},
+  pop:{get:g=>(POP&&POP.gu[g.name]?POP.gu[g.name].tot:0),label:'생활인구(체류)',unit:'명',type:'seq',rev:true}
 };
-let circles=[], polygons=[], curMetric='close', GEO=null;
-// 순차 색 램프(연함→진함): 자치구 값 크기 = 진하기
+let circles=[], polygons=[], curMetric='trend', GEO=null;
+// 순차(single-hue) 램프: 규모/밀도용
 const RAMP=['#EAF0F7','#C7D9EC','#9DBEE0','#6E9FD4','#4A82C3','#2E5A8F','#1E3A5F'];
-function drawLegend(m){
-  const vals=Object.values(DATA.gu).map(m.get);
-  const mn=Math.min(...vals),mx=Math.max(...vals);
-  const good=m.rev?'많을수록 좋음':'낮을수록 좋음';
-  document.getElementById('legend').innerHTML=
-    `<b>${m.label} · ${good}</b>
-     <div class="legrow"><span class="legsw" style="background:${RAMP[0]}"></span>${num(mn)}${m.unit}</div>
-     <div class="legrow"><span class="legsw" style="background:${RAMP[3]}"></span>${num(Math.round((mn+mx)/2))}${m.unit}</div>
-     <div class="legrow"><span class="legsw" style="background:${RAMP[6]}"></span>${num(mx)}${m.unit}</div>
-     <div style="margin-top:7px;color:var(--ink3);font-size:10px">진할수록 값이 큼 · 자치구 경계 색칠</div>`;
+// diverging(두 극 + 중립): 증감률용 — 감소=파랑(안정), 증가=빨강(위험)
+const DIV_NEG=['#9ec5f4','#6da7ec','#3987e5','#256abf'];
+const DIV_POS=['#f4abab','#e34948','#c22f2f','#9a2424'];
+const NEUT='#E5E7EB';
+function divColor(v,maxAbs){ if(Math.abs(v)<1)return NEUT; const idx=Math.min(3,Math.round(Math.min(1,Math.abs(v)/(maxAbs||1))*3)); return v>0?DIV_POS[idx]:DIV_NEG[idx]; }
+function colorFor(m,g,vals){
+  const v=m.get(g);
+  if(m.type==='div'){ return divColor(v,Math.max(...vals.map(Math.abs))); }
+  const mn=Math.min(...vals),mx=Math.max(...vals); return RAMP[Math.round((v-mn)/(mx-mn||1)*6)];
+}
+// GeoJSON 폴리곤에서 자치구 면적(㎢) 계산 — 등거리 근사(상대 밀도용으로 충분)
+function computeAreas(gj){
+  if(!gj||!gj.features)return;
+  gj.features.forEach(f=>{
+    const name=f.properties.name; if(!DATA.gu[name])return;
+    const rings=f.geometry.type==='MultiPolygon'?f.geometry.coordinates.map(p=>p[0]):[f.geometry.coordinates[0]];
+    let area=0;
+    rings.forEach(ring=>{
+      const lat0=ring.reduce((a,p)=>a+p[1],0)/ring.length;
+      const kx=Math.cos(lat0*Math.PI/180)*111.32, ky=110.57; // km/도
+      let s=0; for(let i=0;i<ring.length-1;i++){ const a=ring[i],b=ring[i+1];
+        s+=(a[0]*kx)*(b[1]*ky)-(b[0]*kx)*(a[1]*ky); }
+      area+=Math.abs(s)/2;
+    });
+    DATA.gu[name].areaKm2=area||1;
+  });
+}
+function drawLegend(m,vals){
+  const el=document.getElementById('legend'); const d=v=>Math.round(v).toLocaleString();
+  if(m.type==='div'){
+    el.innerHTML=`<b>${m.label}</b>
+     <div class="legrow"><span class="legsw" style="background:${DIV_NEG[3]}"></span>감소(안정)</div>
+     <div class="legrow"><span class="legsw" style="background:${NEUT}"></span>변화 작음</div>
+     <div class="legrow"><span class="legsw" style="background:${DIV_POS[3]}"></span>증가(위험)</div>
+     <div style="margin-top:7px;color:var(--ink3);font-size:10px">2년 폐업 증감률 · 규모와 무관</div>`;
+    return;
+  }
+  const mn=Math.min(...vals),mx=Math.max(...vals); const good=m.rev?'많을수록 좋음':'낮을수록 좋음';
+  el.innerHTML=`<b>${m.label} · ${good}</b>
+     <div class="legrow"><span class="legsw" style="background:${RAMP[0]}"></span>${d(mn)}${m.unit}</div>
+     <div class="legrow"><span class="legsw" style="background:${RAMP[3]}"></span>${d((mn+mx)/2)}${m.unit}</div>
+     <div class="legrow"><span class="legsw" style="background:${RAMP[6]}"></span>${d(mx)}${m.unit}</div>
+     <div style="margin-top:7px;color:var(--ink3);font-size:10px">면적(㎢) 보정 밀도 · 자치구 경계 색칠</div>`;
 }
 function redraw(metricKey){
   curMetric=metricKey; const m=METRICS[metricKey];
   const vals=Object.values(DATA.gu).map(m.get);
-  const mn=Math.min(...vals),mx=Math.max(...vals);
-  polygons.forEach(({poly,g})=>{
-    const t=(m.get(g)-mn)/(mx-mn||1);
-    poly.setOptions({fillColor:RAMP[Math.round(t*6)],fillOpacity:.78});
-  });
+  polygons.forEach(({poly,g})=>poly.setOptions({fillColor:colorFor(m,g,vals),fillOpacity:.78}));
   circles.forEach(({circle,g})=>{               // 폴백(GeoJSON 미로딩 시)
-    const t=(m.get(g)-mn)/(mx-mn||1);
+    const v=m.get(g); let t;
+    if(m.type==='div'){ t=Math.min(1,Math.abs(v)/(Math.max(...vals.map(Math.abs))||1)); }
+    else{ const mn=Math.min(...vals),mx=Math.max(...vals); t=(v-mn)/(mx-mn||1); }
     circle.setRadius(350+t*1050);
-    circle.setOptions({fillColor:RAMP[Math.round(t*6)],fillOpacity:.22+t*0.45});
+    circle.setOptions({fillColor:colorFor(m,g,vals),fillOpacity:.3+t*0.4});
   });
-  drawLegend(m);
+  drawLegend(m,vals);
   document.querySelectorAll('.lbtn').forEach(b=>b.classList.toggle('on',b.dataset.metric===metricKey));
 }
 let MAP=null;
@@ -577,7 +608,7 @@ function initMap(){
     });
   }
   document.querySelectorAll('.lbtn').forEach(b=>b.onclick=()=>redraw(b.dataset.metric));
-  redraw('close');
+  redraw('trend');
 }
 function renderFoot(){
   document.getElementById('foot').innerHTML=
@@ -659,7 +690,7 @@ function boot(){
     if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
     else{document.getElementById('mapfail').classList.add('on');}
   };
-  loadJSON('seoul_gu.geojson').then(gj=>{GEO=gj;}).finally(startMap);
+  loadJSON('seoul_gu.geojson').then(gj=>{GEO=gj; computeAreas(gj);}).finally(startMap);
 }
 </script>
 <!-- 카카오 지도: a3de8803a1a0c9388bbb205e62cf40c5 를 발급키로 교체하고, 콘솔에 배포 도메인 등록 -->
