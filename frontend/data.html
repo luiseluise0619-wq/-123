@@ -94,7 +94,11 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
 .srcbar{margin-top:26px;font-size:12px;color:var(--ink3);border-top:1px solid var(--line);padding-top:14px;line-height:1.7}
 @media(max-width:980px){.libgrid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:720px){.libgrid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){.hero h1{font-size:27px}.grid2,.stats{grid-template-columns:1fr}.bar{grid-template-columns:80px 1fr auto}}
+@media(max-width:640px){.hero h1{font-size:27px}.grid2,.stats{grid-template-columns:1fr}.bar{grid-template-columns:80px 1fr auto}
+  .top .wrap{height:auto;flex-wrap:wrap;padding-top:9px;padding-bottom:9px;gap:6px}
+  .brand{font-size:14px}
+  .top .wrap>div:last-child{width:100%;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .top a,.top button{font-size:12.5px;white-space:nowrap}.pdfbtn{padding:7px 13px}}
 @media print{
   .top{position:static} .topacts,.tcrumb{display:none} body{background:#fff}
   .card,.stat{box-shadow:none;break-inside:avoid} .grid2>*{break-inside:avoid}
