@@ -20,13 +20,15 @@ html,body{height:100%}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",Inter,sans-serif;
   background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden}
 /* SHELL: sidebar | (map / analytics) */
-.wrap{display:grid;grid-template-columns:60px 1fr;height:100vh}
+.wrap{display:grid;grid-template-columns:68px 1fr;height:100vh}
 .sidebar{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;
-  align-items:center;padding:12px 0;gap:4px}
+  align-items:center;padding:12px 0;gap:2px;overflow-y:auto}
 .logo{width:34px;height:34px;border-radius:9px;background:var(--navy);color:#fff;display:flex;
-  align-items:center;justify-content:center;font-weight:800;font-size:15px;margin-bottom:10px}
-.nav{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  align-items:center;justify-content:center;font-weight:800;font-size:15px;margin-bottom:8px;flex:none}
+.nav{width:58px;min-height:50px;border-radius:10px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;padding:6px 0;flex:none;
   color:var(--ink3);position:relative;cursor:default}
+.nav .lab{font-size:9.5px;font-weight:600;line-height:1;letter-spacing:-.02em}
 .nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;
   stroke-linecap:round;stroke-linejoin:round}
 .nav.on{background:var(--navy);color:#fff}
@@ -55,7 +57,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
 .chat-in input:focus{border-color:var(--navy)}
 .chat-in button{font:inherit;font-size:13px;font-weight:700;padding:9px 14px;border:none;border-radius:10px;background:var(--navy);color:#fff;cursor:pointer}
 .chat-in button:disabled{opacity:.5}
-.nav .tip{position:absolute;left:52px;white-space:nowrap;background:var(--ink);color:var(--panel);
+.nav .tip{position:absolute;left:64px;top:50%;margin-top:-11px;white-space:nowrap;background:var(--ink);color:var(--panel);
   font-size:11px;font-weight:600;padding:5px 9px;border-radius:7px;opacity:0;pointer-events:none;
   transform:translateX(-4px);transition:.15s;z-index:20}
 .nav:hover .tip{opacity:1;transform:translateX(0)}
@@ -158,15 +160,15 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
 <div class="wrap">
   <nav class="sidebar">
     <div class="logo">상</div>
-    <div class="nav on"><span class="tip">지도 (홈)</span><svg viewBox="0 0 24 24"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg></div>
-    <a class="nav act" href="data.html"><span class="tip">데이터룸 리포트</span><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></a>
-    <a class="nav act" href="data.html"><span class="tip">시장분석 → 데이터룸</span><svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="4" y2="12"/><line x1="10" y1="20" x2="10" y2="6"/><line x1="16" y1="20" x2="16" y2="10"/><line x1="21" y1="20" x2="3" y2="20"/></svg></a>
-    <div class="nav act" onclick="coming('입지분석','입지 데이터는 지도 상단 레이어 버튼(대중교통·주차·유동인구)에서 바로 볼 수 있어요')"><span class="tip">입지 → 지도 레이어</span><svg viewBox="0 0 24 24"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-    <a class="nav act" href="data.html"><span class="tip">소비자 → 데이터룸</span><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></a>
-    <a class="nav act" href="data.html"><span class="tip">경쟁사 → 데이터룸(업종 위험도)</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></a>
-    <div class="nav dis" onclick="coming('매출예측','단기 매출예측은 통계적으로 전분기 유지(관성)를 못 이겨서 정직하게 만들지 않습니다. 대신 하단 손익분기 계산기로 필요 매출을 정확히 계산하세요')"><span class="tip">매출예측 · 정직하게 미제공</span><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-    <div class="nav act" onclick="openChat()"><span class="tip">AI 상담 (Gemini)</span><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-    <div class="nav dis" style="margin-top:auto" onclick="coming('설정')"><span class="tip">설정 · 준비중</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <div class="nav on"><span class="tip">지도 (홈)</span><svg viewBox="0 0 24 24"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg><span class="lab">지도</span></div>
+    <a class="nav act" href="data.html"><span class="tip">데이터룸 리포트</span><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="lab">데이터</span></a>
+    <a class="nav act" href="data.html"><span class="tip">시장분석 → 데이터룸</span><svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="4" y2="12"/><line x1="10" y1="20" x2="10" y2="6"/><line x1="16" y1="20" x2="16" y2="10"/><line x1="21" y1="20" x2="3" y2="20"/></svg><span class="lab">시장</span></a>
+    <div class="nav act" onclick="coming('입지분석','입지 데이터는 지도 상단 레이어 버튼(대중교통·주차·유동인구)에서 바로 볼 수 있어요')"><span class="tip">입지 → 지도 레이어</span><svg viewBox="0 0 24 24"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="lab">입지</span></div>
+    <a class="nav act" href="data.html"><span class="tip">소비자 → 데이터룸</span><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><span class="lab">소비자</span></a>
+    <a class="nav act" href="data.html"><span class="tip">경쟁사 → 데이터룸(업종 위험도)</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span class="lab">경쟁</span></a>
+    <div class="nav dis" onclick="coming('매출예측','단기 매출예측은 통계적으로 전분기 유지(관성)를 못 이겨서 정직하게 만들지 않습니다. 대신 하단 손익분기 계산기로 필요 매출을 정확히 계산하세요')"><span class="tip">매출예측 · 정직하게 미제공</span><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span class="lab">예측</span></div>
+    <div class="nav act" onclick="openChat()"><span class="tip">AI 상담 (Gemini)</span><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="lab">AI</span></div>
+    <div class="nav dis" style="margin-top:auto" onclick="coming('설정')"><span class="tip">설정 · 준비중</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="lab">설정</span></div>
   </nav>
   <div id="toast" class="toast"></div>
   <div id="chat" class="chat">
