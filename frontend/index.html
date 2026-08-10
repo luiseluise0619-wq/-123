@@ -199,12 +199,9 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
       <div id="map"></div>
       <div class="legend" id="legend"></div>
       <div class="mapfail" id="mapfail">
-        <h3>지도 타일이 회색인가요?</h3>
-        <p><b>지금 주소창의 도메인</b>이 카카오에 정확히 등록돼 있어야 타일이 뜹니다.
-        Vercel은 <b>여러 URL</b>을 만들어요(운영 + 프리뷰). 지금 보고 있는 <b>정확한 도메인</b>을
-        developers.kakao.com → 내 앱 → 앱 설정 → 플랫폼 → Web → 사이트 도메인에 추가하세요
-        (예: <code>https://123-zeta-bice.vercel.app</code> — 경로 없이 도메인만).
-        검색·데이터룸·손익분기는 지도와 무관하게 정상 동작합니다.
+        <h3>지도가 잠시 안 보여요</h3>
+        <p>지도 타일만 일시적으로 안 뜨는 상태예요. <b>검색·데이터·손익분기 계산은 정상 작동</b>합니다.
+        <br><span style="color:var(--ink3);font-size:11.5px">(관리자용: 카카오 개발자 콘솔 → Web 플랫폼에 이 사이트 도메인 등록이 필요합니다.)</span>
         <br><br><a href="#" onclick="document.getElementById('mapfail').classList.remove('on');return false" style="color:var(--navy2);font-weight:700">닫기</a></p>
       </div>
     </div>
@@ -244,7 +241,7 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
       <!-- 정보/계산기 -->
       <div class="acol">
         <div class="sec">
-          <h2>순이익 계산기 <span class="src">내 조건 입력 → 순이익 계산</span></h2>
+          <h2>순이익 계산기 <span class="src">내 조건 입력 → 순이익 · 매출 기본값=업종 중위(신규점 첫해는 보통 이보다 낮음)</span></h2>
           <div class="field"><label>업종 (원가율 자동)</label><select id="bep-ind"></select></div>
           <div class="field"><label>월 예상 매출 (만원)</label><input id="bep-rev" type="number" inputmode="numeric"></div>
           <div class="field2">
