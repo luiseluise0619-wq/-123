@@ -57,6 +57,9 @@ button.sample{background:var(--panel2);color:var(--ink2);cursor:pointer}
 .find .why{font-size:12.5px;color:var(--ink2);line-height:1.55}
 .find .fix{font-size:12.5px;color:var(--ok);margin-top:6px}
 .find .fix b{color:var(--ink)}
+.find .patch{margin-top:8px}
+.find .patch .pl{font-size:10.5px;font-weight:800;color:var(--ok);letter-spacing:.03em}
+.find code.af{color:var(--ok);border-color:rgba(52,211,153,.4);margin-top:5px}
 .empty{color:var(--ink3);font-size:13px;text-align:center;padding:40px 0}
 .honest{margin:34px 0 60px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
 .honest h2{font-size:15px;font-weight:800;margin-bottom:6px}
@@ -92,6 +95,7 @@ button.sample{background:var(--panel2);color:var(--ink2);cursor:pointer}
         <button class="scan" onclick="scan()">취약점 스캔</button>
         <button class="sample" onclick="loadSample()">예제 코드</button>
         <button class="sample" onclick="document.getElementById('code').value='';scan()">지우기</button>
+        <button class="sample" id="exp" onclick="exportJSON()" style="display:none">결과 JSON 저장</button>
       </div>
     </div>
     <div class="card">
@@ -156,15 +160,51 @@ const RULES=[
  {id:'jwtnone',sev:'high',cwe:'CWE-287',title:'JWT alg:none / 서명 미검증',
   re:/alg["']?\s*[:=]\s*["']?none|verify\s*=\s*False.*jwt|jwt[^;]*verify_signature["']?\s*:\s*False/i,
   why:'JWT 서명을 검증하지 않으면 누구나 토큰을 위조할 수 있습니다.',fix:'서명 검증 필수, 허용 alg 명시(none 금지).'},
+ {id:'weakcipher',sev:'high',cwe:'CWE-327',title:'취약한 암호 알고리즘/모드(DES·RC4·ECB)',
+  re:/\b(?:DES|RC4|ARCFOUR)\b|AES\.MODE_ECB|["']aes-\d+-ecb["']/i,
+  why:'DES·RC4는 깨졌고 ECB 모드는 패턴이 드러납니다.',fix:'AES-256-GCM 등 인증 암호(AEAD) 사용.'},
+ {id:'cors',sev:'med',cwe:'CWE-942',title:'CORS 전체 허용(*)',
+  re:/Access-Control-Allow-Origin["']?\s*[:,]\s*["']\*["']|cors\(\s*\{\s*origin\s*:\s*["']\*["']/i,
+  why:'모든 출처를 허용하면 타 사이트가 인증된 요청을 악용할 수 있습니다.',fix:'허용 출처를 명시적 화이트리스트로 제한.'},
+ {id:'cookie',sev:'med',cwe:'CWE-614',title:'안전하지 않은 쿠키(Secure/HttpOnly 누락)',
+  re:/set[_-]?cookie|res\.cookie\s*\(/i,
+  why:'세션 쿠키에 Secure·HttpOnly가 없으면 탈취·XSS 접근에 노출됩니다.',fix:'HttpOnly, Secure, SameSite 속성 설정.'},
+ {id:'xxe',sev:'high',cwe:'CWE-611',title:'XML 외부 실체(XXE) 위험 파서',
+  re:/etree\.parse|XMLReader|DocumentBuilderFactory|libxml_disable_entity_loader\s*\(\s*false/i,
+  why:'외부 실체를 처리하는 XML 파서는 파일 유출·SSRF에 악용됩니다.',fix:'외부 실체/DTD 비활성화(defusedxml 등).'},
+ {id:'redirect',sev:'med',cwe:'CWE-601',title:'검증 없는 오픈 리다이렉트',
+  re:/(?:redirect|location|sendRedirect)\s*\(?\s*(?:req\.|request\.|params|query)/i,
+  why:'사용자 입력 URL로 리다이렉트하면 피싱에 악용됩니다.',fix:'상대경로·허용목록만 허용.'},
+ {id:'ssrf',sev:'high',cwe:'CWE-918',title:'SSRF 위험(사용자 입력 URL로 요청)',
+  re:/(?:requests\.get|axios\.get|fetch|urlopen|http\.get)\s*\(\s*(?:req\.|request\.|params|input\(|url_from)/i,
+  why:'사용자가 준 URL로 서버가 요청하면 내부망·메타데이터에 접근당합니다.',fix:'허용 도메인 검증, 내부 IP 차단.'},
+ {id:'proto',sev:'med',cwe:'CWE-1321',title:'프로토타입 오염 위험',
+  re:/\[["']__proto__["']\]|Object\.assign\([^,]*,\s*JSON\.parse/,
+  why:'__proto__ 등을 통해 객체 프로토타입이 오염되면 로직 우회가 가능합니다.',fix:'키 검증, Map 사용, Object.create(null).'},
 ];
+// 결정적 자동수정(규칙 id → [찾기, 바꾸기]). 확실한 것만 — LLM 없이 안전.
+const PATCH={
+  md5:[/\b(?:md5|sha1)\s*\(/i,'sha256('],
+  tls:[/verify\s*=\s*False/i,'verify=True'],
+  debug:[/(DEBUG\s*=\s*)True/,'$1False'],
+  rng:[/Math\.random\s*\(\s*\)/,'crypto.getRandomValues(new Uint32Array(1))[0]/2**32'],
+  shell:[/shell\s*=\s*True/i,'shell=False'],
+  weakcipher:[/AES\.MODE_ECB/,'AES.MODE_GCM'],
+};
 const SEVRANK={crit:0,high:1,med:2,low:3}, SEVKO={crit:'심각',high:'높음',med:'중간',low:'낮음'};
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+let LAST=[];
+function autofix(id,line){
+  const p=PATCH[id]; if(!p)return null;
+  const fixed=line.replace(p[0],p[1]);
+  return fixed!==line?fixed.trim().slice(0,160):null;
+}
 function scan(){
   const code=document.getElementById('code').value;
   const lines=code.split(/\r?\n/), found=[];
   lines.forEach((ln,i)=>{
     if(/^\s*(#|\/\/|\*)/.test(ln))return; // 주석 줄 스킵(오탐 감소)
-    RULES.forEach(r=>{ if(r.re.test(ln)) found.push({r,line:i+1,code:ln.trim().slice(0,160)}); });
+    RULES.forEach(r=>{ if(r.re.test(ln)) found.push({r,line:i+1,code:ln.trim().slice(0,160),fixed:autofix(r.id,ln.trim())}); });
   });
   found.sort((a,b)=>SEVRANK[a.r.sev]-SEVRANK[b.r.sev]||a.line-b.line);
   const cnt={crit:0,high:0,med:0,low:0}; found.forEach(f=>cnt[f.r.sev]++);
@@ -174,6 +214,8 @@ function scan(){
   sum.innerHTML = found.length
     ? Object.entries(cnt).filter(([k,v])=>v).map(([k,v])=>`<span class="pill ${k}">${SEVKO[k]} ${v}</span>`).join('')
     : '<span class="pill ok">패턴상 발견 없음</span>';
+  LAST=found.map(f=>({severity:f.r.sev,cwe:f.r.cwe,title:f.r.title,line:f.line,code:f.code,suggested_fix:f.fixed||null}));
+  document.getElementById('exp').style.display=found.length?'inline-block':'none';
   const fh=document.getElementById('findings');
   fh.innerHTML = found.length ? found.map(f=>`
     <div class="find ${f.r.sev}">
@@ -182,8 +224,14 @@ function scan(){
       <code>${esc(f.code)}</code>
       <div class="why">${f.r.why}</div>
       <div class="fix"><b>수정:</b> ${f.r.fix}</div>
+      ${f.fixed?`<div class="patch"><span class="pl">자동 수정 제안</span><code class="af">${esc(f.fixed)}</code></div>`:''}
     </div>`).join('')
     : '<div class="empty">이 규칙셋으로는 취약 패턴이 안 잡혔습니다. (패턴 기반이라 문맥형 취약점은 놓칠 수 있음 — "안전 보장"이 아닙니다.)</div>';
+}
+function exportJSON(){
+  const out={tool:'정직한 코드 보안 스캐너',type:'pattern-based static analysis',generated:new Date().toISOString(),count:LAST.length,findings:LAST};
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='scan_result.json';a.click();
 }
 function loadSample(){
   document.getElementById('code').value=
