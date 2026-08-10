@@ -59,11 +59,10 @@ def main():
     srows = [r for r in srows if r["stdr_yyqu_cd"] == q]
     print(f"점포-상권 최신 분기 {q} · {len(srows):,}행")
 
-    gus = load_gu_rings()
     trdar_gu = {}
     if a.area and os.path.exists(a.area):
         arows = read_csv_any(a.area)
-        trdar_gu = area_to_gu(arows, gus)
+        trdar_gu = area_to_gu(arows)              # {trdar_cd: (자치구, 행정동)}
         print(f"영역-상권 매핑: 상권 {len(trdar_gu):,}개 → 자치구")
     else:
         print("⚠ 영역-상권 파일 없음 — 자치구 매핑 불가(영역-상권 CSV를 --area로 주세요).")
@@ -74,8 +73,9 @@ def main():
 
     gu = {}
     for r in srows:
-        g = trdar_gu.get(r.get("trdar_cd"))
-        if not g: continue
+        gd = trdar_gu.get(r.get("trdar_cd"))
+        if not gd: continue
+        g = gd[0]
         ind = r.get("svc_induty_cd_nm");
         if not ind: continue
         d = gu.setdefault(g, {"ind":{}, "total":0})
