@@ -88,9 +88,21 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
   background:color-mix(in srgb,var(--panel) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border:1px solid var(--line);border-radius:16px;padding:14px 17px;
   box-shadow:0 6px 26px rgba(18,23,33,.12),0 1px 3px rgba(18,23,33,.05)}
-.maptitle{min-width:290px}
+.maptitle{min-width:290px;transition:min-width .2s,padding .2s}
 .maptitle b{font-size:15.5px;font-weight:800;letter-spacing:-.01em}
 .maptitle span{display:block;font-size:11px;color:var(--ink2);margin-top:3px;line-height:1.5}
+.mt-head{display:flex;align-items:flex-start;gap:10px}
+.mt-head b{flex:1;min-width:0}
+.mt-mini{display:none;flex:1;font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+.mt-toggle{flex:none;border:1px solid var(--line2);background:var(--panel);color:var(--ink2);
+  width:26px;height:26px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:.15s;margin-top:-1px;padding:0}
+.mt-toggle:hover{border-color:var(--ink3);color:var(--ink)}
+.mt-toggle svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.maptitle.collapsed{min-width:0;padding:9px 11px}
+.maptitle.collapsed #mt-sub,.maptitle.collapsed .searchbox,.maptitle.collapsed .layers,.maptitle.collapsed .mt-head b{display:none}
+.maptitle.collapsed .mt-mini{display:block}
+.maptitle.collapsed .mt-toggle svg{transform:rotate(180deg)}
 .searchbox{position:relative;margin-top:10px}
 .searchbox .sicon{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
   stroke:var(--ink3);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}
@@ -218,8 +230,14 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
       <span style="font-size:11.5px;color:var(--ink3)">지도는 아래에서 둘러볼 수 있어요</span>
     </div>
     <div class="mapcol">
-      <div class="maptitle">
-        <b>창업 전, 이 자리·업종이 될지 공공데이터로 확인</b><span id="mt-sub">지어낸 숫자 없음 · <b>자치구 클릭</b> → 확대 + 행정동 경계 · 검색창 <b>✕</b>로 전체 복귀</span>
+      <div class="maptitle" id="maptitle">
+        <div class="mt-head">
+          <b>창업 전, 이 자리·업종이 될지 공공데이터로 확인</b>
+          <span class="mt-mini">🔎 검색 · 레이어</span>
+          <button class="mt-toggle" id="mt-toggle" title="검색창 접기/펼치기" aria-label="검색창 접기">
+            <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+        </div><span id="mt-sub">지어낸 숫자 없음 · <b>자치구 클릭</b> → 확대 + 행정동 경계 · 검색창 <b>✕</b>로 전체 복귀</span>
         <div class="searchbox">
           <svg viewBox="0 0 24 24" class="sicon"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="gu-search" list="gu-list" placeholder="자치구 검색 (예: 강남구)" autocomplete="off">
@@ -619,6 +637,19 @@ function initSearch(){
     run();}});
   inp.addEventListener('input',()=>{clr.style.display=inp.value?'block':'none';});
   clr.onclick=()=>{inp.value='';clr.style.display='none';selected=null;renderPanel(null);resetView();inp.focus();};
+  const mt=document.getElementById('maptitle'), tg=document.getElementById('mt-toggle');
+  if(tg&&mt){
+    try{ if(localStorage.getItem('mtCollapsed')==='1') mt.classList.add('collapsed'); }catch(e){}
+    const sync=()=>{const c=mt.classList.contains('collapsed');
+      tg.setAttribute('aria-label',c?'검색창 펼치기':'검색창 접기');
+      tg.title=c?'검색창 펼치기':'검색창 접기';};
+    sync();
+    tg.onclick=()=>{mt.classList.toggle('collapsed');
+      try{localStorage.setItem('mtCollapsed',mt.classList.contains('collapsed')?'1':'0');}catch(e){}
+      sync();};
+    // 접힌 상태에서 미니 라벨 클릭해도 펼치기
+    mt.querySelector('.mt-mini').onclick=()=>{if(mt.classList.contains('collapsed'))tg.click();};
+  }
 }
 function initMap(){
   buildSvgMap();

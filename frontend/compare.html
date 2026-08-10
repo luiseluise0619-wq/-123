@@ -20,9 +20,11 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
 .top{border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:10}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
 .brand{font-weight:800;font-size:15px;display:flex;gap:9px;align-items:center}
-.brand .m{width:26px;height:26px;border-radius:7px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
-.top a,.top button{font:inherit;font-size:13px;color:var(--navy2);text-decoration:none;font-weight:600;background:none;border:none;cursor:pointer}
-.pdfbtn{color:#fff!important;background:var(--navy)!important;padding:8px 14px;border-radius:9px}
+.brand .m{width:28px;height:28px;border-radius:9px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(18,23,33,.2);letter-spacing:-.02em}
+.top a,.top button{font:inherit;font-size:13px;color:var(--ink2);text-decoration:none;font-weight:700;background:none;border:none;cursor:pointer;transition:.15s;letter-spacing:-.01em}
+.top a:hover,.top button:hover{color:var(--navy2)}
+.pdfbtn{color:#fff!important;background:var(--navy)!important;padding:9px 16px;border-radius:10px;box-shadow:0 2px 8px rgba(18,23,33,.16);transition:.15s;letter-spacing:-.01em}
+.pdfbtn:hover{transform:translateY(-1px);box-shadow:0 4px 13px rgba(18,23,33,.24)}
 .pick{display:flex;gap:12px;flex-wrap:wrap;padding:26px 0 8px;align-items:end}
 .pick .f label{font-size:11px;font-weight:700;color:var(--ink2);display:block;margin-bottom:5px}
 .pick select{font:inherit;font-size:14px;font-weight:600;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);min-width:130px}
