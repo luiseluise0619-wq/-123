@@ -87,6 +87,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
 .legend b{font-size:11px;color:var(--ink2);font-weight:600;display:block;margin-bottom:8px}
 .legrow{display:flex;align-items:center;gap:8px;margin-top:5px}
 .legdot{border-radius:50%;background:var(--navy);opacity:.7;flex:none}
+.legsw{width:18px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.08)}
 .mapfail{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
   gap:10px;text-align:center;padding:32px;z-index:4;background:var(--bg)}
 .mapfail.on{display:flex}
@@ -453,26 +454,32 @@ const METRICS={
   pop:{get:g=>(POP&&POP.gu[g.name]?POP.gu[g.name].tot:0),label:'유동인구(생활인구)',unit:'명',rev:true},
   park:{get:g=>(PARK&&PARK.gu[g.name]?PARK.gu[g.name].lots:0),label:'주차장 수',unit:'곳',rev:true}
 };
-let circles=[], curMetric='close';
+let circles=[], polygons=[], curMetric='close', GEO=null;
+// 순차 색 램프(연함→진함): 자치구 값 크기 = 진하기
+const RAMP=['#EAF0F7','#C7D9EC','#9DBEE0','#6E9FD4','#4A82C3','#2E5A8F','#1E3A5F'];
 function drawLegend(m){
   const vals=Object.values(DATA.gu).map(m.get);
   const mn=Math.min(...vals),mx=Math.max(...vals);
   const good=m.rev?'많을수록 좋음':'낮을수록 좋음';
   document.getElementById('legend').innerHTML=
     `<b>${m.label} · ${good}</b>
-     <div class="legrow"><span class="legdot" style="width:10px;height:10px"></span>${num(mn)}${m.unit}</div>
-     <div class="legrow"><span class="legdot" style="width:18px;height:18px"></span>${num((mn+mx)/2)}${m.unit}</div>
-     <div class="legrow"><span class="legdot" style="width:26px;height:26px"></span>${num(mx)}${m.unit}</div>`;
+     <div class="legrow"><span class="legsw" style="background:${RAMP[0]}"></span>${num(mn)}${m.unit}</div>
+     <div class="legrow"><span class="legsw" style="background:${RAMP[3]}"></span>${num(Math.round((mn+mx)/2))}${m.unit}</div>
+     <div class="legrow"><span class="legsw" style="background:${RAMP[6]}"></span>${num(mx)}${m.unit}</div>
+     <div style="margin-top:7px;color:var(--ink3);font-size:10px">진할수록 값이 큼 · 자치구 경계 색칠</div>`;
 }
 function redraw(metricKey){
   curMetric=metricKey; const m=METRICS[metricKey];
   const vals=Object.values(DATA.gu).map(m.get);
   const mn=Math.min(...vals),mx=Math.max(...vals);
-  circles.forEach(({circle,g})=>{
-    const raw=(m.get(g)-mn)/(mx-mn||1);
-    const t=m.rev?raw:raw;               // size by value magnitude
+  polygons.forEach(({poly,g})=>{
+    const t=(m.get(g)-mn)/(mx-mn||1);
+    poly.setOptions({fillColor:RAMP[Math.round(t*6)],fillOpacity:.78});
+  });
+  circles.forEach(({circle,g})=>{               // 폴백(GeoJSON 미로딩 시)
+    const t=(m.get(g)-mn)/(mx-mn||1);
     circle.setRadius(350+t*1050);
-    circle.setOptions({fillOpacity:.22+t*0.45});
+    circle.setOptions({fillColor:RAMP[Math.round(t*6)],fillOpacity:.22+t*0.45});
   });
   drawLegend(m);
   document.querySelectorAll('.lbtn').forEach(b=>b.classList.toggle('on',b.dataset.metric===metricKey));
@@ -484,9 +491,12 @@ function selectGu(name){
   const g=DATA.gu[name];
   if(MAP) MAP.panTo(new kakao.maps.LatLng(g.lat,g.lng));
   // 선택 강조: 잠깐 테두리 굵게
-  const hit=circles.find(c=>c.name===name);
-  if(hit){hit.circle.setOptions({strokeWeight:3,strokeColor:'#2A78D6',strokeOpacity:1});
-    setTimeout(()=>hit.circle.setOptions({strokeWeight:1,strokeColor:'#1E3A5F',strokeOpacity:.5}),1600);}
+  const hp=polygons.find(c=>c.name===name);
+  if(hp){hp.poly.setOptions({strokeWeight:3.5,strokeColor:'#111827',strokeOpacity:1});
+    setTimeout(()=>hp.poly.setOptions({strokeWeight:1.2,strokeColor:'#ffffff',strokeOpacity:.9}),1800);}
+  const hc=circles.find(c=>c.name===name);
+  if(hc){hc.circle.setOptions({strokeWeight:3,strokeColor:'#2A78D6',strokeOpacity:1});
+    setTimeout(()=>hc.circle.setOptions({strokeWeight:1,strokeColor:'#1E3A5F',strokeOpacity:.5}),1600);}
   return true;
 }
 function initSearch(){
@@ -502,22 +512,44 @@ function initSearch(){
   inp.addEventListener('input',()=>{clr.style.display=inp.value?'block':'none';});
   clr.onclick=()=>{inp.value='';clr.style.display='none';selected=null;renderPanel(null);inp.focus();};
 }
+function labelOverlay(map,g,name){
+  new kakao.maps.CustomOverlay({map,position:new kakao.maps.LatLng(g.lat,g.lng),yAnchor:.5,
+    content:`<div style="font:700 11px -apple-system;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.75);pointer-events:none;white-space:nowrap">${name}</div>`});
+}
 function initMap(){
   const c=document.getElementById('map');
   const map=new kakao.maps.Map(c,{center:new kakao.maps.LatLng(37.5636,126.9976),level:8});
   MAP=map;
-  Object.entries(DATA.gu).forEach(([name,g])=>{
-    const circle=new kakao.maps.Circle({
-      center:new kakao.maps.LatLng(g.lat,g.lng),radius:600,
-      strokeWeight:1,strokeColor:'#1E3A5F',strokeOpacity:.5,
-      fillColor:'#1E3A5F',fillOpacity:.3
+  if(GEO&&GEO.features&&GEO.features.length){
+    // choropleth: 자치구 경계 폴리곤을 값 크기로 색칠
+    GEO.features.forEach(f=>{
+      const name=f.properties.name; if(!DATA.gu[name])return;
+      const g=DATA.gu[name];
+      const rings=f.geometry.type==='MultiPolygon'?f.geometry.coordinates.map(p=>p[0]):[f.geometry.coordinates[0]];
+      rings.forEach((ring,ri)=>{
+        const path=ring.map(pt=>new kakao.maps.LatLng(pt[1],pt[0]));
+        const poly=new kakao.maps.Polygon({path,strokeWeight:1.2,strokeColor:'#ffffff',
+          strokeOpacity:.9,fillColor:'#9DBEE0',fillOpacity:.78});
+        poly.setMap(map);
+        kakao.maps.event.addListener(poly,'click',()=>selectGu(name));
+        kakao.maps.event.addListener(poly,'mouseover',()=>poly.setOptions({strokeWeight:2.4,strokeColor:'#111827'}));
+        kakao.maps.event.addListener(poly,'mouseout',()=>poly.setOptions({strokeWeight:1.2,strokeColor:'#ffffff'}));
+        polygons.push({poly,g,name});
+      });
+      labelOverlay(map,g,name);
     });
-    circle.setMap(map);
-    new kakao.maps.CustomOverlay({map,position:new kakao.maps.LatLng(g.lat,g.lng),yAnchor:.5,
-      content:`<div style="font:600 11px -apple-system;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap">${name}</div>`});
-    kakao.maps.event.addListener(circle,'click',()=>{selectGu(name);});
-    circles.push({circle,g,name});
-  });
+  }else{
+    // 폴백: GeoJSON 미로딩 시 버블 지도
+    Object.entries(DATA.gu).forEach(([name,g])=>{
+      const circle=new kakao.maps.Circle({
+        center:new kakao.maps.LatLng(g.lat,g.lng),radius:600,
+        strokeWeight:1,strokeColor:'#1E3A5F',strokeOpacity:.5,fillColor:'#1E3A5F',fillOpacity:.3});
+      circle.setMap(map);
+      labelOverlay(map,g,name);
+      kakao.maps.event.addListener(circle,'click',()=>{selectGu(name);});
+      circles.push({circle,g,name});
+    });
+  }
   document.querySelectorAll('.lbtn').forEach(b=>b.onclick=()=>redraw(b.dataset.metric));
   redraw('close');
 }
@@ -585,8 +617,11 @@ function boot(){
   document.getElementById('p-q').textContent=DATA.quarter;
   loadPop().then(()=>{renderPanel(selected);renderFoot();});
   renderFoot();
-  if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
-  else{document.getElementById('mapfail').classList.add('on');}
+  const startMap=()=>{
+    if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
+    else{document.getElementById('mapfail').classList.add('on');}
+  };
+  loadJSON('seoul_gu.geojson').then(gj=>{GEO=gj;}).finally(startMap);
 }
 </script>
 <!-- 카카오 지도: a3de8803a1a0c9388bbb205e62cf40c5 를 발급키로 교체하고, 콘솔에 배포 도메인 등록 -->
