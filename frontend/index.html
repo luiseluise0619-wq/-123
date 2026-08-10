@@ -26,17 +26,18 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
 .wrap{display:grid;grid-template-columns:68px 1fr;height:100vh}
 .sidebar{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;
   align-items:center;padding:12px 0;gap:2px;overflow-y:auto}
-.logo{width:34px;height:34px;border-radius:9px;background:var(--navy);color:#fff;display:flex;
-  align-items:center;justify-content:center;font-weight:800;font-size:15px;margin-bottom:8px;flex:none}
-.nav{width:58px;min-height:50px;border-radius:10px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:3px;padding:6px 0;flex:none;
-  color:var(--ink3);position:relative;cursor:default}
-.nav .lab{font-size:9.5px;font-weight:600;line-height:1;letter-spacing:-.02em}
+.logo{width:36px;height:36px;border-radius:11px;background:var(--navy);color:#fff;display:flex;
+  align-items:center;justify-content:center;font-weight:800;font-size:16px;margin-bottom:10px;flex:none;
+  box-shadow:0 2px 8px rgba(18,23,33,.22);letter-spacing:-.02em}
+.nav{width:58px;min-height:52px;border-radius:13px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;padding:7px 0;flex:none;
+  color:var(--ink3);position:relative;cursor:default;transition:.15s}
+.nav .lab{font-size:9.5px;font-weight:700;line-height:1;letter-spacing:-.02em}
 .nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;
   stroke-linecap:round;stroke-linejoin:round}
-.nav.on{background:var(--navy);color:#fff}
-.nav.act{color:var(--navy2);cursor:pointer;text-decoration:none}
-.nav.act:hover{background:var(--navyL)}
+.nav.on{background:var(--navy);color:#fff;box-shadow:0 3px 10px rgba(18,23,33,.20)}
+.nav.act{color:var(--ink2);cursor:pointer;text-decoration:none}
+.nav.act:hover{background:var(--navyL);color:var(--navy2)}
 .nav.dis{opacity:.45;cursor:pointer}
 .nav.dis:hover{opacity:.7;background:var(--line)}
 .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:var(--panel);
@@ -66,27 +67,30 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
 .nav:hover .tip{opacity:1;transform:translateX(0)}
 .main{display:grid;grid-template-rows:auto 1fr 340px;height:100vh;min-width:0}
 /* HERO 진입: 구+업종+평수 한 줄 → 리포트 */
-.hero{background:var(--panel);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;
-  align-items:center;gap:14px;flex-wrap:wrap}
-.hero .q{font-size:15px;font-weight:800;color:var(--ink);white-space:nowrap}
+.hero{background:var(--panel);border-bottom:1px solid var(--line);padding:15px 24px;display:flex;
+  align-items:center;gap:18px;flex-wrap:wrap}
+.hero .q{font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap;letter-spacing:-.02em}
 .hero .q b{color:var(--navy2)}
 .hero .fields{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.hero select,.hero input{font:inherit;font-size:13.5px;font-weight:600;padding:8px 11px;border:1px solid var(--line);
-  border-radius:9px;background:var(--bg);color:var(--ink);outline:none;flex:none}
-.hero select:focus,.hero input:focus{border-color:var(--navy2)}
-.hero #h-gu{width:118px}.hero #h-ind{width:160px}.hero input{width:66px}
-.hero .go{font:inherit;font-size:13.5px;font-weight:800;padding:9px 18px;border:none;border-radius:9px;
-  background:var(--navy);color:#fff;cursor:pointer;white-space:nowrap}
-.hero .go:hover{background:var(--navy2)}
-@media(max-width:720px){.hero{padding:10px 14px}.hero .q{font-size:13px;width:100%}}
+.hero select,.hero input{font:inherit;font-size:14px;font-weight:600;padding:10px 13px;border:1px solid var(--line2);
+  border-radius:11px;background:var(--panel);color:var(--ink);outline:none;flex:none;transition:.15s}
+.hero select:hover,.hero input:hover{border-color:var(--ink3)}
+.hero select:focus,.hero input:focus{border-color:var(--navy2);box-shadow:0 0 0 3px var(--navyL)}
+.hero #h-gu{width:120px}.hero #h-ind{width:166px}.hero input{width:70px}
+.hero .go{font:inherit;font-size:14px;font-weight:800;padding:11px 22px;border:none;border-radius:11px;
+  background:var(--navy);color:#fff;cursor:pointer;white-space:nowrap;box-shadow:0 2px 10px rgba(18,23,33,.18);transition:.15s;letter-spacing:-.01em}
+.hero .go:hover{background:var(--navy2);transform:translateY(-1px);box-shadow:0 5px 16px rgba(43,98,196,.32)}
+@media(max-width:720px){.hero{padding:12px 16px}.hero .q{font-size:14px;width:100%}}
 /* MAP */
 .mapcol{position:relative;min-height:0}
 #map{width:100%;height:100%;background:var(--line)}
-.maptitle{position:absolute;top:16px;left:16px;z-index:5;background:var(--panel);
-  border:1px solid var(--line);border-radius:12px;padding:10px 14px;box-shadow:var(--sh)}
-.maptitle{min-width:280px}
-.maptitle b{font-size:15px;font-weight:700}
-.maptitle span{display:block;font-size:11px;color:var(--ink2);margin-top:2px}
+.maptitle{position:absolute;top:18px;left:18px;z-index:5;
+  background:color-mix(in srgb,var(--panel) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:16px;padding:14px 17px;
+  box-shadow:0 6px 26px rgba(18,23,33,.12),0 1px 3px rgba(18,23,33,.05)}
+.maptitle{min-width:290px}
+.maptitle b{font-size:15.5px;font-weight:800;letter-spacing:-.01em}
+.maptitle span{display:block;font-size:11px;color:var(--ink2);margin-top:3px;line-height:1.5}
 .searchbox{position:relative;margin-top:10px}
 .searchbox .sicon{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
   stroke:var(--ink3);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}
@@ -95,12 +99,15 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
 .searchbox input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,58,95,.12);background:var(--panel)}
 .sclear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:var(--line);
   color:var(--ink2);width:18px;height:18px;border-radius:50%;font-size:10px;cursor:pointer;line-height:1}
-.layers{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.lbtn{font:inherit;font-size:12px;font-weight:600;padding:6px 11px;border:1px solid var(--line);
-  border-radius:8px;background:var(--panel);color:var(--ink2);cursor:pointer;transition:.15s}
-.lbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
-.legend{position:absolute;bottom:16px;left:16px;z-index:5;background:var(--panel);
-  border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--sh);font-size:11px}
+.layers{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.lbtn{font:inherit;font-size:12px;font-weight:700;padding:7px 13px;border:1px solid var(--line2);
+  border-radius:9px;background:var(--panel);color:var(--ink2);cursor:pointer;transition:.15s;letter-spacing:-.01em}
+.lbtn:hover{border-color:var(--ink3);color:var(--ink)}
+.lbtn.on{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 2px 8px rgba(18,23,33,.16)}
+.legend{position:absolute;bottom:18px;left:18px;z-index:5;
+  background:color-mix(in srgb,var(--panel) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+  box-shadow:0 6px 26px rgba(18,23,33,.12),0 1px 3px rgba(18,23,33,.05);font-size:11px}
 .legend b{font-size:11px;color:var(--ink2);font-weight:600;display:block;margin-bottom:8px}
 .legrow{display:flex;align-items:center;gap:8px;margin-top:5px}
 .legdot{border-radius:50%;background:var(--navy);opacity:.7;flex:none}
@@ -123,10 +130,10 @@ body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFo
 .phead .q{font-size:11px;color:var(--ink3)}
 .hint{font-size:11.5px;color:var(--ink2);margin-top:3px;margin-bottom:12px}
 .kpis{display:flex;flex-direction:column;gap:8px}
-.kpi{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--bg)}
-.kpi .l{font-size:11px;color:var(--ink2);font-weight:600}
-.kpi .v{font-size:20px;font-weight:700;margin-top:3px;letter-spacing:-.02em}
-.kpi .s{font-size:11px;margin-top:2px}
+.kpi{border:1px solid var(--line);border-radius:13px;padding:13px 15px;background:var(--panel2)}
+.kpi .l{font-size:11px;color:var(--ink2);font-weight:700;letter-spacing:-.01em}
+.kpi .v{font-size:24px;font-weight:800;margin-top:4px;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:11px;margin-top:3px}
 .up{color:var(--bad)}.down{color:var(--good)}
 /* AI insight */
 .ai{font-size:13px;line-height:1.65;color:var(--ink)}
