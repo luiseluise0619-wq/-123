@@ -72,6 +72,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Ne
     <div class="f"><label>자치구</label><select id="p-gu"></select></div>
     <div class="f"><label>업종</label><select id="p-ind"></select></div>
     <div class="f"><label>평수(평)</label><input id="p-area" type="number" value="15"></div>
+    <div class="f"><label>월 임대료(만원)</label><input id="p-rent" type="number" placeholder="실제값 권장"></div>
     <div class="f"><label>직원(명)</label><input id="p-staff" type="number" value="2"></div>
   </div>
   <div id="report"></div>
@@ -102,7 +103,7 @@ function render(){
   if(STORES&&STORES.ind[ind]){ const cr=STORES.ind[ind].close_rate;
     const v=cr<3?1:cr>6?-1:0; score+=v;
     S.push([v,`업종 폐업률 <b>${cr}%</b> — ${v>0?'낮음(안전)':v<0?'높음(위험)':'보통'}`]); }
-  const cogs=i.cogs/100, rentCost=Math.round(RENT.rent*area*3.3), laborCost=staff*250, etc=(i.etc||150);
+  const cogs=i.cogs/100, rentCost=(+document.getElementById('p-rent').value||Math.round(RENT.rent*area*3.3)), laborCost=staff*250, etc=(i.etc||150);
   const fixed=rentCost+laborCost+etc, bep=fixed/(1-cogs);
   const med=i.p50, profit=Math.round(med*(1-cogs)-fixed);
   { const v=profit>0?(profit>258?1:0):-1; score+=v;
@@ -161,7 +162,7 @@ function init(){
   const q=new URLSearchParams(location.search);
   if(q.get('gu')&&DATA.gu[q.get('gu')])gs.value=q.get('gu');
   if(q.get('ind')&&DATA.ind[q.get('ind')])is.value=q.get('ind'); else is.value='한식음식점';
-  ['p-gu','p-ind','p-area','p-staff'].forEach(id=>document.getElementById(id).oninput=render);
+  ['p-gu','p-ind','p-area','p-staff','p-rent'].forEach(id=>document.getElementById(id).oninput=render);
   ['p-gu','p-ind'].forEach(id=>document.getElementById(id).onchange=render);
   render();
 }

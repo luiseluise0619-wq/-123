@@ -246,12 +246,13 @@ select,input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1px 
           <div class="field"><label>월 예상 매출 (만원)</label><input id="bep-rev" type="number" inputmode="numeric"></div>
           <div class="field2">
             <div class="field"><label>평수 (평)</label><input id="bep-area" type="number" inputmode="numeric"></div>
-            <div class="field"><label>직원 수 (명)</label><input id="bep-staff" type="number" inputmode="numeric"></div>
+            <div class="field"><label>월 임대료 (만원, 실제 입력)</label><input id="bep-rent" type="number" inputmode="numeric"></div>
           </div>
           <div class="field2">
+            <div class="field"><label>직원 수 (명)</label><input id="bep-staff" type="number" inputmode="numeric"></div>
             <div class="field"><label>직원 1인 월급 (만원)</label><input id="bep-wage" type="number" inputmode="numeric"></div>
-            <div class="field"><label>초기 투자 (만원)</label><input id="bep-inv" type="number" inputmode="numeric"></div>
           </div>
+          <div class="field"><label>초기 투자 (만원)</label><input id="bep-inv" type="number" inputmode="numeric"></div>
           <div class="bepout" id="bep-out"></div>
           <div class="verdict" id="bep-verdict"></div>
           <a id="report-cta" href="report.html" style="display:flex;justify-content:center;margin-top:12px;font-size:13px;font-weight:700;color:#fff;background:var(--navy);padding:11px;border-radius:10px;text-decoration:none">이 지역·업종 진단 리포트 →</a>
@@ -377,8 +378,15 @@ function fillIndSelect(){
   const sel=document.getElementById('bep-ind');
   sel.innerHTML=Object.keys(DATA.ind).map(k=>`<option>${k}</option>`).join('');
   sel.value='한식음식점'; sel.onchange=onIndChange;
-  ['bep-rev','bep-area','bep-staff','bep-wage','bep-inv'].forEach(id=>document.getElementById(id).oninput=calcBEP);
+  ['bep-rev','bep-staff','bep-wage','bep-inv','bep-rent'].forEach(id=>document.getElementById(id).oninput=calcBEP);
+  // 평수 바꾸면 임대료 추정치 자동 갱신(사용자가 실제값 넣으면 그게 우선)
+  document.getElementById('bep-area').oninput=()=>{estRent();calcBEP();};
+  sel.value='한식음식점';
   onIndChange();
+}
+function estRent(){
+  const area=+document.getElementById('bep-area').value||0;
+  document.getElementById('bep-rent').value=Math.round(RENT.rent*area*3.3);
 }
 function onIndChange(){
   const k=document.getElementById('bep-ind').value, i=DATA.ind[k];
@@ -388,6 +396,7 @@ function onIndChange(){
   if(!document.getElementById('bep-staff').value)document.getElementById('bep-staff').value=2;
   if(!document.getElementById('bep-wage').value)document.getElementById('bep-wage').value=250;
   document.getElementById('bep-inv').value=i.invest;
+  estRent();          // 임대료 추정치 채움(비어있을 때/업종변경 시)
   calcBEP();
 }
 function calcBEP(){
@@ -398,7 +407,7 @@ function calcBEP(){
   const wage =+document.getElementById('bep-wage').value||0;   // 만원/인
   const inv  =+document.getElementById('bep-inv').value||0;
   const cogs=i.cogs/100;                        // 원가율
-  const rentCost=Math.round(RENT.rent*area*3.3);// 임대료: 만원/㎡ × (평×3.3㎡)
+  const rentCost=+document.getElementById('bep-rent').value||Math.round(RENT.rent*area*3.3); // 실제 입력 우선, 없으면 추정
   const laborCost=staff*wage;                   // 인건비
   const etc=i.etc;                              // 기타 운영비(업종 추정)
   const fixed=rentCost+laborCost+etc;           // 고정비
@@ -411,7 +420,7 @@ function calcBEP(){
   document.getElementById('bep-out').innerHTML=`
     <div class="beprow"><span class="bk">월 매출</span><span class="bvv">${won(rev)}</span></div>
     <div class="beprow"><span class="bk">− 원가 (${i.cogs}%)</span><span class="bvv">${won(cogsCost)}</span></div>
-    <div class="beprow"><span class="bk">− 임대료 (${area}평)</span><span class="bvv">${won(rentCost)}</span></div>
+    <div class="beprow"><span class="bk">− 임대료 (실제 임대료 입력 권장)</span><span class="bvv">${won(rentCost)}</span></div>
     <div class="beprow"><span class="bk">− 인건비 (${staff}명)</span><span class="bvv">${won(laborCost)}</span></div>
     <div class="beprow"><span class="bk">− 기타 운영비</span><span class="bvv">${won(etc)}</span></div>
     <div class="beprow" style="background:var(--bg)"><span class="bk" style="font-weight:800;color:var(--ink)">월 순이익</span><span class="bvv" style="color:${pc};font-size:15px">${profit>=0?'':'−'}${won(Math.abs(profit))}</span></div>
