@@ -51,29 +51,44 @@ export default async function handler(req, res) {
       error: "AI 인사이트는 GEMINI_API_KEY 가 필요합니다. Vercel → Settings → Environment Variables 에 추가하세요.",
     });
   }
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
-
   let body = req.body;
   if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
   const context = (body && body.context ? String(body.context) : "").slice(0, 6000);
   if (!context) return res.status(400).json({ error: "context required" });
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
-  try {
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM }] },
-        contents: [{ role: "user", parts: [{ text: "다음은 지도에서 클릭한 지점의 데이터다. 규칙대로 요약해라.\n\n" + context }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 700 },
-      }),
-    });
-    const data = await r.json();
-    if (!r.ok) return res.status(200).json({ insight: "", configured: true, error: "AI 오류: " + (data?.error?.message || r.status) });
-    const insight = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "요약을 생성하지 못했습니다.";
-    return res.status(200).json({ insight, configured: true });
-  } catch (e) {
-    return res.status(200).json({ insight: "", configured: true, error: "AI 호출 실패: " + String(e) });
+  const payload = {
+    systemInstruction: { parts: [{ text: SYSTEM }] },
+    contents: [{ role: "user", parts: [{ text: "다음은 지도에서 클릭한 지점의 데이터다. 규칙대로 요약해라.\n\n" + context }] }],
+    generationConfig: { temperature: 0.3, maxOutputTokens: 700 },
+  };
+  const r2 = await callGemini(key, MODELS(), payload);
+  if (r2.text) return res.status(200).json({ insight: r2.text, model: r2.model, configured: true });
+  return res.status(200).json({ insight: "", configured: true, error: "AI 오류(모든 모델 실패) — " + r2.error });
+}
+
+// GEMINI_MODEL(있으면 우선) + 기본 후보군을 순서대로 시도(중복 제거).
+function MODELS() {
+  const list = [];
+  if (process.env.GEMINI_MODEL) String(process.env.GEMINI_MODEL).split(",").forEach((m) => list.push(m.trim()));
+  ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite", "gemini-1.5-flash"].forEach((m) => { if (!list.includes(m)) list.push(m); });
+  return list.filter(Boolean);
+}
+// 후보 모델을 차례로 호출 → 처음으로 성공한 결과 반환. 실패 사유는 누적.
+async function callGemini(key, models, payload) {
+  let err = "";
+  for (const model of models) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+    try {
+      const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await r.json();
+      if (r.ok) {
+        const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
+        if (text) return { text, model };
+        err = `${model}: 빈 응답`;
+      } else {
+        err = `${model}: ${data?.error?.message || r.status}`;
+      }
+    } catch (e) { err = `${model}: ${String(e)}`; }
   }
+  return { text: "", model: "", error: err };
 }

@@ -30,7 +30,6 @@ export default async function handler(req, res) {
       configured: false,
     });
   }
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
 
   let body = req.body;
   if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
@@ -44,31 +43,39 @@ export default async function handler(req, res) {
     "추정치는 추정이라고 밝혀라. 답은 한국어로, 짧고 실용적으로. 숫자에는 단위를 붙여라.\n\n" +
     "데이터:\n" + (context || "(현재 선택된 상권/업종 데이터 없음)");
 
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const payload = {
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts: [{ text: message }] }],
+    generationConfig: { temperature: 0.4, maxOutputTokens: 600 },
+  };
+  const r2 = await callGemini(key, MODELS(), payload);
+  if (r2.text) return res.status(200).json({ reply: r2.text, model: r2.model, configured: true });
+  return res.status(200).json({ reply: "AI 응답 오류(모든 모델 실패): " + r2.error, configured: true, error: true });
+}
 
-  try {
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents: [{ role: "user", parts: [{ text: message }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 600 },
-      }),
-    });
-    const data = await r.json();
-    if (!r.ok) {
-      return res.status(200).json({
-        reply: "AI 응답 오류: " + (data?.error?.message || r.status),
-        configured: true, error: true,
-      });
-    }
-    const reply =
-      data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") ||
-      "응답을 생성하지 못했습니다.";
-    return res.status(200).json({ reply, configured: true });
-  } catch (e) {
-    return res.status(200).json({ reply: "AI 호출 실패: " + String(e), configured: true, error: true });
+// GEMINI_MODEL(있으면 우선) + 기본 후보군을 순서대로 시도(중복 제거).
+function MODELS() {
+  const list = [];
+  if (process.env.GEMINI_MODEL) String(process.env.GEMINI_MODEL).split(",").forEach((m) => list.push(m.trim()));
+  ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite", "gemini-1.5-flash"].forEach((m) => { if (!list.includes(m)) list.push(m); });
+  return list.filter(Boolean);
+}
+// 후보 모델을 차례로 호출 → 처음으로 성공한 결과 반환. 실패 사유는 누적.
+async function callGemini(key, models, payload) {
+  let err = "";
+  for (const model of models) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+    try {
+      const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await r.json();
+      if (r.ok) {
+        const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
+        if (text) return { text, model };
+        err = `${model}: 빈 응답`;
+      } else {
+        err = `${model}: ${data?.error?.message || r.status}`;
+      }
+    } catch (e) { err = `${model}: ${String(e)}`; }
   }
+  return { text: "", model: "", error: err };
 }
