@@ -54,6 +54,9 @@
   #pin .chip{background:#0b1420;border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-size:11.5px}
   #pin .chip b{color:var(--green)}
   #pin .chip.sel{background:#123528;border-color:var(--green);color:#dff5ea}
+  #pin .chip.more{cursor:pointer;border-style:dashed;color:var(--mut)}
+  #pin .chip.more:hover{border-color:var(--accent);color:var(--ink)}
+  #pin .chip.more b{color:var(--mut)}
   #pin .pick{font-size:13px;margin-bottom:6px;width:100%}
   #pin .pick b{font-size:15px;color:var(--green)}
   #pin .muted{color:var(--mut)}
@@ -300,25 +303,54 @@ function analyzePin(latlng){
     }
   });
 
-  // 3) 카테고리별 반경 내 총 점포수(카카오) + 경쟁 밀도
-  Promise.all(CATS.map(([code,nm])=>kakao({mode:'category',code,x:lng,y:lat,radius,size:1}).then(r=>({nm,code,n:r&&r.ok?r.total:null,err:r&&r.error}))))
+  // 3) 반경 내 점포수 — 카카오 호출 절감: 선택 업종 + 핵심 3개(음식·카페·편의)만 즉시,
+  //    나머지 업종은 칩('업종 +')을 눌렀을 때만 1건씩 조회(온디맨드). 429/비용 방어.
+  const CORE=['FD6','CE7','CS2'];
+  const chosenCode=document.getElementById('pin-cat').value;
+  const nowCodes=[...new Set([chosenCode, ...CORE])];   // 중복 제거 → 최대 4건
+  const nowCats=CATS.filter(c=>nowCodes.includes(c[0]));
+  const laterCats=CATS.filter(c=>!nowCodes.includes(c[0]));
+  const catState={};   // code -> {nm, n}
+  const el=document.getElementById('pin-cats');
+
+  function renderCats(){
+    const pick=catState[chosenCode];
+    const pickH=pick?`<div class="pick">선택 업종 <b>${esc(pick.nm)} ${pick.n==null?'—':num(pick.n)}</b>곳 <span class="muted">반경 내</span></div>`:'';
+    const nowH=nowCats.map(([code,nm])=>{const c=catState[code];
+      return `<span class="chip${code===chosenCode?' sel':''}">${esc(nm)} <b>${c&&c.n!=null?num(c.n):'—'}</b></span>`;}).join('');
+    const laterH=laterCats.map(([code,nm])=>{const c=catState[code];
+      return (c&&c.n!=null)
+        ? `<span class="chip${code===chosenCode?' sel':''}">${esc(nm)} <b>${num(c.n)}</b></span>`
+        : `<span class="chip more" data-code="${code}" data-nm="${esc(nm)}">${esc(nm)} <b>+</b></span>`;}).join('');
+    el.innerHTML=pickH+nowH+laterH;
+    [...el.querySelectorAll('.chip.more')].forEach(ch=>ch.onclick=()=>loadCat(ch.dataset.code,ch.dataset.nm));
+  }
+  function loadCat(code,nm){
+    const chip=[...el.querySelectorAll('.chip.more')].find(c=>c.dataset.code===code);
+    if(chip) chip.innerHTML=`${esc(nm)} …`;
+    kakao({mode:'category',code,x:lng,y:lat,radius,size:1}).then(r=>{
+      catState[code]={nm,n:r&&r.ok?r.total:null};
+      if(pinData&&catState[code].n!=null){pinData.cats=pinData.cats||[];pinData.cats.push({nm,n:catState[code].n});}
+      renderCats();
+    });
+  }
+  function updateDensity(){
+    const pick=catState[chosenCode], pop=POP&&POP.gu&&pinGu&&POP.gu[pinGu];
+    if(pick&&pick.n>0&&pop&&pop.tot){
+      const dens=Math.round(pop.tot/pick.n);
+      if(pinData)pinData.density={nm:pick.nm,per:dens};
+      document.getElementById('pin-density').innerHTML=`경쟁 밀도: ${esc(pick.nm)} 1곳당 유동 <b>${num(dens)}</b>명 <span style="opacity:.7">(자치구 유동 ÷ 반경 ${esc(pick.nm)}, 참고)</span>`;
+    }else document.getElementById('pin-density').innerHTML='';
+  }
+
+  Promise.all(nowCats.map(([code,nm])=>kakao({mode:'category',code,x:lng,y:lat,radius,size:1}).then(r=>({nm,code,n:r&&r.ok?r.total:null,err:r&&r.error}))))
     .then(rows=>{
-      const el=document.getElementById('pin-cats');
-      const anyOk=rows.some(r=>r.n!=null);
-      if(!anyOk){el.innerHTML=`<span class="muted">${esc(rows.find(r=>r.err)?.err||'집계 실패 — /api/kakao(KAKAO_REST_KEY) 확인')}</span>`;
+      if(!rows.some(r=>r.n!=null)){el.innerHTML=`<span class="muted">${esc(rows.find(r=>r.err)?.err||'집계 실패 — /api/kakao(KAKAO_REST_KEY) 확인')}</span>`;
         document.getElementById('pin-density').innerHTML='';return;}
-      const chosen=document.getElementById('pin-cat').value;
-      const pick=rows.find(r=>r.code===chosen);
-      const pickH=pick?`<div class="pick">선택 업종 <b>${esc(pick.nm)} ${pick.n==null?'—':num(pick.n)}</b>곳 <span class="muted">반경 내</span></div>`:'';
-      el.innerHTML=pickH+rows.map(r=>`<span class="chip${r.code===chosen?' sel':''}">${esc(r.nm)} <b>${r.n==null?'—':num(r.n)}</b></span>`).join('');
-      if(pinData){pinData.chosenName=pick?pick.nm:null;pinData.cats=rows.filter(r=>r.n!=null).map(r=>({nm:r.nm,n:r.n}));}
-      // 경쟁 밀도: 선택 업종 1곳당 자치구 유동인구(참고용, 자치구 유동 ÷ 반경 선택업종)
-      const pop=POP&&POP.gu&&pinGu&&POP.gu[pinGu];
-      if(pick&&pick.n>0&&pop&&pop.tot){
-        const dens=Math.round(pop.tot/pick.n);
-        if(pinData)pinData.density={nm:pick.nm,per:dens};
-        document.getElementById('pin-density').innerHTML=`경쟁 밀도: ${esc(pick.nm)} 1곳당 유동 <b>${num(dens)}</b>명 <span style="opacity:.7">(자치구 유동 ÷ 반경 ${esc(pick.nm)}, 참고)</span>`;
-      }else document.getElementById('pin-density').innerHTML='';
+      rows.forEach(r=>{catState[r.code]={nm:r.nm,n:r.n};});
+      if(pinData){const pk=catState[chosenCode];pinData.chosenName=pk?pk.nm:null;
+        pinData.cats=Object.values(catState).filter(c=>c.n!=null).map(c=>({nm:c.nm,n:c.n}));}
+      renderCats(); updateDensity();
     });
 }
 
