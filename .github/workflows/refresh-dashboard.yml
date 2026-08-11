@@ -94,6 +94,23 @@ jobs:
           SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
         run: python collect_subway.py
 
+      - name: 역·자치구 데이터 1차 커밋(무거운 상권 빌드와 분리)
+        continue-on-error: true       # 1차 커밋 실패해도 이후 스텝·최종 커밋은 계속
+        run: |
+          git config user.name  "dashboard-bot"
+          git config user.email "actions@users.noreply.github.com"
+          # 지하철 수집(14번)까지의 산출물만 먼저 커밋 — 상권 전량 빌드(15번)에
+          # 묶이지 않게 역·자치구 데이터를 master 에 즉시 반영한다.
+          for f in frontend/subway_stations.json frontend/subway_gu.json frontend/storeinfo_gu.json frontend/livepop_gu.json frontend/parking_gu.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/sales_by_industry.json frontend/stores_by_industry.json; do
+            [ -f "$f" ] && git add "$f" || true
+          done
+          if git diff --cached --quiet; then
+            echo "1차 커밋: 변경 없음 — 생략"
+          else
+            git commit -m "chore: 역·자치구 데이터 1차 갱신 ($(date -u +%Y-%m-%d))"
+            git push
+          fi
+
       - name: 상권 전량 데이터셋 빌드(거리감쇠 입력 CSV · 상권 좌표 포함)
         working-directory: backend
         continue-on-error: true
