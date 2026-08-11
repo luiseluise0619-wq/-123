@@ -21,7 +21,7 @@ jobs:
           python-version: "3.11"
 
       - name: 의존성 설치
-        run: pip install pandas numpy scikit-learn lightgbm
+        run: pip install pandas numpy scikit-learn lightgbm requests pyproj
 
       - name: 대시보드 재생성
         working-directory: backend
