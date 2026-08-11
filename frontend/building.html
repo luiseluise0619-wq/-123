@@ -45,6 +45,7 @@
   #pin .blk{padding:8px 0;border-top:1px dashed var(--line)}
   #pin .blk:first-child{border-top:none}
   #pin .lb{color:var(--mut);font-size:11px;letter-spacing:.02em}
+  #pin .asof{color:#6f83a0;font-size:10px}
   #pin .big{font-size:15px;font-weight:700}
   #pin .v{color:var(--ink)}
   #pin .li{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
@@ -131,6 +132,8 @@ function haversine(aLng,aLat,bLng,bLat){const R=6371000,rad=Math.PI/180;
   const p1=aLat*rad,p2=bLat*rad,dp=(bLat-aLat)*rad,dl=(bLng-aLng)*rad;
   const x=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R*Math.asin(Math.sqrt(x));}
 function fmtM(m){return m<1000?Math.round(m)+'m':(m/1000).toFixed(m<10000?1:0)+'km';}
+function fmtYmd(s){s=String(s||'');return s.length===8?`${+s.slice(4,6)}/${+s.slice(6,8)}`:s;}
+function fmtQ(s){s=String(s||'');return s.length===5?`${s.slice(0,4)} ${s.slice(4)}분기`:s;}
 
 function kakao(body){
   return fetch('/api/kakao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
@@ -205,13 +208,16 @@ function analyzePin(latlng){
     if(best) znH=`<div class="li"><span class="v">${esc(best.nm)}</span><span class="d">${fmtM(bd)} · 점포 ${num(best.stores)}</span></div>`;
   }
 
+  const popAs=(POP&&POP.stdr_date)?` · ${fmtYmd(POP.stdr_date)}${POP.hour?' '+POP.hour+'시':''} 기준`:'';
+  const stAs=(ST&&ST.date)?` · ${fmtYmd(ST.date)} 기준`:'';
+  const znAs=(ZONE&&ZONE.quarter)?` · ${fmtQ(ZONE.quarter)}`:'';
   const box=document.getElementById('pin');
   box.innerHTML=
     `<div class="blk"><div class="lb">위치</div><div class="big" id="pin-addr">주소 확인 중…</div><div class="v muted" id="pin-region"></div></div>`+
-    `<div class="blk"><div class="lb">유동인구(해당 자치구)</div><div class="v" id="pin-pop">…</div></div>`+
-    `<div class="blk"><div class="lb">주변 역 (가까운 3)</div>${stH}</div>`+
-    `<div class="blk"><div class="lb">가까운 상권</div>${znH}</div>`+
-    `<div class="blk"><div class="lb">반경 ${fmtM(radius)} 경쟁 점포</div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div></div>`;
+    `<div class="blk"><div class="lb">유동인구(해당 자치구)<span class="asof">${popAs}</span></div><div class="v" id="pin-pop">…</div></div>`+
+    `<div class="blk"><div class="lb">주변 역 (가까운 3)<span class="asof">${stAs}</span></div>${stH}</div>`+
+    `<div class="blk"><div class="lb">가까운 상권<span class="asof">${znAs}</span></div>${znH}</div>`+
+    `<div class="blk"><div class="lb">반경 ${fmtM(radius)} 경쟁 점포<span class="asof"> · 실시간</span></div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div></div>`;
 
   // 2) 역지오코딩 → 주소·자치구 → 유동인구
   kakao({mode:'coord',x:lng,y:lat}).then(d=>{
@@ -220,7 +226,7 @@ function analyzePin(latlng){
       document.getElementById('pin-region').textContent=[d.sido,d.gu,d.dong].filter(Boolean).join(' ');
       const pop=POP&&POP.gu&&d.gu&&POP.gu[d.gu];
       document.getElementById('pin-pop').innerHTML=pop
-        ? `${esc(d.gu)} <b>${num(pop.tot)}</b>명 <span class="muted">(${POP.hour}시 체류)</span>`
+        ? `${esc(d.gu)} <b>${num(pop.tot)}</b>명 <span class="muted">체류</span>`
         : `<span class="muted">${d.gu?esc(d.gu)+' 유동인구 데이터 없음':'자치구 밖'}</span>`;
     }else{
       document.getElementById('pin-addr').textContent='주소 변환 실패';
