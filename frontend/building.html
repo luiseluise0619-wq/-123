@@ -5,19 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>상권 인텔리전스 · 건물 단위 지도</title>
 <style>
-  :root{ --bg:#0F1826; --panel:#132033; --line:#22334d; --ink:#eaf1fb; --mut:#93a7c4; --accent:#2A78D6; }
+  :root{ --bg:#0F1826; --panel:#132033; --line:#22334d; --ink:#eaf1fb; --mut:#93a7c4; --accent:#2A78D6; --amber:#E0973A; --green:#2FB27A; }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink)}
   #app{position:fixed;inset:0;display:flex;flex-direction:column}
   header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto}
   header h1{font-size:15px;font-weight:700;margin:0}
-  header .sub{font-size:11px;color:var(--mut)}
+  header .sub{font-size:11px;color:var(--mut);font-weight:400}
   header a.back{margin-left:auto;font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 10px;border-radius:8px;background:#0d1725}
   header a.back:hover{border-color:var(--accent)}
   #wrap{position:relative;flex:1 1 auto}
-  #map{position:absolute;inset:0;background:#0b1420}
-  /* 지도 로드 실패(카카오 도메인 미등록/키 오류) 오버레이 */
-  #mapfail{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(11,20,32,.94);z-index:20}
+  #map{position:absolute;inset:0;background:#0b1420;cursor:crosshair}
+  #mapfail{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(11,20,32,.94);z-index:30}
   #mapfail.on{display:flex}
   #mapfail .card{max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;line-height:1.6}
   #mapfail h2{margin:0 0 8px;font-size:16px}
@@ -25,72 +24,118 @@
   #mapfail code{background:#0b1420;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px;color:#cfe0f7}
   #mapfail ol{margin:10px 0 0;padding-left:18px;font-size:13px;color:var(--mut)}
   #mapfail a{color:#7db4f2}
-  /* 좌상단 컨트롤 */
-  .ctrl{position:absolute;top:12px;left:12px;z-index:10;background:rgba(19,32,51,.92);border:1px solid var(--line);border-radius:12px;padding:12px 14px;backdrop-filter:blur(6px);max-width:240px}
-  .ctrl h3{margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.02em}
-  .ctrl select{width:100%;background:#0b1420;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px}
-  .ctrl .hint{font-size:11px;color:var(--mut);margin-top:8px}
-  .ctrl .stat{font-size:11px;color:var(--mut);margin-top:6px}
-  .ctrl .stat b{color:var(--ink)}
-  /* 범례 */
-  .legend{position:absolute;bottom:16px;left:12px;z-index:10;background:rgba(19,32,51,.92);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:11px;color:var(--mut)}
-  .legend .row{display:flex;align-items:center;gap:7px;margin:3px 0}
-  .legend .dot{border-radius:50%;background:#2A78D6;opacity:.85;flex:0 0 auto}
-  .foot{position:absolute;bottom:16px;right:12px;z-index:10;max-width:340px;font-size:10px;color:var(--mut);text-align:right;line-height:1.5;background:rgba(15,24,38,.72);padding:6px 9px;border-radius:8px}
+  .panel{position:absolute;top:12px;left:12px;z-index:10;width:288px;max-height:calc(100% - 24px);overflow-y:auto;
+    background:rgba(19,32,51,.95);border:1px solid var(--line);border-radius:12px;padding:12px 14px;backdrop-filter:blur(6px)}
+  .panel section{padding:10px 0;border-top:1px solid var(--line)}
+  .panel section:first-child{padding-top:0;border-top:none}
+  .panel h3{margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+  .panel h3 .sw{font-size:10.5px;color:var(--mut);font-weight:400}
+  .panel select,.panel input{width:100%;background:#0b1420;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px}
+  .row{display:flex;gap:6px}.row>*{min-width:0}
+  button{cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:600;white-space:nowrap}
+  .hint{font-size:11px;color:var(--mut);margin-top:7px;line-height:1.5}
+  .stat{font-size:11.5px;color:var(--mut);margin-top:7px;line-height:1.55}.stat b{color:var(--ink)}
+  label.chk{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink);margin:5px 0;cursor:pointer}
+  label.chk input{width:auto}label.chk .sw{font-size:11px;color:var(--mut)}
+  #results{margin-top:8px;max-height:170px;overflow-y:auto}
+  #results .r{padding:6px 7px;border:1px solid var(--line);border-radius:7px;margin:5px 0;cursor:pointer;font-size:12px;background:#0b1420}
+  #results .r:hover{border-color:var(--accent)}#results .r .c{color:var(--mut);font-size:11px}
+  /* 핀 분석 브리핑 */
+  #pin{font-size:12.5px;line-height:1.5}
+  #pin .blk{padding:8px 0;border-top:1px dashed var(--line)}
+  #pin .blk:first-child{border-top:none}
+  #pin .lb{color:var(--mut);font-size:11px;letter-spacing:.02em}
+  #pin .big{font-size:15px;font-weight:700}
+  #pin .v{color:var(--ink)}
+  #pin .li{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+  #pin .li .d{color:var(--mut);font-size:11px;white-space:nowrap}
+  #pin .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+  #pin .chip{background:#0b1420;border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-size:11.5px}
+  #pin .chip b{color:var(--green)}
+  #pin .muted{color:var(--mut)}
+  .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--mut);background:rgba(15,24,38,.72);padding:7px 10px;border-radius:8px}
+  .legend .k{display:inline-flex;align-items:center;gap:4px;margin-left:8px}
+  .legend .d{width:9px;height:9px;border-radius:50%;display:inline-block}
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <div>
-      <h1>건물 단위 지도 <span class="sub">· 역세권 접근성(지하철 승하차)</span></h1>
-    </div>
+    <h1>건물 단위 지도 <span class="sub">· 핀 찍으면 그 지점 브리핑</span></h1>
     <a class="back" href="index.html">← 개요 지도(자치구)</a>
   </header>
   <div id="wrap">
     <div id="map"></div>
 
-    <div class="ctrl">
-      <h3>자치구 이동</h3>
-      <select id="gu-sel"><option value="">서울 전체</option></select>
-      <div class="stat" id="stat">역 데이터 불러오는 중…</div>
-      <div class="hint">원의 크기·진하기 = 하루 승하차 인원. 역을 클릭하면 상세가 나옵니다.</div>
+    <div class="panel">
+      <section>
+        <h3>자치구 이동</h3>
+        <select id="gu-sel"><option value="">서울 전체</option></select>
+        <div class="stat" id="stat">데이터 불러오는 중…</div>
+      </section>
+
+      <section>
+        <h3>업소·건물 검색</h3>
+        <div class="row">
+          <input id="q" placeholder="예: 스타벅스 역삼, ○○빌딩" autocomplete="off">
+          <button id="q-btn">검색</button>
+        </div>
+        <div id="results"></div>
+      </section>
+
+      <section>
+        <h3>핀 분석 <span class="sw">반경
+          <select id="pin-r" style="width:auto;display:inline-block;padding:2px 4px;font-size:11px">
+            <option value="300">300m</option><option value="500" selected>500m</option><option value="1000">1km</option>
+          </select></span></h3>
+        <div id="pin"><div class="muted" style="padding:6px 0">지도의 한 지점을 클릭하면 그 지점의 <b>주소·자치구·유동인구·주변 역·가까운 상권·반경 내 경쟁 점포</b>가 여기 좌르륵 나옵니다.</div></div>
+      </section>
+
+      <section>
+        <h3>레이어</h3>
+        <label class="chk"><input type="checkbox" id="ly-station" checked> 지하철 역 <span class="sw" id="ly-station-n"></span></label>
+        <label class="chk"><input type="checkbox" id="ly-zone" checked> 상권 중심 <span class="sw" id="ly-zone-n"></span></label>
+      </section>
     </div>
 
-    <div class="legend" id="legend" style="display:none">
-      <div style="color:var(--ink);font-weight:600;margin-bottom:4px">일 승하차(명)</div>
+    <div class="legend">
+      <span class="k"><span class="d" style="background:#2A78D6"></span>역</span>
+      <span class="k"><span class="d" style="background:#E0973A"></span>상권</span>
+      <span class="k"><span class="d" style="background:#2FB27A"></span>핀/경쟁</span>
     </div>
-
-    <div class="foot" id="foot"></div>
 
     <div id="mapfail">
       <div class="card">
         <h2>지도를 불러오지 못했어요</h2>
-        <p>카카오 지도 JavaScript SDK가 차단됐습니다. 대부분 <b>배포 도메인 미등록</b> 또는 <b>앱키 오류</b>가 원인입니다(이전에 자치구 지도를 SVG로 바꾼 것도 이 문제 때문).</p>
+        <p>카카오 지도 JavaScript SDK가 차단됐습니다. <b>도메인 미등록</b> 또는 <b>[카카오맵] 사용 설정 OFF</b>가 주 원인입니다.</p>
         <ol>
-          <li><a href="https://developers.kakao.com" target="_blank" rel="noopener">Kakao Developers</a> → 내 애플리케이션에서 <b>JavaScript 키</b> 발급</li>
-          <li>플랫폼 → Web → 사이트 도메인에 <code>https://&lt;배포도메인&gt;</code> 등록(현재 Vercel 주소)</li>
-          <li>이 파일 하단 <code>appkey=</code> 값을 발급한 JS 키로 교체</li>
+          <li><a href="https://developers.kakao.com" target="_blank" rel="noopener">Kakao Developers</a> → 앱 → <b>[카카오맵] 사용 설정 ON</b></li>
+          <li>JavaScript 키 → <b>JavaScript SDK 도메인</b>에 배포 주소 등록</li>
         </ol>
-        <p style="margin-top:12px">그동안 자치구 단위 개요는 <a href="index.html">개요 지도(SVG)</a>에서 정상 동작합니다.</p>
+        <p style="margin-top:12px">자치구 개요는 <a href="index.html">개요 지도(SVG)</a>에서 계속 동작합니다.</p>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-/* 검증된 카카오 연동 관용구는 기존 index.html(bf7ab87^)에서 되살림.
-   여기서는 건물/역 단위 해상도에 집중: 지하철 역별 승하차를 원 마커로 투영. */
-let MAP=null, GU=null, ST=null, guCenters={};
-const markers=[], guPolys=[];
+let MAP=null, GU=null, ST=null, ZONE=null, POP=null, guCenters={}, IW=null, pinMk=null, pinCircle=null;
+const stationMk=[], zoneMk=[], searchMk=[];
 
 function loadJSON(f){return fetch(f,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
 function num(n){return (n==null||isNaN(n))?'—':Number(n).toLocaleString('ko-KR');}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function radiusOf(t,max){t=Math.max(0,t||0);return 120+Math.sqrt(t/(max||1))*640;}
+function colorStation(t,max){const r=Math.min(1,(t||0)/(max||1));return `rgb(42,${Math.round(150-r*70)},${Math.round(214-r*40)})`;}
+function haversine(aLng,aLat,bLng,bLat){const R=6371000,rad=Math.PI/180;
+  const p1=aLat*rad,p2=bLat*rad,dp=(bLat-aLat)*rad,dl=(bLng-aLng)*rad;
+  const x=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R*Math.asin(Math.sqrt(x));}
+function fmtM(m){return m<1000?Math.round(m)+'m':(m/1000).toFixed(m<10000?1:0)+'km';}
 
-// 승하차 규모 → 반지름(미터). sqrt 스케일로 큰 역이 지나치게 커지지 않게.
-function radiusOf(total,max){ const t=Math.max(0,total||0); const r=Math.sqrt(t/(max||1)); return 120+r*640; }
-// 승하차 규모 → 색(옅은 청 → 진한 청).
-function colorOf(total,max){ const r=Math.min(1,(total||0)/(max||1)); const g=Math.round(150-r*70), b=Math.round(214-r*40); return `rgb(42,${g},${b})`; }
+function kakao(body){
+  return fetch('/api/kakao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(r=>r.json()).catch(e=>({ok:false,items:[],error:'연결 실패(배포 사이트에서만 동작): '+e}));
+}
 
 function drawGuBase(map){
   if(!GU||!GU.features)return;
@@ -100,101 +145,169 @@ function drawGuBase(map){
     let cx=0,cy=0,cn=0;
     rings.forEach(ring=>{
       const path=ring.map(pt=>new kakao.maps.LatLng(pt[1],pt[0]));
-      const poly=new kakao.maps.Polygon({path,strokeWeight:1,strokeColor:'#3a5578',strokeOpacity:.7,fillColor:'#16273d',fillOpacity:.22});
-      poly.setMap(map); guPolys.push(poly);
+      new kakao.maps.Polygon({path,strokeWeight:1,strokeColor:'#3a5578',strokeOpacity:.7,fillColor:'#16273d',fillOpacity:.16}).setMap(map);
       ring.forEach(pt=>{cx+=pt[0];cy+=pt[1];cn++;});
     });
     if(cn) guCenters[name]={lat:cy/cn,lng:cx/cn};
   });
 }
-
 function drawStations(map){
   if(!ST||!ST.stations||!ST.stations.length)return;
-  const max=ST.stations[0].total||1;   // total 내림차순 정렬 → 첫 항목이 최대
-  const iw=new kakao.maps.InfoWindow({removable:true});
+  const max=ST.stations[0].total||1;
   ST.stations.forEach(s=>{
     if(s.lat==null||s.lon==null)return;
     const pos=new kakao.maps.LatLng(s.lat,s.lon);
-    const c=new kakao.maps.Circle({center:pos,radius:radiusOf(s.total,max),
-      strokeWeight:1,strokeColor:'#0b1420',strokeOpacity:.5,
-      fillColor:colorOf(s.total,max),fillOpacity:.62});
-    c.setMap(map); markers.push(c);
-    kakao.maps.event.addListener(c,'click',()=>{
-      iw.setContent(
-        `<div style="padding:8px 11px;font:13px -apple-system;color:#0F1826;min-width:150px">`+
-        `<b style="font-size:14px">${s.nm}</b> <span style="color:#5b6b82">· ${s.gu||''}</span><br>`+
-        `승차 ${num(s.on)} · 하차 ${num(s.off)}<br>`+
-        `<b>합계 ${num(s.total)}</b> 명/일</div>`);
-      iw.setPosition(pos); iw.open(map);
-    });
+    const c=new kakao.maps.Circle({center:pos,radius:radiusOf(s.total,max),strokeWeight:1,strokeColor:'#0b1420',strokeOpacity:.5,fillColor:colorStation(s.total,max),fillOpacity:.6});
+    c.setMap(map); stationMk.push(c);
+    kakao.maps.event.addListener(c,'click',()=>openIW(pos,`<b style="font-size:14px">${esc(s.nm)}</b> <span style="color:#5b6b82">· ${esc(s.gu||'')}</span><br>승차 ${num(s.on)} · 하차 ${num(s.off)}<br><b>합계 ${num(s.total)}</b> 명/일`));
   });
-  buildLegend(max);
+  document.getElementById('ly-station-n').textContent=ST.n_stations?`${num(ST.n_stations)}개`:'';
+}
+function drawZones(map){
+  if(!ZONE||!ZONE.available||!ZONE.zones||!ZONE.zones.length)return;
+  const max=ZONE.zones[0].stores||1;
+  ZONE.zones.forEach(z=>{
+    if(z.lat==null||z.lon==null)return;
+    const pos=new kakao.maps.LatLng(z.lat,z.lon);
+    const c=new kakao.maps.Circle({center:pos,radius:100+Math.sqrt((z.stores||0)/max)*380,strokeWeight:1,strokeColor:'#5a3d16',strokeOpacity:.5,fillColor:'#E0973A',fillOpacity:.5});
+    c.setMap(map); zoneMk.push(c);
+    const top=(z.top||[]).map(t=>`${esc(t.ind)} ${num(t.stores)}`).join(' · ');
+    kakao.maps.event.addListener(c,'click',()=>openIW(pos,`<b style="font-size:14px">${esc(z.nm)}</b><br>점포 <b>${num(z.stores)}</b>개${z.sales?` · 월매출 ${num(z.sales)}`:''}<br><span style="color:#5b6b82;font-size:11px">${top}</span>`));
+  });
+  document.getElementById('ly-zone-n').textContent=ZONE.n_zones?`${num(ZONE.n_zones)}개`:'';
+}
+function openIW(pos,html){
+  if(!IW) IW=new kakao.maps.InfoWindow({removable:true});
+  IW.setContent(`<div style="padding:8px 11px;font:13px -apple-system;color:#0F1826;min-width:150px;max-width:240px">${html}</div>`);
+  IW.setPosition(pos); IW.open(MAP);
+}
+function clearMk(arr){arr.forEach(m=>m.setMap(null));arr.length=0;}
+
+/* ── 핀 분석: 클릭 지점 종합 브리핑 ── */
+const CATS=[['FD6','음식점'],['CE7','카페'],['CS2','편의점'],['HP8','병원'],['PM9','약국'],['AC5','학원']];
+function analyzePin(latlng){
+  const lat=latlng.getLat(), lng=latlng.getLng(), radius=+document.getElementById('pin-r').value;
+  if(pinMk) pinMk.setMap(null);
+  pinMk=new kakao.maps.Marker({position:latlng,map:MAP});
+  if(pinCircle) pinCircle.setMap(null);
+  pinCircle=new kakao.maps.Circle({center:latlng,radius,strokeWeight:2,strokeColor:'#2FB27A',strokeOpacity:.9,fillColor:'#2FB27A',fillOpacity:.07});
+  pinCircle.setMap(MAP);
+
+  // 1) 즉시 계산: 주변 역 3개, 가까운 상권 (로컬 데이터 haversine)
+  let stH='<span class="muted">역 데이터 준비 중</span>';
+  if(ST&&ST.stations&&ST.stations.length){
+    const near=ST.stations.map(s=>({s,d:haversine(lng,lat,s.lon,s.lat)})).sort((a,b)=>a.d-b.d).slice(0,3);
+    stH=near.map(o=>`<div class="li"><span class="v">${esc(o.s.nm)} <span class="muted">${esc(o.s.gu||'')}</span></span><span class="d">${fmtM(o.d)} · ${num(o.s.total)}/일</span></div>`).join('');
+  }
+  let znH='<span class="muted">상권 데이터 준비 중</span>';
+  if(ZONE&&ZONE.available&&ZONE.zones&&ZONE.zones.length){
+    let best=null,bd=1e12; ZONE.zones.forEach(z=>{const d=haversine(lng,lat,z.lon,z.lat);if(d<bd){bd=d;best=z;}});
+    if(best) znH=`<div class="li"><span class="v">${esc(best.nm)}</span><span class="d">${fmtM(bd)} · 점포 ${num(best.stores)}</span></div>`;
+  }
+
+  const box=document.getElementById('pin');
+  box.innerHTML=
+    `<div class="blk"><div class="lb">위치</div><div class="big" id="pin-addr">주소 확인 중…</div><div class="v muted" id="pin-region"></div></div>`+
+    `<div class="blk"><div class="lb">유동인구(해당 자치구)</div><div class="v" id="pin-pop">…</div></div>`+
+    `<div class="blk"><div class="lb">주변 역 (가까운 3)</div>${stH}</div>`+
+    `<div class="blk"><div class="lb">가까운 상권</div>${znH}</div>`+
+    `<div class="blk"><div class="lb">반경 ${fmtM(radius)} 경쟁 점포</div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div></div>`;
+
+  // 2) 역지오코딩 → 주소·자치구 → 유동인구
+  kakao({mode:'coord',x:lng,y:lat}).then(d=>{
+    if(d&&d.ok){
+      document.getElementById('pin-addr').textContent=d.address||'주소 정보 없음';
+      document.getElementById('pin-region').textContent=[d.sido,d.gu,d.dong].filter(Boolean).join(' ');
+      const pop=POP&&POP.gu&&d.gu&&POP.gu[d.gu];
+      document.getElementById('pin-pop').innerHTML=pop
+        ? `${esc(d.gu)} <b>${num(pop.tot)}</b>명 <span class="muted">(${POP.hour}시 체류)</span>`
+        : `<span class="muted">${d.gu?esc(d.gu)+' 유동인구 데이터 없음':'자치구 밖'}</span>`;
+    }else{
+      document.getElementById('pin-addr').textContent='주소 변환 실패';
+      document.getElementById('pin-region').innerHTML=`<span class="muted">${esc((d&&d.error)||'')}</span>`;
+      document.getElementById('pin-pop').innerHTML='<span class="muted">—</span>';
+    }
+  });
+
+  // 3) 카테고리별 반경 내 총 점포수 (카카오 total_count)
+  Promise.all(CATS.map(([code,nm])=>kakao({mode:'category',code,x:lng,y:lat,radius,size:1}).then(r=>({nm,code,n:r&&r.ok?r.total:null,err:r&&r.error}))))
+    .then(rows=>{
+      const el=document.getElementById('pin-cats');
+      const anyOk=rows.some(r=>r.n!=null);
+      if(!anyOk){el.innerHTML=`<span class="muted">${esc(rows.find(r=>r.err)?.err||'집계 실패 — /api/kakao(KAKAO_REST_KEY) 확인')}</span>`;return;}
+      el.innerHTML=rows.map(r=>`<span class="chip">${esc(r.nm)} <b>${r.n==null?'—':num(r.n)}</b></span>`).join('');
+    });
 }
 
-function buildLegend(max){
-  const lg=document.getElementById('legend'); if(!lg)return;
-  const steps=[max,max*0.5,max*0.2];
-  lg.querySelectorAll('.row').forEach(n=>n.remove());
-  steps.forEach(v=>{
-    const px=Math.max(8,Math.min(30,Math.sqrt(v/max)*30));
-    const row=document.createElement('div'); row.className='row';
-    row.innerHTML=`<span class="dot" style="width:${px}px;height:${px}px;background:${colorOf(v,max)}"></span><span>${num(Math.round(v))}</span>`;
-    lg.appendChild(row);
+/* ── 업소 검색 ── */
+function poiMarker(map,it){
+  const pos=new kakao.maps.LatLng(it.y,it.x);
+  const mk=new kakao.maps.Marker({position:pos,map});
+  kakao.maps.event.addListener(mk,'click',()=>openIW(pos,
+    `<b style="font-size:14px">${esc(it.name)}</b><br><span style="color:#5b6b82;font-size:11px">${esc(it.category||'')}</span><br>`+
+    `${it.road||it.address?esc(it.road||it.address)+'<br>':''}${it.phone?esc(it.phone)+'<br>':''}`+
+    `${it.url?`<a href="${esc(it.url)}" target="_blank" style="color:#2A78D6">카카오맵 ↗</a>`:''}`));
+  return mk;
+}
+function runSearch(){
+  const q=document.getElementById('q').value.trim(), box=document.getElementById('results');
+  if(!q){box.innerHTML='';return;}
+  box.innerHTML='<div class="r c">검색 중…</div>';
+  const c=MAP.getCenter();
+  kakao({mode:'keyword',query:q,x:c.getLng(),y:c.getLat()}).then(d=>{
+    clearMk(searchMk);
+    if(!d.ok){box.innerHTML=`<div class="r c" style="color:#e6a0a0">${esc(d.error||'검색 실패')}</div>`;return;}
+    if(!d.items.length){box.innerHTML='<div class="r c">결과 없음</div>';return;}
+    d.items.forEach(it=>searchMk.push(poiMarker(MAP,it)));
+    const f=d.items[0]; MAP.panTo(new kakao.maps.LatLng(f.y,f.x)); MAP.setLevel(4);
+    box.innerHTML=d.items.map((it,i)=>`<div class="r" data-i="${i}"><b>${esc(it.name)}</b><br><span class="c">${esc(it.category||'')}${it.road?' · '+esc(it.road):''}</span></div>`).join('');
+    [...box.querySelectorAll('.r')].forEach(el=>el.onclick=()=>{const it=d.items[+el.dataset.i];analyzePin(new kakao.maps.LatLng(it.y,it.x));MAP.setLevel(4);});
   });
-  lg.style.display='';
 }
 
 function fillGuSelect(){
   const sel=document.getElementById('gu-sel');
-  const names=Object.keys(guCenters).sort();
-  names.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
-  sel.onchange=()=>{
-    const v=sel.value;
-    if(!MAP)return;
+  Object.keys(guCenters).sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  sel.onchange=()=>{const v=sel.value;if(!MAP)return;
     if(v&&guCenters[v]){MAP.panTo(new kakao.maps.LatLng(guCenters[v].lat,guCenters[v].lng));MAP.setLevel(5);}
-    else{MAP.panTo(new kakao.maps.LatLng(37.5636,126.9976));MAP.setLevel(8);}
-  };
+    else{MAP.panTo(new kakao.maps.LatLng(37.5636,126.9976));MAP.setLevel(8);}};
 }
-
 function setStat(){
   const el=document.getElementById('stat'); if(!el)return;
-  if(ST&&ST.available&&ST.stations&&ST.stations.length){
-    const top=ST.stations[0];
-    el.innerHTML=`역 <b>${num(ST.n_stations)}</b>개 · 기준 ${ST.date||'—'}<br>최다 승하차: <b>${top.nm}</b> (${num(top.total)}명/일)`;
-  }else{
-    el.innerHTML='역 승하차 데이터가 아직 없습니다.<br>자동 갱신 워크플로가 <code style="font-size:10px">subway_stations.json</code>을 커밋하면 표시됩니다.';
-  }
+  const p=[];
+  p.push(ST&&ST.available&&ST.stations&&ST.stations.length?`역 <b>${num(ST.n_stations)}</b>개`:'역 준비 중');
+  p.push(ZONE&&ZONE.available&&ZONE.zones&&ZONE.zones.length?`상권 <b>${num(ZONE.n_zones)}</b>개`:'상권 준비 중');
+  p.push(POP&&POP.gu?`유동인구 ${POP.hour}시`:'유동인구 준비 중');
+  el.innerHTML=p.join(' · ');
 }
 
 function initMap(){
   const el=document.getElementById('map');
   MAP=new kakao.maps.Map(el,{center:new kakao.maps.LatLng(37.5636,126.9976),level:8});
   MAP.addControl(new kakao.maps.ZoomControl(),kakao.maps.ControlPosition.RIGHT);
-  drawGuBase(MAP);
-  drawStations(MAP);
-  fillGuSelect();
-  setStat();
-  document.getElementById('foot').textContent=
-    '출처: 서울 열린데이터광장 지하철 승하차(CardSubwayStatsNew) + 역사마스터 좌표(WGS84). '+
-    '역별 최근 평일 하루 승차+하차(동일 역명은 노선 합산).';
+  drawGuBase(MAP); drawStations(MAP); drawZones(MAP);
+  fillGuSelect(); setStat();
+  document.getElementById('q-btn').onclick=runSearch;
+  document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')runSearch();});
+  document.getElementById('ly-station').onchange=e=>stationMk.forEach(m=>m.setMap(e.target.checked?MAP:null));
+  document.getElementById('ly-zone').onchange=e=>zoneMk.forEach(m=>m.setMap(e.target.checked?MAP:null));
+  kakao.maps.event.addListener(MAP,'click',me=>analyzePin(me.latLng));
 }
-
 function boot(){
-  Promise.all([loadJSON('seoul_gu.geojson'),loadJSON('subway_stations.json')])
-    .then(([g,s])=>{GU=g;ST=s;})
+  Promise.all([loadJSON('seoul_gu.geojson'),loadJSON('subway_stations.json'),loadJSON('trade_zones.json'),loadJSON('livepop_gu.json')])
+    .then(([g,s,z,p])=>{GU=g;ST=s;ZONE=z;POP=p;})
     .finally(()=>{
       if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
       else{document.getElementById('mapfail').classList.add('on');setStat();}
     });
 }
 </script>
-<!-- 카카오 지도 JS SDK: 아래 appkey 를 발급한 JavaScript 키로 교체하고,
-     Kakao Developers 콘솔의 플랫폼>Web 사이트 도메인에 배포 주소(Vercel)를 반드시 등록할 것.
-     도메인 미등록이 이전 지도 실패(→SVG 전환)의 원인이었음. -->
+<!-- 카카오 지도 JS SDK: JavaScript 키. 콘솔에서 [카카오맵] 사용 설정 ON + JavaScript SDK 도메인 등록 필요.
+     검색·역지오코딩·경쟁점포 집계는 /api/kakao 서버리스가 REST 키(KAKAO_REST_KEY)로 처리. -->
 <script>
 (function(){
   const s=document.createElement('script');
-  s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey=ccae74b5236470bacd274b8f17a0de2e&autoload=false';
+  s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey=ccae74b5236470bacd274b8f17a0de2e&autoload=false&libraries=services';
   s.onload=boot;
   s.onerror=function(){document.getElementById('mapfail').classList.add('on');setStat();};
   document.head.appendChild(s);
