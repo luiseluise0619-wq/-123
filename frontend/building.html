@@ -67,30 +67,30 @@
 <body>
 <div id="app">
   <header>
-    <h1>건물 단위 지도 <span class="sub">· 핀 찍으면 그 지점 브리핑</span></h1>
-    <a class="back" href="index.html">← 개요 지도(자치구)</a>
+    <h1>동네 지도 <span class="sub">· 지도를 누르면 그 자리 정보가 나와요</span></h1>
+    <a class="back" href="index.html">← 자치구 지도</a>
   </header>
   <div id="wrap">
     <div id="map"></div>
 
     <div class="panel">
       <section>
-        <h3>자치구 이동</h3>
+        <h3>지역으로 이동</h3>
         <select id="gu-sel"><option value="">서울 전체</option></select>
-        <div class="stat" id="stat">데이터 불러오는 중…</div>
+        <div class="stat" id="stat">불러오는 중…</div>
       </section>
 
       <section>
-        <h3>업소·건물 검색</h3>
+        <h3>가게·건물 찾기</h3>
         <div class="row">
           <input id="q" placeholder="예: 스타벅스 역삼, ○○빌딩" autocomplete="off">
-          <button id="q-btn">검색</button>
+          <button id="q-btn">찾기</button>
         </div>
         <div id="results"></div>
       </section>
 
       <section>
-        <h3>핀 분석 <span class="sw">반경
+        <h3>이 자리 살펴보기 <span class="sw">반경
           <select id="pin-r" style="width:auto;display:inline-block;padding:2px 4px;font-size:11px">
             <option value="300">300m</option><option value="500" selected>500m</option><option value="1000">1km</option>
           </select></span></h3>
@@ -103,22 +103,22 @@
             <option value="SC4">학교</option><option value="CT1">문화</option><option value="SW8">지하철역</option>
           </select>
         </div>
-        <div id="pin"><div class="muted" style="padding:6px 0">지도를 클릭하면 그 지점 정보가 여기 나옵니다. 위에서 <b>관심 업종</b>도 고를 수 있어요.</div></div>
-        <button id="pin-insight-btn" style="width:100%;margin-top:8px">🧠 AI 인사이트</button>
+        <div id="pin"><div class="muted" style="padding:6px 0">지도를 누르면 그 자리 정보가 여기 나와요. 위에서 <b>보고 싶은 업종</b>도 고를 수 있어요.</div></div>
+        <button id="pin-insight-btn" style="width:100%;margin-top:8px">🧠 AI가 한눈에 정리</button>
         <div id="pin-insight"></div>
       </section>
 
       <section>
-        <h3>레이어</h3>
-        <label class="chk"><input type="checkbox" id="ly-station"> 지하철 역(파란 원) <span class="sw" id="ly-station-n"></span></label>
-        <label class="chk"><input type="checkbox" id="ly-zone" checked> 상권 중심(주황 원) <span class="sw" id="ly-zone-n"></span></label>
+        <h3>지도 위에 표시</h3>
+        <label class="chk"><input type="checkbox" id="ly-station"> 지하철역 (파란 동그라미) <span class="sw" id="ly-station-n"></span></label>
+        <label class="chk"><input type="checkbox" id="ly-zone" checked> 가게 많은 곳 (주황 동그라미) <span class="sw" id="ly-zone-n"></span></label>
       </section>
     </div>
 
     <div class="legend">
-      <span class="k"><span class="d" style="background:#2A78D6"></span>역</span>
-      <span class="k"><span class="d" style="background:#E0973A"></span>상권</span>
-      <span class="k"><span class="d" style="background:#2FB27A"></span>핀/경쟁</span>
+      <span class="k"><span class="d" style="background:#2A78D6"></span>지하철역</span>
+      <span class="k"><span class="d" style="background:#E0973A"></span>가게 많은 곳</span>
+      <span class="k"><span class="d" style="background:#2FB27A"></span>내가 누른 곳</span>
     </div>
 
     <div id="mapfail">
@@ -217,12 +217,12 @@ function analyzePin(latlng){
   pinCircle.setMap(MAP);
 
   // 1) 즉시 계산(로컬 haversine): 주변 역 3개, 가까운 상권, 역세권 프리미엄
-  let near=null, stH='<span class="muted">역 데이터 준비 중 (heavy 실행 후)</span>';
+  let near=null, stH='<span class="muted">지하철역 데이터 준비 중</span>';
   if(ST&&ST.stations&&ST.stations.length){
     near=ST.stations.map(s=>({s,d:haversine(lng,lat,s.lon,s.lat)})).sort((a,b)=>a.d-b.d).slice(0,3);
-    stH=near.map(o=>`<div class="li"><span class="v">${esc(o.s.nm)} <span class="muted">${esc(o.s.gu||'')}</span></span><span class="d">${fmtM(o.d)} · ${num(o.s.total)}/일</span></div>`).join('');
+    stH=near.map(o=>`<div class="li"><span class="v">${esc(o.s.nm)} <span class="muted">${esc(o.s.gu||'')}</span></span><span class="d">${fmtM(o.d)} · 하루 ${num(o.s.total)}명</span></div>`).join('');
   }
-  // 역세권 프리미엄: distance_decay 의 대표 업종 임계거리 vs 이 지점의 최근접 역거리
+  // 역 가까울수록 장사 잘되는지: distance_decay 임계거리 vs 이 자리의 가장 가까운 역거리
   let premH='';
   if(near&&near.length){
     const d0=near[0].d;
@@ -230,16 +230,16 @@ function analyzePin(latlng){
       const res=DD.result||DD.by_industry||DD.industries||{};
       let bp=null; for(const k in res){ if(res[k]&&res[k].breakpoint_m){bp=res[k].breakpoint_m;break;} }
       premH=bp!=null
-        ? `역세권 매출 임계 ~${bp}m · 이 지점 최근접 역 ${fmtM(d0)} → <b>${d0<=bp?'역세권 안':'역세권 밖'}</b>`
-        : `역 인접 매출 프리미엄 데이터 있음(임계 불명확)`;
+        ? `보통 역에서 ~${bp}m 안쪽이 장사 잘되는 편 · 여기서 가장 가까운 역 ${fmtM(d0)} → <b>${d0<=bp?'가까운 편':'먼 편'}</b>`
+        : `역 근처 매출 데이터 있음`;
     }else{
-      premH=`역세권 매출분석은 heavy 실행 후`;
+      premH=`역 근처 매출 분석은 데이터 준비 후`;
     }
   }
-  let znBest=null, znDist=null, znH='<span class="muted">상권 데이터 준비 중 (heavy 실행 후)</span>';
+  let znBest=null, znDist=null, znH='<span class="muted">가게 많은 곳 데이터 준비 중</span>';
   if(ZONE&&ZONE.available&&ZONE.zones&&ZONE.zones.length){
     let best=null,bd=1e12; ZONE.zones.forEach(z=>{const d=haversine(lng,lat,z.lon,z.lat);if(d<bd){bd=d;best=z;}});
-    if(best){ znBest=best; znDist=bd; znH=`<div class="li"><span class="v">${esc(best.nm)}</span><span class="d">${fmtM(bd)} · 점포 ${num(best.stores)}</span></div>`; }
+    if(best){ znBest=best; znDist=bd; znH=`<div class="li"><span class="v">${esc(best.nm)}</span><span class="d">${fmtM(bd)} · 가게 ${num(best.stores)}개</span></div>`; }
   }
 
   // 인사이트/재사용을 위해 이 핀의 데이터를 축적
@@ -258,12 +258,12 @@ function analyzePin(latlng){
   const znAs=(ZONE&&ZONE.quarter)?` · ${fmtQ(ZONE.quarter)}`:'';
   const box=document.getElementById('pin');
   box.innerHTML=
-    `<div class="blk"><div class="lb">위치</div><div class="big" id="pin-addr">주소 확인 중…</div><div class="v muted" id="pin-region"></div></div>`+
-    `<div class="blk"><div class="lb">유동인구(해당 자치구)<span class="asof">${popAs}</span></div><div class="v" id="pin-pop">…</div><div class="muted" id="pin-demo" style="font-size:11px;margin-top:2px"></div></div>`+
-    `<div class="blk"><div class="lb">자치구 지표<span class="asof"> · 자치구 단위</span></div><div class="v" id="pin-gu">…</div></div>`+
-    `<div class="blk"><div class="lb">주변 역 (가까운 3)<span class="asof">${stAs}</span></div>${stH}${premH?`<div class="muted" style="font-size:11px;margin-top:4px">${premH}</div>`:''}</div>`+
-    `<div class="blk"><div class="lb">가까운 상권<span class="asof">${znAs}</span></div>${znH}</div>`+
-    `<div class="blk"><div class="lb">반경 ${fmtM(radius)} 점포<span class="asof"> · 실시간</span></div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div><div class="muted" id="pin-density" style="font-size:11px;margin-top:5px"></div></div>`;
+    `<div class="blk"><div class="lb">어디인가요</div><div class="big" id="pin-addr">주소 확인 중…</div><div class="v muted" id="pin-region"></div></div>`+
+    `<div class="blk"><div class="lb">지나다니는 사람 (이 구 기준)<span class="asof">${popAs}</span></div><div class="v" id="pin-pop">…</div><div class="muted" id="pin-demo" style="font-size:11px;margin-top:2px"></div></div>`+
+    `<div class="blk"><div class="lb">이 구 정보<span class="asof"> · 구 전체</span></div><div class="v" id="pin-gu">…</div></div>`+
+    `<div class="blk"><div class="lb">가까운 지하철역 3곳<span class="asof">${stAs}</span></div>${stH}${premH?`<div class="muted" style="font-size:11px;margin-top:4px">${premH}</div>`:''}</div>`+
+    `<div class="blk"><div class="lb">가까운 가게 많은 곳<span class="asof">${znAs}</span></div>${znH}</div>`+
+    `<div class="blk"><div class="lb">이 근처 ${fmtM(radius)} 안 가게 수<span class="asof"> · 지금 조회</span></div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div><div class="muted" id="pin-density" style="font-size:11px;margin-top:5px"></div></div>`;
 
   // 2) 역지오코딩 → 주소·자치구 → 유동인구(성별·연령) · 폐업추세
   kakao({mode:'coord',x:lng,y:lat}).then(d=>{
@@ -274,8 +274,8 @@ function analyzePin(latlng){
       if(pinData){pinData.addr=d.address||null;pinData.gu=d.gu||null;pinData.dong=d.dong||null;}
       const pop=POP&&POP.gu&&d.gu&&POP.gu[d.gu];
       document.getElementById('pin-pop').innerHTML=pop
-        ? `${esc(d.gu)} <b>${num(pop.tot)}</b>명 <span class="muted">체류</span>`
-        : `<span class="muted">${d.gu?esc(d.gu)+' 유동인구 데이터 없음':'자치구 밖'}</span>`;
+        ? `${esc(d.gu)}에 <b>${num(pop.tot)}</b>명`
+        : `<span class="muted">${d.gu?esc(d.gu)+' 사람 수 데이터 없음':'서울 밖'}</span>`;
       // 성별·연령 구성
       if(pop&&pop.tot){
         const mp=Math.round((pop.m||0)/pop.tot*100), fp=100-mp;
@@ -286,11 +286,11 @@ function analyzePin(latlng){
       // 자치구 지표: 실측 상가 · 주차장 · 폐업추세
       const gv=[];
       const store=STORE&&STORE.gu&&d.gu&&STORE.gu[d.gu];
-      if(store){ gv.push(`<div class="li"><span class="v">실측 상가</span><span class="d">${num(store.stores)}개</span></div>`); if(pinData)pinData.store=store.stores; }
+      if(store){ gv.push(`<div class="li"><span class="v">가게 수(구 전체)</span><span class="d">${num(store.stores)}개</span></div>`); if(pinData)pinData.store=store.stores; }
       const pk=PARK&&PARK.gu&&d.gu&&PARK.gu[d.gu];
-      if(pk){ gv.push(`<div class="li"><span class="v">주차장</span><span class="d">${num(pk.lots)}곳 · ${num(pk.slots)}면</span></div>`); if(pinData){pinData.lots=pk.lots;pinData.slots=pk.slots;} }
+      if(pk){ gv.push(`<div class="li"><span class="v">주차장</span><span class="d">${num(pk.lots)}곳 · ${num(pk.slots)}자리</span></div>`); if(pinData){pinData.lots=pk.lots;pinData.slots=pk.slots;} }
       const core=(window.__SANGGWON&&window.__SANGGWON.core), cg=core&&core.gu&&d.gu&&core.gu[d.gu];
-      if(cg&&cg.trend!=null){ gv.push(`<div class="li"><span class="v">폐업 추세<span class="muted"> 2년</span></span><span class="d">${cg.trend>=0?'+':''}${cg.trend}% · '24 ${num(cg.y2024)}건</span></div>`); if(pinData){pinData.trend=cg.trend;pinData.y2024=cg.y2024;} }
+      if(cg&&cg.trend!=null){ gv.push(`<div class="li"><span class="v">가게 문 닫음<span class="muted"> 2년 변화</span></span><span class="d">${cg.trend>=0?'+':''}${cg.trend}% · '24년 ${num(cg.y2024)}곳</span></div>`); if(pinData){pinData.trend=cg.trend;pinData.y2024=cg.y2024;} }
       document.getElementById('pin-gu').innerHTML=gv.length?gv.join(''):`<span class="muted">자치구 지표 없음</span>`;
     }else{
       document.getElementById('pin-addr').textContent='주소 변환 실패';
@@ -309,7 +309,7 @@ function analyzePin(latlng){
         document.getElementById('pin-density').innerHTML='';return;}
       const chosen=document.getElementById('pin-cat').value;
       const pick=rows.find(r=>r.code===chosen);
-      const pickH=pick?`<div class="pick">선택 업종 <b>${esc(pick.nm)} ${pick.n==null?'—':num(pick.n)}</b>곳 <span class="muted">반경 내</span></div>`:'';
+      const pickH=pick?`<div class="pick">고른 업종 <b>${esc(pick.nm)} ${pick.n==null?'—':num(pick.n)}</b>곳 <span class="muted">이 근처</span></div>`:'';
       el.innerHTML=pickH+rows.map(r=>`<span class="chip${r.code===chosen?' sel':''}">${esc(r.nm)} <b>${r.n==null?'—':num(r.n)}</b></span>`).join('');
       if(pinData){pinData.chosenName=pick?pick.nm:null;pinData.cats=rows.filter(r=>r.n!=null).map(r=>({nm:r.nm,n:r.n}));}
       // 경쟁 밀도: 선택 업종 1곳당 자치구 유동인구(참고용, 자치구 유동 ÷ 반경 선택업종)
@@ -317,7 +317,7 @@ function analyzePin(latlng){
       if(pick&&pick.n>0&&pop&&pop.tot){
         const dens=Math.round(pop.tot/pick.n);
         if(pinData)pinData.density={nm:pick.nm,per:dens};
-        document.getElementById('pin-density').innerHTML=`경쟁 밀도: ${esc(pick.nm)} 1곳당 유동 <b>${num(dens)}</b>명 <span style="opacity:.7">(자치구 유동 ÷ 반경 ${esc(pick.nm)}, 참고)</span>`;
+        document.getElementById('pin-density').innerHTML=`얼마나 빽빽한가: ${esc(pick.nm)} 한 곳당 <b>${num(dens)}</b>명 <span style="opacity:.7">(구 전체 사람 ÷ 이 근처 ${esc(pick.nm)} 수, 참고용)</span>`;
       }else document.getElementById('pin-density').innerHTML='';
     });
 }
@@ -341,8 +341,8 @@ function pinContext(){
 function runInsight(){
   const out=document.getElementById('pin-insight'); if(!out)return;
   const ctx=pinContext();
-  if(!ctx){out.innerHTML='<span class="muted">먼저 지도를 클릭해 지점을 고르세요.</span>';return;}
-  out.innerHTML='<span class="muted">AI가 정리 중…</span>';
+  if(!ctx){out.innerHTML='<span class="muted">먼저 지도를 눌러 자리를 골라주세요.</span>';return;}
+  out.innerHTML='<span class="muted">AI가 정리하는 중…</span>';
   fetch('/api/insight',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:ctx})})
     .then(r=>r.json()).then(d=>{
       if(d&&d.insight){out.textContent=d.insight;}
@@ -363,11 +363,11 @@ function poiMarker(map,it){
 function runSearch(){
   const q=document.getElementById('q').value.trim(), box=document.getElementById('results');
   if(!q){box.innerHTML='';return;}
-  box.innerHTML='<div class="r c">검색 중…</div>';
+  box.innerHTML='<div class="r c">찾는 중…</div>';
   const c=MAP.getCenter();
   kakao({mode:'keyword',query:q,x:c.getLng(),y:c.getLat()}).then(d=>{
     clearMk(searchMk);
-    if(!d.ok){box.innerHTML=`<div class="r c" style="color:#e6a0a0">${esc(d.error||'검색 실패')}</div>`;return;}
+    if(!d.ok){box.innerHTML=`<div class="r c" style="color:#e6a0a0">${esc(d.error||'못 찾음')}</div>`;return;}
     if(!d.items.length){box.innerHTML='<div class="r c">결과 없음</div>';return;}
     d.items.forEach(it=>searchMk.push(poiMarker(MAP,it)));
     const f=d.items[0]; MAP.panTo(new kakao.maps.LatLng(f.y,f.x)); MAP.setLevel(4);
@@ -386,9 +386,9 @@ function fillGuSelect(){
 function setStat(){
   const el=document.getElementById('stat'); if(!el)return;
   const p=[];
-  p.push(ST&&ST.available&&ST.stations&&ST.stations.length?`역 <b>${num(ST.n_stations)}</b>개`:'역 준비 중');
-  p.push(ZONE&&ZONE.available&&ZONE.zones&&ZONE.zones.length?`상권 <b>${num(ZONE.n_zones)}</b>개`:'상권 준비 중');
-  p.push(POP&&POP.gu?`유동인구 ${POP.hour}시`:'유동인구 준비 중');
+  p.push(ST&&ST.available&&ST.stations&&ST.stations.length?`지하철역 <b>${num(ST.n_stations)}</b>개`:'지하철역 준비 중');
+  p.push(ZONE&&ZONE.available&&ZONE.zones&&ZONE.zones.length?`가게 많은 곳 <b>${num(ZONE.n_zones)}</b>개`:'가게 많은 곳 준비 중');
+  p.push(POP&&POP.gu?`사람 수 ${POP.hour}시 기준`:'사람 수 준비 중');
   el.innerHTML=p.join(' · ');
 }
 
