@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # 전체 히스토리 — 커밋 스텝의 rebase(master 경합 대응)에 필요
 
       - uses: actions/setup-python@v5
         with:
@@ -113,7 +115,15 @@ jobs:
             echo "1차 커밋: 변경 없음 — 생략"
           else
             git commit -m "chore: 역·자치구 데이터 1차 갱신 ($(date -u +%Y-%m-%d))"
-            git push
+            # master 가 런 도중 앞서갈 수 있으므로 rebase 후 push 재시도(non-ff 거부 방지)
+            ok=0
+            for i in 1 2 3 4 5; do
+              git fetch origin master || true
+              git rebase origin/master || { git rebase --abort || true; }
+              if git push origin HEAD:master; then ok=1; break; fi
+              echo "1차 커밋 push 재시도 $i"; sleep $((i*3))
+            done
+            [ "$ok" = 1 ] || echo "1차 커밋 push 실패(경합 지속) — 최종 커밋에서 재시도됨"
           fi
 
       - name: 상권 전량 데이터셋 빌드(거리감쇠 입력 CSV · 상권 좌표 포함)
@@ -164,5 +174,13 @@ jobs:
             echo "변경 없음 — 커밋 생략"
           else
             git commit -m "chore: 대시보드·유동인구·주차 자동 갱신 ($(date -u +%Y-%m-%d))"
-            git push
+            # master 경합 대응: rebase 후 push 재시도(non-ff 거부 방지)
+            ok=0
+            for i in 1 2 3 4 5; do
+              git fetch origin master || true
+              git rebase origin/master || { git rebase --abort || true; }
+              if git push origin HEAD:master; then ok=1; break; fi
+              echo "최종 커밋 push 재시도 $i"; sleep $((i*3))
+            done
+            [ "$ok" = 1 ] || echo "최종 커밋 push 실패(경합 지속)"
           fi
