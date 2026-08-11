@@ -22,7 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 OUT  = os.path.join(ROOT, "frontend", "income.json")
 KEY  = os.environ.get("SEOUL_API_KEY", "").strip()
-SERVICE = "VwsmTrdarIncmCnsmpQq"
+SERVICE = "trdarNcmCnsmp"
 BASE = "http://openapi.seoul.go.kr:8088"
 # 지출 카테고리(한글명, 서울 상권분석 표준 필드)
 SPEND = [
@@ -44,8 +44,9 @@ def fnum(x):
 # 소득소비 서비스명 후보(정확한 명칭이 문서마다 달라, 응답되는 것을 자동 선택).
 # 실제로 데이터가 오는 서비스명을 찾으면 SERVICE 에 확정.
 SERVICE_CANDIDATES = [
-    "VwsmTrdarIncmCnsmpQq",   # 최초 시도(실패 확인됨)
-    "VwsmTrdarIcmCnsmpQq",    # Incm→Icm 축약형
+    "trdarNcmCnsmp",          # 정답: seoul_trdar_client.SERVICES['spend'] 에서 확인된 실제 서비스명(Vwsm 패턴 아님)
+    "VwsmTrdarIncmCnsmpQq",   # 이하 과거 후보(폴백)
+    "VwsmTrdarIcmCnsmpQq",
     "VwsmTrdarSelngIncmQq",
     "VwsmTrdarIncomeConsumeQq",
 ]
