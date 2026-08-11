@@ -71,6 +71,20 @@ def main():
 
     acc = {g: {"tot":0.0,"m":0.0,"f":0.0,"a10":0.0,"a20":0.0,"a30":0.0,"a40":0.0,"a50":0.0,"a60":0.0,"cells":0}
            for g in GU.values()}
+
+    # 행정동(동네) 단위 집계 — 지점이 속한 동네 생활인구용. seoul_dong.geojson 으로 코드→(구,동) 매핑.
+    adm_info = {}; code8_to_adm = {}
+    try:
+        geo = json.load(open(os.path.join(ROOT, "frontend", "seoul_dong.geojson"), encoding="utf-8"))
+        for ft in geo.get("features", []):
+            p = ft.get("properties", {}); adm = str(p.get("adm") or "")
+            if adm:
+                adm_info[adm] = (p.get("gu"), p.get("dong")); code8_to_adm[adm[:8]] = adm
+    except Exception as ex:
+        print("dong geojson 로드 실패 — 행정동 집계 생략:", ex)
+    dong_acc = {adm: {"gu":gd[0],"dong":gd[1],"tot":0.0,"m":0.0,"f":0.0,
+                      "a10":0.0,"a20":0.0,"a30":0.0,"a40":0.0,"a50":0.0,"a60":0.0,"cells":0}
+                for adm,gd in adm_info.items()}
     stdr = None
     step = 1000
     for s in range(1, total+1, step):
@@ -83,18 +97,25 @@ def main():
                 time.sleep(2*(attempt+1))
         rt = ET.fromstring(xml)
         for row in rt.findall(".//row"):
-            adstrd = (row.findtext("ADSTRD_CODE_SE") or "")[:5]
-            g = GU.get(adstrd)
+            raw = (row.findtext("ADSTRD_CODE_SE") or "")
+            g = GU.get(raw[:5])
             if not g: continue
             if stdr is None: stdr = row.findtext("STDR_DE_ID")
             tot = fnum(row.findtext("TOT_LVPOP_CO"))
-            a = acc[g]; a["tot"]+=tot; a["cells"]+=1
+            # 성별·연령 버킷을 한 번만 계산 → 자치구·행정동 양쪽에 더함
+            buck = {"m":0.0,"f":0.0,"a10":0.0,"a20":0.0,"a30":0.0,"a40":0.0,"a50":0.0,"a60":0.0}
             for pref in ("MALE","FEMALE"):
-                for suf_list_key,sufs in AGE.items():
+                for key,sufs in AGE.items():
                     for suf in sufs:
                         v = fnum(row.findtext(f"{pref}_{suf}_LVPOP_CO"))
-                        a[suf_list_key]+=v
-                        a["m" if pref=="MALE" else "f"]+=v
+                        buck[key]+=v; buck["m" if pref=="MALE" else "f"]+=v
+            a = acc[g]; a["tot"]+=tot; a["cells"]+=1
+            for k,v in buck.items(): a[k]+=v
+            # 행정동 단위(코드 전체 또는 앞 8자리로 매칭)
+            adm = raw if raw in dong_acc else code8_to_adm.get(raw[:8])
+            if adm and adm in dong_acc:
+                da = dong_acc[adm]; da["tot"]+=tot; da["cells"]+=1
+                for k,v in buck.items(): da[k]+=v
         print(f"  {s:,}~{e:,} 처리")
         time.sleep(0.2)
 
@@ -108,6 +129,20 @@ def main():
     top = sorted(out["gu"].items(), key=lambda x:-x[1]["tot"])[:3]
     print("저장:", OUT)
     print("유동인구 상위:", [(g, int(d["tot"])) for g,d in top])
+
+    # 행정동 단위 산출물(지점 반경 생활인구용)
+    dong_out = {}
+    for adm,d in dong_acc.items():
+        if d["cells"] <= 0: continue
+        dong_out[adm] = {"gu":d["gu"], "dong":d["dong"],
+                         **{k:round(d[k],1) for k in ("tot","m","f","a10","a20","a30","a40","a50","a60","cells")}}
+    DONG_OUT = os.path.join(ROOT, "frontend", "livepop_dong.json")
+    json.dump({"service":SERVICE, "hour":HOUR, "stdr_date":stdr,
+               "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d"),
+               "note":"행정동 단위 생활인구(내국인) · 지점이 속한 동네 기준",
+               "dong":dong_out},
+              open(DONG_OUT,"w",encoding="utf-8"), ensure_ascii=False)
+    print("저장:", DONG_OUT, "· 행정동", len(dong_out))
     return 0
 
 if __name__ == "__main__":

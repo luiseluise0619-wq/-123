@@ -108,7 +108,7 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           # 지하철 수집(14번)까지의 산출물만 먼저 커밋 — 상권 전량 빌드(15번)에
           # 묶이지 않게 역·자치구 데이터를 master 에 즉시 반영한다.
-          for f in frontend/subway_stations.json frontend/subway_gu.json frontend/storeinfo_gu.json frontend/livepop_gu.json frontend/parking_gu.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/sales_by_industry.json frontend/stores_by_industry.json; do
+          for f in frontend/subway_stations.json frontend/subway_gu.json frontend/storeinfo_gu.json frontend/livepop_gu.json frontend/livepop_dong.json frontend/parking_gu.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/sales_by_industry.json frontend/stores_by_industry.json; do
             [ -f "$f" ] && git add "$f" || true
           done
           if git diff --cached --quiet; then
@@ -179,7 +179,7 @@ jobs:
           git config user.name  "dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
           # 파일별로 개별 add — 하나가 없어도(수집 실패) 나머지는 정상 스테이징
-          for f in frontend/dashboard.html frontend/livepop_gu.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/sales_history.json frontend/sales_forecast.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/storeinfo_gu.json frontend/subway_gu.json frontend/subway_stations.json frontend/distance_decay.json frontend/trade_zones.json frontend/updates.json; do
+          for f in frontend/dashboard.html frontend/livepop_gu.json frontend/livepop_dong.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/sales_history.json frontend/sales_forecast.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/storeinfo_gu.json frontend/subway_gu.json frontend/subway_stations.json frontend/distance_decay.json frontend/trade_zones.json frontend/updates.json; do
             [ -f "$f" ] && git add "$f" || true
           done
           if git diff --cached --quiet; then
