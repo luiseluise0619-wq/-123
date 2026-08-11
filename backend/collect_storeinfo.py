@@ -17,6 +17,7 @@ localdata.go.kr 대신 공공데이터포털의 '소상공인 상가정보' API 
     python collect_storeinfo.py --check
 """
 import os, sys, json, time, datetime, urllib.request, urllib.parse
+import concurrent.futures
 import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -62,19 +63,26 @@ def main():
     if "--check" in sys.argv:
         print("DATA_GO_KR_KEY 존재 — 수집 가능"); return 0
 
-    gu = {}; grand = 0; last_xml = ""
-    for name, code in SIGUNGU.items():
-        n = 0
+    # 자치구 25개는 서로 독립 호출이라 병렬로. 순차(25×요청+sleep) → 동시 처리로 대폭 단축.
+    def fetch_gu(item):
+        name, code = item
         for attempt in range(3):
             try:
-                n, last_xml = total_for(code); break
+                n, xml = total_for(code)
+                return name, n, xml, None
             except Exception as e:
-                if attempt == 2: print(f"  {name} 실패: {e}")
-                else: time.sleep(2*(attempt+1))
-        gu[name] = {"stores": n}
-        grand += n
-        print(f"  {name}: 상가 {n:,}")
-        time.sleep(0.2)
+                if attempt == 2:
+                    return name, 0, "", e
+                time.sleep(2 * (attempt + 1))
+        return name, 0, "", None
+
+    gu = {}; grand = 0; last_xml = ""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+        for name, n, xml, err in ex.map(fetch_gu, SIGUNGU.items()):
+            gu[name] = {"stores": n}
+            grand += n
+            if xml: last_xml = xml
+            print(f"  {name}: 상가 {n:,}" + (f" (실패: {err})" if err else ""))
 
     # 정직 가드: 전부 0이면 키/엔드포인트/파라미터 불일치 → 지어낸 0 금지.
     if grand <= 0:
