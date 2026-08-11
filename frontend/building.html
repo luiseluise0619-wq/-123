@@ -103,15 +103,15 @@
             <option value="SC4">학교</option><option value="CT1">문화</option><option value="SW8">지하철역</option>
           </select>
         </div>
-        <div id="pin"><div class="muted" style="padding:6px 0">지도의 한 지점을 클릭하면 그 지점의 <b>주소·자치구·유동인구·주변 역·가까운 상권·반경 내 점포</b>가 여기 좌르륵 나옵니다. 위에서 <b>관심 업종</b>을 고르면 그 업종 위주로 보여줍니다.</div></div>
+        <div id="pin"><div class="muted" style="padding:6px 0">지도를 클릭하면 그 지점 정보가 여기 나옵니다. 위에서 <b>관심 업종</b>도 고를 수 있어요.</div></div>
         <button id="pin-insight-btn" style="width:100%;margin-top:8px">🧠 AI 인사이트</button>
         <div id="pin-insight"></div>
       </section>
 
       <section>
         <h3>레이어</h3>
-        <label class="chk"><input type="checkbox" id="ly-station" checked> 지하철 역 <span class="sw" id="ly-station-n"></span></label>
-        <label class="chk"><input type="checkbox" id="ly-zone" checked> 상권 중심 <span class="sw" id="ly-zone-n"></span></label>
+        <label class="chk"><input type="checkbox" id="ly-station"> 지하철 역(파란 원) <span class="sw" id="ly-station-n"></span></label>
+        <label class="chk"><input type="checkbox" id="ly-zone" checked> 상권 중심(주황 원) <span class="sw" id="ly-zone-n"></span></label>
       </section>
     </div>
 
@@ -144,7 +144,7 @@ const stationMk=[], zoneMk=[], searchMk=[];
 function loadJSON(f){return fetch(f,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
 function num(n){return (n==null||isNaN(n))?'—':Number(n).toLocaleString('ko-KR');}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function radiusOf(t,max){t=Math.max(0,t||0);return 120+Math.sqrt(t/(max||1))*640;}
+function radiusOf(t,max){t=Math.max(0,t||0);return 70+Math.sqrt(t/(max||1))*300;}  // 작게 — 역 많아도 덜 겹치게
 function colorStation(t,max){const r=Math.min(1,(t||0)/(max||1));return `rgb(42,${Math.round(150-r*70)},${Math.round(214-r*40)})`;}
 function haversine(aLng,aLat,bLng,bLat){const R=6371000,rad=Math.PI/180;
   const p1=aLat*rad,p2=bLat*rad,dp=(bLat-aLat)*rad,dl=(bLng-aLng)*rad;
@@ -178,8 +178,8 @@ function drawStations(map){
   ST.stations.forEach(s=>{
     if(s.lat==null||s.lon==null)return;
     const pos=new kakao.maps.LatLng(s.lat,s.lon);
-    const c=new kakao.maps.Circle({center:pos,radius:radiusOf(s.total,max),strokeWeight:1,strokeColor:'#0b1420',strokeOpacity:.5,fillColor:colorStation(s.total,max),fillOpacity:.6});
-    c.setMap(map); stationMk.push(c);
+    const c=new kakao.maps.Circle({center:pos,radius:radiusOf(s.total,max),strokeWeight:1,strokeColor:'#0b1420',strokeOpacity:.3,fillColor:colorStation(s.total,max),fillOpacity:.4});
+    c.setMap(document.getElementById('ly-station').checked?map:null); stationMk.push(c);
     kakao.maps.event.addListener(c,'click',()=>openIW(pos,`<b style="font-size:14px">${esc(s.nm)}</b> <span style="color:#5b6b82">· ${esc(s.gu||'')}</span><br>승차 ${num(s.on)} · 하차 ${num(s.off)}<br><b>합계 ${num(s.total)}</b> 명/일`));
   });
   document.getElementById('ly-station-n').textContent=ST.n_stations?`${num(ST.n_stations)}개`:'';
@@ -190,8 +190,8 @@ function drawZones(map){
   ZONE.zones.forEach(z=>{
     if(z.lat==null||z.lon==null)return;
     const pos=new kakao.maps.LatLng(z.lat,z.lon);
-    const c=new kakao.maps.Circle({center:pos,radius:100+Math.sqrt((z.stores||0)/max)*380,strokeWeight:1,strokeColor:'#5a3d16',strokeOpacity:.5,fillColor:'#E0973A',fillOpacity:.5});
-    c.setMap(map); zoneMk.push(c);
+    const c=new kakao.maps.Circle({center:pos,radius:70+Math.sqrt((z.stores||0)/max)*230,strokeWeight:1,strokeColor:'#5a3d16',strokeOpacity:.35,fillColor:'#E0973A',fillOpacity:.4});
+    c.setMap(document.getElementById('ly-zone').checked?map:null); zoneMk.push(c);
     const top=(z.top||[]).map(t=>`${esc(t.ind)} ${num(t.stores)}`).join(' · ');
     kakao.maps.event.addListener(c,'click',()=>openIW(pos,`<b style="font-size:14px">${esc(z.nm)}</b><br>점포 <b>${num(z.stores)}</b>개${z.sales?` · 월매출 ${num(z.sales)}`:''}<br><span style="color:#5b6b82;font-size:11px">${top}</span>`));
   });
