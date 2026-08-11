@@ -143,6 +143,9 @@
                 <sc-for list="{{ shapes }}" as="s" hint-placeholder-count="25">
                   <path d="{{ s.d }}" style="{{ s.style }}" onClick="{{ s.onClick }}" onMouseEnter="{{ s.onEnter }}" onMouseLeave="{{ s.onLeave }}"></path>
                 </sc-for>
+                <sc-for list="{{ stationDots }}" as="p" hint-placeholder-count="1">
+                  <circle cx="{{ p.cx }}" cy="{{ p.cy }}" r="{{ p.r }}" style="{{ p.style }}"></circle>
+                </sc-for>
                 <sc-for list="{{ mapLabels }}" as="l" hint-placeholder-count="1">
                   <text x="{{ l.x }}" y="{{ l.y }}" style="{{ l.style }}">{{ l.name }}</text>
                 </sc-for>
@@ -725,6 +728,10 @@ class Component extends DCLogic {
       if (h && this.topicDefs().find(t => t.id === h)) { patch.screen = 'data'; patch.topic = h; }
       this.setState(patch);
     });
+    // 역 단위 지하철은 구운 번들(__SANGGWON)에 없으므로 항상 별도 로드. 파일이 생기면 표시.
+    fetch('frontend/subway_stations.json', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(s => { if (s && s.available && s.stations) { this.stations = s; this.setState({ stationsReady: true }); } });
     this._hash = () => {
       const h = (location.hash || '').replace('#', '');
       if (h && this.topicDefs().find(t => t.id === h)) this.setState({ screen: 'data', topic: h });
@@ -881,6 +888,14 @@ class Component extends DCLogic {
   }
   num(n) { return Math.round(n).toLocaleString(); }
 
+  // 위경도 → 지도 SVG 좌표. geo.paths 를 만든 것과 동일한 mercator+bbox 맞춤
+  // (자치구 경계 재현 최대오차 0.3px 로 검증). 어떤 위경도든 이 지도 위에 정렬된다.
+  project(lon, lat) {
+    const XMIN = 126.7670046502, XMAX = 127.1854337892, YMIN = 40.4117736846, YMAX = 40.7559686158, W = 1000, H = 823;
+    const my = (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
+    return [(lon - XMIN) / (XMAX - XMIN) * W, (YMAX - my) / (YMAX - YMIN) * H];
+  }
+
   // ── 지표 정의 (면적 보정 후 비교, 절대 건수 금지)
   metricDefs() {
     const P = this.pop, K = this.park, A = this.areaKm2 || {};
@@ -889,6 +904,7 @@ class Component extends DCLogic {
       pop: { label: '유동인구', unit: '명', get: n => (P && P.gu[n] ? P.gu[n].tot : 0), fmt: v => this.num(v) + '명', note: '오후 2시 기준 자치구 체류인구입니다.', caption: '체류인구 많은 순', source: '서울 열린데이터광장 생활인구' },
       bus: { label: '대중교통', unit: '개/㎢', get: (n, g) => g.bus / (A[n] || 1), fmt: v => v.toFixed(1) + '개/㎢', note: '면적당 정류소 수입니다. 자치구 크기가 다르므로 밀도로 비교합니다.', caption: '정류소 밀도 높은 순', source: '서울시 버스·마을버스·선착장 정류소' },
       park: { label: '주차', unit: '곳/㎢', get: n => (K && K.gu[n] ? K.gu[n].lots : 0) / (A[n] || 1), fmt: v => v.toFixed(1) + '곳/㎢', note: '면적당 공영·민영 주차장 수입니다.', caption: '주차장 밀도 높은 순', source: '전국주차장정보표준데이터' },
+      subway: { label: '지하철 (역 단위)', station: true, note: '자치구가 아니라 역 단위입니다. 점 하나가 역 하나, 크기는 최근 평일 하루 승하차 인원입니다. 배경 경계는 2013년 단순화 자치구 경계라 정밀하지 않고 도로·건물은 없습니다. 역 단위까지만 실측이며 건물 단위 판단에는 쓸 수 없습니다.', caption: '승하차 많은 역 순', source: '서울 열린데이터광장 지하철 역별 승하차' },
       rent: { label: '임대료', empty: true, note: '한국부동산원은 임대료를 자치구가 아닌 상권 단위로 공표합니다.', caption: '', source: '한국부동산원 상업용부동산 임대동향' }
     };
   }
@@ -1231,8 +1247,34 @@ class Component extends DCLogic {
       style: 'font-size:13px;padding:7px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .2s;' +
         (S.metric === k ? 'background:var(--bg);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)' : 'color:var(--ink2)')
     }));
-    let shapes = [], ranked = [], legendLow = '', legendHigh = '', mapLabels = [];
-    if (!cur.empty && this.geo) {
+    let shapes = [], ranked = [], legendLow = '', legendHigh = '', mapLabels = [], stationDots = [];
+    if (cur.station && this.geo) {
+      // 역 단위(고해상도): 배경은 자치구 경계, 점은 역별 승하차. 검증된 project() 사용.
+      shapes = Object.entries(this.geo.paths).map(([n, d]) => ({
+        d, onClick: () => this.setState({ gu: n }), onEnter: () => this.setState({ hover: n }), onLeave: () => this.setState({ hover: null }),
+        style: 'fill:var(--surface);stroke:var(--line);stroke-width:0.8;cursor:pointer;transition:fill .2s'
+      }));
+      const sts = (this.stations && this.stations.stations) || [];
+      if (sts.length) {
+        const maxT = Math.max(...sts.map(s => s.total)) || 1;
+        stationDots = sts.map(s => {
+          const xy = this.project(s.lon, s.lat), r = 1.6 + 7.4 * Math.sqrt(s.total / maxT);
+          const active = S.gu === s.gu || S.hover === s.gu;
+          return { cx: xy[0].toFixed(1), cy: xy[1].toFixed(1), r: r.toFixed(1),
+            style: 'fill:' + (active ? '#1971c2' : '#e8590c') + ';fill-opacity:' + (active ? 0.95 : 0.5) + ';stroke:#fff;stroke-width:0.4;pointer-events:none' };
+        });
+        ranked = sts.slice(0, 40).map((s, i) => ({
+          rank: i + 1, name: s.nm, value: this.num(s.total) + '명',
+          go: () => this.setState({ gu: s.gu }), onEnter: () => this.setState({ hover: s.gu }), onLeave: () => this.setState({ hover: null }),
+          style: 'display:flex;gap:12px;align-items:baseline;padding:9px 0;font-size:14px;cursor:pointer;border-bottom:1px solid var(--surface);transition:opacity .2s;' +
+            (S.gu === s.gu || S.hover === s.gu ? 'opacity:1' : 'opacity:.62')
+        }));
+        const totals = sts.map(s => s.total);
+        legendLow = this.num(Math.min(...totals)) + '명'; legendHigh = this.num(Math.max(...totals)) + '명';
+      } else {
+        legendHigh = '역별 데이터 준비 중 (Actions 실행 후 표시)';
+      }
+    } else if (!cur.empty && !cur.station && this.geo) {
       const vals = Object.keys(core.gu).map(n => cur.get(n, core.gu[n]));
       const mn = Math.min(...vals), mx = Math.max(...vals), maxAbs = Math.max(...vals.map(Math.abs));
       shapes = Object.entries(this.geo.paths).map(([n, d]) => {
@@ -1491,7 +1533,7 @@ class Component extends DCLogic {
 
     return Object.assign(base, {
       metricTabs, metricNote: cur.note, metricEmpty: !!cur.empty, metricHasMap: !cur.empty,
-      mapViewBox: this.geo ? this.geo.viewBox : '0 0 1000 823', shapes, mapLabels, ranked,
+      mapViewBox: this.geo ? this.geo.viewBox : '0 0 1000 823', shapes, mapLabels, ranked, stationDots,
       rankCaption: cur.caption, legendLow, legendHigh,
       legendGradient: 'flex:1;max-width:180px;height:6px;border-radius:3px;display:block;background:linear-gradient(90deg,' + (cur.diverging ? this.divColor(-99, 99) + ',' + this.divColor(0, 1) + ',' + this.divColor(99, 99) : this.rampColor(0) + ',' + this.rampColor(1)) + ')',
       mapSource: '출처: ' + cur.source + ' · 기준 ' + ((core && core.quarter) || ''),
