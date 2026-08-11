@@ -61,9 +61,23 @@ export default async function handler(req, res) {
     contents: [{ role: "user", parts: [{ text: "다음은 지도에서 클릭한 지점의 데이터다. 규칙대로 요약해라.\n\n" + context }] }],
     generationConfig: { temperature: 0.3, maxOutputTokens: 700 },
   };
-  const r2 = await callGemini(key, MODELS(), payload);
+  let r2 = await callGemini(key, MODELS(), payload);
+  if (!r2.text) { const dm = await discoverModel(key); if (dm) r2 = await callGemini(key, [dm], payload); }
   if (r2.text) return res.status(200).json({ insight: r2.text, model: r2.model, configured: true });
-  return res.status(200).json({ insight: "", configured: true, error: "AI 오류(모든 모델 실패) — " + r2.error });
+  return res.status(200).json({ insight: "", configured: true, error: "AI 오류 — " + r2.error });
+}
+
+// 하드코딩 모델이 다 막히면(모델명 변경/폐기) 계정에서 쓸 수 있는 모델을 실시간 조회해 선택.
+async function discoverModel(key) {
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}&pageSize=1000`);
+    const d = await r.json();
+    const ok = (d.models || [])
+      .filter((m) => (m.supportedGenerationMethods || []).includes("generateContent"))
+      .map((m) => String(m.name || "").replace(/^models\//, ""));
+    const flash = ok.filter((n) => /flash/i.test(n) && !/(vision|thinking|exp|live|image|audio|tts|embedding)/i.test(n)).sort().reverse();
+    return flash[0] || ok.find((n) => /gemini/i.test(n)) || ok[0] || null;
+  } catch { return null; }
 }
 
 // GEMINI_MODEL(있으면 우선) + 기본 후보군을 순서대로 시도(중복 제거).

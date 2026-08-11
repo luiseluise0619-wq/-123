@@ -292,11 +292,11 @@ function analyzePin(latlng){
     // ── 핵심(예비 창업자 관점): 어디 + 3신호 + 가까운 역 ──
     `<div class="blk"><div class="lb">어디인가요</div><div class="big" id="pin-addr">주소 확인 중…</div><div class="v muted" id="pin-region"></div></div>`+
     `<div class="sig">`+
-      `<div class="t" title="서울 생활인구 · 그 시각 그 자치구에 머문 사람 수(지나가는 사람 아님)"><div class="tl">지나다니는 사람${POP&&POP.hour?' · '+fmtHour(POP.hour):''}</div><div class="tv" id="sig-pop">…</div></div>`+
+      `<div class="t" title="서울 생활인구 · 그 시각 자치구 전체에 머문 사람 수(이 지점 반경 아님)"><div class="tl">유동인구 · 구 전체</div><div class="tv" id="sig-pop">…</div></div>`+
       `<div class="t" title="반경 내 카카오지도에 등록된 그 업종 가게 수(지금 조회)"><div class="tl" id="sig-cat-l">경쟁</div><div class="tv" id="sig-cat">…</div></div>`+
       `<div class="t" title="2022→2024 자치구 폐업 건수 증감률. ▲ 늘어남(주의) ▼ 줄어듦"><div class="tl">폐업 2년</div><div class="tv" id="sig-close">…</div></div>`+
     `</div>`+
-    `<div class="muted" style="font-size:10.5px;margin:0 0 4px">${(POP&&POP.stdr_date)?`※ 지나다니는 사람 = <b>${fmtYmdK(POP.stdr_date)} ${fmtHour(POP.hour)}</b> 그 자치구에 머문 사람 수(서울 생활인구)`:'※ 유동인구 데이터 준비 중'}</div>`+
+    `<div class="muted" style="font-size:10.5px;margin:0 0 4px">${(POP&&POP.stdr_date)?`※ 유동인구 = <b>${fmtYmdK(POP.stdr_date)} ${fmtHour(POP.hour)}</b> <b>자치구 전체</b>에 머문 사람 수(이 지점 반경 아님·서울 생활인구)`:'※ 유동인구 데이터 준비 중'}</div>`+
     `<div class="blk"><div class="lb">가까운 역<span class="asof">${stAs}</span></div><div class="v">${sigStationH}</div></div>`+
     // ── 자세히(접기): 상세 지표 ──
     `<details class="more"><summary>자세히 보기 ▾</summary>`+
