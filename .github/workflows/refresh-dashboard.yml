@@ -4,8 +4,13 @@ name: 대시보드 자동 갱신
 # 매주 1회면 충분(매일은 API 콜 낭비). 매주 월요일 06:10 KST(=21:10 UTC 일).
 on:
   schedule:
-    - cron: "10 21 * * 0"        # 매주 월요일 06:10 KST
-  workflow_dispatch: {}          # 수동 실행 버튼
+    - cron: "10 21 * * 0"        # 매주 월요일 06:10 KST — 가벼운 주간 갱신(heavy 미포함)
+  workflow_dispatch:             # 수동 실행 버튼
+    inputs:
+      heavy:
+        description: "상권 전량 빌드까지 실행(분기 1회만 ON). 평소엔 OFF로 빠르게."
+        type: boolean
+        default: false
 
 permissions:
   contents: write                # 갱신된 HTML 커밋용
@@ -112,6 +117,7 @@ jobs:
           fi
 
       - name: 상권 전량 데이터셋 빌드(거리감쇠 입력 CSV · 상권 좌표 포함)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.heavy }}   # 분기 1회 · 느림(수십 분)
         working-directory: backend
         continue-on-error: true
         env:
@@ -121,6 +127,7 @@ jobs:
         run: python build_seoul_dataset.py --build
 
       - name: 역-거리 감쇠 분석(해상도 개선 · distance_decay.json)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.heavy }}   # 상권 CSV 의존 → heavy 에서만
         working-directory: backend
         continue-on-error: true
         env:
@@ -128,6 +135,7 @@ jobs:
         run: python analyze_distance_decay.py --csv app/data/real_data/seoul_trdar_dataset.csv
 
       - name: 상권 좌표 마커 레이어 생산(trade_zones.json · 5181→WGS84)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.heavy }}   # 상권 CSV 의존 → heavy 에서만
         working-directory: backend
         continue-on-error: true
         run: python make_trade_zones.py
