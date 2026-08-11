@@ -729,8 +729,9 @@ class Component extends DCLogic {
       this.setState(patch);
     });
     // 역 단위 지하철은 구운 번들(__SANGGWON)에 없으므로 항상 별도 로드. 파일이 생기면 표시.
-    fetch('frontend/subway_stations.json', { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : null).catch(() => null)
+    // data-bundle.js 와 같은 형제 경로가 프로덕션(루트=frontend/) 기준. dev(레포루트)용 접두사 폴백.
+    const loadJson = (u) => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+    loadJson('subway_stations.json').then(s => s || loadJson('frontend/subway_stations.json'))
       .then(s => { if (s && s.available && s.stations) { this.stations = s; this.setState({ stationsReady: true }); } });
     this._hash = () => {
       const h = (location.hash || '').replace('#', '');
