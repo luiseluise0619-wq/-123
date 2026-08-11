@@ -53,6 +53,9 @@
   #pin .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
   #pin .chip{background:#0b1420;border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-size:11.5px}
   #pin .chip b{color:var(--green)}
+  #pin .chip.sel{background:#123528;border-color:var(--green);color:#dff5ea}
+  #pin .pick{font-size:13px;margin-bottom:6px;width:100%}
+  #pin .pick b{font-size:15px;color:var(--green)}
   #pin .muted{color:var(--mut)}
   .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--mut);background:rgba(15,24,38,.72);padding:7px 10px;border-radius:8px}
   .legend .k{display:inline-flex;align-items:center;gap:4px;margin-left:8px}
@@ -89,7 +92,16 @@
           <select id="pin-r" style="width:auto;display:inline-block;padding:2px 4px;font-size:11px">
             <option value="300">300m</option><option value="500" selected>500m</option><option value="1000">1km</option>
           </select></span></h3>
-        <div id="pin"><div class="muted" style="padding:6px 0">지도의 한 지점을 클릭하면 그 지점의 <b>주소·자치구·유동인구·주변 역·가까운 상권·반경 내 경쟁 점포</b>가 여기 좌르륵 나옵니다.</div></div>
+        <div class="row" style="margin-bottom:6px">
+          <select id="pin-cat" title="관심 업종">
+            <option value="FD6" selected>음식점</option><option value="CE7">카페</option>
+            <option value="CS2">편의점</option><option value="HP8">병원</option>
+            <option value="PM9">약국</option><option value="AC5">학원</option>
+            <option value="BK9">은행</option><option value="MT1">마트</option>
+            <option value="SC4">학교</option><option value="CT1">문화</option><option value="SW8">지하철역</option>
+          </select>
+        </div>
+        <div id="pin"><div class="muted" style="padding:6px 0">지도의 한 지점을 클릭하면 그 지점의 <b>주소·자치구·유동인구·주변 역·가까운 상권·반경 내 점포</b>가 여기 좌르륵 나옵니다. 위에서 <b>관심 업종</b>을 고르면 그 업종 위주로 보여줍니다.</div></div>
       </section>
 
       <section>
@@ -119,8 +131,10 @@
   </div>
 </div>
 
+<!-- 개요 지도 기본 데이터(자치구 폐업추세 등). window.__SANGGWON 을 세팅 → 핀 분석의 폐업추세에 사용. -->
+<script src="data-bundle.js"></script>
 <script>
-let MAP=null, GU=null, ST=null, ZONE=null, POP=null, PARK=null, STORE=null, guCenters={}, IW=null, pinMk=null, pinCircle=null;
+let MAP=null, GU=null, ST=null, ZONE=null, POP=null, PARK=null, STORE=null, DD=null, guCenters={}, IW=null, pinMk=null, pinCircle=null, lastPin=null, pinGu=null;
 const stationMk=[], zoneMk=[], searchMk=[];
 
 function loadJSON(f){return fetch(f,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
@@ -187,8 +201,10 @@ function openIW(pos,html){
 function clearMk(arr){arr.forEach(m=>m.setMap(null));arr.length=0;}
 
 /* ── 핀 분석: 클릭 지점 종합 브리핑 ── */
-const CATS=[['FD6','음식점'],['CE7','카페'],['CS2','편의점'],['HP8','병원'],['PM9','약국'],['AC5','학원']];
+const CATS=[['FD6','음식점'],['CE7','카페'],['CS2','편의점'],['HP8','병원'],['PM9','약국'],['AC5','학원'],['BK9','은행'],['MT1','마트'],['SC4','학교'],['CT1','문화'],['SW8','지하철역']];
+const AGES=[['a10','10대'],['a20','20대'],['a30','30대'],['a40','40대'],['a50','50대'],['a60','60+']];
 function analyzePin(latlng){
+  lastPin=latlng;
   const lat=latlng.getLat(), lng=latlng.getLng(), radius=+document.getElementById('pin-r').value;
   if(pinMk) pinMk.setMap(null);
   pinMk=new kakao.maps.Marker({position:latlng,map:MAP});
@@ -196,13 +212,27 @@ function analyzePin(latlng){
   pinCircle=new kakao.maps.Circle({center:latlng,radius,strokeWeight:2,strokeColor:'#2FB27A',strokeOpacity:.9,fillColor:'#2FB27A',fillOpacity:.07});
   pinCircle.setMap(MAP);
 
-  // 1) 즉시 계산: 주변 역 3개, 가까운 상권 (로컬 데이터 haversine)
-  let stH='<span class="muted">역 데이터 준비 중</span>';
+  // 1) 즉시 계산(로컬 haversine): 주변 역 3개, 가까운 상권, 역세권 프리미엄
+  let near=null, stH='<span class="muted">역 데이터 준비 중 (heavy 실행 후)</span>';
   if(ST&&ST.stations&&ST.stations.length){
-    const near=ST.stations.map(s=>({s,d:haversine(lng,lat,s.lon,s.lat)})).sort((a,b)=>a.d-b.d).slice(0,3);
+    near=ST.stations.map(s=>({s,d:haversine(lng,lat,s.lon,s.lat)})).sort((a,b)=>a.d-b.d).slice(0,3);
     stH=near.map(o=>`<div class="li"><span class="v">${esc(o.s.nm)} <span class="muted">${esc(o.s.gu||'')}</span></span><span class="d">${fmtM(o.d)} · ${num(o.s.total)}/일</span></div>`).join('');
   }
-  let znH='<span class="muted">상권 데이터 준비 중</span>';
+  // 역세권 프리미엄: distance_decay 의 대표 업종 임계거리 vs 이 지점의 최근접 역거리
+  let premH='';
+  if(near&&near.length){
+    const d0=near[0].d;
+    if(DD&&DD.available){
+      const res=DD.result||DD.by_industry||DD.industries||{};
+      let bp=null; for(const k in res){ if(res[k]&&res[k].breakpoint_m){bp=res[k].breakpoint_m;break;} }
+      premH=bp!=null
+        ? `역세권 매출 임계 ~${bp}m · 이 지점 최근접 역 ${fmtM(d0)} → <b>${d0<=bp?'역세권 안':'역세권 밖'}</b>`
+        : `역 인접 매출 프리미엄 데이터 있음(임계 불명확)`;
+    }else{
+      premH=`역세권 매출분석은 heavy 실행 후`;
+    }
+  }
+  let znH='<span class="muted">상권 데이터 준비 중 (heavy 실행 후)</span>';
   if(ZONE&&ZONE.available&&ZONE.zones&&ZONE.zones.length){
     let best=null,bd=1e12; ZONE.zones.forEach(z=>{const d=haversine(lng,lat,z.lon,z.lat);if(d<bd){bd=d;best=z;}});
     if(best) znH=`<div class="li"><span class="v">${esc(best.nm)}</span><span class="d">${fmtM(bd)} · 점포 ${num(best.stores)}</span></div>`;
@@ -214,27 +244,36 @@ function analyzePin(latlng){
   const box=document.getElementById('pin');
   box.innerHTML=
     `<div class="blk"><div class="lb">위치</div><div class="big" id="pin-addr">주소 확인 중…</div><div class="v muted" id="pin-region"></div></div>`+
-    `<div class="blk"><div class="lb">유동인구(해당 자치구)<span class="asof">${popAs}</span></div><div class="v" id="pin-pop">…</div></div>`+
+    `<div class="blk"><div class="lb">유동인구(해당 자치구)<span class="asof">${popAs}</span></div><div class="v" id="pin-pop">…</div><div class="muted" id="pin-demo" style="font-size:11px;margin-top:2px"></div></div>`+
     `<div class="blk"><div class="lb">자치구 지표<span class="asof"> · 자치구 단위</span></div><div class="v" id="pin-gu">…</div></div>`+
-    `<div class="blk"><div class="lb">주변 역 (가까운 3)<span class="asof">${stAs}</span></div>${stH}</div>`+
+    `<div class="blk"><div class="lb">주변 역 (가까운 3)<span class="asof">${stAs}</span></div>${stH}${premH?`<div class="muted" style="font-size:11px;margin-top:4px">${premH}</div>`:''}</div>`+
     `<div class="blk"><div class="lb">가까운 상권<span class="asof">${znAs}</span></div>${znH}</div>`+
-    `<div class="blk"><div class="lb">반경 ${fmtM(radius)} 경쟁 점포<span class="asof"> · 실시간</span></div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div></div>`;
+    `<div class="blk"><div class="lb">반경 ${fmtM(radius)} 점포<span class="asof"> · 실시간</span></div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div><div class="muted" id="pin-density" style="font-size:11px;margin-top:5px"></div></div>`;
 
-  // 2) 역지오코딩 → 주소·자치구 → 유동인구
+  // 2) 역지오코딩 → 주소·자치구 → 유동인구(성별·연령) · 폐업추세
   kakao({mode:'coord',x:lng,y:lat}).then(d=>{
     if(d&&d.ok){
       document.getElementById('pin-addr').textContent=d.address||'주소 정보 없음';
       document.getElementById('pin-region').textContent=[d.sido,d.gu,d.dong].filter(Boolean).join(' ');
+      pinGu=d.gu||null;
       const pop=POP&&POP.gu&&d.gu&&POP.gu[d.gu];
       document.getElementById('pin-pop').innerHTML=pop
         ? `${esc(d.gu)} <b>${num(pop.tot)}</b>명 <span class="muted">체류</span>`
         : `<span class="muted">${d.gu?esc(d.gu)+' 유동인구 데이터 없음':'자치구 밖'}</span>`;
-      // 자치구 지표: 실측 점포수 · 주차장 (gu 단위, 이미 수집돼 있는 데이터)
+      // 성별·연령 구성
+      if(pop&&pop.tot){
+        const mp=Math.round((pop.m||0)/pop.tot*100), fp=100-mp;
+        let topAge='', tv=-1; AGES.forEach(([k,l])=>{if((pop[k]||0)>tv){tv=pop[k]||0;topAge=l;}});
+        document.getElementById('pin-demo').innerHTML=`남 ${mp}% · 여 ${fp}% · 최다 ${topAge}`;
+      }
+      // 자치구 지표: 실측 상가 · 주차장 · 폐업추세
       const gv=[];
       const store=STORE&&STORE.gu&&d.gu&&STORE.gu[d.gu];
       if(store) gv.push(`<div class="li"><span class="v">실측 상가</span><span class="d">${num(store.stores)}개</span></div>`);
       const pk=PARK&&PARK.gu&&d.gu&&PARK.gu[d.gu];
       if(pk) gv.push(`<div class="li"><span class="v">주차장</span><span class="d">${num(pk.lots)}곳 · ${num(pk.slots)}면</span></div>`);
+      const core=(window.__SANGGWON&&window.__SANGGWON.core), cg=core&&core.gu&&d.gu&&core.gu[d.gu];
+      if(cg&&cg.trend!=null) gv.push(`<div class="li"><span class="v">폐업 추세<span class="muted"> 2년</span></span><span class="d">${cg.trend>=0?'+':''}${cg.trend}% · '24 ${num(cg.y2024)}건</span></div>`);
       document.getElementById('pin-gu').innerHTML=gv.length?gv.join(''):`<span class="muted">자치구 지표 없음</span>`;
     }else{
       document.getElementById('pin-addr').textContent='주소 변환 실패';
@@ -244,13 +283,22 @@ function analyzePin(latlng){
     }
   });
 
-  // 3) 카테고리별 반경 내 총 점포수 (카카오 total_count)
+  // 3) 카테고리별 반경 내 총 점포수(카카오) + 경쟁 밀도
   Promise.all(CATS.map(([code,nm])=>kakao({mode:'category',code,x:lng,y:lat,radius,size:1}).then(r=>({nm,code,n:r&&r.ok?r.total:null,err:r&&r.error}))))
     .then(rows=>{
       const el=document.getElementById('pin-cats');
       const anyOk=rows.some(r=>r.n!=null);
-      if(!anyOk){el.innerHTML=`<span class="muted">${esc(rows.find(r=>r.err)?.err||'집계 실패 — /api/kakao(KAKAO_REST_KEY) 확인')}</span>`;return;}
-      el.innerHTML=rows.map(r=>`<span class="chip">${esc(r.nm)} <b>${r.n==null?'—':num(r.n)}</b></span>`).join('');
+      if(!anyOk){el.innerHTML=`<span class="muted">${esc(rows.find(r=>r.err)?.err||'집계 실패 — /api/kakao(KAKAO_REST_KEY) 확인')}</span>`;
+        document.getElementById('pin-density').innerHTML='';return;}
+      const chosen=document.getElementById('pin-cat').value;
+      const pick=rows.find(r=>r.code===chosen);
+      const pickH=pick?`<div class="pick">선택 업종 <b>${esc(pick.nm)} ${pick.n==null?'—':num(pick.n)}</b>곳 <span class="muted">반경 내</span></div>`:'';
+      el.innerHTML=pickH+rows.map(r=>`<span class="chip${r.code===chosen?' sel':''}">${esc(r.nm)} <b>${r.n==null?'—':num(r.n)}</b></span>`).join('');
+      // 경쟁 밀도: 선택 업종 1곳당 자치구 유동인구(참고용, 자치구 유동 ÷ 반경 선택업종)
+      const pop=POP&&POP.gu&&pinGu&&POP.gu[pinGu];
+      if(pick&&pick.n>0&&pop&&pop.tot){
+        document.getElementById('pin-density').innerHTML=`경쟁 밀도: ${esc(pick.nm)} 1곳당 유동 <b>${num(Math.round(pop.tot/pick.n))}</b>명 <span style="opacity:.7">(자치구 유동 ÷ 반경 ${esc(pick.nm)}, 참고)</span>`;
+      }else document.getElementById('pin-density').innerHTML='';
     });
 }
 
@@ -306,11 +354,14 @@ function initMap(){
   document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')runSearch();});
   document.getElementById('ly-station').onchange=e=>stationMk.forEach(m=>m.setMap(e.target.checked?MAP:null));
   document.getElementById('ly-zone').onchange=e=>zoneMk.forEach(m=>m.setMap(e.target.checked?MAP:null));
+  // 반경·관심업종을 바꾸면 마지막 핀에 대해 즉시 다시 그림(원·집계 갱신)
+  document.getElementById('pin-r').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
+  document.getElementById('pin-cat').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
   kakao.maps.event.addListener(MAP,'click',me=>analyzePin(me.latLng));
 }
 function boot(){
-  Promise.all([loadJSON('seoul_gu.geojson'),loadJSON('subway_stations.json'),loadJSON('trade_zones.json'),loadJSON('livepop_gu.json'),loadJSON('parking_gu.json'),loadJSON('storeinfo_gu.json')])
-    .then(([g,s,z,p,pk,so])=>{GU=g;ST=s;ZONE=z;POP=p;PARK=pk;STORE=so;})
+  Promise.all([loadJSON('seoul_gu.geojson'),loadJSON('subway_stations.json'),loadJSON('trade_zones.json'),loadJSON('livepop_gu.json'),loadJSON('parking_gu.json'),loadJSON('storeinfo_gu.json'),loadJSON('distance_decay.json')])
+    .then(([g,s,z,p,pk,so,dd])=>{GU=g;ST=s;ZONE=z;POP=p;PARK=pk;STORE=so;DD=dd;})
     .finally(()=>{
       if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
       else{document.getElementById('mapfail').classList.add('on');setStat();}
