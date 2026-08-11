@@ -73,6 +73,16 @@
   .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--mut);background:rgba(15,24,38,.72);padding:7px 10px;border-radius:8px}
   .legend .k{display:inline-flex;align-items:center;gap:4px;margin-left:8px}
   .legend .d{width:9px;height:9px;border-radius:50%;display:inline-block}
+  /* 모바일: 좁은 화면에서 패널을 하단 시트로 + 접기 토글 */
+  .pan-handle{display:none;width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;margin-bottom:8px;cursor:pointer}
+  @media (max-width:640px){
+    .panel{top:auto;bottom:0;left:0;right:0;width:auto;max-height:58vh;border-radius:14px 14px 0 0;padding:10px 12px}
+    .pan-handle{display:block}
+    .panel.collapsed{max-height:48px;overflow:hidden}
+    header h1{font-size:13px}
+    header .sub{display:none}
+    .legend{bottom:auto;top:54px;right:8px}
+  }
 </style>
 </head>
 <body>
@@ -84,7 +94,8 @@
   <div id="wrap">
     <div id="map"></div>
 
-    <div class="panel">
+    <div class="panel" id="panel">
+      <button class="pan-handle" id="pan-toggle">📋 정보판 접기 ▾</button>
       <section>
         <h3>자치구 이동</h3>
         <select id="gu-sel"><option value="">서울 전체</option></select>
@@ -222,6 +233,10 @@ const CATS=[['FD6','음식점'],['CE7','카페'],['CS2','편의점'],['HP8','병
 const AGES=[['a10','10대'],['a20','20대'],['a30','30대'],['a40','40대'],['a50','50대'],['a60','60+']];
 function analyzePin(latlng){
   lastPin=latlng;
+  // 모바일: 핀 찍으면 결과가 보이게 하단 시트 펼침
+  const _pn=document.getElementById('panel');
+  if(_pn&&_pn.classList.contains('collapsed')){_pn.classList.remove('collapsed');
+    const _pt=document.getElementById('pan-toggle');if(_pt)_pt.innerHTML='📋 정보판 접기 ▾';}
   const lat=latlng.getLat(), lng=latlng.getLng(), radius=+document.getElementById('pin-r').value;
   if(pinMk) pinMk.setMap(null);
   pinMk=new kakao.maps.Marker({position:latlng,map:MAP});
@@ -472,6 +487,10 @@ function initMap(){
   document.getElementById('pin-r').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
   document.getElementById('pin-cat').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
   document.getElementById('pin-insight-btn').onclick=runInsight;
+  // 모바일 하단 시트 접기/펼치기
+  const pt=document.getElementById('pan-toggle');
+  if(pt) pt.onclick=()=>{const c=document.getElementById('panel').classList.toggle('collapsed');
+    pt.innerHTML=c?'📋 정보판 열기 ▴':'📋 정보판 접기 ▾';};
   kakao.maps.event.addListener(MAP,'click',me=>analyzePin(me.latLng));
 }
 function boot(){
