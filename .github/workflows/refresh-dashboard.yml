@@ -98,6 +98,8 @@ jobs:
         working-directory: backend
         continue-on-error: true
         env:
+          # seoul_trdar_client.get_api_key() 는 SEOUL_OPENDATA_API_KEY 를 읽는다(다른 수집기와 이름이 다름).
+          SEOUL_OPENDATA_API_KEY: ${{ secrets.SEOUL_API_KEY }}
           SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
         run: python build_seoul_dataset.py --build
 
