@@ -125,7 +125,7 @@ jobs:
           git config user.name  "dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
           # 파일별로 개별 add — 하나가 없어도(수집 실패) 나머지는 정상 스테이징
-          for f in frontend/dashboard.html frontend/livepop_gu.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/sales_history.json frontend/sales_forecast.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/storeinfo_gu.json frontend/subway_gu.json frontend/distance_decay.json frontend/updates.json; do
+          for f in frontend/dashboard.html frontend/livepop_gu.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/sales_history.json frontend/sales_forecast.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/storeinfo_gu.json frontend/subway_gu.json frontend/subway_stations.json frontend/distance_decay.json frontend/updates.json; do
             [ -f "$f" ] && git add "$f" || true
           done
           if git diff --cached --quiet; then

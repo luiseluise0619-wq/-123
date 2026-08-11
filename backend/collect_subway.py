@@ -21,6 +21,7 @@ import xml.etree.ElementTree as ET
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 OUT  = os.path.join(ROOT, "frontend", "subway_gu.json")
+STATIONS_OUT = os.path.join(ROOT, "frontend", "subway_stations.json")
 GEOJSON = os.path.join(ROOT, "frontend", "seoul_gu.geojson")
 KEY  = os.environ.get("SEOUL_API_KEY", "").strip()
 BASE = "http://openapi.seoul.go.kr:8088"
@@ -132,7 +133,7 @@ def main():
                 fnum(row.findtext("GTON_TNOPE")), fnum(row.findtext("GTOFF_TNOPE"))))
         time.sleep(0.1)
 
-    acc = {}; mapped = 0
+    acc = {}; mapped = 0; st_acc = {}
     for nm, on, off in rows:
         c = coords.get(nm)
         if not c: continue
@@ -141,6 +142,9 @@ def main():
         mapped += 1
         a = acc.setdefault(g, {"stations":0, "on":0.0, "off":0.0})
         a["stations"] += 1; a["on"] += on; a["off"] += off
+        # 역 단위(고해상도 SVG 오버레이용): 같은 역명은 노선 합산
+        s = st_acc.setdefault(nm, {"lon":c[0], "lat":c[1], "gu":g, "on":0.0, "off":0.0})
+        s["on"] += on; s["off"] += off
 
     # 정직 가드: 매핑된 역이 없으면 실패.
     if mapped == 0 or not acc:
@@ -157,6 +161,20 @@ def main():
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
     print(f"저장: {OUT} · {use_ymd} · 매핑역 {mapped} · 자치구 {len(gu_out)}")
+
+    # 역 단위 산출물(SVG 오버레이용). 자치구 롤업 이전의 실측을 그대로 보존.
+    st_list = [{"nm":nm, "lon":round(v["lon"],6), "lat":round(v["lat"],6), "gu":v["gu"],
+                "on":round(v["on"]), "off":round(v["off"]), "total":round(v["on"]+v["off"])}
+               for nm, v in st_acc.items()]
+    st_list.sort(key=lambda r: r["total"], reverse=True)
+    st_out = {"available":True, "date":use_ymd,
+              "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d"),
+              "n_stations":len(st_list),
+              "note":"역별 최근 평일 하루 승차+하차(같은 역명은 노선 합산). "
+                     "좌표는 역사마스터 WGS84. 프론트의 검증된 project(lon,lat)로 지도에 투영.",
+              "stations":st_list}
+    json.dump(st_out, open(STATIONS_OUT,"w",encoding="utf-8"), ensure_ascii=False)
+    print(f"저장: {STATIONS_OUT} · 역 {len(st_list)}개")
     return 0
 
 if __name__ == "__main__":
