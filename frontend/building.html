@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>상권 인텔리전스 · 건물 단위 지도</title>
+<style>
+  :root{ --bg:#0F1826; --panel:#132033; --line:#22334d; --ink:#eaf1fb; --mut:#93a7c4; --accent:#2A78D6; }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink)}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto}
+  header h1{font-size:15px;font-weight:700;margin:0}
+  header .sub{font-size:11px;color:var(--mut)}
+  header a.back{margin-left:auto;font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 10px;border-radius:8px;background:#0d1725}
+  header a.back:hover{border-color:var(--accent)}
+  #wrap{position:relative;flex:1 1 auto}
+  #map{position:absolute;inset:0;background:#0b1420}
+  /* 지도 로드 실패(카카오 도메인 미등록/키 오류) 오버레이 */
+  #mapfail{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(11,20,32,.94);z-index:20}
+  #mapfail.on{display:flex}
+  #mapfail .card{max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;line-height:1.6}
+  #mapfail h2{margin:0 0 8px;font-size:16px}
+  #mapfail p{margin:6px 0;font-size:13px;color:var(--mut)}
+  #mapfail code{background:#0b1420;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px;color:#cfe0f7}
+  #mapfail ol{margin:10px 0 0;padding-left:18px;font-size:13px;color:var(--mut)}
+  #mapfail a{color:#7db4f2}
+  /* 좌상단 컨트롤 */
+  .ctrl{position:absolute;top:12px;left:12px;z-index:10;background:rgba(19,32,51,.92);border:1px solid var(--line);border-radius:12px;padding:12px 14px;backdrop-filter:blur(6px);max-width:240px}
+  .ctrl h3{margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.02em}
+  .ctrl select{width:100%;background:#0b1420;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px}
+  .ctrl .hint{font-size:11px;color:var(--mut);margin-top:8px}
+  .ctrl .stat{font-size:11px;color:var(--mut);margin-top:6px}
+  .ctrl .stat b{color:var(--ink)}
+  /* 범례 */
+  .legend{position:absolute;bottom:16px;left:12px;z-index:10;background:rgba(19,32,51,.92);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:11px;color:var(--mut)}
+  .legend .row{display:flex;align-items:center;gap:7px;margin:3px 0}
+  .legend .dot{border-radius:50%;background:#2A78D6;opacity:.85;flex:0 0 auto}
+  .foot{position:absolute;bottom:16px;right:12px;z-index:10;max-width:340px;font-size:10px;color:var(--mut);text-align:right;line-height:1.5;background:rgba(15,24,38,.72);padding:6px 9px;border-radius:8px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <h1>건물 단위 지도 <span class="sub">· 역세권 접근성(지하철 승하차)</span></h1>
+    </div>
+    <a class="back" href="index.html">← 개요 지도(자치구)</a>
+  </header>
+  <div id="wrap">
+    <div id="map"></div>
+
+    <div class="ctrl">
+      <h3>자치구 이동</h3>
+      <select id="gu-sel"><option value="">서울 전체</option></select>
+      <div class="stat" id="stat">역 데이터 불러오는 중…</div>
+      <div class="hint">원의 크기·진하기 = 하루 승하차 인원. 역을 클릭하면 상세가 나옵니다.</div>
+    </div>
+
+    <div class="legend" id="legend" style="display:none">
+      <div style="color:var(--ink);font-weight:600;margin-bottom:4px">일 승하차(명)</div>
+    </div>
+
+    <div class="foot" id="foot"></div>
+
+    <div id="mapfail">
+      <div class="card">
+        <h2>지도를 불러오지 못했어요</h2>
+        <p>카카오 지도 JavaScript SDK가 차단됐습니다. 대부분 <b>배포 도메인 미등록</b> 또는 <b>앱키 오류</b>가 원인입니다(이전에 자치구 지도를 SVG로 바꾼 것도 이 문제 때문).</p>
+        <ol>
+          <li><a href="https://developers.kakao.com" target="_blank" rel="noopener">Kakao Developers</a> → 내 애플리케이션에서 <b>JavaScript 키</b> 발급</li>
+          <li>플랫폼 → Web → 사이트 도메인에 <code>https://&lt;배포도메인&gt;</code> 등록(현재 Vercel 주소)</li>
+          <li>이 파일 하단 <code>appkey=</code> 값을 발급한 JS 키로 교체</li>
+        </ol>
+        <p style="margin-top:12px">그동안 자치구 단위 개요는 <a href="index.html">개요 지도(SVG)</a>에서 정상 동작합니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 검증된 카카오 연동 관용구는 기존 index.html(bf7ab87^)에서 되살림.
+   여기서는 건물/역 단위 해상도에 집중: 지하철 역별 승하차를 원 마커로 투영. */
+let MAP=null, GU=null, ST=null, guCenters={};
+const markers=[], guPolys=[];
+
+function loadJSON(f){return fetch(f,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
+function num(n){return (n==null||isNaN(n))?'—':Number(n).toLocaleString('ko-KR');}
+
+// 승하차 규모 → 반지름(미터). sqrt 스케일로 큰 역이 지나치게 커지지 않게.
+function radiusOf(total,max){ const t=Math.max(0,total||0); const r=Math.sqrt(t/(max||1)); return 120+r*640; }
+// 승하차 규모 → 색(옅은 청 → 진한 청).
+function colorOf(total,max){ const r=Math.min(1,(total||0)/(max||1)); const g=Math.round(150-r*70), b=Math.round(214-r*40); return `rgb(42,${g},${b})`; }
+
+function drawGuBase(map){
+  if(!GU||!GU.features)return;
+  GU.features.forEach(f=>{
+    const name=f.properties.name;
+    const rings=f.geometry.type==='MultiPolygon'?f.geometry.coordinates.map(p=>p[0]):[f.geometry.coordinates[0]];
+    let cx=0,cy=0,cn=0;
+    rings.forEach(ring=>{
+      const path=ring.map(pt=>new kakao.maps.LatLng(pt[1],pt[0]));
+      const poly=new kakao.maps.Polygon({path,strokeWeight:1,strokeColor:'#3a5578',strokeOpacity:.7,fillColor:'#16273d',fillOpacity:.22});
+      poly.setMap(map); guPolys.push(poly);
+      ring.forEach(pt=>{cx+=pt[0];cy+=pt[1];cn++;});
+    });
+    if(cn) guCenters[name]={lat:cy/cn,lng:cx/cn};
+  });
+}
+
+function drawStations(map){
+  if(!ST||!ST.stations||!ST.stations.length)return;
+  const max=ST.stations[0].total||1;   // total 내림차순 정렬 → 첫 항목이 최대
+  const iw=new kakao.maps.InfoWindow({removable:true});
+  ST.stations.forEach(s=>{
+    if(s.lat==null||s.lon==null)return;
+    const pos=new kakao.maps.LatLng(s.lat,s.lon);
+    const c=new kakao.maps.Circle({center:pos,radius:radiusOf(s.total,max),
+      strokeWeight:1,strokeColor:'#0b1420',strokeOpacity:.5,
+      fillColor:colorOf(s.total,max),fillOpacity:.62});
+    c.setMap(map); markers.push(c);
+    kakao.maps.event.addListener(c,'click',()=>{
+      iw.setContent(
+        `<div style="padding:8px 11px;font:13px -apple-system;color:#0F1826;min-width:150px">`+
+        `<b style="font-size:14px">${s.nm}</b> <span style="color:#5b6b82">· ${s.gu||''}</span><br>`+
+        `승차 ${num(s.on)} · 하차 ${num(s.off)}<br>`+
+        `<b>합계 ${num(s.total)}</b> 명/일</div>`);
+      iw.setPosition(pos); iw.open(map);
+    });
+  });
+  buildLegend(max);
+}
+
+function buildLegend(max){
+  const lg=document.getElementById('legend'); if(!lg)return;
+  const steps=[max,max*0.5,max*0.2];
+  lg.querySelectorAll('.row').forEach(n=>n.remove());
+  steps.forEach(v=>{
+    const px=Math.max(8,Math.min(30,Math.sqrt(v/max)*30));
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML=`<span class="dot" style="width:${px}px;height:${px}px;background:${colorOf(v,max)}"></span><span>${num(Math.round(v))}</span>`;
+    lg.appendChild(row);
+  });
+  lg.style.display='';
+}
+
+function fillGuSelect(){
+  const sel=document.getElementById('gu-sel');
+  const names=Object.keys(guCenters).sort();
+  names.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  sel.onchange=()=>{
+    const v=sel.value;
+    if(!MAP)return;
+    if(v&&guCenters[v]){MAP.panTo(new kakao.maps.LatLng(guCenters[v].lat,guCenters[v].lng));MAP.setLevel(5);}
+    else{MAP.panTo(new kakao.maps.LatLng(37.5636,126.9976));MAP.setLevel(8);}
+  };
+}
+
+function setStat(){
+  const el=document.getElementById('stat'); if(!el)return;
+  if(ST&&ST.available&&ST.stations&&ST.stations.length){
+    const top=ST.stations[0];
+    el.innerHTML=`역 <b>${num(ST.n_stations)}</b>개 · 기준 ${ST.date||'—'}<br>최다 승하차: <b>${top.nm}</b> (${num(top.total)}명/일)`;
+  }else{
+    el.innerHTML='역 승하차 데이터가 아직 없습니다.<br>자동 갱신 워크플로가 <code style="font-size:10px">subway_stations.json</code>을 커밋하면 표시됩니다.';
+  }
+}
+
+function initMap(){
+  const el=document.getElementById('map');
+  MAP=new kakao.maps.Map(el,{center:new kakao.maps.LatLng(37.5636,126.9976),level:8});
+  MAP.addControl(new kakao.maps.ZoomControl(),kakao.maps.ControlPosition.RIGHT);
+  drawGuBase(MAP);
+  drawStations(MAP);
+  fillGuSelect();
+  setStat();
+  document.getElementById('foot').textContent=
+    '출처: 서울 열린데이터광장 지하철 승하차(CardSubwayStatsNew) + 역사마스터 좌표(WGS84). '+
+    '역별 최근 평일 하루 승차+하차(동일 역명은 노선 합산).';
+}
+
+function boot(){
+  Promise.all([loadJSON('seoul_gu.geojson'),loadJSON('subway_stations.json')])
+    .then(([g,s])=>{GU=g;ST=s;})
+    .finally(()=>{
+      if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
+      else{document.getElementById('mapfail').classList.add('on');setStat();}
+    });
+}
+</script>
+<!-- 카카오 지도 JS SDK: 아래 appkey 를 발급한 JavaScript 키로 교체하고,
+     Kakao Developers 콘솔의 플랫폼>Web 사이트 도메인에 배포 주소(Vercel)를 반드시 등록할 것.
+     도메인 미등록이 이전 지도 실패(→SVG 전환)의 원인이었음. -->
+<script>
+(function(){
+  const s=document.createElement('script');
+  s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey=a3de8803a1a0c9388bbb205e62cf40c5&autoload=false';
+  s.onload=boot;
+  s.onerror=function(){document.getElementById('mapfail').classList.add('on');setStat();};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
