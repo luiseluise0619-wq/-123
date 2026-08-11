@@ -60,6 +60,14 @@
   #pin .pick{font-size:13px;margin-bottom:6px;width:100%}
   #pin .pick b{font-size:15px;color:var(--green)}
   #pin .muted{color:var(--mut)}
+  #pin .sig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0 4px}
+  #pin .sig .t{background:#0b1420;border:1px solid var(--line);border-radius:10px;padding:9px 6px;text-align:center}
+  #pin .sig .tl{font-size:10px;color:var(--mut);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pin .sig .tv{font-size:16px;font-weight:700;line-height:1.1}
+  #pin .sig .tv small{font-size:10px;font-weight:400;color:var(--mut)}
+  #pin details.more{margin-top:6px;border-top:1px dashed var(--line);padding-top:4px}
+  #pin details.more>summary{cursor:pointer;font-size:12px;color:var(--accent);padding:5px 0;list-style:none}
+  #pin details.more>summary::-webkit-details-marker{display:none}
   #pin-insight{white-space:pre-wrap;font-size:12.5px;line-height:1.6;margin-top:8px;color:var(--ink)}
   #pin-insight:empty{margin:0}
   .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--mut);background:rgba(15,24,38,.72);padding:7px 10px;border-radius:8px}
@@ -259,14 +267,27 @@ function analyzePin(latlng){
   const popAs=(POP&&POP.stdr_date)?` · ${fmtYmd(POP.stdr_date)}${POP.hour?' '+POP.hour+'시':''} 기준`:'';
   const stAs=(ST&&ST.date)?` · ${fmtYmd(ST.date)} 기준`:'';
   const znAs=(ZONE&&ZONE.quarter)?` · ${fmtQ(ZONE.quarter)}`:'';
+  const sigStationH = (near&&near.length)
+    ? `<b>${esc(near[0].s.nm)}</b> <span class="muted">${fmtM(near[0].d)} · 하루 ${num(near[0].s.total)}명</span>`
+    : '<span class="muted">역 데이터 준비 중</span>';
   const box=document.getElementById('pin');
   box.innerHTML=
-    `<div class="blk"><div class="lb">위치</div><div class="big" id="pin-addr">주소 확인 중…</div><div class="v muted" id="pin-region"></div></div>`+
-    `<div class="blk"><div class="lb">유동인구(해당 자치구)<span class="asof">${popAs}</span></div><div class="v" id="pin-pop">…</div><div class="muted" id="pin-demo" style="font-size:11px;margin-top:2px"></div></div>`+
-    `<div class="blk"><div class="lb">자치구 지표<span class="asof"> · 자치구 단위</span></div><div class="v" id="pin-gu">…</div></div>`+
-    `<div class="blk"><div class="lb">주변 역 (가까운 3)<span class="asof">${stAs}</span></div>${stH}${premH?`<div class="muted" style="font-size:11px;margin-top:4px">${premH}</div>`:''}</div>`+
-    `<div class="blk"><div class="lb">가까운 상권<span class="asof">${znAs}</span></div>${znH}</div>`+
-    `<div class="blk"><div class="lb">반경 ${fmtM(radius)} 점포<span class="asof"> · 실시간</span></div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div><div class="muted" id="pin-density" style="font-size:11px;margin-top:5px"></div></div>`;
+    // ── 핵심(예비 창업자 관점): 어디 + 3신호 + 가까운 역 ──
+    `<div class="blk"><div class="lb">어디인가요</div><div class="big" id="pin-addr">주소 확인 중…</div><div class="v muted" id="pin-region"></div></div>`+
+    `<div class="sig">`+
+      `<div class="t"><div class="tl">지나다니는 사람</div><div class="tv" id="sig-pop">…</div></div>`+
+      `<div class="t"><div class="tl" id="sig-cat-l">경쟁</div><div class="tv" id="sig-cat">…</div></div>`+
+      `<div class="t"><div class="tl">폐업 2년</div><div class="tv" id="sig-close">…</div></div>`+
+    `</div>`+
+    `<div class="blk"><div class="lb">가까운 역<span class="asof">${stAs}</span></div><div class="v">${sigStationH}</div></div>`+
+    // ── 자세히(접기): 상세 지표 ──
+    `<details class="more"><summary>자세히 보기 ▾</summary>`+
+      `<div class="blk"><div class="lb">유동인구 구성<span class="asof">${popAs}</span></div><div class="v" id="pin-pop">…</div><div class="muted" id="pin-demo" style="font-size:11px;margin-top:2px"></div></div>`+
+      `<div class="blk"><div class="lb">자치구 지표</div><div class="v" id="pin-gu">…</div></div>`+
+      `<div class="blk"><div class="lb">주변 역 (가까운 3)</div>${stH}${premH?`<div class="muted" style="font-size:11px;margin-top:4px">${premH}</div>`:''}</div>`+
+      `<div class="blk"><div class="lb">가까운 상권<span class="asof">${znAs}</span></div>${znH}</div>`+
+      `<div class="blk"><div class="lb">반경 ${fmtM(radius)} 업종별 점포<span class="asof"> · 실시간</span></div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div><div class="muted" id="pin-density" style="font-size:11px;margin-top:5px"></div></div>`+
+    `</details>`;
 
   // 2) 역지오코딩 → 주소·자치구 → 유동인구(성별·연령) · 폐업추세
   kakao({mode:'coord',x:lng,y:lat}).then(d=>{
@@ -279,6 +300,7 @@ function analyzePin(latlng){
       document.getElementById('pin-pop').innerHTML=pop
         ? `${esc(d.gu)} <b>${num(pop.tot)}</b>명 <span class="muted">체류</span>`
         : `<span class="muted">${d.gu?esc(d.gu)+' 유동인구 데이터 없음':'자치구 밖'}</span>`;
+      const sp=document.getElementById('sig-pop'); if(sp) sp.innerHTML=pop?`${num(pop.tot)}<small>명</small>`:'<small class="muted">—</small>';
       // 성별·연령 구성
       if(pop&&pop.tot){
         const mp=Math.round((pop.m||0)/pop.tot*100), fp=100-mp;
@@ -295,11 +317,15 @@ function analyzePin(latlng){
       const core=(window.__SANGGWON&&window.__SANGGWON.core), cg=core&&core.gu&&d.gu&&core.gu[d.gu];
       if(cg&&cg.trend!=null){ gv.push(`<div class="li"><span class="v">폐업 추세<span class="muted"> 2년</span></span><span class="d">${cg.trend>=0?'+':''}${cg.trend}% · '24 ${num(cg.y2024)}건</span></div>`); if(pinData){pinData.trend=cg.trend;pinData.y2024=cg.y2024;} }
       document.getElementById('pin-gu').innerHTML=gv.length?gv.join(''):`<span class="muted">자치구 지표 없음</span>`;
+      const scl=document.getElementById('sig-close');
+      if(scl){ if(cg&&cg.trend!=null){const up=cg.trend>=0;scl.innerHTML=`<span style="color:${up?'#e6866f':'#4fb98a'}">${up?'▲':'▼'}${Math.abs(cg.trend)}<small>%</small></span>`;} else scl.innerHTML='<small class="muted">—</small>'; }
     }else{
       document.getElementById('pin-addr').textContent='주소 변환 실패';
       document.getElementById('pin-region').innerHTML=`<span class="muted">${esc((d&&d.error)||'')}</span>`;
       document.getElementById('pin-pop').innerHTML='<span class="muted">—</span>';
       document.getElementById('pin-gu').innerHTML='<span class="muted">자치구 미확인</span>';
+      const sp=document.getElementById('sig-pop'); if(sp)sp.innerHTML='<small class="muted">—</small>';
+      const scl=document.getElementById('sig-close'); if(scl)scl.innerHTML='<small class="muted">—</small>';
     }
   });
 
@@ -345,10 +371,15 @@ function analyzePin(latlng){
 
   Promise.all(nowCats.map(([code,nm])=>kakao({mode:'category',code,x:lng,y:lat,radius,size:1}).then(r=>({nm,code,n:r&&r.ok?r.total:null,err:r&&r.error}))))
     .then(rows=>{
+      const scl=document.getElementById('sig-cat-l'), scv=document.getElementById('sig-cat');
       if(!rows.some(r=>r.n!=null)){el.innerHTML=`<span class="muted">${esc(rows.find(r=>r.err)?.err||'집계 실패 — /api/kakao(KAKAO_REST_KEY) 확인')}</span>`;
-        document.getElementById('pin-density').innerHTML='';return;}
+        document.getElementById('pin-density').innerHTML='';
+        if(scv)scv.innerHTML='<small class="muted">키필요</small>';return;}
       rows.forEach(r=>{catState[r.code]={nm:r.nm,n:r.n};});
-      if(pinData){const pk=catState[chosenCode];pinData.chosenName=pk?pk.nm:null;
+      const pk=catState[chosenCode];
+      if(scl)scl.textContent=pk?pk.nm:'경쟁';
+      if(scv)scv.innerHTML=pk&&pk.n!=null?`${num(pk.n)}<small>곳</small>`:'<small class="muted">—</small>';
+      if(pinData){pinData.chosenName=pk?pk.nm:null;
         pinData.cats=Object.values(catState).filter(c=>c.n!=null).map(c=>({nm:c.nm,n:c.n}));}
       renderCats(); updateDensity();
     });
