@@ -78,6 +78,20 @@ class WebAutonomousLoop:
             
         return result
 
+    def log_remediation(self, name, payload, verdict, reason):
+        self.round_count = 999 # Remediation marker
+        result = {
+            "round": "REMEDY",
+            "type": name,
+            "verdict": verdict,
+            "payload": payload,
+            "is_force_loss": False,
+            "reason": reason,
+            "timestamp": time.time()
+        }
+        with open(self.log_file, "a") as f:
+            f.write(json.dumps(result) + "\n")
+
 if __name__ == "__main__":
     loop = WebAutonomousLoop()
     print("Starting Web Autonomous Duel Loop (with intentional BLUE_LOSS)...")
