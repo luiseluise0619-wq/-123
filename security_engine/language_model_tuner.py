@@ -122,10 +122,13 @@ def choose_threshold(
 class LanguageModelTuner:
     """Fit one local text model per programming language with calibrated thresholds."""
 
-    def __init__(self, minimum_recall: float = 0.80):
+    def __init__(self, minimum_recall: float = 0.80, smoothing_alpha: float = 1.0):
         if not 0 < minimum_recall <= 1:
             raise ValueError("minimum_recall must be in (0, 1].")
+        if smoothing_alpha <= 0:
+            raise ValueError("smoothing_alpha must be greater than zero.")
         self.minimum_recall = minimum_recall
+        self.smoothing_alpha = float(smoothing_alpha)
 
     @staticmethod
     def add_hard_negatives(examples: Iterable[LanguageExample]) -> List[LanguageExample]:
@@ -175,7 +178,11 @@ class LanguageModelTuner:
             by_language.setdefault(example.language, []).append(example)
 
         models: Dict[str, LocalRiskModel] = {}
-        report: Dict[str, Any] = {"minimum_recall": self.minimum_recall, "languages": {}}
+        report: Dict[str, Any] = {
+            "minimum_recall": self.minimum_recall,
+            "smoothing_alpha": self.smoothing_alpha,
+            "languages": {},
+        }
         for language, rows in sorted(by_language.items()):
             if len(rows) < 4 or {row.label for row in rows} != {0, 1}:
                 report["languages"][language] = {
@@ -185,7 +192,7 @@ class LanguageModelTuner:
                 }
                 continue
             train, validation = self._split(rows)
-            model = LocalRiskModel()
+            model = LocalRiskModel(smoothing_alpha=self.smoothing_alpha)
             hard_negative_count = sum(row.source_kind == "post_fix_hard_negative" for row in train)
             model.fit(
                 [(row.code, row.label) for row in train],

@@ -117,7 +117,10 @@ class LocalRiskModel:
     Bandit judge's findings.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, smoothing_alpha: float = 1.0) -> None:
+        if smoothing_alpha <= 0:
+            raise ValueError("smoothing_alpha must be greater than zero.")
+        self.smoothing_alpha = float(smoothing_alpha)
         self.class_document_counts: Counter[int] = Counter()
         self.class_token_counts: Dict[int, Counter[str]] = {0: Counter(), 1: Counter()}
         self.class_total_tokens: Counter[int] = Counter()
@@ -165,11 +168,12 @@ class LocalRiskModel:
         log_scores: Dict[int, float] = {}
         for label in (0, 1):
             # Laplace smoothing keeps probabilities defined for unseen tokens.
-            log_probability = math.log((self.class_document_counts[label] + 1) / (total_docs + 2))
-            denominator = self.class_total_tokens[label] + vocabulary_size
+            alpha = self.smoothing_alpha
+            log_probability = math.log((self.class_document_counts[label] + alpha) / (total_docs + 2 * alpha))
+            denominator = self.class_total_tokens[label] + alpha * vocabulary_size
             for token in tokens:
                 count = self.class_token_counts[label][token]
-                log_probability += math.log((count + 1) / denominator)
+                log_probability += math.log((count + alpha) / denominator)
             log_scores[label] = log_probability
 
         maximum = max(log_scores.values())
@@ -181,6 +185,7 @@ class LocalRiskModel:
         return {
             "model_type": "local multinomial naive bayes (from scratch)",
             "model_version": MODEL_VERSION,
+            "smoothing_alpha": self.smoothing_alpha,
             "trained": self.is_trained,
             "trained_at": self.trained_at,
             "training_documents": int(sum(self.class_document_counts.values())),
@@ -216,10 +221,17 @@ class RedBlueTrainingArena:
             labelled_samples.append((clean_sample, label))
         return self.risk_model.fit(labelled_samples)
 
-    def run_rounds(self, rounds: int = 4, retrain_model: bool = True) -> Dict[str, Any]:
+    def run_rounds(
+        self,
+        rounds: int = 4,
+        retrain_model: bool = True,
+        start_round: int = 0,
+    ) -> Dict[str, Any]:
         """Run bounded, local code exercises and return judge-backed results only."""
         if not 1 <= rounds <= 16:
             raise ValueError("rounds must be between 1 and 16.")
+        if start_round < 0:
+            raise ValueError("start_round must not be negative.")
         if retrain_model or not self.risk_model.is_trained:
             self.train_risk_model()
 
@@ -227,12 +239,12 @@ class RedBlueTrainingArena:
         exercises: List[Dict[str, Any]] = []
 
         for round_index in range(rounds):
-            scenario = SAFE_TRAINING_SCENARIOS[round_index % len(SAFE_TRAINING_SCENARIOS)]
+            scenario = SAFE_TRAINING_SCENARIOS[(start_round + round_index) % len(SAFE_TRAINING_SCENARIOS)]
             before = self.judge(scenario.source_code)
             before_rule_ids = _rule_ids(before)
             probability = self.risk_model.predict_vulnerability_probability(scenario.source_code)
             red_detected = bool(before)
-            model_predicted_vulnerable = probability >= 0.5
+            model_predicted_vulnerable = probability >= self.risk_model.decision_threshold
             if red_detected:
                 scoreboard["red_points"] += 100
 
@@ -281,6 +293,7 @@ class RedBlueTrainingArena:
             "mode": "safe-local-red-blue-training",
             "safety_boundary": "Local static analysis only. No source execution, network target, or exploit delivery.",
             "scoreboard": scoreboard,
+            "start_round": start_round,
             "model": self.risk_model.metadata(),
             "exercises": exercises,
         }
