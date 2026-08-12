@@ -79,6 +79,16 @@ SAFE_TRAINING_SCENARIOS: Tuple[TrainingScenario, ...] = (
             "    return value\n"
         ),
     ),
+    TrainingScenario(
+        scenario_id="predictable-session-nonce",
+        category="randomness",
+        description="Predictable random-value identification exercise for session-related values.",
+        source_code=(
+            "import random\n\n"
+            "def create_session_nonce():\n"
+            "    return str(random.random())\n"
+        ),
+    ),
 )
 
 

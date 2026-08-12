@@ -29,15 +29,15 @@ class RedBlueArenaTests(unittest.TestCase):
 
     def test_local_model_is_judge_labelled_and_arena_verifies_fixes(self):
         arena = RedBlueTrainingArena()
-        result = arena.run_rounds(rounds=4, retrain_model=True)
+        result = arena.run_rounds(rounds=5, retrain_model=True)
 
         self.assertEqual(result["mode"], "safe-local-red-blue-training")
         self.assertIn("No source execution", result["safety_boundary"])
-        self.assertEqual(len(result["exercises"]), 4)
+        self.assertEqual(len(result["exercises"]), 5)
         self.assertEqual(result["model"]["model_type"], "local multinomial naive bayes (from scratch)")
-        self.assertEqual(result["model"]["positive_documents"], 4)
+        self.assertEqual(result["model"]["positive_documents"], 5)
         self.assertEqual(result["model"]["negative_documents"], 4)
-        self.assertGreaterEqual(result["scoreboard"]["red_points"], 400)
+        self.assertGreaterEqual(result["scoreboard"]["red_points"], 500)
         self.assertGreaterEqual(result["scoreboard"]["judge_verified_fixes"], 2)
 
         fixed_rules = {
@@ -47,6 +47,12 @@ class RedBlueArenaTests(unittest.TestCase):
         }
         self.assertIn("B324", fixed_rules)
         self.assertIn("B602", fixed_rules)
+        custom_exercise = next(
+            exercise for exercise in result["exercises"] if exercise["scenario_id"] == "predictable-session-nonce"
+        )
+        self.assertIn("B311", custom_exercise["judge_before_rule_ids"])
+        self.assertFalse(custom_exercise["blue_fix_verified"])
+        self.assertIn("B311", custom_exercise["blue_needs_human_review_rule_ids"])
         for exercise in result["exercises"]:
             self.assertFalse(exercise["source_persisted"])
             self.assertFalse(exercise["source_executed"])
