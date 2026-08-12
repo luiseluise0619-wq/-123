@@ -8,6 +8,9 @@ claims that header values constitute production authentication.
 
 from __future__ import annotations
 
+import os
+import re
+import sqlite3
 import datetime as dt
 import sys
 import time
@@ -28,6 +31,7 @@ from security_engine.integrated_auditor import AuditReport, IntegratedSecurityAu
 from security_engine.red_blue_arena import LocalRiskModel, RedBlueTrainingArena
 from security_engine.repository_trainer import RepositoryRiskTrainer
 from security_engine.public_corpus_trainer import PublicVulnerabilityCorpusTrainer
+from security_engine.blue_team_evaluator import BlueTeamEvaluator
 
 
 app = FastAPI(
@@ -103,6 +107,15 @@ class LegacyRepositoryAuditRequest(BaseModel):
     branch: str = "main"
 
 
+class CVEfixesEvaluationRequest(BaseModel):
+    """Bounded evaluation request for an official CVEfixes SQLite database."""
+
+    database_filename: str = Field(default="CVEfixes.db", min_length=1, max_length=255)
+    minimum_recall: float = Field(default=0.80, gt=0, le=1)
+    pair_limit: Optional[int] = Field(default=None, ge=3, le=50000)
+    scenario_ids: Optional[List[str]] = Field(default=None, max_length=16)
+
+
 class RedBlueTrainingRequest(BaseModel):
     """Bounded request for local, non-executed Red-Team / Blue-Team exercises."""
 
@@ -123,6 +136,8 @@ REPOSITORY_TRAINING_REPORTS: Dict[str, Dict[str, Any]] = {}
 PUBLIC_CORPUS_TRAINING_MODELS: Dict[str, LocalRiskModel] = {}
 PUBLIC_CORPUS_TRAINING_REPORTS: Dict[str, Dict[str, Any]] = {}
 TRAINING_DASHBOARDS: Dict[str, Dict[str, Any]] = {}
+CVEFIXES_EVALUATION_DASHBOARDS: Dict[str, Dict[str, Any]] = {}
+CVEFIXES_DATA_ROOT = (PROJECT_ROOT.parent / "cvedata").resolve()
 
 
 def get_request_context(
@@ -186,6 +201,12 @@ async def health() -> Dict[str, str]:
 async def training_dashboard() -> FileResponse:
     """Serve the local Red-Team / Blue-Team training dashboard."""
     return FileResponse(PROJECT_ROOT / "training_dashboard.html")
+
+
+@app.get("/blue-dashboard", include_in_schema=False)
+async def blue_team_dashboard() -> FileResponse:
+    """Serve the CVEfixes Blue-Team evaluation dashboard."""
+    return FileResponse(PROJECT_ROOT / "blue_team_dashboard.html")
 
 
 @app.post("/api/v1/audit-code", response_model=CodeAuditResponse)
@@ -255,6 +276,85 @@ async def audit_python_source(
         ),
     )
     return CodeAuditResponse(audit=audit)
+
+
+@app.post("/api/v1/blue-team/evaluate")
+async def evaluate_cvefixes_blue_team(
+    payload: CVEfixesEvaluationRequest,
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Evaluate local CVEfixes method pairs and simulate approved local scenarios."""
+    if context.user_role not in {UserRole.ADMIN, UserRole.SECURITY_LEAD}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CVEfixes model evaluation requires the Admin or Security Lead role.",
+        )
+    database_path = (CVEFIXES_DATA_ROOT / payload.database_filename).resolve()
+    if CVEFIXES_DATA_ROOT not in database_path.parents or database_path.suffix != ".db":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="database_filename must reference a .db file under the local cvedata directory.",
+        )
+    try:
+        evaluator = BlueTeamEvaluator(
+            str(database_path),
+            minimum_recall=payload.minimum_recall,
+            limit=payload.pair_limit,
+        )
+        training = evaluator.train()
+        patch_evaluation = evaluator.evaluate_patch_detection()
+        simulation = evaluator.simulate_red_team_response(payload.scenario_ids)
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="CVEfixes database not found. Convert the official dump and place the .db file under cvedata/.",
+        ) from exc
+    except (ValueError, sqlite3.DatabaseError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"CVEfixes evaluation could not use this database: {str(exc)}",
+        ) from exc
+
+    result = {
+        "training": training,
+        "patch_evaluation": patch_evaluation,
+        "red_blue_simulation": simulation,
+    }
+    CVEFIXES_EVALUATION_DASHBOARDS[context.organization_id] = result
+    record_audit_event(
+        context=context,
+        request=request,
+        action="EVALUATE_CVEFIXES_BLUE_TEAM",
+        target_type="LocalCVEfixesDatabase",
+        details=(
+            f"pair_limit={payload.pair_limit or 'all'}; minimum_recall={payload.minimum_recall}; "
+            f"evaluated_pairs={patch_evaluation['overall']['patch_pairs_evaluated']}"
+        ),
+    )
+    return result
+
+
+@app.get("/api/v1/blue-team/dashboard")
+async def get_cvefixes_blue_dashboard(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return the latest in-memory CVEfixes Blue-Team evaluation for one organization."""
+    result = CVEFIXES_EVALUATION_DASHBOARDS.get(context.organization_id)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No CVEfixes Blue-Team evaluation exists for this organization yet.",
+        )
+    record_audit_event(
+        context=context,
+        request=request,
+        action="READ_CVEFIXES_BLUE_DASHBOARD",
+        target_type="LocalCVEfixesDatabase",
+        details="Returned latest aggregate model evaluation and Red-Team response simulation.",
+    )
+    return result
 
 
 @app.post("/api/v1/training/red-blue")

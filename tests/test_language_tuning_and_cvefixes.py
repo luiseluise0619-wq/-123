@@ -109,3 +109,66 @@ class CVEfixesPatchPipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class BlueTeamEvaluationTests(unittest.TestCase):
+    def _create_fixture_db(self, path: Path) -> None:
+        with sqlite3.connect(path) as connection:
+            connection.executescript(
+                """
+                CREATE TABLE file_change (
+                    file_change_id INTEGER PRIMARY KEY,
+                    hash TEXT NOT NULL,
+                    programming_language TEXT NOT NULL
+                );
+                CREATE TABLE method_change (
+                    method_change_id INTEGER PRIMARY KEY,
+                    file_change_id INTEGER NOT NULL,
+                    signature TEXT,
+                    code TEXT NOT NULL,
+                    before_change INTEGER NOT NULL
+                );
+                CREATE TABLE fixes (cve_id TEXT NOT NULL, hash TEXT NOT NULL);
+                """
+            )
+            for index, cve_id in enumerate(("CVE-EVAL-1", "CVE-EVAL-2", "CVE-EVAL-3"), start=1):
+                commit_hash = f"evaluation-{index}"
+                connection.execute(
+                    "INSERT INTO file_change(file_change_id, hash, programming_language) VALUES (?, ?, ?)",
+                    (index, commit_hash, "C"),
+                )
+                connection.execute("INSERT INTO fixes(cve_id, hash) VALUES (?, ?)", (cve_id, commit_hash))
+                connection.execute(
+                    "INSERT INTO method_change(file_change_id, signature, code, before_change) VALUES (?, ?, ?, 1)",
+                    (index, f"parse_{index}()", f"int parse_{index}() {{ return unsafe_parse(); }}"),
+                )
+                connection.execute(
+                    "INSERT INTO method_change(file_change_id, signature, code, before_change) VALUES (?, ?, ?, 0)",
+                    (index, f"parse_{index}()", f"int parse_{index}() {{ return validated_parse(); }}"),
+                )
+
+    def test_patch_detection_metrics_and_new_red_scenario_simulation(self):
+        from security_engine.blue_team_evaluator import BlueTeamEvaluator
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            database_path = Path(temp_dir) / "CVEfixes.db"
+            self._create_fixture_db(database_path)
+            evaluator = BlueTeamEvaluator(str(database_path), minimum_recall=0.5)
+            evaluation = evaluator.evaluate_patch_detection()
+            overall = evaluation["overall"]
+            self.assertEqual(overall["patch_pairs_evaluated"], 3)
+            self.assertEqual(overall["evaluated_documents"], 6)
+            self.assertIsNotNone(overall["accuracy"])
+            self.assertIsNotNone(overall["false_positive_rate"])
+            self.assertFalse(evaluation["source_execution"])
+            self.assertFalse(evaluation["source_persisted"])
+
+            simulation = evaluator.simulate_red_team_response(["predictable-session-nonce"])
+            result = simulation["simulations"][0]
+            self.assertEqual(result["scenario_id"], "predictable-session-nonce")
+            self.assertIn("B311", result["red_team_rule_ids"])
+            self.assertFalse(result["source_execution"])
+            self.assertFalse(result["patch_verified_by_rescan"])
+            self.assertIn("B311", result["blue_team_human_review_rule_ids"])
+            # The CVEfixes fixture is C-only, so a Python model must not be invented.
+            self.assertFalse(result["language_model"]["model_available"])
