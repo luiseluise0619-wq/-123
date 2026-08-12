@@ -166,6 +166,7 @@ FEEDBACK_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "adversarial_fee
 PATTERNS_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "deadly_patterns_report.json"
 BYPASS_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "multistage_bypass_report.json"
 MASTER_DUEL_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "master_duel_report.json"
+AUTONOMOUS_DUEL_LOG = Path("/home/ubuntu/arena/autonomous_duels.jsonl")
 STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
 KOREAN_RED_TEAM = KoreanRedTeamGenerator(seed=42)
 
@@ -657,6 +658,23 @@ async def get_master_duel_report(
         "scenario": {},
         "safety_scope": "static analysis only; no code execution",
     }
+
+
+@app.get("/api/v1/autonomous-duels/live")
+async def get_autonomous_duels_live(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> List[Dict[str, Any]]:
+    """Return the latest autonomous duel logs from the live arena."""
+    if not AUTONOMOUS_DUEL_LOG.exists():
+        return []
+    
+    logs = []
+    with open(AUTONOMOUS_DUEL_LOG, "r") as f:
+        for line in f:
+            if line.strip():
+                logs.append(json.loads(line))
+    return logs[-20:] # Return last 20 rounds
 
 
 @app.post("/api/v1/korean-scenarios/generate")

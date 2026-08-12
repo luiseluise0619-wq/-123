@@ -1,0 +1,4 @@
+AegisAI execution verification harness
+mode=--safe input_bytes=200 buffer_bytes=128
+PATCH_RESULT=blocked
+reason=packet exceeds 128-byte safety limit

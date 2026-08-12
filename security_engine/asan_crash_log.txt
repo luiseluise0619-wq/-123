@@ -1,0 +1,52 @@
+=== AegisAI Execution-Based Verification Harness ===
+[*] Testing Vulnerable Function with 200 bytes input...
+=================================================================
+==13033==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x7fb2715000a0 at pc 0x7fb273cfb303 bp 0x7ffd29798820 sp 0x7ffd29797fc8
+WRITE of size 200 at 0x7fb2715000a0 thread T0
+    #0 0x7fb273cfb302 in memcpy ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors_memintrinsics.inc:115
+    #1 0x56143d5da591 in process_packet_vulnerable(char const*, unsigned long) /home/ubuntu/-123/security_engine/test_overflow_harness.cpp:11
+    #2 0x56143d5daa6b in main /home/ubuntu/-123/security_engine/test_overflow_harness.cpp:33
+    #3 0x7fb27342a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7)
+    #4 0x7fb27342a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7)
+    #5 0x56143d5da404 in _start (/home/ubuntu/-123/security_engine/test_overflow_asan+0x2404) (BuildId: f7d16861c3e168bc9b390418dee59f1700506fc5)
+
+Address 0x7fb2715000a0 is located in stack of thread T0 at offset 160 in frame
+    #0 0x56143d5da4d8 in process_packet_vulnerable(char const*, unsigned long) /home/ubuntu/-123/security_engine/test_overflow_harness.cpp:7
+
+  This frame has 1 object(s):
+    [32, 160) 'packet_buf' (line 8) <== Memory access at offset 160 overflows this variable
+HINT: this may be a false positive if your program uses some custom stack unwind mechanism, swapcontext or vfork
+      (longjmp and C++ exceptions *are* supported)
+SUMMARY: AddressSanitizer: stack-buffer-overflow ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors_memintrinsics.inc:115 in memcpy
+Shadow bytes around the buggy address:
+  0x7fb2714ffe00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7fb2714ffe80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7fb2714fff00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7fb2714fff80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7fb271500000: f1 f1 f1 f1 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x7fb271500080: 00 00 00 00[f3]f3 f3 f3 00 00 00 00 00 00 00 00
+  0x7fb271500100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7fb271500180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7fb271500200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7fb271500280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7fb271500300: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==13033==ABORTING
