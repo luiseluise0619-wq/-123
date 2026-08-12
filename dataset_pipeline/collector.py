@@ -63,7 +63,7 @@ class SecurityDataCollector:
             )
         ]
 
-    def fetch_registered_sources(()) -> List[RawSecurityRecord]:
+    def fetch_registered_sources(self) -> List[RawSecurityRecord]:
         """Simulates fetching & extracting raw data feeds from registered repositories."""
         print(f"📥 [Data Collector] Ingesting feeds from {len(self.sources)} security sources...")
         records = []

@@ -35,7 +35,7 @@ class AndroidAPKScanner:
     def __init__(self, apk_or_source_path: str):
         self.target_path = apk_or_source_path
 
-    def analyze(()) -> List[MobileFinding]:
+    def analyze(self) -> List[MobileFinding]:
         print(f"🤖 [Android Scanner] Analyzing APK / Source: {self.target_path}...")
         findings = []
 
