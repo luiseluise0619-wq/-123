@@ -94,6 +94,7 @@ def main():
 
     inc_sum=0.0; inc_n=0
     spend=[0.0]*len(SPEND)
+    income_field=None   # 응답에서 자동 감지(서비스 버전마다 소득 필드명이 다름)
     step=1000
     for s in range(1, total+1, step):
         e=min(s+step-1, total)
@@ -103,7 +104,14 @@ def main():
                 if attempt==3: raise
                 time.sleep(2*(attempt+1))
         for row in ET.fromstring(xml).findall(".//row"):
-            v=fnum(row.findtext("MT_AVRG_INCOME_AMT"))
+            if income_field is None:
+                tags=[el.tag for el in list(row)]
+                # 'INCOME'+'AMT' 포함 태그 중 평균(AVRG/AVG) 우선 선택
+                cands=[t for t in tags if "INCOME" in t.upper() and "AMT" in t.upper()]
+                cands.sort(key=lambda t: 0 if ("AVRG" in t.upper() or "AVG" in t.upper()) else 1)
+                income_field = cands[0] if cands else "MT_AVRG_INCOME_AMT"
+                print("  감지된 소득 필드:", income_field, "| 후보:", cands, "| 컬럼 예시:", tags[:18])
+            v=fnum(row.findtext(income_field))
             if v>0: inc_sum+=v; inc_n+=1
             for i,(_,k) in enumerate(SPEND): spend[i]+=fnum(row.findtext(k))
         if (s//step)%5==0 or e==total: print(f"  {s:,}~{e:,} 처리")
