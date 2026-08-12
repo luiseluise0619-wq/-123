@@ -78,6 +78,7 @@
   #saved-list .r{padding:6px 7px;border:1px solid var(--line);border-radius:7px;margin:5px 0;cursor:pointer;font-size:12px;background:#0b1420}
   #saved-list .r:hover{border-color:var(--accent)}#saved-list .r .c{color:var(--mut);font-size:11px}
   #saved-list .del{float:right;cursor:pointer;color:var(--mut);padding:0 2px}#saved-list .del:hover{color:#e6866f}
+  .numpin{width:26px;height:26px;border-radius:50%;background:#2A78D6;color:#fff;font:700 14px -apple-system;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45);cursor:pointer}
   .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--mut);background:rgba(15,24,38,.72);padding:7px 10px;border-radius:8px}
   .legend .k{display:inline-flex;align-items:center;gap:4px;margin-left:8px}
   .legend .d{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -145,6 +146,7 @@
       <section id="saved-sec" style="display:none">
         <h3>저장한 지점 <span class="sw" id="saved-n"></span></h3>
         <div id="saved-list"></div>
+        <button id="cmp-btn" class="sec" style="width:100%;margin-top:6px">📊 비교표 · PDF로 저장</button>
       </section>
 
       <section>
@@ -191,7 +193,7 @@ function findDong(lng,lat){
   }
   return null;
 }
-const stationMk=[], zoneMk=[], searchMk=[];
+const stationMk=[], zoneMk=[], searchMk=[], savedMk=[];
 
 function loadJSON(f){return fetch(f,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
 function num(n){return (n==null||isNaN(n))?'—':Number(n).toLocaleString('ko-KR');}
@@ -522,11 +524,53 @@ function renderSaved(){
   const a=loadSaved(), sec=document.getElementById('saved-sec'), list=document.getElementById('saved-list');
   document.getElementById('saved-n').textContent=a.length?a.length+'곳':'';
   sec.style.display=a.length?'':'none'; if(!a.length){list.innerHTML='';return;}
-  list.innerHTML=a.map((s,i)=>`<div class="r" data-i="${i}"><span class="del" data-del="${i}">✕</span><b>${esc(s.label)}</b><br><span class="c">사람 ${s.pop!=null?num(s.pop):'—'} · ${esc(s.catNm||'경쟁')} ${s.catN!=null?num(s.catN)+'곳':'—'} · 폐업 ${s.trend!=null?(s.trend>=0?'+':'')+s.trend+'%':'—'}</span></div>`).join('');
+  list.innerHTML=a.map((s,i)=>`<div class="r" data-i="${i}"><span class="del" data-del="${i}">✕</span><b>${i+1}. ${esc(s.label)}</b><br><span class="c">사람 ${s.pop!=null?num(s.pop):'—'} · ${esc(s.catNm||'경쟁')} ${s.catN!=null?num(s.catN)+'곳':'—'} · 폐업 ${s.trend!=null?(s.trend>=0?'+':'')+s.trend+'%':'—'}</span></div>`).join('');
   [...list.querySelectorAll('.r')].forEach(el=>el.onclick=e=>{
     if(e.target.dataset.del!=null){const arr=loadSaved();arr.splice(+e.target.dataset.del,1);saveSaved(arr);renderSaved();return;}
     const s=a[+el.dataset.i], pos=new kakao.maps.LatLng(s.lat,s.lng); MAP.setCenter(pos); MAP.setLevel(4); analyzePin(pos);
   });
+  drawSavedMarkers();
+}
+// 저장 지점을 지도에 번호(①②③) 마커로
+function drawSavedMarkers(){
+  savedMk.forEach(m=>m.setMap(null)); savedMk.length=0;
+  if(!MAP)return;
+  loadSaved().forEach((s,i)=>{
+    const el=document.createElement('div'); el.className='numpin'; el.textContent=i+1;
+    el.onclick=()=>{const pos=new kakao.maps.LatLng(s.lat,s.lng);MAP.setCenter(pos);MAP.setLevel(4);analyzePin(pos);};
+    savedMk.push(new kakao.maps.CustomOverlay({map:MAP,position:new kakao.maps.LatLng(s.lat,s.lng),yAnchor:1.1,content:el}));
+  });
+}
+// 저장 지점 비교표 → 새 창(인쇄로 PDF 저장)
+function comparePrint(){
+  const a=loadSaved();
+  if(!a.length){return;}
+  const hour=(DONGPOP&&DONGPOP.hour)?fmtHour(DONGPOP.hour):'';
+  const th=a.map((s,i)=>`<th>${i+1}. ${esc(s.label)}</th>`).join('');
+  const cell=(f)=>a.map(s=>`<td>${f(s)}</td>`).join('');
+  const html=`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>상권 후보지 비교</title>`+
+    `<style>body{font-family:-apple-system,'Malgun Gothic',sans-serif;padding:28px;color:#111}`+
+    `h1{font-size:20px;margin:0 0 4px}.sub{color:#666;font-size:12px;margin-bottom:16px}`+
+    `table{border-collapse:collapse;width:100%;font-size:13px}`+
+    `th,td{border:1px solid #ccc;padding:9px 10px;text-align:center}`+
+    `th{background:#eef3f9}td.h{background:#f7fafc;font-weight:600;text-align:left;white-space:nowrap}`+
+    `.note{color:#666;font-size:11px;margin-top:14px;line-height:1.6}`+
+    `.pbtn{margin:14px 0;padding:9px 16px;font-size:14px;cursor:pointer;border:1px solid #2A78D6;background:#2A78D6;color:#fff;border-radius:8px}`+
+    `@media print{.pbtn{display:none}}</style></head><body>`+
+    `<h1>상권 후보지 비교</h1><div class="sub">${new Date().toLocaleDateString('ko-KR')} · 서울 상권 인텔리전스</div>`+
+    `<button class="pbtn" onclick="window.print()">🖨 인쇄 / PDF로 저장</button>`+
+    `<table>`+
+    `<tr><td class="h">지점</td>${th}</tr>`+
+    `<tr><td class="h">동네 유동인구${hour?' ('+hour+')':''}</td>${cell(s=>s.pop!=null?num(s.pop)+'명':'—')}</tr>`+
+    `<tr><td class="h">관심 업종</td>${cell(s=>esc(s.catNm||'—'))}</tr>`+
+    `<tr><td class="h">반경 내 경쟁</td>${cell(s=>s.catN!=null?num(s.catN)+'곳':'—')}</tr>`+
+    `<tr><td class="h">폐업 2년 추세</td>${cell(s=>s.trend!=null?(s.trend>=0?'+':'')+s.trend+'%':'—')}</tr>`+
+    `</table>`+
+    `<div class="note">※ 유동인구=행정동 생활인구(${hour||'오후 2시'}). 경쟁=반경 내 카카오 등록 가게 수. 폐업=자치구 2년 증감률. 참고 지표이며 예상 매출이 아닙니다.</div>`+
+    `</body></html>`;
+  const w=window.open('','_blank');
+  if(!w){alert('팝업이 차단됐습니다. 팝업 허용 후 다시 시도하세요.');return;}
+  w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>{try{w.print();}catch(e){}},500);
 }
 function savePin(){
   if(!lastPin||!pinData) return;
@@ -598,6 +642,7 @@ function initMap(){
   document.getElementById('pin-opp-btn').onclick=opportunityAnalysis;
   document.getElementById('pin-share-btn').onclick=shareLink;
   document.getElementById('pin-save-btn').onclick=savePin;
+  document.getElementById('cmp-btn').onclick=comparePrint;
   renderSaved();
   // 공유 링크로 들어온 경우: 그 지점 복원
   const q=new URLSearchParams(location.search);
