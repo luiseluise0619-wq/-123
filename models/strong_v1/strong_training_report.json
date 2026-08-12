@@ -1,0 +1,141 @@
+{
+  "model_family": "strong_vulnerability_model_v1",
+  "data_root": "/home/ubuntu/cvedata",
+  "source_execution": false,
+  "source_persisted": false,
+  "languages": {
+    "c_cpp": {
+      "train_documents": 362970,
+      "validation_documents": 63206,
+      "test_documents": 63164,
+      "threshold_tuning": {
+        "minimum_recall": 0.8,
+        "selected": {
+          "threshold": 0.0437,
+          "precision": 0.07755775577557755,
+          "recall": 0.8012274122059325,
+          "f1": 0.14142569133090602,
+          "false_positive_rate": 0.46372339190018746,
+          "tp": 2350,
+          "fp": 27950,
+          "tn": 32323,
+          "fn": 583
+        },
+        "candidate_count": 2389
+      },
+      "validation_metrics": {
+        "documents": 63206,
+        "accuracy": 0.5485713381640983,
+        "precision": 0.07755775577557755,
+        "recall": 0.8012274122059325,
+        "f1": 0.14142569133090602,
+        "false_positive_rate": 0.46372339190018746,
+        "roc_auc": 0.7393896808050475,
+        "pr_auc": 0.12409064555297705,
+        "threshold": 0.0437,
+        "true_positive": 2350,
+        "false_positive": 27950,
+        "true_negative": 32323,
+        "false_negative": 583
+      },
+      "test_metrics": {
+        "documents": 63164,
+        "accuracy": 0.5491419162814262,
+        "precision": 0.07638360514737504,
+        "recall": 0.8053714684339031,
+        "f1": 0.13953347836596566,
+        "false_positive_rate": 0.4630412790022721,
+        "roc_auc": 0.7366445552716587,
+        "pr_auc": 0.11870015825122388,
+        "threshold": 0.0437,
+        "true_positive": 2309,
+        "false_positive": 27920,
+        "true_negative": 32377,
+        "false_negative": 558
+      },
+      "model_metadata": {
+        "model_type": "hashing word-bigram plus averaged SGD logistic classifier",
+        "language": "c_cpp",
+        "alpha": 1e-05,
+        "n_features": 131072,
+        "epochs": 2,
+        "training_documents": 362970,
+        "positive_documents": 20297,
+        "negative_documents": 342673,
+        "label_sources": [
+          "bigvul",
+          "diversevul"
+        ],
+        "source_execution": false
+      },
+      "artifact": "models/strong_v1/c_cpp_model.pkl"
+    },
+    "python": {
+      "train_documents": 20999,
+      "validation_documents": 3558,
+      "test_documents": 3558,
+      "threshold_tuning": {
+        "minimum_recall": 0.8,
+        "selected": {
+          "threshold": 0.1694,
+          "precision": 0.8900487125956854,
+          "recall": 0.8008766437069506,
+          "f1": 0.8431114040870138,
+          "false_positive_rate": 0.08057113717491075,
+          "tp": 1279,
+          "fp": 158,
+          "tn": 1803,
+          "fn": 318
+        },
+        "candidate_count": 2363
+      },
+      "validation_metrics": {
+        "documents": 3558,
+        "accuracy": 0.8662169758291175,
+        "precision": 0.8900487125956854,
+        "recall": 0.8008766437069506,
+        "f1": 0.8431114040870138,
+        "false_positive_rate": 0.08057113717491075,
+        "roc_auc": 0.9474170239520365,
+        "pr_auc": 0.9411235367722074,
+        "threshold": 0.1694,
+        "true_positive": 1279,
+        "false_positive": 158,
+        "true_negative": 1803,
+        "false_negative": 318
+      },
+      "test_metrics": {
+        "documents": 3558,
+        "accuracy": 0.8662169758291175,
+        "precision": 0.8900487125956854,
+        "recall": 0.8008766437069506,
+        "f1": 0.8431114040870138,
+        "false_positive_rate": 0.08057113717491075,
+        "roc_auc": 0.9474170239520365,
+        "pr_auc": 0.9411235367722074,
+        "threshold": 0.1694,
+        "true_positive": 1279,
+        "false_positive": 158,
+        "true_negative": 1803,
+        "false_negative": 318
+      },
+      "model_metadata": {
+        "model_type": "hashing word-bigram plus averaged SGD logistic classifier",
+        "language": "python",
+        "alpha": 1e-05,
+        "n_features": 131072,
+        "epochs": 2,
+        "training_documents": 20999,
+        "positive_documents": 6234,
+        "negative_documents": 14765,
+        "label_sources": [
+          "cvefixes",
+          "pycodevul",
+          "pycodevul-hard-negative"
+        ],
+        "source_execution": false
+      },
+      "artifact": "models/strong_v1/python_model.pkl"
+    }
+  }
+}

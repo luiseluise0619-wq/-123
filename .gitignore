@@ -38,3 +38,6 @@ models/*.joblib
 # CVE 원천 데이터(대용량) — 스크립트로 재다운로드
 cvedata/
 *.txt.big
+
+# Strong vulnerability model binaries (reproduce with train_strong_models.py)
+models/strong_v1/*.pkl

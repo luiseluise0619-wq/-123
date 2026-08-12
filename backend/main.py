@@ -32,6 +32,7 @@ from security_engine.red_blue_arena import LocalRiskModel, RedBlueTrainingArena
 from security_engine.repository_trainer import RepositoryRiskTrainer
 from security_engine.public_corpus_trainer import PublicVulnerabilityCorpusTrainer
 from security_engine.blue_team_evaluator import BlueTeamEvaluator
+from security_engine.strong_model_registry import StrongModelRegistry, StrongPythonRiskAdapter
 
 
 app = FastAPI(
@@ -116,11 +117,16 @@ class CVEfixesEvaluationRequest(BaseModel):
     scenario_ids: Optional[List[str]] = Field(default=None, max_length=16)
 
 
+class StrongModelPredictionRequest(BaseModel):
+    source_code: str = Field(min_length=1, max_length=MAX_SOURCE_BYTES)
+    language: Literal["python", "c_cpp"]
+
+
 class RedBlueTrainingRequest(BaseModel):
     """Bounded request for local, non-executed Red-Team / Blue-Team exercises."""
 
     rounds: int = Field(default=4, ge=1, le=16)
-    training_corpus: Literal["repository", "public-github-vulnerability"] = "repository"
+    training_corpus: Literal["repository", "public-github-vulnerability", "strong-language-models"] = "repository"
     retrain_model: bool = Field(
         default=True,
         description="Rebuild the selected local risk model before the exercises.",
@@ -138,6 +144,8 @@ PUBLIC_CORPUS_TRAINING_REPORTS: Dict[str, Dict[str, Any]] = {}
 TRAINING_DASHBOARDS: Dict[str, Dict[str, Any]] = {}
 CVEFIXES_EVALUATION_DASHBOARDS: Dict[str, Dict[str, Any]] = {}
 CVEFIXES_DATA_ROOT = (PROJECT_ROOT.parent / "cvedata").resolve()
+STRONG_MODEL_ROOT = PROJECT_ROOT / "models" / "strong_v1"
+STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
 
 
 def get_request_context(
@@ -357,6 +365,55 @@ async def get_cvefixes_blue_dashboard(
     return result
 
 
+@app.get("/api/v1/strong-models/report")
+async def get_strong_model_report(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return metadata and aggregate metrics for locally trained strong models."""
+    global STRONG_MODEL_REGISTRY
+    try:
+        if STRONG_MODEL_REGISTRY is None:
+            STRONG_MODEL_REGISTRY = StrongModelRegistry(STRONG_MODEL_ROOT)
+            STRONG_MODEL_REGISTRY.load()
+    except (FileNotFoundError, ValueError) as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    record_audit_event(
+        context=context,
+        request=request,
+        action="READ_STRONG_MODEL_REPORT",
+        target_type="LocalStrongModel",
+        details=f"languages={','.join(sorted(STRONG_MODEL_REGISTRY.models))}",
+    )
+    return STRONG_MODEL_REGISTRY.metadata()
+
+
+@app.post("/api/v1/strong-models/predict")
+async def predict_with_strong_model(
+    payload: StrongModelPredictionRequest,
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Score submitted source with a strong local model without storing or executing it."""
+    global STRONG_MODEL_REGISTRY
+    try:
+        if STRONG_MODEL_REGISTRY is None:
+            STRONG_MODEL_REGISTRY = StrongModelRegistry(STRONG_MODEL_ROOT)
+            STRONG_MODEL_REGISTRY.load()
+        result = STRONG_MODEL_REGISTRY.predict(payload.source_code, payload.language)
+    except (FileNotFoundError, ValueError) as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    record_audit_event(
+        context=context,
+        request=request,
+        action="PREDICT_STRONG_MODEL",
+        target_type=payload.language,
+        details=f"model_available={result.get('model_available', False)}; source_bytes={len(payload.source_code.encode('utf-8'))}",
+    )
+    result["source_persisted"] = False
+    return result
+
+
 @app.post("/api/v1/training/red-blue")
 async def run_red_blue_training(
     payload: RedBlueTrainingRequest,
@@ -373,6 +430,13 @@ async def run_red_blue_training(
             else:
                 model = PUBLIC_CORPUS_TRAINING_MODELS[context.organization_id]
                 training_report = PUBLIC_CORPUS_TRAINING_REPORTS[context.organization_id]
+        elif payload.training_corpus == "strong-language-models":
+            global STRONG_MODEL_REGISTRY
+            if STRONG_MODEL_REGISTRY is None:
+                STRONG_MODEL_REGISTRY = StrongModelRegistry(STRONG_MODEL_ROOT)
+                STRONG_MODEL_REGISTRY.load()
+            model = StrongPythonRiskAdapter(STRONG_MODEL_REGISTRY)
+            training_report = STRONG_MODEL_REGISTRY.metadata()
         else:
             if payload.retrain_model or context.organization_id not in REPOSITORY_TRAINING_MODELS:
                 model, training_report = RepositoryRiskTrainer(PROJECT_ROOT).train()
