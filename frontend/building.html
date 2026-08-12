@@ -478,18 +478,28 @@ function runInsight(){
   out.innerHTML='<span class="muted">AI가 정리 중…</span>';
   fetch('/api/insight',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:ctx,model})})
     .then(r=>r.json()).then(d=>{
-      if(d&&d.insight){out.innerHTML=esc(d.insight)+(d.model?`<div style="color:var(--mut);font-size:10.5px;margin-top:6px">· ${esc(d.model)}</div>`:'');}
+      if(d&&d.insight){const tag=[d.provider,d.model].filter(Boolean).join(' · ');out.innerHTML=esc(d.insight)+(tag?`<div style="color:var(--mut);font-size:10.5px;margin-top:6px">· ${esc(tag)}</div>`:'');}
       else out.innerHTML=`<span class="muted">${esc((d&&d.error)||'인사이트 생성 실패')}</span>`;
     }).catch(e=>{out.innerHTML=`<span class="muted">연결 실패(배포 사이트에서만 동작): ${esc(String(e))}</span>`;});
 }
-// 사용 가능한 Gemini 모델을 드롭다운에 채움(선택 저장)
+// 설정된 제공자(Gemini·OpenAI·Anthropic)별 모델을 드롭다운에 optgroup 으로 채움(선택 저장)
 function loadModels(){
   const sel=document.getElementById('ai-model'); if(!sel)return;
   const saved=(()=>{try{return localStorage.getItem('ai_model')||'';}catch{return'';}})();
   sel.onchange=()=>{try{localStorage.setItem('ai_model',sel.value);}catch{}};
   fetch('/api/models').then(r=>r.json()).then(d=>{
-    if(!d||!d.ok||!Array.isArray(d.models))return;
-    d.models.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+    if(!d||!d.ok)return;
+    const groups=Array.isArray(d.groups)?d.groups:[];
+    if(groups.length){
+      groups.forEach(g=>{
+        if(!g.models||!g.models.length)return;
+        const og=document.createElement('optgroup'); og.label=g.label||g.provider;
+        g.models.forEach(m=>{const o=document.createElement('option');o.value=g.provider+':'+m;o.textContent=m;og.appendChild(o);});
+        sel.appendChild(og);
+      });
+    } else if(Array.isArray(d.models)){ // 하위호환
+      d.models.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+    }
     if(saved&&[...sel.options].some(o=>o.value===saved)) sel.value=saved;
   }).catch(()=>{});
 }
