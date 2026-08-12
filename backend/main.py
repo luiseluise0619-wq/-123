@@ -165,6 +165,7 @@ ADVERSARIAL_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "detailed_adv
 FEEDBACK_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "adversarial_feedback_report.json"
 PATTERNS_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "deadly_patterns_report.json"
 BYPASS_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "multistage_bypass_report.json"
+MASTER_DUEL_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "master_duel_report.json"
 STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
 KOREAN_RED_TEAM = KoreanRedTeamGenerator(seed=42)
 
@@ -636,6 +637,24 @@ async def get_multistage_bypass_report(
     return {
         "status": "not_started",
         "bypass_scenarios": [],
+        "safety_scope": "static analysis only; no code execution",
+    }
+
+
+@app.get("/api/v1/master-duel/report")
+async def get_master_duel_report(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return the master duel arena clash between Red-Team and Blue-Team on MS-BOF-01."""
+    if MASTER_DUEL_REPORT_PATH.exists():
+        try:
+            return json.loads(MASTER_DUEL_REPORT_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=503, detail="Master duel report is invalid.") from exc
+    return {
+        "status": "not_started",
+        "scenario": {},
         "safety_scope": "static analysis only; no code execution",
     }
 
