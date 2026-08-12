@@ -164,6 +164,7 @@ SYNC_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "synchronized_dual_r
 ADVERSARIAL_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "detailed_adversarial_report.json"
 FEEDBACK_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "adversarial_feedback_report.json"
 PATTERNS_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "deadly_patterns_report.json"
+BYPASS_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "multistage_bypass_report.json"
 STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
 KOREAN_RED_TEAM = KoreanRedTeamGenerator(seed=42)
 
@@ -617,6 +618,24 @@ async def get_deadly_patterns_report(
     return {
         "status": "not_started",
         "deadly_patterns": [],
+        "safety_scope": "static analysis only; no code execution",
+    }
+
+
+@app.get("/api/v1/multistage-bypass/report")
+async def get_multistage_bypass_report(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return advanced multi-stage bypass scenarios evolved by Red-Team against ensemble defense."""
+    if BYPASS_REPORT_PATH.exists():
+        try:
+            return json.loads(BYPASS_REPORT_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=503, detail="Bypass report is invalid.") from exc
+    return {
+        "status": "not_started",
+        "bypass_scenarios": [],
         "safety_scope": "static analysis only; no code execution",
     }
 
