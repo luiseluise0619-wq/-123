@@ -160,6 +160,7 @@ CVEFIXES_EVALUATION_DASHBOARDS: Dict[str, Dict[str, Any]] = {}
 CVEFIXES_DATA_ROOT = (PROJECT_ROOT.parent / "cvedata").resolve()
 STRONG_MODEL_ROOT = PROJECT_ROOT / "models" / "strong_v1"
 MASSIVE_REPORT_PATH = PROJECT_ROOT / "models" / "massive_v1" / "massive_kr_report.json"
+SYNC_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "synchronized_dual_report.json"
 STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
 KOREAN_RED_TEAM = KoreanRedTeamGenerator(seed=42)
 
@@ -529,6 +530,35 @@ async def get_massive_model_report(
         action="READ_MASSIVE_MODEL_PROGRESS",
         target_type="LocalTraining",
         details=f"processed_samples={report.get('stream_progress', {}).get('processed_samples', 0)}",
+    )
+    return report
+
+
+@app.get("/api/v1/synchronized-training/report")
+async def get_synchronized_training_report(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return simultaneous Red-Team and Blue-Team training progress."""
+    if SYNC_REPORT_PATH.exists():
+        try:
+            report = json.loads(SYNC_REPORT_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=503, detail="Synchronized report is invalid.") from exc
+    else:
+        report = {
+            "status": "not_started",
+            "red_team": {"processed_samples": 0, "target_samples": 10_000_000, "completion_ratio": 0.0},
+            "blue_team": {"processed_samples": 0, "target_samples": 10_000_000, "completion_ratio": 0.0},
+            "recent_exchanges": [],
+            "safety_scope": "static analysis only; no code execution",
+        }
+    record_audit_event(
+        context=context,
+        request=request,
+        action="READ_SYNCHRONIZED_TRAINING_REPORT",
+        target_type="SynchronizedTraining",
+        details="Returned synchronized Red/Blue training report.",
     )
     return report
 
