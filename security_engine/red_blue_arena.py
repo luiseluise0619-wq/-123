@@ -124,6 +124,7 @@ class LocalRiskModel:
         self.vocabulary: set[str] = set()
         self.trained_at: str | None = None
         self.label_source = "Bandit static-analysis judge on local non-executed training samples"
+        self.decision_threshold = 0.5
 
     @property
     def is_trained(self) -> bool:
@@ -187,6 +188,7 @@ class LocalRiskModel:
             "negative_documents": int(self.class_document_counts[0]),
             "vocabulary_size": len(self.vocabulary),
             "label_source": self.label_source,
+            "decision_threshold": self.decision_threshold,
             "decision_limit": "Model probability is advisory; the judge decides findings and scores.",
         }
 
