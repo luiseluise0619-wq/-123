@@ -1,238 +1,363 @@
 """
-==============================================================================
-AegisAI - Enterprise SaaS Backend API & Security Hardening Engine
-File: backend/main.py
-Description: Production FastAPI server featuring Enterprise Organization RBAC,
-             Audit Logging, Secrets Masking, Transient Data Wipe Policy,
-             and REST Endpoints (POST /api/v1/audit, GET /findings, GET /reports).
-==============================================================================
+AegisAI local security-auditing API.
+
+This module intentionally reports only results returned by the local analysis
+pipeline. It never clones repository URLs, executes submitted source code, or
+claims that header values constitute production authentication.
 """
 
-import json
+from __future__ import annotations
+
+import datetime as dt
+import sys
 import time
-import os
-import re
-import datetime
-from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, HTTPException, Header, Depends, Query, BackgroundTasks
+from pathlib import Path
+from typing import Any, Dict, List, Literal, Optional
+
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from ml.inference import ModelInferenceEngine
+from security_ai_core import reasoning_agent
+from security_engine.integrated_auditor import AuditReport, IntegratedSecurityAuditor
+
+
 app = FastAPI(
-    title="AegisAI Security Auditor - Enterprise API",
-    version="1.0.0-ENTERPRISE",
-    description="Enterprise DevSecOps REST API with RBAC, Secrets Masking, & Cryptographic Audit Trails"
+    title="AegisAI Security Auditor",
+    version="1.1.0",
+    description=(
+        "Local Python source-code security auditing API. It runs the repository's "
+        "real static-analysis and optional safe-patch pipeline; it does not execute "
+        "submitted code or perform repository cloning."
+    ),
 )
 
-# ============================================================================
-# 🔒 1. Secrets Masking & Data Hardening Utilities
-# ============================================================================
+MAX_SOURCE_BYTES = 200_000
 
-SECRET_PATTERNS = [
-    (re.compile(r'(?i)(aws_secret_access_key|aws_access_key_id)\s*[:=]\s*["\']?([a-zA-Z0-9/+=]{16,40})["\']?'), r'\1="[REDACTED_AWS_SECRET]"'),
-    (re.compile(r'(?i)(bearer\s+[a-zA-Z0-9_\-\.]{20,})'), r'Bearer [REDACTED_BEARER_TOKEN]'),
-    (re.compile(r'-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY-----[\s\S]+?-----END \1 PRIVATE KEY-----'), r'[REDACTED_PRIVATE_KEY]'),
-    (re.compile(r'(?i)(ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{82})'), r'[REDACTED_GITHUB_TOKEN]'),
-    (re.compile(r'(?i)(password|passwd|secret_key)\s*[:=]\s*["\']?([^"\'\s]{6,})["\']?'), r'\1="[REDACTED_PASSWORD]"')
-]
-
-def mask_secrets_in_text(text: str) -> str:
-    """Scans and redacts sensitive API keys, private keys, and secrets from code/logs."""
-    masked = text
-    for pattern, replacement in SECRET_PATTERNS:
-        masked = pattern.sub(replacement, masked)
-    return masked
-
-# ============================================================================
-# 👥 2. Enterprise RBAC Data Models & Audit Trail Schema
-# ============================================================================
 
 class UserRole:
+    """Roles accepted by the local, header-driven development context."""
+
     ADMIN = "Admin"
     SECURITY_LEAD = "Security Lead"
     DEVELOPER = "Developer"
+    ALL = {ADMIN, SECURITY_LEAD, DEVELOPER}
+
+
+class RequestContext(BaseModel):
+    """Validated request context for local development only, not authentication."""
+
+    organization_id: str
+    user_email: str
+    user_role: str
+
 
 class AuditLogEntry(BaseModel):
-    audit_id: str = Field(default_factory=lambda: f"AUD-{int(time.time()*1000)}")
-    timestamp: str = Field(default_factory=lambda: datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
+    audit_id: str = Field(default_factory=lambda: f"AUD-{int(time.time() * 1000)}")
+    timestamp: str = Field(
+        default_factory=lambda: dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    )
     organization_id: str
     user_email: str
     user_role: str
     action: str
-    repository: str
     target_type: str
     ip_address: str
     details: str
 
-# In-memory Audit Trail Store
-AUDIT_LOG_TRAIL: List[AuditLogEntry] = []
 
-class AuditRequest(BaseModel):
+class CodeAuditRequest(BaseModel):
+    """A local, non-executed Python source audit request."""
+
+    source_code: str = Field(
+        min_length=1,
+        max_length=MAX_SOURCE_BYTES,
+        description="Python source to statically analyze. It is not executed or persisted.",
+    )
+    language: Literal["python"] = "python"
+    apply_safe_fixes: bool = Field(
+        default=True,
+        description="Apply only deterministic fixes, then verify them by re-scanning.",
+    )
+
+
+class CodeAuditResponse(BaseModel):
+    """Report derived from real scanner and re-scan output."""
+
+    audit: AuditReport
+    source_persisted: bool = False
+    analysis_scope: str = "static analysis only; submitted code was not executed"
+
+
+class LegacyRepositoryAuditRequest(BaseModel):
     repository_url: str
-    target_type: str = "Web"  # 'Web', 'Android', 'iOS'
+    target_type: str = "Web"
     branch: str = "main"
 
-class AuditResponse(BaseModel):
-    job_id: str
-    vulnerability_id: str
-    status: str
-    findings_count: int
-    evidence_status: str
-    masked_log_summary: str
 
-# ============================================================================
-# 🔐 3. Authentication & RBAC Middleware Dependency
-# ============================================================================
+# Deliberately in-memory local state. Raw submitted source is never retained.
+AUDIT_LOG_TRAIL: List[AuditLogEntry] = []
+AUDIT_REPORTS: Dict[str, Dict[str, Any]] = {}
 
-def verify_enterprise_rbac(
-    x_org_id: str = Header(..., alias="X-Org-Id"),
-    x_user_email: str = Header(..., alias="X-User-Email"),
-    x_user_role: str = Header(..., alias="X-User-Role"),
-    required_roles: Optional[List[str]] = None
-):
-    """Enforces Organization isolation and RBAC role permissions."""
-    if x_user_role not in [UserRole.ADMIN, UserRole.SECURITY_LEAD, UserRole.DEVELOPER]:
-        raise HTTPException(status_code=403, detail="Invalid enterprise RBAC role assigned.")
-    
-    if required_roles and x_user_role not in required_roles:
-        raise HTTPException(status_code=403, detail=f"Permission Denied. Role '{x_user_role}' insufficient for this resource.")
-    
-    return {
-        "org_id": x_org_id,
-        "email": x_user_email,
-        "role": x_user_role
-    }
 
-def record_audit_event(user_ctx: dict, action: str, repo: str, target_type: str, details: str):
-    entry = AuditLogEntry(
-        organization_id=user_ctx["org_id"],
-        user_email=user_ctx["email"],
-        user_role=user_ctx["role"],
-        action=action,
-        repository=repo,
-        target_type=target_type,
-        ip_address="127.0.0.1",
-        details=details
+def get_request_context(
+    x_org_id: str = Header(..., alias="X-Org-Id", min_length=1, max_length=128),
+    x_user_email: str = Header(..., alias="X-User-Email", min_length=3, max_length=320),
+    x_user_role: str = Header(..., alias="X-User-Role", min_length=1, max_length=64),
+) -> RequestContext:
+    """Validate a development request context.
+
+    The values are caller-provided headers and are therefore not production-grade
+    authentication. A deployment must replace this dependency with verified OIDC,
+    session, or API-key authentication before exposing the service publicly.
+    """
+    if x_user_role not in UserRole.ALL:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid local development role.",
+        )
+    return RequestContext(
+        organization_id=x_org_id,
+        user_email=x_user_email,
+        user_role=x_user_role,
     )
-    AUDIT_LOG_TRAIL.append(entry)
-    print(f"[Enterprise Audit Trail] Logged: {entry.action} by {entry.user_email} ({entry.user_role}) on {entry.repository}")
 
-# ============================================================================
-# 🚀 4. Enterprise REST API Endpoints
-# ============================================================================
 
-@app.post("/api/v1/audit", response_model=AuditResponse)
-async def trigger_security_audit(
-    request: AuditRequest,
-    user_ctx: dict = Depends(verify_enterprise_rbac)
-):
-    """
-    POST /api/v1/audit
-    Triggers automated security audit with RBAC check and secrets masking.
-    """
-    # Verify Developer or higher role
-    if user_ctx["role"] not in [UserRole.ADMIN, UserRole.SECURITY_LEAD, UserRole.DEVELOPER]:
-        raise HTTPException(status_code=403, detail="Insufficient role to trigger audits.")
+def record_audit_event(
+    context: RequestContext,
+    request: Request,
+    action: str,
+    target_type: str,
+    details: str,
+) -> None:
+    """Record local metadata only; raw source code is intentionally excluded."""
+    client_ip = request.client.host if request.client else "unknown"
+    AUDIT_LOG_TRAIL.append(
+        AuditLogEntry(
+            organization_id=context.organization_id,
+            user_email=context.user_email,
+            user_role=context.user_role,
+            action=action,
+            target_type=target_type,
+            ip_address=client_ip,
+            details=details,
+        )
+    )
 
-    job_id = f"JOB-{int(time.time())}"
-    vuln_id = "AEGIS-2026-0002"
 
-    raw_sample = f"Connecting to {request.repository_url} using bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.secret_key='SuperSecret123'"
-    masked_sample = mask_secrets_in_text(raw_sample)
+def _stored_report(audit: AuditReport, organization_id: str) -> Dict[str, Any]:
+    """Persist an audit report without retaining original or patched source code."""
+    report = audit.model_dump()
+    report["patched_code"] = None
+    return {"organization_id": organization_id, "audit": report}
 
+
+@app.get("/health")
+async def health() -> Dict[str, str]:
+    return {"status": "ok", "service": "aegisai-local-security-auditor"}
+
+
+@app.post("/api/v1/audit-code", response_model=CodeAuditResponse)
+async def audit_python_source(
+    payload: CodeAuditRequest,
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> CodeAuditResponse:
+    """Run a static audit on inline Python source without executing or saving it."""
+    source_size = len(payload.source_code.encode("utf-8"))
+    if source_size > MAX_SOURCE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"source_code exceeds the {MAX_SOURCE_BYTES}-byte local analysis limit.",
+        )
+
+    try:
+        if payload.apply_safe_fixes:
+            audit = IntegratedSecurityAuditor().run_full_audit(payload.source_code)
+        else:
+            prediction = ModelInferenceEngine().predict(payload.source_code)
+            findings = [finding.model_dump() for finding in prediction.findings]
+            audit = AuditReport(
+                audit_id=f"AUD-{int(time.time() * 1000)}",
+                timestamp_utc=dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                engine=prediction.engine,
+                findings_count=prediction.num_findings,
+                findings=findings,
+                model_available=prediction.model_available,
+                model_vuln_probability=prediction.model_vuln_probability,
+                patch_applied=False,
+                patch_needs_llm=False,
+                patched_code=None,
+                fix_verified_by_rescan=False,
+                evidence=None,
+                reasoning=[
+                    reasoning_agent(
+                        {
+                            "rule_id": finding["rule_id"],
+                            "cwe": finding.get("cwe"),
+                            "message": finding.get("message"),
+                        }
+                    )
+                    for finding in findings
+                ],
+            )
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="The Bandit static-analysis executable is unavailable on this server.",
+        ) from exc
+    except TimeoutError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Static analysis exceeded the configured time limit.",
+        ) from exc
+
+    AUDIT_REPORTS[audit.audit_id] = _stored_report(audit, context.organization_id)
     record_audit_event(
-        user_ctx=user_ctx,
-        action="TRIGGER_SECURITY_AUDIT",
-        repo=request.repository_url,
-        target_type=request.target_type,
-        details=f"Job {job_id} initiated. Secrets masked automatically."
+        context=context,
+        request=request,
+        action="AUDIT_INLINE_PYTHON",
+        target_type="Python",
+        details=(
+            f"audit_id={audit.audit_id}; findings={audit.findings_count}; "
+            f"safe_patch_applied={audit.patch_applied}; source_bytes={source_size}"
+        ),
+    )
+    return CodeAuditResponse(audit=audit)
+
+
+@app.post("/api/v1/audit", status_code=status.HTTP_501_NOT_IMPLEMENTED)
+async def legacy_repository_audit(
+    payload: LegacyRepositoryAuditRequest,
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, str]:
+    """Explicitly reject the former hard-coded repository-audit demonstration."""
+    record_audit_event(
+        context=context,
+        request=request,
+        action="REJECTED_REPOSITORY_AUDIT",
+        target_type=payload.target_type,
+        details="Repository cloning is not implemented; no audit was performed.",
+    )
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=(
+            "Repository URL auditing is not implemented in this local API, so no audit "
+            "was performed. Submit inline Python source to /api/v1/audit-code instead."
+        ),
     )
 
-    return AuditResponse(
-        job_id=job_id,
-        vulnerability_id=vuln_id,
-        status="COMPLETED",
-        findings_count=1,
-        evidence_status="Verified (Sandbox Replay 3/3 Proof)",
-        masked_log_summary=masked_sample
+
+@app.get("/api/v1/audits/{audit_id}")
+async def get_audit(
+    audit_id: str,
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return a previously created local report for the requesting organization."""
+    stored = AUDIT_REPORTS.get(audit_id)
+    if not stored or stored["organization_id"] != context.organization_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit report not found.")
+    record_audit_event(
+        context=context,
+        request=request,
+        action="READ_AUDIT",
+        target_type="Python",
+        details=f"audit_id={audit_id}",
     )
+    return stored["audit"]
+
 
 @app.get("/api/v1/findings")
 async def list_findings(
-    severity: Optional[str] = Query(None),
-    user_ctx: dict = Depends(verify_enterprise_rbac)
-):
-    """
-    GET /api/v1/findings
-    Returns discovered findings filtered by RBAC Organization context.
-    """
-    record_audit_event(
-        user_ctx=user_ctx,
-        action="LIST_FINDINGS",
-        repo="ALL_ORGS",
-        target_type="Web/Mobile",
-        details=f"Fetched findings list with severity filter='{severity}'"
-    )
+    request: Request,
+    severity: Optional[str] = Query(default=None, max_length=16),
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return real findings from locally submitted audits scoped by organization."""
+    requested_severity = severity.upper() if severity else None
+    findings: List[Dict[str, Any]] = []
+    for audit_id, stored in AUDIT_REPORTS.items():
+        if stored["organization_id"] != context.organization_id:
+            continue
+        for finding in stored["audit"]["findings"]:
+            if requested_severity and finding["severity"].upper() != requested_severity:
+                continue
+            findings.append({"audit_id": audit_id, **finding})
 
+    record_audit_event(
+        context=context,
+        request=request,
+        action="LIST_FINDINGS",
+        target_type="Python",
+        details=f"severity_filter={requested_severity or 'none'}; count={len(findings)}",
+    )
     return {
-        "organization_id": user_ctx["org_id"],
-        "total_findings": 1,
-        "findings": [
-            {
-                "vulnerability_id": "AEGIS-2026-0002",
-                "title": "Ticketing Refund Fee Negative Tampering",
-                "cwe": "CWE-840",
-                "severity": "Critical",
-                "evidence_status": "Verified",
-                "repository": "https://github.com/organization/ticket-backend"
-            }
-        ]
+        "organization_id": context.organization_id,
+        "total_findings": len(findings),
+        "findings": findings,
     }
+
 
 @app.get("/api/v1/reports")
 async def get_audit_reports(
-    user_ctx: dict = Depends(verify_enterprise_rbac)
-):
-    """
-    GET /api/v1/reports
-    Returns generated compliance & benchmark reports.
-    """
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """List actual reports produced during this process lifetime."""
+    reports = [
+        {
+            "audit_id": audit_id,
+            "timestamp_utc": stored["audit"]["timestamp_utc"],
+            "findings_count": stored["audit"]["findings_count"],
+            "patch_applied": stored["audit"]["patch_applied"],
+            "fix_verified_by_rescan": stored["audit"]["fix_verified_by_rescan"],
+        }
+        for audit_id, stored in AUDIT_REPORTS.items()
+        if stored["organization_id"] == context.organization_id
+    ]
     record_audit_event(
-        user_ctx=user_ctx,
-        action="GET_REPORTS",
-        repo="ALL_ORGS",
-        target_type="Report",
-        details="Accessed enterprise benchmark and compliance report."
+        context=context,
+        request=request,
+        action="LIST_AUDIT_REPORTS",
+        target_type="Python",
+        details=f"count={len(reports)}",
     )
+    return {"organization_id": context.organization_id, "available_reports": reports}
 
-    return {
-        "organization_id": user_ctx["org_id"],
-        "available_reports": [
-            {
-                "report_name": "Public Benchmark Report",
-                "file": "benchmark.md",
-                "status": "GENERATED"
-            }
-        ]
-    }
 
 @app.get("/api/v1/audit-logs")
 async def get_audit_trail(
-    user_ctx: dict = Depends(verify_enterprise_rbac)
-):
-    """
-    GET /api/v1/audit-logs
-    Returns complete compliance audit logs (Requires Admin or Security Lead role).
-    """
-    if user_ctx["role"] not in [UserRole.ADMIN, UserRole.SECURITY_LEAD]:
-        raise HTTPException(status_code=403, detail="Audit log access requires Admin or Security Lead role.")
-
-    org_logs = [log for log in AUDIT_LOG_TRAIL if log.organization_id == user_ctx["org_id"]]
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return the local audit trail to an Admin or Security Lead only."""
+    if context.user_role not in {UserRole.ADMIN, UserRole.SECURITY_LEAD}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Audit-log access requires the Admin or Security Lead role.",
+        )
+    org_logs = [entry.model_dump() for entry in AUDIT_LOG_TRAIL if entry.organization_id == context.organization_id]
+    record_audit_event(
+        context=context,
+        request=request,
+        action="READ_AUDIT_LOGS",
+        target_type="AuditLog",
+        details=f"count={len(org_logs)}",
+    )
     return {
-        "organization_id": user_ctx["org_id"],
+        "organization_id": context.organization_id,
         "total_log_entries": len(org_logs),
-        "audit_trail": org_logs
+        "audit_trail": org_logs,
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=8000)
