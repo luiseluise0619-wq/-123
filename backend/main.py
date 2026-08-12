@@ -161,6 +161,7 @@ CVEFIXES_DATA_ROOT = (PROJECT_ROOT.parent / "cvedata").resolve()
 STRONG_MODEL_ROOT = PROJECT_ROOT / "models" / "strong_v1"
 MASSIVE_REPORT_PATH = PROJECT_ROOT / "models" / "massive_v1" / "massive_kr_report.json"
 SYNC_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "synchronized_dual_report.json"
+ADVERSARIAL_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "detailed_adversarial_report.json"
 STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
 KOREAN_RED_TEAM = KoreanRedTeamGenerator(seed=42)
 
@@ -561,6 +562,23 @@ async def get_synchronized_training_report(
         details="Returned synchronized Red/Blue training report.",
     )
     return report
+
+
+@app.get("/api/v1/adversarial-report")
+async def get_adversarial_report(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return high-fidelity Red-Blue simulation logs and CWE distribution."""
+    if ADVERSARIAL_REPORT_PATH.exists():
+        try:
+            return json.loads(ADVERSARIAL_REPORT_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=503, detail="Adversarial report is invalid.") from exc
+    return {
+        "dataset_analysis": {"total_samples": 0, "cwe_distribution": []},
+        "adversarial_simulation": {"total_rounds": 0, "logs": []}
+    }
 
 
 @app.post("/api/v1/korean-scenarios/generate")
