@@ -929,7 +929,8 @@ class Component extends DCLogic {
   calc() {
     const core = this.core; if (!core) return null;
     const i = core.ind[this.state.ind]; if (!i) return null;
-    const R = core.rentSeoul || { rent: 5.3, vacancy: 6.4 };
+    // 자치구 대표 상권의 임대료를 사용(구를 바꾸면 임대료·손익분기가 바뀜). 매핑 없으면 서울 평균으로 폴백.
+    const R = this.rentZoneOf(this.state.gu) || core.rentSeoul || { rent: 5.3, vacancy: 6.4 };
     const area = +this.state.area || 0;
     const rev = this.state.rev == null ? Math.round(i.p50) : +this.state.rev || 0;
     const staff = +this.state.staff || 0;
@@ -1189,11 +1190,12 @@ class Component extends DCLogic {
         meta.push({ k: '데이터', v: '남성 ' + this.num(d.m) + '명 · 여성 ' + this.num(d.f) + '명' });
       }
     } else if (has('임대료', '월세', '비용')) {
-      const R = core && core.rentSeoul;
+      const R = (c && c.R) || (core && core.rentSeoul);
       if (R && c) {
-        text = '서울 평균 임대료는 ㎡당 ' + R.rent + '만원입니다. ' + c.area + '평이면 월 ' + this.won(c.rentCost) + ' 수준으로 추정합니다. 실제 계약 금액을 넣으면 손익분기가 바로 다시 계산됩니다.';
-        meta.push({ k: '근거', v: '㎡당 ' + R.rent + '만원 × ' + c.area + '평 × 3.3' });
-        meta.push({ k: '데이터', v: '서울 공실률 ' + R.vacancy + '%' });
+        const zn = R.zone || '서울 평균';
+        text = zn + ' 기준 임대료는 ㎡당 ' + R.rent + '만원입니다. ' + c.area + '평이면 월 ' + this.won(c.rentCost) + ' 수준으로 추정합니다. 실제 계약 금액을 넣으면 손익분기가 바로 다시 계산됩니다.';
+        meta.push({ k: '근거', v: zn + ' ㎡당 ' + R.rent + '만원 × ' + c.area + '평 × 3.3' });
+        meta.push({ k: '데이터', v: zn + ' 공실률 ' + R.vacancy + '%' });
       }
     }
 
