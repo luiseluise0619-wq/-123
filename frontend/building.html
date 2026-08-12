@@ -70,6 +70,11 @@
   #pin details.more>summary::-webkit-details-marker{display:none}
   #pin-insight{white-space:pre-wrap;font-size:12.5px;line-height:1.6;margin-top:8px;color:var(--ink)}
   #pin-insight:empty{margin:0}
+  #pin-opp{font-size:12px;margin-top:6px}#pin-opp:empty{margin:0}
+  #pin-opp .li{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px dashed var(--line)}
+  #pin-opp .li:first-child{border-top:none}
+  #pin-opp .d{color:var(--mut);font-size:11px;white-space:nowrap}
+  button.sec{background:#0b1420;border:1px solid var(--line);color:var(--ink);font-weight:500}
   .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--mut);background:rgba(15,24,38,.72);padding:7px 10px;border-radius:8px}
   .legend .k{display:inline-flex;align-items:center;gap:4px;margin-left:8px}
   .legend .d{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -126,8 +131,11 @@
           </select>
         </div>
         <div id="pin"><div class="muted" style="padding:6px 0">지도를 클릭하면 그 지점 정보가 여기 나옵니다. 위에서 <b>관심 업종</b>도 고를 수 있어요.</div></div>
+        <button id="pin-opp-btn" style="width:100%;margin-top:8px">🎯 이 동네 기회 업종</button>
+        <div id="pin-opp"></div>
         <button id="pin-insight-btn" style="width:100%;margin-top:8px">🧠 AI 인사이트</button>
         <div id="pin-insight"></div>
+        <button id="pin-share-btn" class="sec" style="width:100%;margin-top:8px">🔗 이 지점 링크 복사</button>
       </section>
 
       <section>
@@ -331,6 +339,8 @@ function analyzePin(latlng){
     if(pinData){pinData.popTot=Math.round(lp.tot);pinData.popScope=dongP.dong;}
     popFilled=true;
   }
+  document.getElementById('pin-opp').innerHTML='';   // 새 지점: 기회 업종 초기화
+  updateURL();
 
   // 2) 역지오코딩 → 주소·자치구 → 유동인구(성별·연령) · 폐업추세
   kakao({mode:'coord',x:lng,y:lat}).then(d=>{
@@ -457,6 +467,45 @@ function runInsight(){
     }).catch(e=>{out.innerHTML=`<span class="muted">연결 실패(배포 사이트에서만 동작): ${esc(String(e))}</span>`;});
 }
 
+// 이 동네 기회 업종 — 수요(동네 생활인구) 대비 공급(반경 내 그 업종 가게 수)
+const OPP_CATS=[['FD6','음식점'],['CE7','카페'],['CS2','편의점'],['AC5','학원']];
+function opportunityAnalysis(){
+  const out=document.getElementById('pin-opp');
+  if(!lastPin){out.innerHTML='<span class="muted">먼저 지도를 클릭해 지점을 고르세요.</span>';return;}
+  const demand=pinData&&pinData.popTot;
+  if(!demand){out.innerHTML='<span class="muted">유동인구 데이터가 있어야 분석됩니다(핀을 다시 클릭).</span>';return;}
+  const lng=lastPin.getLng(), lat=lastPin.getLat(), radius=+document.getElementById('pin-r').value;
+  const scope=(pinData&&pinData.popScope)||'해당 지역';
+  out.innerHTML='<span class="muted">기회 업종 계산 중…</span>';
+  Promise.all(OPP_CATS.map(([code,nm])=>kakao({mode:'category',code,x:lng,y:lat,radius,size:1}).then(r=>({nm,n:r&&r.ok?r.total:null,err:r&&r.error}))))
+    .then(rows=>{
+      const ok=rows.filter(r=>r.n!=null);
+      if(!ok.length){out.innerHTML=`<span class="muted">${esc(rows.find(r=>r.err)?.err||'집계 실패 — KAKAO_REST_KEY 확인')}</span>`;return;}
+      ok.forEach(r=>r.ratio=Math.round(demand/(r.n+1)));   // 가게 1곳당 동네 사람 수(많을수록 덜 붐빔)
+      ok.sort((a,b)=>b.ratio-a.ratio);
+      out.innerHTML=
+        `<div style="font-size:12px;margin:2px 0 5px"><b>${esc(scope)}</b> · 가게 1곳당 사람 수(많을수록 덜 붐빔=기회)</div>`+
+        ok.map((r,i)=>`<div class="li"><span class="v">${i===0?'🎯 ':''}${esc(r.nm)}</span><span class="d">${num(r.n)}곳 · 1곳당 <b>${num(r.ratio)}</b>명</span></div>`).join('')+
+        `<div class="muted" style="font-size:10.5px;margin-top:5px">※ 동네 생활인구 ÷ 반경 내 가게 수. 카카오 등록·오후 2시 기준의 <b>참고 지표</b>이지 '예상 매출'이 아님.</div>`;
+    });
+}
+
+// 공유: 핀 위치·업종·반경을 URL 로 → 링크만 보내면 같은 화면 복원
+function updateURL(){
+  if(!lastPin)return;
+  const p=new URLSearchParams();
+  p.set('lat',lastPin.getLat().toFixed(6)); p.set('lng',lastPin.getLng().toFixed(6));
+  p.set('cat',document.getElementById('pin-cat').value); p.set('r',document.getElementById('pin-r').value);
+  history.replaceState(null,'','?'+p.toString());
+}
+function shareLink(){
+  updateURL();
+  const btn=document.getElementById('pin-share-btn');
+  const done=()=>{const t=btn.textContent;btn.textContent='✅ 링크 복사됨';setTimeout(()=>btn.textContent=t,1600);};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done,done);
+  else done();
+}
+
 /* ── 업소 검색 ── */
 function poiMarker(map,it){
   const pos=new kakao.maps.LatLng(it.y,it.x);
@@ -513,6 +562,16 @@ function initMap(){
   document.getElementById('pin-r').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
   document.getElementById('pin-cat').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
   document.getElementById('pin-insight-btn').onclick=runInsight;
+  document.getElementById('pin-opp-btn').onclick=opportunityAnalysis;
+  document.getElementById('pin-share-btn').onclick=shareLink;
+  // 공유 링크로 들어온 경우: 그 지점 복원
+  const q=new URLSearchParams(location.search);
+  const qlat=parseFloat(q.get('lat')), qlng=parseFloat(q.get('lng'));
+  if(!isNaN(qlat)&&!isNaN(qlng)){
+    if(q.get('cat'))document.getElementById('pin-cat').value=q.get('cat');
+    if(q.get('r'))document.getElementById('pin-r').value=q.get('r');
+    const pos=new kakao.maps.LatLng(qlat,qlng); MAP.setCenter(pos); MAP.setLevel(4); analyzePin(pos);
+  }
   // 모바일 하단 시트 접기/펼치기
   const pt=document.getElementById('pan-toggle');
   if(pt) pt.onclick=()=>{const c=document.getElementById('panel').classList.toggle('collapsed');
