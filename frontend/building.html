@@ -75,6 +75,9 @@
   #pin-opp .li:first-child{border-top:none}
   #pin-opp .d{color:var(--mut);font-size:11px;white-space:nowrap}
   button.sec{background:#0b1420;border:1px solid var(--line);color:var(--ink);font-weight:500}
+  #saved-list .r{padding:6px 7px;border:1px solid var(--line);border-radius:7px;margin:5px 0;cursor:pointer;font-size:12px;background:#0b1420}
+  #saved-list .r:hover{border-color:var(--accent)}#saved-list .r .c{color:var(--mut);font-size:11px}
+  #saved-list .del{float:right;cursor:pointer;color:var(--mut);padding:0 2px}#saved-list .del:hover{color:#e6866f}
   .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--mut);background:rgba(15,24,38,.72);padding:7px 10px;border-radius:8px}
   .legend .k{display:inline-flex;align-items:center;gap:4px;margin-left:8px}
   .legend .d{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -135,7 +138,13 @@
         <div id="pin-opp"></div>
         <button id="pin-insight-btn" style="width:100%;margin-top:8px">🧠 AI 인사이트</button>
         <div id="pin-insight"></div>
+        <button id="pin-save-btn" class="sec" style="width:100%;margin-top:8px">⭐ 이 지점 저장(비교용)</button>
         <button id="pin-share-btn" class="sec" style="width:100%;margin-top:8px">🔗 이 지점 링크 복사</button>
+      </section>
+
+      <section id="saved-sec" style="display:none">
+        <h3>저장한 지점 <span class="sw" id="saved-n"></span></h3>
+        <div id="saved-list"></div>
       </section>
 
       <section>
@@ -506,6 +515,30 @@ function shareLink(){
   else done();
 }
 
+// 후보지 저장·비교(localStorage)
+function loadSaved(){try{return JSON.parse(localStorage.getItem('bld_saved')||'[]');}catch{return[];}}
+function saveSaved(a){try{localStorage.setItem('bld_saved',JSON.stringify(a.slice(0,8)));}catch{}}
+function renderSaved(){
+  const a=loadSaved(), sec=document.getElementById('saved-sec'), list=document.getElementById('saved-list');
+  document.getElementById('saved-n').textContent=a.length?a.length+'곳':'';
+  sec.style.display=a.length?'':'none'; if(!a.length){list.innerHTML='';return;}
+  list.innerHTML=a.map((s,i)=>`<div class="r" data-i="${i}"><span class="del" data-del="${i}">✕</span><b>${esc(s.label)}</b><br><span class="c">사람 ${s.pop!=null?num(s.pop):'—'} · ${esc(s.catNm||'경쟁')} ${s.catN!=null?num(s.catN)+'곳':'—'} · 폐업 ${s.trend!=null?(s.trend>=0?'+':'')+s.trend+'%':'—'}</span></div>`).join('');
+  [...list.querySelectorAll('.r')].forEach(el=>el.onclick=e=>{
+    if(e.target.dataset.del!=null){const arr=loadSaved();arr.splice(+e.target.dataset.del,1);saveSaved(arr);renderSaved();return;}
+    const s=a[+el.dataset.i], pos=new kakao.maps.LatLng(s.lat,s.lng); MAP.setCenter(pos); MAP.setLevel(4); analyzePin(pos);
+  });
+}
+function savePin(){
+  if(!lastPin||!pinData) return;
+  const cat=(pinData.cats||[]).find(c=>c.nm===pinData.chosenName);
+  const a=loadSaved();
+  a.unshift({lat:lastPin.getLat(), lng:lastPin.getLng(),
+    label:(pinData.popScope&&pinData.popScope!=='자치구')?pinData.popScope:(pinData.gu||'지점'),
+    pop:pinData.popTot, catNm:pinData.chosenName, catN:cat?cat.n:null, trend:pinData.trend});
+  saveSaved(a); renderSaved();
+  const b=document.getElementById('pin-save-btn'), t=b.textContent; b.textContent='✅ 저장됨'; setTimeout(()=>b.textContent=t,1400);
+}
+
 /* ── 업소 검색 ── */
 function poiMarker(map,it){
   const pos=new kakao.maps.LatLng(it.y,it.x);
@@ -564,6 +597,8 @@ function initMap(){
   document.getElementById('pin-insight-btn').onclick=runInsight;
   document.getElementById('pin-opp-btn').onclick=opportunityAnalysis;
   document.getElementById('pin-share-btn').onclick=shareLink;
+  document.getElementById('pin-save-btn').onclick=savePin;
+  renderSaved();
   // 공유 링크로 들어온 경우: 그 지점 복원
   const q=new URLSearchParams(location.search);
   const qlat=parseFloat(q.get('lat')), qlng=parseFloat(q.get('lng'));
