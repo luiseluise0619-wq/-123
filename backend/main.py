@@ -24,6 +24,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from ml.inference import ModelInferenceEngine
 from security_ai_core import reasoning_agent
 from security_engine.integrated_auditor import AuditReport, IntegratedSecurityAuditor
+from security_engine.red_blue_arena import RedBlueTrainingArena
 
 
 app = FastAPI(
@@ -99,9 +100,20 @@ class LegacyRepositoryAuditRequest(BaseModel):
     branch: str = "main"
 
 
+class RedBlueTrainingRequest(BaseModel):
+    """Bounded request for local, non-executed Red-Team / Blue-Team exercises."""
+
+    rounds: int = Field(default=4, ge=1, le=16)
+    retrain_model: bool = Field(
+        default=True,
+        description="Rebuild the local risk model using fresh judge labels before the exercises.",
+    )
+
+
 # Deliberately in-memory local state. Raw submitted source is never retained.
 AUDIT_LOG_TRAIL: List[AuditLogEntry] = []
 AUDIT_REPORTS: Dict[str, Dict[str, Any]] = {}
+TRAINING_ARENA = RedBlueTrainingArena()
 
 
 def get_request_context(
@@ -228,6 +240,43 @@ async def audit_python_source(
         ),
     )
     return CodeAuditResponse(audit=audit)
+
+
+@app.post("/api/v1/training/red-blue")
+async def run_red_blue_training(
+    payload: RedBlueTrainingRequest,
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Run safe, local security exercises; no targets are attacked or executed."""
+    try:
+        result = TRAINING_ARENA.run_rounds(
+            rounds=payload.rounds,
+            retrain_model=payload.retrain_model,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="The Bandit static-analysis executable is unavailable on this server.",
+        ) from exc
+    except TimeoutError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Static analysis exceeded the configured time limit.",
+        ) from exc
+
+    record_audit_event(
+        context=context,
+        request=request,
+        action="RUN_SAFE_RED_BLUE_TRAINING",
+        target_type="LocalCodeTraining",
+        details=(
+            f"rounds={payload.rounds}; red_points={result['scoreboard']['red_points']}; "
+            f"blue_points={result['scoreboard']['blue_points']}; "
+            f"judge_verified_fixes={result['scoreboard']['judge_verified_fixes']}"
+        ),
+    )
+    return result
 
 
 @app.post("/api/v1/audit", status_code=status.HTTP_501_NOT_IMPLEMENTED)
