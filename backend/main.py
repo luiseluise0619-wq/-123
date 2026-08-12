@@ -8,6 +8,7 @@ claims that header values constitute production authentication.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sqlite3
@@ -33,6 +34,7 @@ from security_engine.repository_trainer import RepositoryRiskTrainer
 from security_engine.public_corpus_trainer import PublicVulnerabilityCorpusTrainer
 from security_engine.blue_team_evaluator import BlueTeamEvaluator
 from security_engine.strong_model_registry import StrongModelRegistry, StrongPythonRiskAdapter
+from security_engine.korean_red_team_generator import KoreanRedTeamGenerator
 
 
 app = FastAPI(
@@ -133,6 +135,18 @@ class RedBlueTrainingRequest(BaseModel):
     )
 
 
+class KoreanScenarioRequest(BaseModel):
+    """Request for a Korean, metadata-only Red-Team scenario."""
+
+    category: Optional[str] = Field(default=None, max_length=80)
+
+
+class KoreanArenaRequest(BaseModel):
+    """Bounded Korean scenario rounds; no code is executed or sent to a target."""
+
+    rounds: int = Field(default=4, ge=1, le=16)
+
+
 # Deliberately in-memory local state. Raw submitted source is never retained.
 AUDIT_LOG_TRAIL: List[AuditLogEntry] = []
 AUDIT_REPORTS: Dict[str, Dict[str, Any]] = {}
@@ -145,7 +159,9 @@ TRAINING_DASHBOARDS: Dict[str, Dict[str, Any]] = {}
 CVEFIXES_EVALUATION_DASHBOARDS: Dict[str, Dict[str, Any]] = {}
 CVEFIXES_DATA_ROOT = (PROJECT_ROOT.parent / "cvedata").resolve()
 STRONG_MODEL_ROOT = PROJECT_ROOT / "models" / "strong_v1"
+MASSIVE_REPORT_PATH = PROJECT_ROOT / "models" / "massive_v1" / "massive_kr_report.json"
 STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
+KOREAN_RED_TEAM = KoreanRedTeamGenerator(seed=42)
 
 
 def get_request_context(
@@ -482,6 +498,75 @@ async def run_red_blue_training(
         ),
     )
     return result
+
+
+@app.get("/api/v1/massive-models/report")
+async def get_massive_model_report(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return actual 10M target and processed-row progress, never a fabricated count."""
+    if MASSIVE_REPORT_PATH.exists():
+        try:
+            report = json.loads(MASSIVE_REPORT_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=503, detail="Massive model progress report is invalid.") from exc
+    else:
+        report = {
+            "data_scale_target": 10_000_000,
+            "stream_progress": {
+                "target_samples": 10_000_000,
+                "processed_samples": 0,
+                "target_reached": False,
+                "completion_ratio": 0.0,
+                "scale_status": "not_started",
+            },
+            "rounds": [],
+        }
+    record_audit_event(
+        context=context,
+        request=request,
+        action="READ_MASSIVE_MODEL_PROGRESS",
+        target_type="LocalTraining",
+        details=f"processed_samples={report.get('stream_progress', {}).get('processed_samples', 0)}",
+    )
+    return report
+
+
+@app.post("/api/v1/korean-scenarios/generate")
+async def generate_korean_scenario(
+    payload: KoreanScenarioRequest,
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Generate a bounded Korean Red-Team scenario without delivering an attack."""
+    result = KOREAN_RED_TEAM.generate_scenario(payload.category)
+    record_audit_event(
+        context=context,
+        request=request,
+        action="GENERATE_KOREAN_RED_TEAM_SCENARIO",
+        target_type="LocalTrainingScenario",
+        details=f"category={payload.category or 'any'}; scenario_id={result['scenario']['id']}",
+    )
+    return result
+
+
+@app.post("/api/v1/korean-scenarios/arena")
+async def run_korean_scenario_arena(
+    payload: KoreanArenaRequest,
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Generate Korean scenarios and hand them to the static Blue-Team workflow."""
+    result = KOREAN_RED_TEAM.run_rounds(payload.rounds)
+    record_audit_event(
+        context=context,
+        request=request,
+        action="RUN_KOREAN_RED_BLUE_SCENARIOS",
+        target_type="LocalCodeTraining",
+        details=f"rounds={payload.rounds}; source_executed=false; network_contacted=false",
+    )
+    return {"organization_id": context.organization_id, **result}
 
 
 @app.get("/api/v1/training/dashboard")

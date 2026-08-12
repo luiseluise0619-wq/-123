@@ -41,3 +41,6 @@ cvedata/
 
 # Strong vulnerability model binaries (reproduce with train_strong_models.py)
 models/strong_v1/*.pkl
+
+# Massive streaming model binaries (reproduce with run_massive_kr_red_blue.py)
+models/massive_v1/*.pkl
