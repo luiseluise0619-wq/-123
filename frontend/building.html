@@ -104,7 +104,7 @@
     <div id="map"></div>
 
     <div class="panel" id="panel">
-      <button class="pan-handle" id="pan-toggle">📋 정보판 접기 ▾</button>
+      <button class="pan-handle" id="pan-toggle">정보판 접기 ▾</button>
       <section>
         <h3>자치구 이동</h3>
         <select id="gu-sel"><option value="">서울 전체</option></select>
@@ -135,22 +135,22 @@
           </select>
         </div>
         <div id="pin"><div class="muted" style="padding:6px 0">지도를 클릭하면 그 지점 정보가 여기 나옵니다. 위에서 <b>관심 업종</b>도 고를 수 있어요.</div></div>
-        <button id="pin-opp-btn" style="width:100%;margin-top:8px">🎯 이 동네 기회 업종</button>
+        <button id="pin-opp-btn" style="width:100%;margin-top:8px">이 동네 기회 업종</button>
         <div id="pin-opp"></div>
         <select id="ai-model" style="width:100%;margin-top:8px;background:#0b1420;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:12px">
           <option value="">AI 모델: 자동(추천)</option>
         </select>
-        <button id="pin-insight-btn" style="width:100%;margin-top:6px">🧠 AI 인사이트</button>
+        <button id="pin-insight-btn" style="width:100%;margin-top:6px">AI 인사이트</button>
         <div id="pin-insight"></div>
-        <button id="pin-report-btn" class="sec" style="width:100%;margin-top:8px">📄 이 지점 리포트 PDF</button>
-        <button id="pin-save-btn" class="sec" style="width:100%;margin-top:8px">⭐ 이 지점 저장(비교용)</button>
-        <button id="pin-share-btn" class="sec" style="width:100%;margin-top:8px">🔗 이 지점 링크 복사</button>
+        <button id="pin-report-btn" class="sec" style="width:100%;margin-top:8px">이 지점 리포트 PDF</button>
+        <button id="pin-save-btn" class="sec" style="width:100%;margin-top:8px">이 지점 저장(비교용)</button>
+        <button id="pin-share-btn" class="sec" style="width:100%;margin-top:8px">이 지점 링크 복사</button>
       </section>
 
       <section id="saved-sec" style="display:none">
         <h3>저장한 지점 <span class="sw" id="saved-n"></span></h3>
         <div id="saved-list"></div>
-        <button id="cmp-btn" class="sec" style="width:100%;margin-top:6px">📊 비교표 · PDF로 저장</button>
+        <button id="cmp-btn" class="sec" style="width:100%;margin-top:6px">비교표 · PDF로 저장</button>
       </section>
 
       <section>
@@ -272,7 +272,7 @@ function analyzePin(latlng){
   // 모바일: 핀 찍으면 결과가 보이게 하단 시트 펼침
   const _pn=document.getElementById('panel');
   if(_pn&&_pn.classList.contains('collapsed')){_pn.classList.remove('collapsed');
-    const _pt=document.getElementById('pan-toggle');if(_pt)_pt.innerHTML='📋 정보판 접기 ▾';}
+    const _pt=document.getElementById('pan-toggle');if(_pt)_pt.innerHTML='정보판 접기 ▾';}
   const lat=latlng.getLat(), lng=latlng.getLng(), radius=+document.getElementById('pin-r').value;
   if(pinMk) pinMk.setMap(null);
   pinMk=new kakao.maps.Marker({position:latlng,map:MAP});
@@ -512,7 +512,7 @@ function opportunityAnalysis(){
       ok.sort((a,b)=>b.ratio-a.ratio);
       out.innerHTML=
         `<div style="font-size:12px;margin:2px 0 5px"><b>${esc(scope)}</b> · 가게 1곳당 사람 수(많을수록 덜 붐빔=기회)</div>`+
-        ok.map((r,i)=>`<div class="li"><span class="v">${i===0?'🎯 ':''}${esc(r.nm)}</span><span class="d">${num(r.n)}곳 · 1곳당 <b>${num(r.ratio)}</b>명</span></div>`).join('')+
+        ok.map((r,i)=>`<div class="li"><span class="v">${i===0?'[추천] ':''}${esc(r.nm)}</span><span class="d">${num(r.n)}곳 · 1곳당 <b>${num(r.ratio)}</b>명</span></div>`).join('')+
         `<div class="muted" style="font-size:10.5px;margin-top:5px">※ 동네 생활인구 ÷ 반경 내 가게 수. 카카오 등록·오후 2시 기준의 <b>참고 지표</b>이지 '예상 매출'이 아님.</div>`;
     });
 }
@@ -528,7 +528,7 @@ function updateURL(){
 function shareLink(){
   updateURL();
   const btn=document.getElementById('pin-share-btn');
-  const done=()=>{const t=btn.textContent;btn.textContent='✅ 링크 복사됨';setTimeout(()=>btn.textContent=t,1600);};
+  const done=()=>{const t=btn.textContent;btn.textContent='링크 복사됨';setTimeout(()=>btn.textContent=t,1600);};
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done,done);
   else done();
 }
@@ -540,7 +540,7 @@ function renderSaved(){
   const a=loadSaved(), sec=document.getElementById('saved-sec'), list=document.getElementById('saved-list');
   document.getElementById('saved-n').textContent=a.length?a.length+'곳':'';
   sec.style.display=a.length?'':'none'; if(!a.length){list.innerHTML='';return;}
-  list.innerHTML=a.map((s,i)=>`<div class="r" data-i="${i}"><span class="del" data-del="${i}">✕</span><b>${i+1}. ${esc(s.label)}</b><br><span class="c">사람 ${s.pop!=null?num(s.pop):'—'} · ${esc(s.catNm||'경쟁')} ${s.catN!=null?num(s.catN)+'곳':'—'} · 폐업 ${s.trend!=null?(s.trend>=0?'+':'')+s.trend+'%':'—'}</span></div>`).join('');
+  list.innerHTML=a.map((s,i)=>`<div class="r" data-i="${i}"><span class="del" data-del="${i}">×</span><b>${i+1}. ${esc(s.label)}</b><br><span class="c">사람 ${s.pop!=null?num(s.pop):'—'} · ${esc(s.catNm||'경쟁')} ${s.catN!=null?num(s.catN)+'곳':'—'} · 폐업 ${s.trend!=null?(s.trend>=0?'+':'')+s.trend+'%':'—'}</span></div>`).join('');
   [...list.querySelectorAll('.r')].forEach(el=>el.onclick=e=>{
     if(e.target.dataset.del!=null){const arr=loadSaved();arr.splice(+e.target.dataset.del,1);saveSaved(arr);renderSaved();return;}
     const s=a[+el.dataset.i], pos=new kakao.maps.LatLng(s.lat,s.lng); MAP.setCenter(pos); MAP.setLevel(4); analyzePin(pos);
@@ -576,7 +576,7 @@ function reportPrint(){
     `.pbtn{margin:14px 0;padding:9px 16px;font-size:14px;cursor:pointer;border:1px solid #2A78D6;background:#2A78D6;color:#fff;border-radius:8px}`+
     `@media print{.pbtn{display:none}}</style></head><body>`+
     `<h1>${title} 상권 리포트</h1><div class="sub">${new Date().toLocaleDateString('ko-KR')} · 서울 상권 인텔리전스</div>`+
-    `<button class="pbtn" onclick="window.print()">🖨 인쇄 / PDF로 저장</button>`+
+    `<button class="pbtn" onclick="window.print()">인쇄 / PDF로 저장</button>`+
     `<table>`+
     row('위치', esc([p.gu,p.dong].filter(Boolean).join(' ')||'—'))+
     row(`유동인구${hour?'('+hour+')':''}`, (p.popTot!=null?num(p.popTot)+'명':'—')+(p.popScope?` · ${esc(p.popScope)}`:''))+
@@ -613,7 +613,7 @@ function comparePrint(){
     `.pbtn{margin:14px 0;padding:9px 16px;font-size:14px;cursor:pointer;border:1px solid #2A78D6;background:#2A78D6;color:#fff;border-radius:8px}`+
     `@media print{.pbtn{display:none}}</style></head><body>`+
     `<h1>상권 후보지 비교</h1><div class="sub">${new Date().toLocaleDateString('ko-KR')} · 서울 상권 인텔리전스</div>`+
-    `<button class="pbtn" onclick="window.print()">🖨 인쇄 / PDF로 저장</button>`+
+    `<button class="pbtn" onclick="window.print()">인쇄 / PDF로 저장</button>`+
     `<table>`+
     `<tr><td class="h">지점</td>${th}</tr>`+
     `<tr><td class="h">동네 유동인구${hour?' ('+hour+')':''}</td>${cell(s=>s.pop!=null?num(s.pop)+'명':'—')}</tr>`+
@@ -635,7 +635,7 @@ function savePin(){
     label:(pinData.popScope&&pinData.popScope!=='자치구')?pinData.popScope:(pinData.gu||'지점'),
     pop:pinData.popTot, catNm:pinData.chosenName, catN:cat?cat.n:null, trend:pinData.trend});
   saveSaved(a); renderSaved();
-  const b=document.getElementById('pin-save-btn'), t=b.textContent; b.textContent='✅ 저장됨'; setTimeout(()=>b.textContent=t,1400);
+  const b=document.getElementById('pin-save-btn'), t=b.textContent; b.textContent='저장됨'; setTimeout(()=>b.textContent=t,1400);
 }
 
 /* ── 업소 검색 ── */
@@ -645,7 +645,7 @@ function poiMarker(map,it){
   kakao.maps.event.addListener(mk,'click',()=>openIW(pos,
     `<b style="font-size:14px">${esc(it.name)}</b><br><span style="color:#5b6b82;font-size:11px">${esc(it.category||'')}</span><br>`+
     `${it.road||it.address?esc(it.road||it.address)+'<br>':''}${it.phone?esc(it.phone)+'<br>':''}`+
-    `${it.url?`<a href="${esc(it.url)}" target="_blank" style="color:#2A78D6">카카오맵 ↗</a>`:''}`));
+    `${it.url?`<a href="${esc(it.url)}" target="_blank" style="color:#2A78D6">카카오맵 보기</a>`:''}`));
   return mk;
 }
 function runSearch(){
@@ -712,7 +712,7 @@ function initMap(){
   // 모바일 하단 시트 접기/펼치기
   const pt=document.getElementById('pan-toggle');
   if(pt) pt.onclick=()=>{const c=document.getElementById('panel').classList.toggle('collapsed');
-    pt.innerHTML=c?'📋 정보판 열기 ▴':'📋 정보판 접기 ▾';};
+    pt.innerHTML=c?'정보판 열기 ▴':'정보판 접기 ▾';};
   kakao.maps.event.addListener(MAP,'click',me=>analyzePin(me.latLng));
 }
 function boot(){
