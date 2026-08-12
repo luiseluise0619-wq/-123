@@ -162,6 +162,7 @@ STRONG_MODEL_ROOT = PROJECT_ROOT / "models" / "strong_v1"
 MASSIVE_REPORT_PATH = PROJECT_ROOT / "models" / "massive_v1" / "massive_kr_report.json"
 SYNC_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "synchronized_dual_report.json"
 ADVERSARIAL_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "detailed_adversarial_report.json"
+FEEDBACK_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "adversarial_feedback_report.json"
 STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
 KOREAN_RED_TEAM = KoreanRedTeamGenerator(seed=42)
 
@@ -578,6 +579,26 @@ async def get_adversarial_report(
     return {
         "dataset_analysis": {"total_samples": 0, "cwe_distribution": []},
         "adversarial_simulation": {"total_rounds": 0, "logs": []}
+    }
+
+
+@app.get("/api/v1/adversarial-feedback/report")
+async def get_adversarial_feedback_report(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return evolution metrics from millions of adversarial feedback rounds."""
+    if FEEDBACK_REPORT_PATH.exists():
+        try:
+            return json.loads(FEEDBACK_REPORT_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=503, detail="Feedback report is invalid.") from exc
+    return {
+        "status": "not_started",
+        "completed_rounds": 0,
+        "target_rounds": 1_000_000,
+        "evolution_history": [],
+        "safety_scope": "static analysis only; no code execution",
     }
 
 
