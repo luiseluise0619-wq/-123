@@ -33,7 +33,8 @@ def parse(paths):
         paths = [paths]
     codes, labels, groups = [], [], []
     for path in paths:
-        raw = open(path, encoding="utf-8", errors="ignore").read()
+        with open(path, encoding="utf-8", errors="ignore") as source_file:
+            raw = source_file.read()
         tag = os.path.basename(path).replace(".txt", "")
         for block in raw.split(SEP):
             lines = [l for l in block.strip().split("\n") if l.strip() != ""]

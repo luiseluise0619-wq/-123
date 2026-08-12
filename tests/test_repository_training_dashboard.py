@@ -69,6 +69,8 @@ class TrainingDashboardApiTests(unittest.TestCase):
         main.AUDIT_LOG_TRAIL.clear()
         main.REPOSITORY_TRAINING_MODELS.clear()
         main.REPOSITORY_TRAINING_REPORTS.clear()
+        main.PUBLIC_CORPUS_TRAINING_MODELS.clear()
+        main.PUBLIC_CORPUS_TRAINING_REPORTS.clear()
         main.TRAINING_DASHBOARDS.clear()
         self.client = TestClient(main.app)
         self.headers = {
@@ -107,6 +109,32 @@ class TrainingDashboardApiTests(unittest.TestCase):
         dashboard = self.client.get("/api/v1/training/dashboard", headers=self.headers)
         self.assertEqual(dashboard.status_code, 200, dashboard.text)
         self.assertEqual(dashboard.json()["repository_training"], report)
+
+    def test_public_github_vulnerability_corpus_can_drive_red_blue_training(self):
+        training = self.client.post(
+            "/api/v1/training/red-blue",
+            headers=self.headers,
+            json={
+                "rounds": 1,
+                "training_corpus": "public-github-vulnerability",
+                "retrain_model": True,
+            },
+        )
+        self.assertEqual(training.status_code, 200, training.text)
+        result = training.json()
+        report = result["training_report"]
+        self.assertEqual(result["training_corpus"], "public-github-vulnerability")
+        self.assertEqual(report["data_source"], "public GitHub-hosted VulDeePecker code-gadget corpus")
+        self.assertFalse(report["source_execution"])
+        self.assertFalse(report["source_persisted"])
+        self.assertGreater(report["corpus"]["deduplicated_documents"], 1000)
+        self.assertGreater(report["corpus"]["positive_documents"], 0)
+        self.assertGreater(report["corpus"]["negative_documents"], 0)
+        self.assertEqual(
+            result["model"]["label_source"],
+            "VulDeePecker dataset-provided labels on non-executed public code text",
+        )
+        self.assertIn("model_judge_agreement", result["exercises"][0])
 
 
 if __name__ == "__main__":

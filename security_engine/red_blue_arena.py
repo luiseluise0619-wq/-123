@@ -123,12 +123,17 @@ class LocalRiskModel:
         self.class_total_tokens: Counter[int] = Counter()
         self.vocabulary: set[str] = set()
         self.trained_at: str | None = None
+        self.label_source = "Bandit static-analysis judge on local non-executed training samples"
 
     @property
     def is_trained(self) -> bool:
         return self.class_document_counts[0] > 0 and self.class_document_counts[1] > 0
 
-    def fit(self, samples: Sequence[Tuple[str, int]]) -> Dict[str, Any]:
+    def fit(
+        self,
+        samples: Sequence[Tuple[str, int]],
+        label_source: str = "Bandit static-analysis judge on local non-executed training samples",
+    ) -> Dict[str, Any]:
         self.class_document_counts.clear()
         self.class_token_counts = {0: Counter(), 1: Counter()}
         self.class_total_tokens.clear()
@@ -146,6 +151,7 @@ class LocalRiskModel:
         if not self.is_trained:
             raise ValueError("The local risk model requires judge-labelled positive and negative samples.")
         self.trained_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.label_source = label_source
         return self.metadata()
 
     def predict_vulnerability_probability(self, code: str) -> float:
@@ -180,7 +186,7 @@ class LocalRiskModel:
             "positive_documents": int(self.class_document_counts[1]),
             "negative_documents": int(self.class_document_counts[0]),
             "vocabulary_size": len(self.vocabulary),
-            "label_source": "Bandit static-analysis judge on local non-executed training samples",
+            "label_source": self.label_source,
             "decision_limit": "Model probability is advisory; the judge decides findings and scores.",
         }
 

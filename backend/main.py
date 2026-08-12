@@ -27,6 +27,7 @@ from security_ai_core import reasoning_agent
 from security_engine.integrated_auditor import AuditReport, IntegratedSecurityAuditor
 from security_engine.red_blue_arena import LocalRiskModel, RedBlueTrainingArena
 from security_engine.repository_trainer import RepositoryRiskTrainer
+from security_engine.public_corpus_trainer import PublicVulnerabilityCorpusTrainer
 
 
 app = FastAPI(
@@ -106,9 +107,10 @@ class RedBlueTrainingRequest(BaseModel):
     """Bounded request for local, non-executed Red-Team / Blue-Team exercises."""
 
     rounds: int = Field(default=4, ge=1, le=16)
+    training_corpus: Literal["repository", "public-github-vulnerability"] = "repository"
     retrain_model: bool = Field(
         default=True,
-        description="Rebuild the local risk model using fresh judge labels before the exercises.",
+        description="Rebuild the selected local risk model before the exercises.",
     )
 
 
@@ -118,6 +120,8 @@ AUDIT_REPORTS: Dict[str, Dict[str, Any]] = {}
 TRAINING_ARENA = RedBlueTrainingArena()
 REPOSITORY_TRAINING_MODELS: Dict[str, LocalRiskModel] = {}
 REPOSITORY_TRAINING_REPORTS: Dict[str, Dict[str, Any]] = {}
+PUBLIC_CORPUS_TRAINING_MODELS: Dict[str, LocalRiskModel] = {}
+PUBLIC_CORPUS_TRAINING_REPORTS: Dict[str, Dict[str, Any]] = {}
 TRAINING_DASHBOARDS: Dict[str, Dict[str, Any]] = {}
 
 
@@ -261,22 +265,34 @@ async def run_red_blue_training(
 ) -> Dict[str, Any]:
     """Run safe, local security exercises; no targets are attacked or executed."""
     try:
-        if payload.retrain_model or context.organization_id not in REPOSITORY_TRAINING_MODELS:
-            model, repository_training = RepositoryRiskTrainer(PROJECT_ROOT).train()
-            REPOSITORY_TRAINING_MODELS[context.organization_id] = model
-            REPOSITORY_TRAINING_REPORTS[context.organization_id] = repository_training
+        if payload.training_corpus == "public-github-vulnerability":
+            if payload.retrain_model or context.organization_id not in PUBLIC_CORPUS_TRAINING_MODELS:
+                model, training_report = PublicVulnerabilityCorpusTrainer(PROJECT_ROOT.parent / "cvedata").train()
+                PUBLIC_CORPUS_TRAINING_MODELS[context.organization_id] = model
+                PUBLIC_CORPUS_TRAINING_REPORTS[context.organization_id] = training_report
+            else:
+                model = PUBLIC_CORPUS_TRAINING_MODELS[context.organization_id]
+                training_report = PUBLIC_CORPUS_TRAINING_REPORTS[context.organization_id]
         else:
-            model = REPOSITORY_TRAINING_MODELS[context.organization_id]
-            repository_training = REPOSITORY_TRAINING_REPORTS[context.organization_id]
+            if payload.retrain_model or context.organization_id not in REPOSITORY_TRAINING_MODELS:
+                model, training_report = RepositoryRiskTrainer(PROJECT_ROOT).train()
+                REPOSITORY_TRAINING_MODELS[context.organization_id] = model
+                REPOSITORY_TRAINING_REPORTS[context.organization_id] = training_report
+            else:
+                model = REPOSITORY_TRAINING_MODELS[context.organization_id]
+                training_report = REPOSITORY_TRAINING_REPORTS[context.organization_id]
 
-        # The arena uses the repository-trained model for risk prioritisation.
-        # Judge findings and scores remain derived from a fresh Bandit scan.
+        # The selected model ranks local exercises. Bandit remains the sole
+        # judge for findings, red-team validity, blue-team patches, and scores.
         TRAINING_ARENA.risk_model = model
         result = TRAINING_ARENA.run_rounds(
             rounds=payload.rounds,
             retrain_model=False,
         )
-        result["repository_training"] = repository_training
+        result["training_corpus"] = payload.training_corpus
+        result["training_report"] = training_report
+        # Backward-compatible key for existing dashboard clients.
+        result["repository_training"] = training_report
         TRAINING_DASHBOARDS[context.organization_id] = result
     except FileNotFoundError as exc:
         raise HTTPException(
@@ -295,7 +311,8 @@ async def run_red_blue_training(
         action="RUN_SAFE_RED_BLUE_TRAINING",
         target_type="LocalCodeTraining",
         details=(
-            f"rounds={payload.rounds}; red_points={result['scoreboard']['red_points']}; "
+            f"corpus={payload.training_corpus}; rounds={payload.rounds}; "
+            f"red_points={result['scoreboard']['red_points']}; "
             f"blue_points={result['scoreboard']['blue_points']}; "
             f"judge_verified_fixes={result['scoreboard']['judge_verified_fixes']}"
         ),
