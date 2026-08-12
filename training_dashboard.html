@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>AegisAI · Red / Blue Training Dashboard</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --surface: #0c1a2d;
+      --surface-2: #10243c;
+      --surface-3: #142b47;
+      --line: #213b59;
+      --ink: #ebf3ff;
+      --muted: #9fb3cc;
+      --faint: #617a9b;
+      --cyan: #40d9ff;
+      --blue: #548cff;
+      --green: #40d995;
+      --amber: #ffbc4d;
+      --red: #ff6e83;
+      --shadow: 0 22px 55px rgba(0, 0, 0, .25);
+      --radius: 16px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: radial-gradient(circle at 82% -10%, #193f6f 0%, rgba(25,63,111,0) 32%), var(--bg); color: var(--ink); }
+    button, input, select { font: inherit; }
+    .shell { max-width: 1440px; margin: 0 auto; padding: 0 26px 56px; }
+    header { padding: 25px 0; border-bottom: 1px solid rgba(151, 183, 218, .16); display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .shield { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid rgba(64,217,255,.45); color: var(--cyan); border-radius: 12px; background: rgba(64,217,255,.07); font-weight: 850; }
+    .brand strong { display: block; font-size: 15px; letter-spacing: .02em; }
+    .brand span, .status-copy { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+    .status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 4px rgba(255,188,77,.11); }
+    .dot.ready { background: var(--green); box-shadow: 0 0 0 4px rgba(64,217,149,.11); }
+    .hero { padding: 40px 0 25px; display: flex; justify-content: space-between; align-items: end; gap: 24px; }
+    h1 { margin: 0; max-width: 760px; font-size: clamp(28px, 4vw, 48px); line-height: 1.08; letter-spacing: -.045em; }
+    .hero p { max-width: 710px; margin: 15px 0 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
+    .eyebrow { color: var(--cyan); font-size: 11px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; margin-bottom: 9px; }
+    .controls { background: rgba(12,26,45,.88); border: 1px solid var(--line); padding: 15px; border-radius: var(--radius); display: flex; align-items: end; gap: 10px; flex-wrap: wrap; box-shadow: var(--shadow); }
+    .field { display: grid; gap: 5px; }
+    label { color: var(--faint); font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+    input, select { min-height: 37px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: #091625; color: var(--ink); outline: none; }
+    input:focus, select:focus { border-color: var(--cyan); }
+    input.org { width: 130px; } input.email { width: 190px; }
+    .button { min-height: 37px; border: 1px solid transparent; cursor: pointer; border-radius: 8px; padding: 8px 13px; font-weight: 750; font-size: 12px; transition: transform .15s ease, background .15s ease; }
+    .button:hover { transform: translateY(-1px); }
+    .button.primary { color: #001522; background: var(--cyan); }
+    .button.secondary { background: transparent; border-color: var(--line); color: var(--muted); }
+    .safety { display: flex; align-items: start; gap: 10px; padding: 12px 14px; margin: 6px 0 22px; border: 1px solid rgba(64,217,149,.27); border-radius: 11px; color: #b9ebd5; background: rgba(64,217,149,.06); font-size: 12.5px; line-height: 1.55; }
+    .safety b { color: var(--green); }
+    .metrics { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .card { border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(145deg, rgba(18,43,71,.95), rgba(10,25,43,.95)); box-shadow: var(--shadow); }
+    .metric { padding: 16px; min-height: 122px; }
+    .metric .label { color: var(--muted); font-size: 11px; line-height: 1.25; }
+    .metric .value { margin-top: 11px; font-size: 28px; letter-spacing: -.04em; font-weight: 800; }
+    .metric .sub { margin-top: 4px; color: var(--faint); font-size: 11px; }
+    .layout { display: grid; grid-template-columns: 1.25fr .75fr; gap: 14px; margin-top: 14px; }
+    .panel { padding: 18px; min-width: 0; }
+    .panel h2 { margin: 0; font-size: 14px; letter-spacing: -.02em; }
+    .panel .intro { margin: 6px 0 16px; font-size: 12px; line-height: 1.6; color: var(--muted); }
+    .chart-area { min-height: 238px; position: relative; }
+    .axis { position: absolute; inset: 0 0 22px 0; display: grid; grid-template-rows: repeat(4, 1fr); pointer-events: none; }
+    .axis span { border-top: 1px dashed rgba(159,179,204,.16); }
+    #learningSvg { width: 100%; height: 220px; position: relative; z-index: 2; overflow: visible; }
+    .chart-labels { display: flex; justify-content: space-between; color: var(--faint); font-size: 10px; padding: 1px 8px 0 27px; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 11px; }
+    .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--cyan); }
+    .legend i.green { background: var(--green); }
+    .summary { display: grid; gap: 10px; }
+    .summary-item { padding: 12px; background: rgba(5,14,27,.42); border: 1px solid rgba(159,179,204,.12); border-radius: 10px; }
+    .summary-item strong { display: block; color: var(--ink); font-size: 12px; }
+    .summary-item span { display: block; color: var(--muted); font-size: 12px; line-height: 1.55; margin-top: 4px; }
+    .round-panel { margin-top: 14px; }
+    .rounds { display: grid; gap: 9px; }
+    .round { display: grid; grid-template-columns: 32px minmax(135px, 1.15fr) minmax(120px, .9fr) minmax(150px, 1.1fr) minmax(110px, .65fr); align-items: center; gap: 12px; padding: 12px; border: 1px solid rgba(159,179,204,.13); border-radius: 11px; background: rgba(5,14,27,.35); font-size: 12px; }
+    .round-number { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; background: rgba(84,140,255,.15); color: #a8c1ff; font-size: 11px; font-weight: 800; }
+    .scenario { font-weight: 740; }
+    .scenario small, .round small { display: block; margin-top: 3px; color: var(--faint); font-weight: 500; font-size: 10.5px; }
+    .probability { font-variant-numeric: tabular-nums; }
+    .bar { margin-top: 5px; overflow: hidden; height: 6px; background: #0a1728; border-radius: 99px; }
+    .bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+    .tag { display: inline-flex; width: fit-content; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+    .tag.success { color: #8cf0c6; background: rgba(64,217,149,.12); }
+    .tag.review { color: #ffd38d; background: rgba(255,188,77,.12); }
+    .tag.none { color: var(--faint); background: rgba(159,179,204,.08); }
+    .guide { margin-top: 14px; }
+    .guide-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 14px; }
+    .steps { margin: 0; padding-left: 19px; color: var(--muted); font-size: 12px; line-height: 1.75; }
+    code { color: #a9d8ff; background: rgba(84,140,255,.11); border: 1px solid rgba(84,140,255,.18); padding: 2px 5px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .92em; }
+    .code-block { margin: 10px 0 0; padding: 12px; overflow: auto; color: #cfe5ff; background: #06101e; border: 1px solid rgba(159,179,204,.12); border-radius: 9px; font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+    .empty { min-height: 170px; display: grid; place-items: center; text-align: center; color: var(--muted); font-size: 13px; padding: 26px; }
+    .hidden { display: none !important; }
+    .notice { margin-top: 14px; color: var(--red); font-size: 12px; min-height: 18px; }
+    footer { margin-top: 20px; color: var(--faint); border-top: 1px solid rgba(159,179,204,.12); padding-top: 15px; font-size: 11px; line-height: 1.6; }
+    @media (max-width: 1120px) { .metrics { grid-template-columns: repeat(3, 1fr); } .layout, .guide-grid { grid-template-columns: 1fr; } .round { grid-template-columns: 32px 1fr 1fr; } .round > :last-child { grid-column: 2 / -1; } }
+    @media (max-width: 720px) { .shell { padding: 0 15px 36px; } header, .hero { align-items: start; flex-direction: column; } .controls { width: 100%; } input.org, input.email { width: min(100%, 260px); } .metrics { grid-template-columns: repeat(2, 1fr); } .round { grid-template-columns: 28px 1fr; gap: 9px; } .round > *:not(.round-number):not(.scenario) { grid-column: 2; } .round > :last-child { grid-column: 2; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand"><div class="shield">A</div><div><strong>AegisAI Security Lab</strong><span>Repository-trained Red / Blue analysis</span></div></div>
+      <div class="status"><span id="statusDot" class="dot"></span><span id="statusText">훈련 결과를 불러오세요</span></div>
+    </header>
+
+    <section class="hero">
+      <div><div class="eyebrow">Local defensive training</div><h1>GitHub 코드로 학습한<br>레드팀·블루팀 현황</h1><p>저장소의 Python 소스를 실행하지 않고 정적으로 라벨링합니다. 모델의 확률은 우선순위 보조 신호이며, 탐지·점수·패치 성공은 심판의 재스캔 결과로만 확정됩니다.</p></div>
+      <div class="controls" aria-label="훈련 제어">
+        <div class="field"><label for="org">Organization</label><input id="org" class="org" value="acme-security"></div>
+        <div class="field"><label for="email">User email</label><input id="email" class="email" value="lead@acme.example"></div>
+        <div class="field"><label for="role">Role</label><select id="role"><option>Security Lead</option><option>Admin</option><option>Developer</option></select></div>
+        <div class="field"><label for="rounds">Rounds</label><select id="rounds"><option value="4">4</option><option value="8">8</option><option value="12">12</option><option value="16">16</option></select></div>
+        <button class="button primary" id="trainButton" type="button">저장소로 훈련 실행</button>
+        <button class="button secondary" id="loadButton" type="button">최근 결과</button>
+      </div>
+    </section>
+
+    <div class="safety"><b>안전 경계</b><span>코드를 실행하지 않고, 외부 대상에 접속하거나 익스플로잇을 전달하지 않습니다. 결과에는 원본·패치 코드가 보존되지 않습니다.</span></div>
+    <div id="error" class="notice" role="alert"></div>
+
+    <main id="dashboard" class="hidden">
+      <section class="metrics">
+        <article class="card metric"><div class="label">스캔한 Python 파일</div><div class="value" id="filesValue">—</div><div class="sub" id="functionsSub">—</div></article>
+        <article class="card metric"><div class="label">Bandit 정적 라벨</div><div class="value" id="labelsValue">—</div><div class="sub" id="labelSub">—</div></article>
+        <article class="card metric"><div class="label">홀드아웃 정확도</div><div class="value" id="accuracyValue">—</div><div class="sub" id="accuracySub">—</div></article>
+        <article class="card metric"><div class="label">정밀도 / 재현율</div><div class="value" id="precisionValue">—</div><div class="sub" id="precisionSub">—</div></article>
+        <article class="card metric"><div class="label">패치 성공률</div><div class="value" id="patchValue">—</div><div class="sub" id="patchSub">—</div></article>
+        <article class="card metric"><div class="label">모델-심판 일치</div><div class="value" id="agreementValue">—</div><div class="sub" id="agreementSub">—</div></article>
+      </section>
+
+      <section class="layout">
+        <article class="card panel"><h2>학습 단계별 홀드아웃 정확도</h2><p class="intro">저장소 파일 단위 홀드아웃에 대해, 실제 학습 데이터의 25·50·75·100% 단계에서 측정한 정확도입니다. 취약 라벨이 적으므로 정밀도·재현율을 함께 해석해야 합니다.</p><div class="chart-area"><div class="axis"><span></span><span></span><span></span><span></span></div><svg id="learningSvg" viewBox="0 0 600 220" preserveAspectRatio="none" aria-label="학습 정확도 선 그래프"></svg></div><div class="chart-labels" id="chartLabels"></div><div class="legend"><span><i></i>홀드아웃 정확도</span><span><i class="green"></i>측정된 학습 단계</span></div></article>
+        <article class="card panel"><h2>분석 요약</h2><p class="intro">숫자는 최신 저장소 기반 학습 및 이번 레드팀·블루팀 훈련에서 계산됩니다.</p><div class="summary" id="summary"></div></article>
+      </section>
+
+      <section class="card panel round-panel"><h2>레드팀·블루팀 라운드</h2><p class="intro">각 라운드의 모델 위험 확률, 심판 탐지, 블루팀 패치와 재스캔 검증 결과입니다.</p><div class="rounds" id="roundsList"></div></section>
+
+      <section class="guide-grid guide">
+        <article class="card panel"><h2>새 레드팀 시나리오를 안전하게 추가하는 방법</h2><p class="intro">새 시나리오는 외부 공격 기능이 아니라, 정적 분석과 방어 규칙을 검증할 수 있는 <b>로컬 교육용 코드 문자열</b>이어야 합니다.</p><ol class="steps"><li><code>security_engine/red_blue_arena.py</code>의 <code>SAFE_TRAINING_SCENARIOS</code>에 <code>TrainingScenario</code>를 추가합니다.</li><li>고유한 <code>scenario_id</code>, 분류명, 한 줄 설명, 실행하지 않을 최소 Python 예제를 정의합니다.</li><li>Bandit이 실제로 식별하는지 확인하고, 지원되는 결정적 패치가 없는 경우에는 사람 검토 항목으로 남깁니다.</li><li><code>python3 -m unittest discover -s tests -v</code>를 실행해 심판 재스캔과 안전 경계를 검증합니다.</li><li>실제 호스트·네트워크 대상·자격 증명·동작하는 익스플로잇·임의 페이로드는 추가하지 않습니다.</li></ol></article>
+        <article class="card panel"><h2>안전한 시나리오 형식</h2><p class="intro">아래처럼 최소한의 비실행 소스만 사용합니다. 모델 학습에 쓰는 저장소 코드 역시 읽기·AST 추출·정적 라벨링만 수행합니다.</p><pre class="code-block">TrainingScenario(
+  scenario_id="weak-hash-example",
+  category="cryptography",
+  description="Weak hash detection exercise.",
+  source_code=(
+    "import hashlib\\n\\n"
+    "def digest(data):\\n"
+    "    return hashlib.md5(data).hexdigest()\\n"
+  ),
+)</pre><p class="intro">지원 패치가 필요하면 <code>security_ai_core.py</code>에 작은 결정적 변환을 추가하고, 반드시 Bandit 재스캔 테스트를 함께 추가하세요.</p></article>
+      </section>
+    </main>
+    <div id="empty" class="card empty">“저장소로 훈련 실행”을 누르면 GitHub 저장소의 Python 파일을 정적으로 라벨링하고, 자체 모델 학습·레드팀·블루팀 결과를 이 화면에 표시합니다.</div>
+    <footer>이 화면은 로컬 개발용입니다. 현재의 요청 헤더는 프로덕션 인증이 아니므로, 공개 배포 전에는 검증된 인증·권한부여·속도 제한을 적용해야 합니다.</footer>
+  </div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&quot;',"'":'&#39;'}[char]));
+    const percent = (value) => value == null ? '—' : `${(Number(value) * 100).toFixed(1)}%`;
+    const headers = () => ({'Content-Type':'application/json','X-Org-Id':$('org').value.trim(),'X-User-Email':$('email').value.trim(),'X-User-Role':$('role').value});
+    function setStatus(text, ready=false) { $('statusText').textContent = text; $('statusDot').classList.toggle('ready', ready); }
+    function setLoading(active) { $('trainButton').disabled = active; $('loadButton').disabled = active; $('trainButton').textContent = active ? '저장소 분석 중…' : '저장소로 훈련 실행'; }
+    async function request(url, options={}) { const response = await fetch(url, options); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.detail || `요청 실패 (${response.status})`); return payload; }
+    function renderLearningCurve(curve) {
+      const svg = $('learningSvg'); const labels = $('chartLabels');
+      if (!curve.length) { svg.innerHTML = ''; labels.textContent = '학습 곡선을 만들기에 충분한 양·클래스 분포의 데이터가 없습니다.'; return; }
+      const width = 600, height = 220, left = 28, right = 16, top = 12, bottom = 25;
+      const innerWidth = width - left - right, innerHeight = height - top - bottom;
+      const points = curve.map((entry, index) => { const x = left + (curve.length === 1 ? innerWidth / 2 : index * innerWidth / (curve.length - 1)); const y = top + (1 - Number(entry.accuracy || 0)) * innerHeight; return {x,y,entry}; });
+      const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
+      svg.innerHTML = `<path d="${path}" fill="none" stroke="#40d9ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${points.map(point => `<circle cx="${point.x}" cy="${point.y}" r="5" fill="#40d995" stroke="#07111f" stroke-width="3"><title>${point.entry.training_percentage}% 학습 · ${percent(point.entry.accuracy)}</title></circle><text x="${point.x}" y="${Math.max(12, point.y - 12)}" text-anchor="middle" fill="#d9edff" font-size="11" font-weight="700">${percent(point.entry.accuracy)}</text>`).join('')}`;
+      labels.innerHTML = points.map(point => `<span>${point.entry.training_percentage}% 학습<br><b>${point.entry.training_documents}개</b></span>`).join('');
+    }
+    function patchTag(exercise) { if (exercise.blue_fix_verified) return '<span class="tag success">심판 검증 패치</span>'; if (exercise.blue_needs_human_review_rule_ids.length) return '<span class="tag review">사람 검토 필요</span>'; return '<span class="tag none">패치 대상 없음</span>'; }
+    function renderDashboard(data) {
+      const repository = data.repository_training; const corpus = repository.corpus; const metrics = repository.holdout_metrics; const exercises = data.exercises || [];
+      const patchSuccess = exercises.filter(item => item.blue_fix_verified).length / Math.max(exercises.length, 1);
+      const agreement = exercises.filter(item => item.model_judge_agreement).length / Math.max(exercises.length, 1);
+      const reviewCount = exercises.filter(item => item.blue_needs_human_review_rule_ids.length).length;
+      $('filesValue').textContent = corpus.python_files_scanned; $('functionsSub').textContent = `${corpus.functions_extracted}개 함수 추출`;
+      $('labelsValue').textContent = corpus.static_findings; $('labelSub').textContent = `양성 ${corpus.positive_function_labels} · 음성 ${corpus.negative_function_labels}`;
+      $('accuracyValue').textContent = percent(metrics.accuracy); $('accuracySub').textContent = `${metrics.evaluated_documents}개 홀드아웃 함수`;
+      $('precisionValue').textContent = `${percent(metrics.precision)} / ${percent(metrics.recall)}`; $('precisionSub').textContent = '정밀도 / 재현율';
+      $('patchValue').textContent = percent(patchSuccess); $('patchSub').textContent = `${exercises.filter(item => item.blue_fix_verified).length} / ${exercises.length} 라운드 재스캔 검증`;
+      $('agreementValue').textContent = percent(agreement); $('agreementSub').textContent = `${exercises.filter(item => item.model_judge_agreement).length} / ${exercises.length} 라운드`;
+      renderLearningCurve(repository.learning_curve || []);
+      $('summary').innerHTML = `<div class="summary-item"><strong>학습 데이터</strong><span>GitHub 저장소의 Python 코드 ${corpus.python_files_scanned}개 파일을 읽고, Bandit 결과를 AST 함수 범위에 매핑했습니다. 코드는 실행하지 않았습니다.</span></div><div class="summary-item"><strong>모델 해석</strong><span>홀드아웃 정확도 ${percent(metrics.accuracy)}, 정밀도 ${percent(metrics.precision)}, 재현율 ${percent(metrics.recall)}입니다. 양성 라벨이 적으므로 정확도만으로 모델 성능을 판단하지 않습니다.</span></div><div class="summary-item"><strong>방어 결과</strong><span>${exercises.length}개 훈련 라운드 중 ${exercises.filter(item => item.blue_fix_verified).length}개는 심판 재스캔으로 특정 규칙 패치가 검증됐고, ${reviewCount}개는 결정적 자동 패치가 없어 사람 검토로 남았습니다. 다른 규칙이 남아 있으면 총 탐지 수는 유지될 수 있습니다.</span></div>`;
+      $('roundsList').innerHTML = exercises.map(item => `<article class="round"><div class="round-number">${item.round}</div><div class="scenario">${escapeHtml(item.scenario_id)}<small>${escapeHtml(item.category)} · 심판 발견 ${item.judge_before_findings}건</small></div><div class="probability">위험 확률 <b>${percent(item.model_vulnerability_probability)}</b><div class="bar"><span style="width:${Math.max(0, Math.min(100, Number(item.model_vulnerability_probability) * 100))}%"></span></div><small>${item.model_judge_agreement ? '모델-심판 일치' : '모델-심판 불일치'}</small></div><div><b>심판: 전 ${item.judge_before_findings}건 → 후 ${item.judge_after_findings}건</b><small>해결 규칙: ${escapeHtml(item.judge_verified_fixed_rule_ids.join(', ') || '없음')} · 잔류: ${escapeHtml(item.judge_after_rule_ids.join(', ') || '없음')}</small></div><div>${patchTag(item)}</div></article>`).join('');
+      $('empty').classList.add('hidden'); $('dashboard').classList.remove('hidden'); setStatus('최신 훈련 결과 로드됨', true);
+    }
+    async function runTraining() { $('error').textContent = ''; setLoading(true); setStatus('저장소 정적 라벨링 및 학습 중…'); try { const data = await request('/api/v1/training/red-blue', {method:'POST', headers:headers(), body:JSON.stringify({rounds:Number($('rounds').value), retrain_model:true})}); renderDashboard(data); } catch (error) { $('error').textContent = error.message; setStatus('훈련 요청 실패'); } finally { setLoading(false); } }
+    async function loadLatest() { $('error').textContent = ''; setLoading(true); setStatus('최근 결과 조회 중…'); try { const data = await request('/api/v1/training/dashboard', {headers:headers()}); renderDashboard(data); } catch (error) { $('error').textContent = error.message; setStatus('저장된 결과 없음'); } finally { setLoading(false); } }
+    $('trainButton').addEventListener('click', runTraining); $('loadButton').addEventListener('click', loadLatest);
+  </script>
+</body>
+</html>

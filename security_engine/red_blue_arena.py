@@ -214,6 +214,7 @@ class RedBlueTrainingArena:
             before_rule_ids = _rule_ids(before)
             probability = self.risk_model.predict_vulnerability_probability(scenario.source_code)
             red_detected = bool(before)
+            model_predicted_vulnerable = probability >= 0.5
             if red_detected:
                 scoreboard["red_points"] += 100
 
@@ -242,6 +243,8 @@ class RedBlueTrainingArena:
                 "category": scenario.category,
                 "red_detected_by_judge": red_detected,
                 "model_vulnerability_probability": round(probability, 6),
+                "model_predicted_vulnerable": model_predicted_vulnerable,
+                "model_judge_agreement": model_predicted_vulnerable == red_detected,
                 "judge_before_rule_ids": before_rule_ids,
                 "judge_before_findings": len(before),
                 "blue_attempted_rule_ids": sorted(set(attempted_rules)),

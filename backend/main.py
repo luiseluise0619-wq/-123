@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -24,7 +25,8 @@ if str(PROJECT_ROOT) not in sys.path:
 from ml.inference import ModelInferenceEngine
 from security_ai_core import reasoning_agent
 from security_engine.integrated_auditor import AuditReport, IntegratedSecurityAuditor
-from security_engine.red_blue_arena import RedBlueTrainingArena
+from security_engine.red_blue_arena import LocalRiskModel, RedBlueTrainingArena
+from security_engine.repository_trainer import RepositoryRiskTrainer
 
 
 app = FastAPI(
@@ -114,6 +116,9 @@ class RedBlueTrainingRequest(BaseModel):
 AUDIT_LOG_TRAIL: List[AuditLogEntry] = []
 AUDIT_REPORTS: Dict[str, Dict[str, Any]] = {}
 TRAINING_ARENA = RedBlueTrainingArena()
+REPOSITORY_TRAINING_MODELS: Dict[str, LocalRiskModel] = {}
+REPOSITORY_TRAINING_REPORTS: Dict[str, Dict[str, Any]] = {}
+TRAINING_DASHBOARDS: Dict[str, Dict[str, Any]] = {}
 
 
 def get_request_context(
@@ -171,6 +176,12 @@ def _stored_report(audit: AuditReport, organization_id: str) -> Dict[str, Any]:
 @app.get("/health")
 async def health() -> Dict[str, str]:
     return {"status": "ok", "service": "aegisai-local-security-auditor"}
+
+
+@app.get("/dashboard", include_in_schema=False)
+async def training_dashboard() -> FileResponse:
+    """Serve the local Red-Team / Blue-Team training dashboard."""
+    return FileResponse(PROJECT_ROOT / "training_dashboard.html")
 
 
 @app.post("/api/v1/audit-code", response_model=CodeAuditResponse)
@@ -250,10 +261,23 @@ async def run_red_blue_training(
 ) -> Dict[str, Any]:
     """Run safe, local security exercises; no targets are attacked or executed."""
     try:
+        if payload.retrain_model or context.organization_id not in REPOSITORY_TRAINING_MODELS:
+            model, repository_training = RepositoryRiskTrainer(PROJECT_ROOT).train()
+            REPOSITORY_TRAINING_MODELS[context.organization_id] = model
+            REPOSITORY_TRAINING_REPORTS[context.organization_id] = repository_training
+        else:
+            model = REPOSITORY_TRAINING_MODELS[context.organization_id]
+            repository_training = REPOSITORY_TRAINING_REPORTS[context.organization_id]
+
+        # The arena uses the repository-trained model for risk prioritisation.
+        # Judge findings and scores remain derived from a fresh Bandit scan.
+        TRAINING_ARENA.risk_model = model
         result = TRAINING_ARENA.run_rounds(
             rounds=payload.rounds,
-            retrain_model=payload.retrain_model,
+            retrain_model=False,
         )
+        result["repository_training"] = repository_training
+        TRAINING_DASHBOARDS[context.organization_id] = result
     except FileNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -277,6 +301,28 @@ async def run_red_blue_training(
         ),
     )
     return result
+
+
+@app.get("/api/v1/training/dashboard")
+async def get_training_dashboard(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return the latest repository-trained local dashboard data for one organization."""
+    dashboard = TRAINING_DASHBOARDS.get(context.organization_id)
+    if dashboard is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No Red-Team / Blue-Team training result exists for this organization yet.",
+        )
+    record_audit_event(
+        context=context,
+        request=request,
+        action="READ_RED_BLUE_DASHBOARD",
+        target_type="LocalCodeTraining",
+        details="Returned latest repository-backed training dashboard data.",
+    )
+    return dashboard
 
 
 @app.post("/api/v1/audit", status_code=status.HTTP_501_NOT_IMPLEMENTED)
