@@ -35,6 +35,7 @@ from security_engine.public_corpus_trainer import PublicVulnerabilityCorpusTrain
 from security_engine.blue_team_evaluator import BlueTeamEvaluator
 from security_engine.strong_model_registry import StrongModelRegistry, StrongPythonRiskAdapter
 from security_engine.korean_red_team_generator import KoreanRedTeamGenerator
+from security_engine.llm_security_agent import LLMSecurityAgent
 
 
 app = FastAPI(
@@ -170,6 +171,8 @@ AUTONOMOUS_DUEL_LOG = Path("/home/ubuntu/arena/autonomous_duels.jsonl")
 WEB_AUTONOMOUS_LOG = Path("/home/ubuntu/arena/web_autonomous_duels.jsonl")
 STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
 KOREAN_RED_TEAM = KoreanRedTeamGenerator(seed=42)
+RED_AGENT = LLMSecurityAgent(role="red")
+BLUE_AGENT = LLMSecurityAgent(role="blue")
 
 
 def get_request_context(
@@ -693,6 +696,25 @@ async def get_web_autonomous_live(
             if line.strip():
                 logs.append(json.loads(line))
     return logs[-20:]
+
+
+class AgentCommandRequest(BaseModel):
+    instruction: str
+    context: str
+
+@app.post("/api/v1/agent/red/command")
+async def red_agent_command(req: AgentCommandRequest):
+    try:
+        return RED_AGENT.get_command_result(req.instruction, req.context)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/agent/blue/command")
+async def blue_agent_command(req: AgentCommandRequest):
+    try:
+        return BLUE_AGENT.get_command_result(req.instruction, req.context)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/v1/korean-scenarios/generate")
