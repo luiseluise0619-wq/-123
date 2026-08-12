@@ -137,7 +137,10 @@
         <div id="pin"><div class="muted" style="padding:6px 0">지도를 클릭하면 그 지점 정보가 여기 나옵니다. 위에서 <b>관심 업종</b>도 고를 수 있어요.</div></div>
         <button id="pin-opp-btn" style="width:100%;margin-top:8px">🎯 이 동네 기회 업종</button>
         <div id="pin-opp"></div>
-        <button id="pin-insight-btn" style="width:100%;margin-top:8px">🧠 AI 인사이트</button>
+        <select id="ai-model" style="width:100%;margin-top:8px;background:#0b1420;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:12px">
+          <option value="">AI 모델: 자동(추천)</option>
+        </select>
+        <button id="pin-insight-btn" style="width:100%;margin-top:6px">🧠 AI 인사이트</button>
         <div id="pin-insight"></div>
         <button id="pin-report-btn" class="sec" style="width:100%;margin-top:8px">📄 이 지점 리포트 PDF</button>
         <button id="pin-save-btn" class="sec" style="width:100%;margin-top:8px">⭐ 이 지점 저장(비교용)</button>
@@ -471,12 +474,24 @@ function runInsight(){
   const out=document.getElementById('pin-insight'); if(!out)return;
   const ctx=pinContext();
   if(!ctx){out.innerHTML='<span class="muted">먼저 지도를 클릭해 지점을 고르세요.</span>';return;}
+  const model=(document.getElementById('ai-model')||{}).value||'';
   out.innerHTML='<span class="muted">AI가 정리 중…</span>';
-  fetch('/api/insight',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:ctx})})
+  fetch('/api/insight',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:ctx,model})})
     .then(r=>r.json()).then(d=>{
-      if(d&&d.insight){out.textContent=d.insight;}
+      if(d&&d.insight){out.innerHTML=esc(d.insight)+(d.model?`<div style="color:var(--mut);font-size:10.5px;margin-top:6px">· ${esc(d.model)}</div>`:'');}
       else out.innerHTML=`<span class="muted">${esc((d&&d.error)||'인사이트 생성 실패')}</span>`;
     }).catch(e=>{out.innerHTML=`<span class="muted">연결 실패(배포 사이트에서만 동작): ${esc(String(e))}</span>`;});
+}
+// 사용 가능한 Gemini 모델을 드롭다운에 채움(선택 저장)
+function loadModels(){
+  const sel=document.getElementById('ai-model'); if(!sel)return;
+  const saved=(()=>{try{return localStorage.getItem('ai_model')||'';}catch{return'';}})();
+  sel.onchange=()=>{try{localStorage.setItem('ai_model',sel.value);}catch{}};
+  fetch('/api/models').then(r=>r.json()).then(d=>{
+    if(!d||!d.ok||!Array.isArray(d.models))return;
+    d.models.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+    if(saved&&[...sel.options].some(o=>o.value===saved)) sel.value=saved;
+  }).catch(()=>{});
 }
 
 // 이 동네 기회 업종 — 수요(동네 생활인구) 대비 공급(반경 내 그 업종 가게 수)
@@ -679,6 +694,7 @@ function initMap(){
   document.getElementById('pin-r').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
   document.getElementById('pin-cat').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
   document.getElementById('pin-insight-btn').onclick=runInsight;
+  loadModels();
   document.getElementById('pin-opp-btn').onclick=opportunityAnalysis;
   document.getElementById('pin-share-btn').onclick=shareLink;
   document.getElementById('pin-save-btn').onclick=savePin;

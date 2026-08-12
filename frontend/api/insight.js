@@ -17,6 +17,7 @@ const SYSTEM = [
   "6. 다음 AI투 표현 금지: 종합적으로 분석해보면 / 주목할 만한 점은 / 시사하는 바가 큽니다 / 유의미한 결과 / 다각도로 살펴보면 / 데이터 기반으로 확인 / 인사이트를 도출 / 긍정적인 시사점 / ~라고 볼 수 있습니다 / ~을 고려할 필요가 있습니다.",
   "7. 데이터에 없거나 '준비 중/데이터 없음'인 항목은 억지로 말하지 말고, 필요하면 '해당 데이터는 아직 없음'이라고만 짧게 적는다.",
   "8. 기준시점이 다른 값(유동인구 날짜·매출 분기 등)을 같은 시점으로 합치지 않는다.",
+  "9. 사람이 직접 메모하듯 자연스러운 존댓말로. 기계적 나열·과한 접속사·같은 말 반복을 피하고, 각 항목은 구체적 숫자로 시작한다. 형식 라벨(한줄 요약 등) 외에 군더더기 수식어를 넣지 않는다.",
   "",
   "반드시 아래 형식 그대로 출력:",
   "한줄 요약",
@@ -55,13 +56,15 @@ export default async function handler(req, res) {
   if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
   const context = (body && body.context ? String(body.context) : "").slice(0, 6000);
   if (!context) return res.status(400).json({ error: "context required" });
+  const reqModel = body && body.model ? String(body.model).trim() : "";   // 사용자가 고른 모델(있으면 최우선)
 
   const payload = {
     systemInstruction: { parts: [{ text: SYSTEM }] },
     contents: [{ role: "user", parts: [{ text: "다음은 지도에서 클릭한 지점의 데이터다. 규칙대로 요약해라.\n\n" + context }] }],
     generationConfig: { temperature: 0.3, maxOutputTokens: 700 },
   };
-  let r2 = await callGemini(key, MODELS(), payload);
+  const models = [reqModel, ...MODELS()].filter((m, i, a) => m && a.indexOf(m) === i);
+  let r2 = await callGemini(key, models, payload);
   if (!r2.text) { const dm = await discoverModel(key); if (dm) r2 = await callGemini(key, [dm], payload); }
   if (r2.text) return res.status(200).json({ insight: r2.text, model: r2.model, configured: true });
   return res.status(200).json({ insight: "", configured: true, error: "AI 오류 — " + r2.error });
