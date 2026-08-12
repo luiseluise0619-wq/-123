@@ -163,6 +163,7 @@ MASSIVE_REPORT_PATH = PROJECT_ROOT / "models" / "massive_v1" / "massive_kr_repor
 SYNC_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "synchronized_dual_report.json"
 ADVERSARIAL_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "detailed_adversarial_report.json"
 FEEDBACK_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "adversarial_feedback_report.json"
+PATTERNS_REPORT_PATH = PROJECT_ROOT / "models" / "extreme_v1" / "deadly_patterns_report.json"
 STRONG_MODEL_REGISTRY: Optional[StrongModelRegistry] = None
 KOREAN_RED_TEAM = KoreanRedTeamGenerator(seed=42)
 
@@ -598,6 +599,24 @@ async def get_adversarial_feedback_report(
         "completed_rounds": 0,
         "target_rounds": 1_000_000,
         "evolution_history": [],
+        "safety_scope": "static analysis only; no code execution",
+    }
+
+
+@app.get("/api/v1/deadly-patterns/report")
+async def get_deadly_patterns_report(
+    request: Request,
+    context: RequestContext = Depends(get_request_context),
+) -> Dict[str, Any]:
+    """Return the most deadly attack payloads and defensive patch patterns learned."""
+    if PATTERNS_REPORT_PATH.exists():
+        try:
+            return json.loads(PATTERNS_REPORT_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=503, detail="Patterns report is invalid.") from exc
+    return {
+        "status": "not_started",
+        "deadly_patterns": [],
         "safety_scope": "static analysis only; no code execution",
     }
 
