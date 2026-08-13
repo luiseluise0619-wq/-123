@@ -118,7 +118,13 @@
     </div>
 
     <div id="ctl-zone" style="display:none">
-      <div class="lbl">비교할 상권 (최대 3 · 이름 입력해 검색)</div>
+      <div class="grp">
+        <div class="col">
+          <div class="lbl">업종 (선택 시 상권별 그 업종만 비교)</div>
+          <select id="zind"><option value="">— 상권 전체 요약 —</option></select>
+        </div>
+      </div>
+      <div class="lbl" style="margin-top:14px">비교할 상권 (최대 3 · 이름 입력해 검색)</div>
       <div class="gurow">
         <div class="gucol"><input id="z0" list="zlist" placeholder="예: 강남역"></div>
         <div class="gucol"><input id="z1" list="zlist" placeholder="예: 홍대"></div>
@@ -147,6 +153,7 @@ const AGE=['10대','20대','30대','40대','50대','60대+'];
 const TMZ=['0-6시','6-11시','11-14시','14-17시','17-21시','21-24시'];
 const DOW=['월','화','수','목','금','토','일'];
 let SALES=null, STORE=null, ZONES=null, ZBYNAME={}, INDS=[], GUS=[];
+let ZI=null, ZI_TRIED=false;   // zone_industry.json (상권×업종 세부) — 상권 모드 첫 사용 시 지연 로드
 let MODE='gu';
 
 const num=n=>n==null?'—':Math.round(n).toLocaleString('ko-KR');
@@ -164,6 +171,19 @@ fetch('trade_zones.json').then(r=>r.json()).then(d=>{
   });
 }).catch(()=>{});
 
+// 상권×업종 세부는 용량이 커 상권 모드를 처음 열 때만 지연 로드
+function loadZI(cb){
+  if(ZI||ZI_TRIED){cb&&cb();return;}
+  ZI_TRIED=true;
+  fetch('zone_industry.json').then(r=>r.json()).then(d=>{
+    if(d&&d.available){
+      ZI=d; const sel=document.getElementById('zind');
+      (d.inds||[]).slice().sort((a,b)=>a.localeCompare(b,'ko')).forEach(nm=>opt(sel,nm,nm));
+    }
+    cb&&cb();
+  }).catch(()=>{cb&&cb();});
+}
+
 // 모드 전환
 function setMode(m){
   MODE=m;
@@ -171,7 +191,7 @@ function setMode(m){
   document.getElementById('m-zone').classList.toggle('on',m==='zone');
   document.getElementById('ctl-gu').style.display=m==='gu'?'':'none';
   document.getElementById('ctl-zone').style.display=m==='zone'?'':'none';
-  render();
+  if(m==='zone') loadZI(render); else render();
 }
 document.getElementById('m-gu').onclick=()=>setMode('gu');
 document.getElementById('m-zone').onclick=()=>setMode('zone');
@@ -198,6 +218,7 @@ Promise.all([
 
 document.getElementById('run').onclick=render;
 document.getElementById('pdf').onclick=()=>window.print();
+document.getElementById('zind').onchange=render;
 
 function pick(ind,gu){
   if(!gu) return null;
@@ -302,6 +323,9 @@ function renderZones(){
   const cols=names.map(nm=>({nm, z:ZBYNAME[nm]||null}));
   if(!cols.length){out.innerHTML='<div class="empty">비교할 상권 이름을 입력하세요. (칸을 누르면 후보가 뜹니다)</div>';return;}
 
+  const zind=document.getElementById('zind').value;
+  if(zind) return renderZoneInd(cols, zind);   // 업종 선택 시: 상권별 그 업종만 비교
+
   const th=cols.map(c=>`<th>${c.z?c.z.nm:c.nm}</th>`).join('');
   const perStore=z=>z&&z.stores?z.sales/z.stores:null;   // 상권 전체 평균(원)
 
@@ -333,7 +357,44 @@ function renderZones(){
   out.innerHTML=
     `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">상권</th>${th}</tr></thead><tbody>${body}</tbody></table></div>`+
     (miss.length?`<div class="note" style="border-left-color:#C65B87;margin-top:14px">찾지 못한 이름: <b>${miss.join(', ')}</b> — 칸을 눌러 후보 목록에서 고르세요.</div>`:'')+
-    `<div class="note" style="margin-top:14px">상권 요약은 <b>업종을 구분하지 않은 상권 전체 합계</b>입니다. 점포당 평균매출도 모든 업종을 섞은 값이라, 특정 업종 비교에는 위의 <b>자치구 비교</b>(업종 소분류·객단가·손님 구성)를 쓰세요. 상권별 업종 세부(객단가·성별·연령·시간대)는 원본 상권×업종 데이터가 있어야 하며 현재 요약만 제공합니다.</div>`;
+    `<div class="note" style="margin-top:14px">상권 요약은 <b>업종을 구분하지 않은 상권 전체 합계</b>입니다. 특정 업종만 상권끼리 비교하려면 위에서 <b>업종을 선택</b>하세요.</div>`;
+}
+
+// ── 상권 × 특정 업종 비교(zone_industry.json: 점포·매출·객단가) ──
+function renderZoneInd(cols, ind){
+  const out=document.getElementById('out');
+  if(!ZI){out.innerHTML='<div class="note" style="border-left-color:#C65B87">상권×업종 세부 데이터(zone_industry.json)가 아직 없습니다. 다음 상권 갱신(heavy) 실행 후 채워집니다. 그전까지는 업종을 비우면 상권 전체 요약이 보입니다.</div>';return;}
+  const th=cols.map(c=>`<th>${c.z?c.z.nm:c.nm}</th>`).join('');
+  // 각 상권에서 이 업종 행 찾기(zone_industry 는 cd 로 키, 매출 상위 TOP_N 만 담김)
+  const find=c=>{
+    if(!c.z) return null;
+    const z=ZI.zones[c.z.cd]; if(!z) return null;
+    const r=(z.rows||[]).find(r=>ZI.inds[r[0]]===ind);
+    return r?{stores:r[1],sales:r[2],unit:r[3]}:null;
+  };
+  const data=cols.map(find);
+  const rowNum=(label,subl,f,fmt,dir)=>{
+    const vals=data.map(d=>d?f(d):null);
+    const nn=vals.filter(v=>v!=null&&v>0);
+    const best=(dir&&nn.length)?(dir==='high'?Math.max(...nn):Math.min(...nn)):null;
+    const cells=vals.map(v=>{
+      if(v==null)return '<td class="na">—</td>';
+      const win=best!=null&&v===best&&nn.length>1;
+      return `<td class="num"><span class="${win?'win':''}">${fmt(v)}</span></td>`;
+    }).join('');
+    return `<tr><td class="metric">${label}${subl?`<small>${subl}</small>`:''}</td>${cells}</tr>`;
+  };
+  let body='';
+  body+=rowNum('점포 수','이 상권의 해당 업종', d=>d.stores, num, 'high');
+  body+=rowNum('추정매출','억원', d=>d.sales/1e8, num, 'high');
+  body+=rowNum('객단가','만원 · 매출÷건수(실측)', d=>d.unit/1e4, num, 'high');
+
+  const miss=cols.filter((c,i)=>c.z&&!data[i]).map(c=>c.z.nm);
+  out.innerHTML=
+    `<div class="sub" style="margin-bottom:10px">업종: <b>${ind}</b> · 상권별 비교</div>`+
+    `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">${ind}</th>${th}</tr></thead><tbody>${body}</tbody></table></div>`+
+    (miss.length?`<div class="note" style="border-left-color:#C65B87;margin-top:14px">이 업종이 상위 목록에 없는 상권: <b>${miss.join(', ')}</b> — 해당 상권에선 <b>${ind}</b>가 매출 상위권 밖이라 세부가 생략됐습니다(점포·매출이 작다는 뜻).</div>`:'')+
+    `<div class="note" style="margin-top:14px">객단가는 매출÷결제건수 실측입니다. 시간대·요일·성별·연령 세분은 상권별로는 제공하지 않고(용량), <b>서울 전체 업종 평균</b>으로 대시보드에 있습니다.</div>`;
 }
 </script>
 </body>
