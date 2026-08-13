@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>업종·자치구 세부 비교 · 서울 상권 인텔리전스</title>
+<style>
+  :root{ --bg:#0F1826; --panel:#132033; --line:#22334d; --ink:#eaf1fb; --mut:#93a7c4; --accent:#2A78D6; --amber:#E0973A; --green:#2FB27A; --soft:#0b1420; }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.55}
+  a{color:#7db4f2}
+  header.top{position:sticky;top:0;z-index:5;background:rgba(15,24,38,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:12px 20px}
+  header.top .brand{font-size:14px;font-weight:700}
+  header.top .brand span{color:var(--mut);font-weight:400;font-size:12px}
+  header.top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  header.top nav a{font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 11px;border-radius:8px;background:var(--soft)}
+  header.top nav a:hover{border-color:var(--accent)}
+  .wrap{max-width:1040px;margin:0 auto;padding:22px 20px 90px}
+  h1{font-size:22px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--mut);font-size:13.5px;margin:0 0 18px}
+
+  .controls{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}
+  .controls .lbl{font-size:11.5px;color:var(--mut);font-weight:700;letter-spacing:.03em;margin-bottom:6px}
+  .controls .grp{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+  .controls .col{flex:1 1 180px;min-width:150px}
+  select{width:100%;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:14px}
+  .gurow{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+  .gucol{flex:1 1 150px;min-width:130px}
+  button{cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600}
+  button.sec{background:var(--soft);border:1px solid var(--line);color:var(--ink);font-weight:500}
+  .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+
+  table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  table.cmp th,table.cmp td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:right}
+  table.cmp thead th{background:var(--soft);text-align:center;font-size:13px}
+  table.cmp th.metric,table.cmp td.metric{text-align:left;color:var(--ink);font-weight:600;white-space:nowrap}
+  table.cmp td.metric small{display:block;color:var(--mut);font-weight:400;font-size:11px}
+  table.cmp tbody tr:last-child td{border-bottom:none}
+  table.cmp td.num{font-variant-numeric:tabular-nums}
+  table.cmp td .win{color:var(--green);font-weight:700}
+  table.cmp td.na{color:#5c6f8c}
+  .scroll{overflow-x:auto;border-radius:12px}
+  .sec-h{font-size:15px;font-weight:700;margin:26px 0 12px}
+
+  .dists{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .dcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+  .dcard h4{margin:0 0 12px;font-size:14px;font-weight:700}
+  .dblk{margin:0 0 13px}
+  .dblk .dt{font-size:11px;color:var(--mut);font-weight:700;letter-spacing:.03em;margin-bottom:7px}
+  .bar{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:11.5px}
+  .bar .bl{width:38px;color:var(--mut);flex:0 0 auto;text-align:right}
+  .bar .bt{flex:1 1 auto;background:var(--soft);border-radius:4px;height:14px;overflow:hidden}
+  .bar .bf{height:100%;background:var(--accent);border-radius:4px}
+  .bar .bf.g{background:var(--green)}
+  .bar .bv{width:40px;flex:0 0 auto;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+  .gender{display:flex;height:20px;border-radius:6px;overflow:hidden;font-size:11px;font-weight:700}
+  .gender .m{background:#2A78D6;color:#fff;display:flex;align-items:center;justify-content:center}
+  .gender .f{background:#C65B87;color:#fff;display:flex;align-items:center;justify-content:center}
+
+  .note{background:var(--soft);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:13px 15px;font-size:12.5px;color:var(--mut);margin-top:22px}
+  .note b{color:var(--ink)}
+  .empty{color:var(--mut);font-size:14px;padding:40px 10px;text-align:center}
+  .asof{color:#6f83a0;font-size:11px;margin-left:6px}
+
+  @media print{
+    header.top,.controls,.actions{display:none!important}
+    body{background:#fff;color:#111}
+    .dcard,.controls,table.cmp{border-color:#ccc}
+    table.cmp thead th,.dcard{background:#f3f6fa}
+    .wrap{max-width:none;padding:0}
+    .bar .bt{background:#eef2f7}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">서울 상권 인텔리전스 <span>· 업종·자치구 세부 비교</span></div>
+  <nav>
+    <a href="index.html">개요 지도</a>
+    <a href="building.html">건물 지도</a>
+    <a href="about.html">소개</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <h1>업종 하나를 골라, 자치구를 나란히 비교</h1>
+  <p class="sub">객단가·점포당 월매출·손님 구성·붐비는 요일과 시간대·폐업률까지 소상공인이 실제로 궁금한 항목을 한 표로 봅니다. <span id="asof" class="asof"></span></p>
+
+  <div class="controls">
+    <div class="grp">
+      <div class="col">
+        <div class="lbl">업종 (소분류)</div>
+        <select id="ind"></select>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="lbl">비교할 자치구 (최대 3)</div>
+      <div class="gurow">
+        <div class="gucol"><select id="gu0"></select></div>
+        <div class="gucol"><select id="gu1"></select></div>
+        <div class="gucol"><select id="gu2"></select></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="run">비교하기</button>
+      <button id="pdf" class="sec">PDF로 저장</button>
+    </div>
+  </div>
+
+  <div id="out"><div class="empty">업종과 자치구를 고르고 <b>비교하기</b>를 누르세요.</div></div>
+
+  <div class="note">
+    <b>읽는 법</b> · 매출은 서울 상권분석 추정치로 카드사 귀속 탓에 과대추정 경향이 있어, 절대 금액보다 <b>업종·지역 간 상대 비교</b>로 보세요.
+    점포당 월매출은 평균이 아니라 상권별 <b>분위(하위25 · 중위 · 상위25)</b>라 몇몇 큰 점포에 덜 휘둘립니다.
+    성별·연령·요일·시간대는 매출 기준 구성비입니다. 개별 가게 한 곳의 매출이나 건물 단위 수치는 공개 데이터에 없습니다.
+  </div>
+</div>
+
+<script>
+const AGE=['10대','20대','30대','40대','50대','60대+'];
+const TMZ=['0-6시','6-11시','11-14시','14-17시','17-21시','21-24시'];
+const DOW=['월','화','수','목','금','토','일'];
+let SALES=null, STORE=null, INDS=[], GUS=[];
+
+const num=n=>n==null?'—':Math.round(n).toLocaleString('ko-KR');
+const pct=n=>n==null?'—':(Math.round(n*10)/10)+'%';
+
+function opt(sel,val,txt,selected){const o=document.createElement('option');o.value=val;o.textContent=txt;if(selected)o.selected=true;sel.appendChild(o);}
+
+Promise.all([
+  fetch('sales_gu_ind.json').then(r=>r.json()),
+  fetch('store_gu_ind.json').then(r=>r.json())
+]).then(([sa,st])=>{
+  SALES=sa; STORE=st;
+  GUS=Object.keys(sa.gu||{});
+  // 업종 = 모든 자치구 sales 키의 합집합, 점포 많은 순 정렬
+  const cnt={};
+  GUS.forEach(g=>Object.keys(sa.gu[g]||{}).forEach(ind=>{cnt[ind]=(cnt[ind]||0)+((st.gu[g]&&st.gu[g].ind[ind]&&st.gu[g].ind[ind].stores)||0);}));
+  INDS=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
+  const indSel=document.getElementById('ind');
+  INDS.forEach((v,i)=>opt(indSel,v,v,i===0));
+  const g0=document.getElementById('gu0'),g1=document.getElementById('gu1'),g2=document.getElementById('gu2');
+  const sortedGu=[...GUS].sort();
+  sortedGu.forEach(g=>{opt(g0,g,g,g==='강남구');opt(g1,g,g,g==='마포구');opt(g2,g,g,g==='종로구');});
+  opt(g2,'', '(없음)');   // 세 번째는 비워둘 수 있게
+  document.getElementById('asof').textContent='기준 '+(sa.quarter||'')+' · 매출/점포 상권분석';
+  render();
+}).catch(e=>{document.getElementById('out').innerHTML='<div class="empty">데이터를 불러오지 못했습니다(배포 사이트에서 동작). '+String(e)+'</div>';});
+
+document.getElementById('run').onclick=render;
+document.getElementById('pdf').onclick=()=>window.print();
+
+function pick(ind,gu){
+  if(!gu) return null;
+  const s=(SALES.gu[gu]||{})[ind]||null;
+  const t=((STORE.gu[gu]||{}).ind||{})[ind]||null;
+  if(!s&&!t) return {gu,none:true};
+  const stores=t?t.stores:null, closed=t?t.closed:null, fr=t?t.fr:null;
+  return {
+    gu, none:false,
+    stores, closed, fr,
+    closeRate: (stores&&closed!=null)?100*closed/stores:null,
+    frShare: (stores&&fr!=null)?100*fr/stores:null,
+    unit: s?s.unit:null,
+    perMed: s&&s.perstore_q?s.perstore_q[1]:null,
+    perLo: s&&s.perstore_q?s.perstore_q[0]:null,
+    perHi: s&&s.perstore_q?s.perstore_q[2]:null,
+    amtEok: s?s.amt_man/10000:null,   // 만원→억
+    ml: s?s.ml:null, fml: s?s.fml:null,
+    age: s?s.age:null, tmz: s?s.tmz:null, dow: s?s.dow:null,
+    topAge: s&&s.age?AGE[s.age.indexOf(Math.max(...s.age))]:null,
+    topDow: s&&s.dow?DOW[s.dow.indexOf(Math.max(...s.dow))]:null,
+    topTmz: s&&s.tmz?TMZ[s.tmz.indexOf(Math.max(...s.tmz))]:null,
+  };
+}
+
+// 각 지표에서 '유리한' 열을 강조(높을수록/낮을수록 좋음 방향 지정)
+function winners(cols,key,dir){
+  const vals=cols.map(c=>c&&!c.none?c[key]:null).filter(v=>v!=null);
+  if(!vals.length)return null;
+  return dir==='low'?Math.min(...vals):Math.max(...vals);
+}
+
+function render(){
+  if(!SALES)return;
+  const ind=document.getElementById('ind').value;
+  const guv=[document.getElementById('gu0').value,document.getElementById('gu1').value,document.getElementById('gu2').value]
+    .filter((g,i,a)=>g&&a.indexOf(g)===i);
+  const cols=guv.map(g=>pick(ind,g));
+  const out=document.getElementById('out');
+  if(!cols.length){out.innerHTML='<div class="empty">자치구를 하나 이상 고르세요.</div>';return;}
+
+  const th=cols.map(c=>`<th>${c.gu}</th>`).join('');
+  // 지표 정의: [라벨, 부제, key, 포맷, 유리방향('high'|'low'|null)]
+  const rows=[
+    ['점포 수','', 'stores', num, 'high'],
+    ['폐업 수','최근 분기','closed', num, 'low'],
+    ['폐업률','폐업÷점포','closeRate', pct, 'low'],
+    ['프랜차이즈 비중','','frShare', pct, null],
+    ['객단가','1건 평균(원)','unit', num, 'high'],
+    ['점포당 월매출 · 중위','만원','perMed', num, 'high'],
+    ['점포당 월매출 · 범위','하위25~상위25 만원', null, null, null],
+    ['추정매출(분기)','억원 · 상대비교용','amtEok', num, 'high'],
+    ['주 고객','성별','__gender', null, null],
+    ['최다 연령','','topAge', v=>v||'—', null],
+    ['붐비는 요일','','topDow', v=>v||'—', null],
+    ['붐비는 시간대','','topTmz', v=>v||'—', null],
+  ];
+  let body='';
+  rows.forEach(([label,subl,key,fmt,dir])=>{
+    let cells;
+    if(key==='__gender'){
+      cells=cols.map(c=>c.none||c.ml==null?'<td class="na">—</td>':`<td class="num">남 ${c.ml}% · 여 ${c.fml}%</td>`).join('');
+    } else if(key===null){ // 점포당 범위
+      cells=cols.map(c=>c.none||c.perLo==null?'<td class="na">—</td>':`<td class="num">${num(c.perLo)} ~ ${num(c.perHi)}</td>`).join('');
+    } else {
+      const win=dir?winners(cols,key,dir):null;
+      cells=cols.map(c=>{
+        if(c.none||c[key]==null)return '<td class="na">—</td>';
+        const isWin=win!=null&&c[key]===win&&cols.length>1;
+        return `<td class="num"><span class="${isWin?'win':''}">${fmt(c[key])}</span></td>`;
+      }).join('');
+    }
+    body+=`<tr><td class="metric">${label}${subl?`<small>${subl}</small>`:''}</td>${cells}</tr>`;
+  });
+
+  // 분포 카드(성별·연령·요일·시간대 막대)
+  let dists='';
+  cols.forEach(c=>{
+    if(c.none){dists+=`<div class="dcard"><h4>${c.gu}</h4><div class="empty" style="padding:14px 0">이 업종 데이터 없음</div></div>`;return;}
+    const barset=(title,labels,arr,g)=>{
+      if(!arr)return '';
+      const mx=Math.max(...arr)||1;
+      const bars=arr.map((v,i)=>`<div class="bar"><span class="bl">${labels[i]}</span><span class="bt"><span class="bf ${g?'g':''}" style="width:${Math.round(100*v/mx)}%"></span></span><span class="bv">${Math.round(v*10)/10}%</span></div>`).join('');
+      return `<div class="dblk"><div class="dt">${title}</div>${bars}</div>`;
+    };
+    const gender=(c.ml!=null)?`<div class="dblk"><div class="dt">성별(매출 기준)</div><div class="gender"><span class="m" style="width:${c.ml}%">남 ${c.ml}%</span><span class="f" style="width:${c.fml}%">여 ${c.fml}%</span></div></div>`:'';
+    dists+=`<div class="dcard"><h4>${c.gu}</h4>${gender}${barset('연령대',AGE,c.age)}${barset('요일',DOW,c.dow,true)}${barset('시간대',TMZ,c.tmz,true)}</div>`;
+  });
+
+  out.innerHTML=
+    `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">${ind}</th>${th}</tr></thead><tbody>${body}</tbody></table></div>`+
+    `<div class="sec-h">손님·시간 분포</div><div class="dists">${dists}</div>`;
+}
+</script>
+</body>
+</html>
