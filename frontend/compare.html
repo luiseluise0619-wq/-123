@@ -98,6 +98,7 @@
     <div class="modes">
       <button id="m-gu" class="mode on">자치구 비교</button>
       <button id="m-zone" class="mode">상권 비교</button>
+      <button id="m-rent" class="mode">임대료 비교</button>
     </div>
 
     <div id="ctl-gu">
@@ -133,6 +134,16 @@
       <datalist id="zlist"></datalist>
     </div>
 
+    <div id="ctl-rent" style="display:none">
+      <div class="lbl">비교할 상권 (최대 3 · 한국부동산원 임대동향 상권)</div>
+      <div class="gurow">
+        <div class="gucol"><input id="r0" list="rlist" placeholder="예: 명동"></div>
+        <div class="gucol"><input id="r1" list="rlist" placeholder="예: 강남대로"></div>
+        <div class="gucol"><input id="r2" list="rlist" placeholder="(선택)"></div>
+      </div>
+      <datalist id="rlist"></datalist>
+    </div>
+
     <div class="actions">
       <button id="run">비교하기</button>
       <button id="pdf" class="sec">PDF로 저장</button>
@@ -154,6 +165,7 @@ const TMZ=['0-6시','6-11시','11-14시','14-17시','17-21시','21-24시'];
 const DOW=['월','화','수','목','금','토','일'];
 let SALES=null, STORE=null, ZONES=null, ZBYNAME={}, INDS=[], GUS=[];
 let ZI=null, ZI_TRIED=false;   // zone_industry.json (상권×업종 세부) — 상권 모드 첫 사용 시 지연 로드
+let RENT=null, RENT_TRIED=false, RBYNAME={};   // rent.json (임대료·공실률) — 임대료 모드 첫 사용 시 지연 로드
 let MODE='gu';
 
 const num=n=>n==null?'—':Math.round(n).toLocaleString('ko-KR');
@@ -184,17 +196,33 @@ function loadZI(cb){
   }).catch(()=>{cb&&cb();});
 }
 
+// 임대료·공실률도 지연 로드(임대료 모드 첫 사용 시)
+function loadRent(cb){
+  if(RENT||RENT_TRIED){cb&&cb();return;}
+  RENT_TRIED=true;
+  fetch('rent.json').then(r=>r.json()).then(d=>{
+    if(d&&d.available){
+      RENT=d; const dl=document.getElementById('rlist');
+      (d.zones||[]).forEach(z=>{RBYNAME[z.nm]=z; const o=document.createElement('option'); o.value=z.nm; dl.appendChild(o);});
+    }
+    cb&&cb();
+  }).catch(()=>{cb&&cb();});
+}
+
 // 모드 전환
 function setMode(m){
   MODE=m;
-  document.getElementById('m-gu').classList.toggle('on',m==='gu');
-  document.getElementById('m-zone').classList.toggle('on',m==='zone');
-  document.getElementById('ctl-gu').style.display=m==='gu'?'':'none';
-  document.getElementById('ctl-zone').style.display=m==='zone'?'':'none';
-  if(m==='zone') loadZI(render); else render();
+  ['gu','zone','rent'].forEach(x=>{
+    document.getElementById('m-'+x).classList.toggle('on',m===x);
+    document.getElementById('ctl-'+x).style.display=m===x?'':'none';
+  });
+  if(m==='zone') loadZI(render);
+  else if(m==='rent') loadRent(render);
+  else render();
 }
 document.getElementById('m-gu').onclick=()=>setMode('gu');
 document.getElementById('m-zone').onclick=()=>setMode('zone');
+document.getElementById('m-rent').onclick=()=>setMode('rent');
 
 Promise.all([
   fetch('sales_gu_ind.json').then(r=>r.json()),
@@ -219,6 +247,22 @@ Promise.all([
 document.getElementById('run').onclick=render;
 document.getElementById('pdf').onclick=()=>window.print();
 document.getElementById('zind').onchange=render;
+
+// 8분기 추세 미니 스파크라인(인라인 SVG · 인쇄/PDF 안전)
+function spark(vals,color){
+  const v=vals.filter(x=>x!=null);
+  if(v.length<2)return '';
+  const w=88,h=24,pad=2,mn=Math.min(...v),mx=Math.max(...v),rng=(mx-mn)||1;
+  const pts=vals.map((y,i)=>{
+    if(y==null)return null;
+    const x=pad+(w-2*pad)*i/(vals.length-1);
+    const yy=h-pad-(h-2*pad)*(y-mn)/rng;
+    return `${x.toFixed(1)},${yy.toFixed(1)}`;
+  }).filter(Boolean).join(' ');
+  const up=v[v.length-1]>=v[0];
+  const c=color||(up?'#3E9E6E':'#C65B87');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="vertical-align:middle"><polyline fill="none" stroke="${c}" stroke-width="1.6" points="${pts}"/></svg>`;
+}
 
 function pick(ind,gu){
   if(!gu) return null;
@@ -253,6 +297,7 @@ function winners(cols,key,dir){
 
 function render(){
   if(MODE==='zone') return renderZones();
+  if(MODE==='rent') return renderRent();
   if(!SALES)return;
   const ind=document.getElementById('ind').value;
   const guv=[document.getElementById('gu0').value,document.getElementById('gu1').value,document.getElementById('gu2').value]
@@ -395,6 +440,52 @@ function renderZoneInd(cols, ind){
     `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">${ind}</th>${th}</tr></thead><tbody>${body}</tbody></table></div>`+
     (miss.length?`<div class="note" style="border-left-color:#C65B87;margin-top:14px">이 업종이 상위 목록에 없는 상권: <b>${miss.join(', ')}</b> — 해당 상권에선 <b>${ind}</b>가 매출 상위권 밖이라 세부가 생략됐습니다(점포·매출이 작다는 뜻).</div>`:'')+
     `<div class="note" style="margin-top:14px">객단가는 매출÷결제건수 실측입니다. 시간대·요일·성별·연령 세분은 상권별로는 제공하지 않고(용량), <b>서울 전체 업종 평균</b>으로 대시보드에 있습니다.</div>`;
+}
+
+// ── 임대료·공실률 비교(rent.json: 한국부동산원 중대형 상가, 8분기 추세) ──
+function renderRent(){
+  const out=document.getElementById('out');
+  if(!RENT){out.innerHTML='<div class="empty">임대료 데이터를 불러오는 중…(배포 사이트에서 동작)</div>';return;}
+  const names=[document.getElementById('r0').value,document.getElementById('r1').value,document.getElementById('r2').value]
+    .map(v=>v.trim()).filter((v,i,a)=>v&&a.indexOf(v)===i);
+  const cols=names.map(nm=>({nm, z:RBYNAME[nm]||null}));
+  if(!cols.length){out.innerHTML='<div class="empty">비교할 상권 이름을 입력하세요. (칸을 누르면 한국부동산원 상권 후보가 뜹니다)</div>';return;}
+
+  const th=cols.map(c=>`<th>${c.z?c.z.nm:c.nm}${c.z?`<small>${c.z.gwon}권역</small>`:''}</th>`).join('');
+  const S=RENT.seoul||{};
+  const rowNum=(label,subl,f,fmt,dir)=>{
+    const vals=cols.map(c=>c.z?f(c.z):null);
+    const nn=vals.filter(v=>v!=null);
+    const best=(dir&&nn.length)?(dir==='high'?Math.max(...nn):Math.min(...nn)):null;
+    const cells=vals.map(v=>{
+      if(v==null)return '<td class="na">—</td>';
+      const win=best!=null&&v===best&&nn.length>1;
+      return `<td class="num"><span class="${win?'win':''}">${fmt(v)}</span></td>`;
+    }).join('');
+    return `<tr><td class="metric">${label}${subl?`<small>${subl}</small>`:''}</td>${cells}</tr>`;
+  };
+  const rowSpark=(label,key,color)=>{
+    const cells=cols.map(c=>{
+      if(!c.z||!c.z[key])return '<td class="na">—</td>';
+      const t=c.z[key], sp=spark(t,color);
+      return `<td class="num">${sp}<div style="font-size:11px;color:var(--mut);margin-top:2px">${t[0]} → ${t[t.length-1]}</div></td>`;
+    }).join('');
+    return `<tr><td class="metric">${label}<small>8분기 추이</small></td>${cells}</tr>`;
+  };
+
+  let body='';
+  // 임대료: 낮을수록 '유리'로 강조(비용) — dir='low'
+  body+=rowNum('임대료','만원/㎡·월 · 낮을수록 강조', z=>z.rent, v=>num(v), 'low');
+  body+=rowNum('공실률','% · 낮을수록 강조', z=>z.vacancy, v=>((Math.round(v*10)/10)+'%'), 'low');
+  body+=rowSpark('임대료 추이','rent_trend','#C6803E');
+  body+=rowSpark('공실률 추이','vacancy_trend','#5B84C6');
+
+  const miss=cols.filter(c=>!c.z).map(c=>c.nm);
+  out.innerHTML=
+    `<div class="sub" style="margin-bottom:10px">서울 평균 임대료 <b>${num(S.rent)}</b>만원/㎡ · 공실률 <b>${S.vacancy}%</b> (${(RENT.quarters||[]).slice(-1)[0]||''})</div>`+
+    `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">임대 지표</th>${th}</tr></thead><tbody>${body}</tbody></table></div>`+
+    (miss.length?`<div class="note" style="border-left-color:#C65B87;margin-top:14px">찾지 못한 이름: <b>${miss.join(', ')}</b> — 칸을 눌러 후보 목록에서 고르세요.</div>`:'')+
+    `<div class="note" style="margin-top:14px">${RENT.source}. 임대료는 <b>중대형 상가 ㎡당 월 임대료(만원)</b>, 공실률은 %. 이 상권 구분은 <b>한국부동산원 30여개 권역</b>이라 서울시 상권분석(강남역·홍대 등 1564개)과는 다른 지리입니다. 임대료가 낮고 공실률이 높으면 <b>비용은 싸지만 수요가 약할 수</b> 있어 매출 지표와 함께 보세요.</div>`;
 }
 </script>
 </body>
