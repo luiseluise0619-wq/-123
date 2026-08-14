@@ -45,8 +45,13 @@ class RedBlueArenaTests(unittest.TestCase):
             for exercise in result["exercises"]
             for rule_id in exercise["judge_verified_fixed_rule_ids"]
         }
+        # Verified deterministic fixes: weak hash (B324), unsafe yaml.load (B506),
+        # and production assert (B101). shell=True (B602) has no safe deterministic
+        # fix and is honestly left for human/LLM review instead of being faked.
         self.assertIn("B324", fixed_rules)
-        self.assertIn("B602", fixed_rules)
+        self.assertIn("B506", fixed_rules)
+        self.assertIn("B101", fixed_rules)
+        self.assertNotIn("B602", fixed_rules)
         custom_exercise = next(
             exercise for exercise in result["exercises"] if exercise["scenario_id"] == "predictable-session-nonce"
         )

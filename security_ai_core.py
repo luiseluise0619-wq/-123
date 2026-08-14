@@ -21,20 +21,32 @@ from security_engine.real_detector import scan_python_with_bandit
 
 # ---- Knowledge Base: grows over time; each entry is real & verifiable ----
 KNOWLEDGE_BASE: Dict[str, Dict[str, Any]] = {
-    "B324": {  # weak hash
+    "B324": {  # weak hash (md5 / sha1)
         "cwe": "CWE-327", "cause": "약한 해시(MD5/SHA1)를 보안 용도로 사용",
         "fix": "SHA-256 이상으로 교체",
-        "transform": (r"hashlib\.md5\(", "hashlib.sha256("),
+        "transform": (r"hashlib\.(md5|sha1)\(", "hashlib.sha256("),
     },
-    "B602": {  # shell=True
+    "B602": {  # shell=True — no safe *deterministic* fix
         "cwe": "CWE-78", "cause": "subprocess에 shell=True로 명령어 주입 가능",
-        "fix": "shell=False + 인자 리스트 사용",
-        "transform": (r"shell\s*=\s*True", "shell=False"),
+        "fix": "shell=False + 인자를 리스트로 전달 (문자열→리스트 재구성 필요)",
+        # 의도적으로 transform 없음: shell=False 로만 바꾸면 B602→B603 로 바뀌고
+        # 문자열 인자는 런타임에 깨진다. 안전한 자동수정 불가 → needs_llm 로 정직 표기.
     },
     "B303": {  # insecure MD5/SHA1 via hashlib.new
         "cwe": "CWE-327", "cause": "취약한 해시 알고리즘",
         "fix": "SHA-256 사용",
         "transform": (r"hashlib\.sha1\(", "hashlib.sha256("),
+    },
+    "B506": {  # yaml.load on untrusted input
+        "cwe": "CWE-20", "cause": "yaml.load 로 신뢰 불가 입력을 역직렬화(임의 객체 생성 위험)",
+        "fix": "yaml.safe_load 사용 (동등 기능, 안전)",
+        "transform": (r"yaml\.load\(", "yaml.safe_load("),
+    },
+    "B101": {  # assert used (stripped under -O)
+        "cwe": "CWE-703", "cause": "assert 는 -O 최적화 시 제거되어 검증이 사라짐",
+        "fix": "명시적 조건 검사 + 예외 발생으로 교체 (항상 실행)",
+        "transform": (r"(?m)^(\s*)assert (.+),\s+(.+)$",
+                      r"\1if not (\2): raise AssertionError(\3)"),
     },
 }
 

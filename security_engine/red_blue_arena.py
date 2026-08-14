@@ -60,22 +60,22 @@ SAFE_TRAINING_SCENARIOS: Tuple[TrainingScenario, ...] = (
         ),
     ),
     TrainingScenario(
-        scenario_id="insecure-tempfile",
-        category="temporary-files",
-        description="Unsafe temporary-file API identification exercise.",
+        scenario_id="unsafe-yaml-load",
+        category="deserialization",
+        description="Unsafe yaml.load identification and verified safe_load upgrade exercise.",
         source_code=(
-            "import tempfile\n\n"
-            "def make_path():\n"
-            "    return tempfile.mktemp()\n"
+            "import yaml\n\n"
+            "def parse(raw):\n"
+            "    return yaml.load(raw)\n"
         ),
     ),
     TrainingScenario(
         scenario_id="assert-check",
         category="runtime-validation",
-        description="Production assertion identification exercise.",
+        description="Production assertion identification and verified replacement exercise.",
         source_code=(
             "def validate(value):\n"
-            "    assert value > 0\n"
+            "    assert value > 0, 'value must be positive'\n"
             "    return value\n"
         ),
     ),

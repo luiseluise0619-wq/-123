@@ -35,7 +35,11 @@
   → **병목은 모델이 아니라 데이터**
 - **불균형 처리**(취약 2%로 downsample): 무처리는 정확도 0.985 인데 취약 62% 놓침.
   class_weight/scale_pos_weight/임계값튜닝으로 recall 0.375→0.68. **정확도는 함정, PR-AUC/recall 로 평가.**
-- 자동 패치(md5→sha256, shell=True→False 등): 재스캔으로 해결 **검증됨**
+- 자동 패치 — **의미적으로 올바른 결정적 변환만** 적용하고 Bandit 재스캔으로 해결 검증:
+  md5/sha1→sha256(B324), yaml.load→safe_load(B506), assert→명시적 raise(B101).
+  안전한 자동수정이 없는 것(shell=True: shell=False로 바꾸면 B602→B603로 바뀌고 코드도 깨짐,
+  mktemp, pickle.loads 등)은 **가짜로 고치지 않고 `needs_llm`으로 정직 표기**.
+  Red/Blue self-play(`adversarial_loop.py`)에서 심판(Bandit)이 방어 성공/실패를 객관 부여.
 
 ## ⚠️ 아직 데모/미검증 (정직한 한계)
 - 실전급 성능을 내려면 **CVE 라벨 취약함수 수천~수만 개**(DiverseVul 18,900 등)와

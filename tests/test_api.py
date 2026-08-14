@@ -55,7 +55,10 @@ class AegisApiTests(unittest.TestCase):
         self.assertTrue(audit["patch_applied"])
         self.assertTrue(audit["fix_verified_by_rescan"])
         self.assertIn("hashlib.sha256", audit["patched_code"])
-        self.assertIn("shell=False", audit["patched_code"])
+        # shell=True has no safe *deterministic* fix (shell=False alone breaks the
+        # string call and only trades B602 for B603), so it is honestly left
+        # unpatched rather than "fixed" with a broken transform.
+        self.assertIn("shell=True", audit["patched_code"])
         self.assertFalse(payload["source_persisted"])
 
         stored = self.client.get(f"/api/v1/audits/{audit['audit_id']}", headers=self.headers)

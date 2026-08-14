@@ -44,3 +44,6 @@ models/strong_v1/*.pkl
 
 # Massive streaming model binaries (reproduce with run_massive_kr_red_blue.py)
 models/massive_v1/*.pkl
+
+# Self-play generated training data (regenerate with adversarial_loop.py)
+selfplay_dataset.jsonl
