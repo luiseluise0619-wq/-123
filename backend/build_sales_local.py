@@ -24,6 +24,9 @@ ROOT = os.path.dirname(HERE)
 OUT  = os.path.join(ROOT, "frontend", "sales_gu_ind.json")
 MAPF = os.path.join(HERE, "trdar_signgu.csv")
 STORE = os.path.join(ROOT, "frontend", "store_gu_ind.json")
+# build_seoul_dataset.py --build 가 만드는 API 원천(최신 분기·utf-8-sig·wide 컬럼).
+# 있으면 이걸 기본 입력으로 써서 워크플로가 자동으로 최신 분기로 정렬한다.
+DEFAULT_CSV = os.path.join(HERE, "app", "data", "real_data", "seoul_trdar_dataset.csv")
 
 # 파일마다 컬럼명이 영문코드(stor 파일) 또는 한글(매출 파일)이라 둘 다 지원.
 TMZ = [("tmzon_00_06_selng_amt","시간대_00~06_매출_금액"),("tmzon_06_11_selng_amt","시간대_06~11_매출_금액"),
@@ -59,13 +62,16 @@ def load_map():
     return m
 
 def open_csv(path):
-    for enc in ("cp949","utf-8-sig","euc-kr","utf-8"):
+    # utf-8(heavy CSV)을 먼저 시도. 헤더만 읽으면 API CSV 헤더가 전부 ASCII라
+    # cp949로도 '성공'해 한글 값이 깨지므로, 1MB를 강제 디코드해 인코딩을 검증한다.
+    for enc in ("utf-8-sig","utf-8","cp949","euc-kr"):
         try:
-            fh = open(path, encoding=enc)
-            fh.readline(); fh.seek(0)
-            return fh
-        except Exception: continue
-    raise RuntimeError("인코딩 판별 실패")
+            with open(path, encoding=enc) as probe:
+                probe.read(1 << 20)
+            return open(path, encoding=enc)
+        except (UnicodeDecodeError, LookupError):
+            continue
+    raise RuntimeError("인코딩 판별 실패: " + path)
 
 def blank():
     return {"amt":0.0,"cnt":0.0,"tmz":[0.0]*6,"dow":[0.0]*7,"ml":0.0,"fml":0.0,"age":[0.0]*6,"perstore":[]}
@@ -84,9 +90,18 @@ def load_store_by_trdar(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--sales", required=True)
-    ap.add_argument("--stores", default="")   # 점포-상권 CSV(있으면 상권별 점포당 매출 분위 계산)
+    ap.add_argument("--sales", default=DEFAULT_CSV,   # 기본: heavy 원천(최신 분기). 수동 CSV는 --sales로 덮어쓰기
+                    help="추정매출 CSV(기본: seoul_trdar_dataset.csv)")
+    ap.add_argument("--stores", default="")   # 점포-상권 CSV(있으면 상권별 점포당 매출 분위 계산). 비우면 --sales 재사용
     a = ap.parse_args()
+    if not os.path.exists(a.sales):
+        json.dump({"available": False, "reason": f"매출 CSV 없음: {a.sales} (build_seoul_dataset.py --build 먼저)",
+                   "updated": datetime.datetime.utcnow().strftime("%Y-%m-%d")},
+                  open(OUT, "w", encoding="utf-8"), ensure_ascii=False)
+        print("매출 CSV 없음:", a.sales); return 1
+    # heavy 병합 CSV엔 매출·점포(STOR_CO)가 한 파일에 있으므로 점포 소스로 재사용
+    if not a.stores:
+        a.stores = a.sales
     tmap = load_map()
     if not tmap:
         print("상권→자치구 매핑 로드 실패:", MAPF); return 1
