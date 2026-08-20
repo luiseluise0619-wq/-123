@@ -470,7 +470,7 @@
           <div style="font-size:clamp(36px,6vw,56px);font-weight:500;letter-spacing:-0.04em;line-height:1.1;margin-top:12px;font-variant-numeric:tabular-nums">{{ bep }}</div>
           <div style="font-size:13px;color:var(--ink3);margin-top:10px">{{ bepFormula }}</div>
 
-          <button class="no-print" onClick="{{ printReport }}" style="margin-top:16px;font-size:13px;padding:8px 14px;border:1px solid var(--line-strong);border-radius:8px;background:transparent;color:var(--ink);cursor:pointer">📄 PDF로 저장</button>
+          <button class="no-print" onClick="{{ printReport }}" style="margin-top:16px;font-size:13px;padding:8px 14px;border:1px solid var(--line-strong);border-radius:8px;background:transparent;color:var(--ink);cursor:pointer">PDF로 저장</button>
 
           <div style="margin-top:36px">
             <sc-for list="{{ bepRows }}" as="r" hint-placeholder-count="6">
@@ -721,9 +721,9 @@ class Component extends DCLogic {
     }
     const j = (f) => (D ? Promise.resolve(null) : fetch(f, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null));
     Promise.all([
-      j('data/core.json'), j('data/seoul-gu-paths.json'), j('frontend/livepop_gu.json'),
-      j('frontend/parking_gu.json'), j('frontend/stores_by_industry.json'), j('frontend/sales_by_industry.json'),
-      j('frontend/repop.json'), j('frontend/workpop.json'), j('frontend/income.json'), j('frontend/sales_forecast.json')
+      j('data/core.json'), j('data/seoul-gu-paths.json'), j('livepop_gu.json'),
+      j('parking_gu.json'), j('stores_by_industry.json'), j('sales_by_industry.json'),
+      j('repop.json'), j('workpop.json'), j('income.json'), j('sales_forecast.json')
     ]).then(([core, geo, pop, park, stores, sales, repop, work, income, forecast]) => {
       if (D) return;
       this.core = core; this.geo = geo; this.pop = pop; this.park = park;
@@ -1072,9 +1072,11 @@ class Component extends DCLogic {
       title = '거주 인구'; lede = '배후 수요의 성격을 정하는 값입니다.';
       if (!R) B.push({ isEmpty: true, text: '상주인구 데이터가 아직 적재되지 않았습니다.', sub: '' });
       else {
-        H('서울 상주인구 ' + this.num(R.tot / 1000) + '천 명 규모');
-        BAR([['10대', R.age[0]], ['20대', R.age[1]], ['30대', R.age[2]], ['40대', R.age[3]], ['50대', R.age[4]], ['60대+', R.age[5]]], v => this.num(v));
-        T('60대 이상 비중이 가장 큽니다. 낮 시간대 수요를 겨냥한 업종이라면 이 분포가 유동인구보다 중요합니다.');
+        const Rsum = R.age.reduce((a, b) => a + b, 0) || 1;
+        const Rp = R.age_pct || R.age.map(v => Math.round(v / Rsum * 1000) / 10);
+        H('배후 거주민 연령 구성 (상권 배후지 기준 · 비율)');
+        BAR([['10대', Rp[0]], ['20대', Rp[1]], ['30대', Rp[2]], ['40대', Rp[3]], ['50대', Rp[4]], ['60대+', Rp[5]]], v => v + '%');
+        T('60대 이상 비중이 가장 큽니다. 낮 시간대 수요를 겨냥한 업종이라면 이 분포가 유동인구보다 중요합니다. (상권 배후지 합산이라 절대 인구수가 아닌 구성비로 봅니다.)');
         source = '서울 상권분석서비스 상주인구 · ' + R.quarter + '분기';
       }
     }
@@ -1084,9 +1086,13 @@ class Component extends DCLogic {
       title = '직장 인구'; lede = '점심과 퇴근 시간의 수요는 여기서 나옵니다.';
       if (!W || !W.available) B.push({ isEmpty: true, text: '직장인구 데이터가 아직 적재되지 않았습니다.', sub: '' });
       else {
-        H('직장인구는 30–40대에 몰려 있습니다.');
-        BAR([['10대', W.age[0]], ['20대', W.age[1]], ['30대', W.age[2]], ['40대', W.age[3]], ['50대', W.age[4]], ['60대+', W.age[5]]], v => this.num(v));
-        T('남성 ' + Math.round(W.m / W.tot * 100) + '%, 여성 ' + Math.round(W.f / W.tot * 100) + '%입니다.');
+        const Wsum = W.age.reduce((a, b) => a + b, 0) || 1;
+        const Wp = W.age_pct || W.age.map(v => Math.round(v / Wsum * 1000) / 10);
+        const wml = W.ml_pct != null ? W.ml_pct : Math.round(W.m / (W.m + W.f) * 100);
+        const wfml = W.fml_pct != null ? W.fml_pct : Math.round(W.f / (W.m + W.f) * 100);
+        H('직장인구는 30–40대에 몰려 있습니다. (상권 배후지 기준 · 비율)');
+        BAR([['10대', Wp[0]], ['20대', Wp[1]], ['30대', Wp[2]], ['40대', Wp[3]], ['50대', Wp[4]], ['60대+', Wp[5]]], v => v + '%');
+        T('남성 ' + wml + '%, 여성 ' + wfml + '%입니다. (배후지 합산이라 구성비로 해석합니다.)');
         source = '서울 상권분석서비스 직장인구 · ' + W.quarter + '분기';
       }
     }
@@ -1225,6 +1231,14 @@ class Component extends DCLogic {
     // 건물 지도: 별도 정적 페이지(building.html, 카카오 실지도)라 인앱 뷰 전환이 아닌 전체-페이지 이동
     navItems.push({
       label: '건물지도', go: () => { location.href = 'building.html'; },
+      style: 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:var(--ink3);font-weight:400'
+    });
+    navItems.push({
+      label: '세부비교', go: () => { location.href = 'compare.html'; },
+      style: 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:var(--ink3);font-weight:400'
+    });
+    navItems.push({
+      label: '소개', go: () => { location.href = 'about.html'; },
       style: 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:var(--ink3);font-weight:400'
     });
 

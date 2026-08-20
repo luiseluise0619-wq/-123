@@ -142,7 +142,7 @@
   <div class="sh"><h2>상권 탐색</h2><span class="hint">업종을 고르고 자리를 클릭하세요</span><span class="tag">HERO · 실데이터</span></div>
   <div class="bar">
     <select id="ind" aria-label="업종 선택"></select>
-    <input id="q" placeholder="🔍 지역 검색 — 성수 · 강남 · 홍대" aria-label="지역 검색">
+    <input id="q" placeholder="지역 검색 — 성수 · 강남 · 홍대" aria-label="지역 검색">
     <span class="cnt num" id="cnt"></span>
   </div>
   <div class="zg">
@@ -155,7 +155,7 @@
 
   <div class="sh" style="margin-top:34px"><h2>시장 차트</h2><span class="hint">버튼으로 지표를 전환하세요</span><span class="tag">Pro</span></div>
   <div class="tabs" role="tablist" id="tabs">
-    <button class="tab" role="tab" data-v="forecast" aria-selected="true">🔮 매출 전망</button>
+    <button class="tab" role="tab" data-v="forecast" aria-selected="true">매출 전망</button>
     <button class="tab" role="tab" data-v="bars" aria-selected="false">업종 매출</button>
     <button class="tab" role="tab" data-v="food" aria-selected="false">식자재 원가</button>
     <button class="tab" role="tab" data-v="lines" aria-selected="false">가격 추세</button>
@@ -235,7 +235,7 @@ function detail(r){
     const vlabel=sp>=60?'유망':sp>=35?'보통':'주의',vbg=sp>=60?'var(--g0)':sp>=35?'var(--g2)':'var(--g4)';
     const band=r.pr?`${won(Math.round(r.pr*0.7))} ~ ${won(Math.round(r.pr*1.3))}`:'—';
     mlHtml=`<div class="ml">
-      <div class="mlh">🤖 상권 예측 모델<span class="b">AI</span>
+      <div class="mlh">상권 예측 모델<span class="b">AI</span>
         <span class="verdict" style="margin-left:auto;color:#fff;background:${vbg}">${vlabel}</span></div>
       <div class="prob"><span class="pv" style="color:${col}">${sp}<small style="font-size:15px">%</small></span>
         <span class="pl">내 가게가 이 상권서<br>상위권일 확률 <span style="color:var(--faint)">(점포당 매출)</span></span></div>
@@ -275,17 +275,17 @@ function draw(){const p=$('#panel');({forecast:drawForecast,bars:drawBars,food:d
 
 function drawForecast(p){
   if(!cur){
-    p.innerHTML=`<h3>🔮 매출 전망</h3><p class="cd">상권을 클릭하면 그 자리의 전망이 나옵니다</p>
-      <div class="empty" style="padding:44px 20px">👈 왼쪽에서 상권 자리를 클릭하세요<br>
+    p.innerHTML=`<h3>매출 전망</h3><p class="cd">상권을 클릭하면 그 자리의 전망이 나옵니다</p>
+      <div class="empty" style="padding:44px 20px">왼쪽에서 상권 자리를 클릭하세요<br>
         <span style="font-size:11.5px;color:var(--faint)">예상 내 가게 월매출 · 성공확률 · 업종 내 위치를 예측해 드립니다</span></div>
       <div style="margin-top:6px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:var(--brand-soft);font-size:11.5px;color:var(--mut);line-height:1.7">
-        📈 <b style="color:var(--brand)">시계열(다음 분기) 예측선</b>은 여러 분기 CSV를 넣으면 자동 생성됩니다(현재 1개 분기라 시간축 없음).
+        <b style="color:var(--brand)">시계열(다음 분기) 예측선</b>은 여러 분기 CSV를 넣으면 자동 생성됩니다(현재 1개 분기라 시간축 없음).
         상권 매출은 분기별 추세가 있어 time-split R²0.80로 진짜 예측 가능 — 식자재 단기예측(관성)과 다릅니다.</div>`;
     return;
   }
   const r=cur;
   if(r.sp==null){
-    p.innerHTML=`<h3>🔮 ${r.z} — 전망</h3><p class="cd">${r.i}</p>
+    p.innerHTML=`<h3>${r.z} — 전망</h3><p class="cd">${r.i}</p>
       <div class="empty">이 자리는 점포 수 데이터가 0이라<br>점포당 매출 예측을 못 냅니다(정직).</div>`;
     return;
   }
@@ -305,7 +305,7 @@ function drawForecast(p){
   let hist='';cnt.forEach((c,i)=>{const bh=(c/cmax)*(base-pt);hist+=`<rect x="${pl+i*bw+1}" y="${base-bh}" width="${bw-2}" height="${bh}" rx="2" fill="${cssv('--grid')}"/>`});
   const mark=(v,color,lab,dash)=>{const x=pl+Math.min(cw,v/mx*cw);return `<line x1="${x}" y1="${pt}" x2="${x}" y2="${base}" stroke="${color}" stroke-width="2" ${dash?'stroke-dasharray="4 3"':''}/><text x="${x}" y="${base+13}" font-size="9.5" fill="${color}" text-anchor="middle" font-weight="700">${lab}</text>`;};
   const markers=(actPS?mark(actPS,cssv('--mut'),'실측',true):'')+mark(predPS,cssv('--brand'),'예측',false);
-  p.innerHTML=`<h3>🔮 ${r.z} — 매출 전망</h3><p class="cd"><b>${r.i}</b> · 이 자리에 새로 들어갈 때 (점포당 예측)</p>
+  p.innerHTML=`<h3>${r.z} — 매출 전망</h3><p class="cd"><b>${r.i}</b> · 이 자리에 새로 들어갈 때 (점포당 예측)</p>
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">
       <div style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:linear-gradient(180deg,var(--brand-soft),transparent)">
         <div style="font-size:11.5px;color:var(--faint);margin-bottom:3px">예상 내 가게 월매출</div>
@@ -348,7 +348,7 @@ function drawSources(p){
     </div>
     <div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card2);margin-top:12px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-        <span style="font-size:14.5px;font-weight:800">🤖 상권 예측 모델</span>${chip('공간 홀드아웃','brand')}</div>
+        <span style="font-size:14.5px;font-weight:800">상권 예측 모델</span>${chip('공간 홀드아웃','brand')}</div>
       <div style="font-size:12.5px;color:var(--mut);margin-bottom:9px">LightGBM · 목표=점포당 매출(내 가게) · 경쟁·고객구성·업종으로 예측. 총매출(점포수빨)이 아닌 '내 가게'라 숫자는 겸손하지만 정직</div>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:9px">
         <div><div style="font-size:10.5px;color:var(--faint)">내 가게 성공확률</div><div class="num" style="font-size:18px;font-weight:800;color:var(--g2)">AUC ${ML.success_auc||'0.64'}</div></div>

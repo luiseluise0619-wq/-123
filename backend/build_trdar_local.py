@@ -22,17 +22,23 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 OUT  = os.path.join(ROOT, "frontend", "store_gu_ind.json")
 GEOJSON = os.path.join(ROOT, "frontend", "seoul_gu.geojson")
+# build_seoul_dataset.py --build 가 만드는 API 원천(점포 STOR_CO 포함, 최신 분기).
+DEFAULT_CSV  = os.path.join(HERE, "app", "data", "real_data", "seoul_trdar_dataset.csv")
+# 상권→자치구 매핑(trdar_cd,signgu_cd_nm,adstrd_cd_nm) — area_to_gu 가 읽는 컬럼과 동일.
+DEFAULT_AREA = os.path.join(HERE, "trdar_signgu.csv")
 
 def fnum(x):
     try: return float(str(x).replace(",",""))
     except: return 0.0
 
 def read_csv_any(path):
-    for enc in ("cp949","utf-8-sig","euc-kr","utf-8"):
+    # utf-8(heavy CSV) 우선. 헤더가 ASCII라 cp949로도 '성공'해 한글이 깨지므로
+    # 전체를 강제 디코드(list())해 잘못된 인코딩은 예외로 걸러낸다.
+    for enc in ("utf-8-sig","utf-8","cp949","euc-kr"):
         try:
             with open(path, encoding=enc) as fh:
                 return list(csv.DictReader(fh))
-        except Exception:
+        except (UnicodeDecodeError, LookupError):
             continue
     raise RuntimeError("인코딩 판별 실패: "+path)
 
@@ -49,12 +55,27 @@ def area_to_gu(area_rows):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stores", required=True)
-    ap.add_argument("--area", default="")
+    ap.add_argument("--stores", default=DEFAULT_CSV,   # 기본: heavy 원천(최신 분기)
+                    help="점포-상권 CSV(기본: seoul_trdar_dataset.csv)")
+    ap.add_argument("--area", default=DEFAULT_AREA,    # 기본: trdar_signgu.csv 매핑
+                    help="상권→자치구 매핑 CSV(기본: trdar_signgu.csv)")
     a = ap.parse_args()
+    if not os.path.exists(a.stores):
+        json.dump({"available": False, "reason": f"점포 CSV 없음: {a.stores} (build_seoul_dataset.py --build 먼저)",
+                   "updated": datetime.datetime.utcnow().strftime("%Y-%m-%d")},
+                  open(OUT, "w", encoding="utf-8"), ensure_ascii=False)
+        print("점포 CSV 없음:", a.stores); return 1
 
     srows = read_csv_any(a.stores)
     srows = [{k.lower():v for k,v in r.items()} for r in srows]
+    # 컬럼 존재 가드 — 없으면 KeyError로 죽거나 조용히 0이 되므로 명확히 실패시킴
+    cols = set(srows[0].keys()) if srows else set()
+    miss = [c for c in ("stdr_yyqu_cd","trdar_cd","svc_induty_cd_nm","stor_co") if c not in cols]
+    if not srows or miss:
+        json.dump({"available":False,"reason":f"필수 컬럼 없음: {miss or '빈 파일'} (있는 컬럼 {sorted(cols)[:15]})",
+                   "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d")},
+                  open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
+        print("필수 컬럼 없음:", miss); return 1
     q = max(r["stdr_yyqu_cd"] for r in srows)          # 최신 분기
     srows = [r for r in srows if r["stdr_yyqu_cd"] == q]
     print(f"점포-상권 최신 분기 {q} · {len(srows):,}행")
