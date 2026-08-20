@@ -342,6 +342,7 @@ function analyzePin(latlng){
       `<div class="blk"><div class="lb">자치구 지표<span class="asof"> · 구 전체 실측</span></div><div class="v" id="pin-gu">…</div></div>`+
       `<div class="blk"><div class="lb">주변 역 (가까운 3)<span class="asof">${stAs} · 하루 승하차 합</span></div>${stH}${premH?`<div class="muted" style="font-size:11px;margin-top:4px">${premH}</div>`:''}</div>`+
       `<div class="blk"><div class="lb">가까운 상권<span class="asof">${znAs} · 상권별 점포수</span></div>${znH}</div>`+
+      `<div class="blk"><div class="lb">이 건물<span class="asof"> · 건축물대장, 지금 조회</span></div><div class="v" id="pin-bld"><span class="muted">조회 중…</span></div></div>`+
       `<div class="blk"><div class="lb">반경 ${fmtM(radius)} 업종별 점포<span class="asof"> · 카카오 등록, 지금 조회</span></div><div class="chips" id="pin-cats"><span class="muted">세는 중…</span></div><div class="muted" id="pin-density" style="font-size:11px;margin-top:5px"></div></div>`+
     `</details>`;
 
@@ -358,6 +359,23 @@ function analyzePin(latlng){
   }
   document.getElementById('pin-opp').innerHTML='';   // 새 지점: 기회 업종 초기화
   updateURL();
+
+  // 이 건물(건축물대장) 실시간 조회 — 좌표→법정동코드→표제부(서버 함수, 키는 서버에만)
+  (function(){
+    const el=document.getElementById('pin-bld'); if(!el)return;
+    fetch('/api/building',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({x:lng,y:lat})})
+      .then(r=>r.json()).then(d=>{
+        if(d&&d.ok&&d.bld){const b=d.bld;
+          const fl=[b.grndFlr?`지상 ${b.grndFlr}층`:'', b.ugrndFlr?`지하 ${b.ugrndFlr}층`:''].filter(Boolean).join(' · ');
+          const ar=b.totArea?`연면적 ${num(Math.round(b.totArea))}㎡`:'';
+          const ap=(b.aprDay&&b.aprDay.length>=4)?`${b.aprDay.slice(0,4)}년 준공`:'';
+          el.innerHTML=`${b.name?`<b>${esc(b.name)}</b> · `:''}${esc(b.use||'용도 미상')}`+
+            `<div class="muted" style="font-size:11px;margin-top:2px">${[fl,ar,b.struct,ap].filter(Boolean).map(esc).join(' · ')}${b.dongCnt>1?` · ${b.dongCnt}개 동`:''}</div>`;
+        } else {
+          el.innerHTML=`<span class="muted">${esc((d&&d.error)||'건축물대장 없음')}</span>`;
+        }
+      }).catch(()=>{el.innerHTML='<span class="muted">조회 실패(배포 사이트에서만 동작)</span>';});
+  })();
 
   // 2) 역지오코딩 → 주소·자치구 → 유동인구(성별·연령) · 폐업추세
   kakao({mode:'coord',x:lng,y:lat}).then(d=>{
