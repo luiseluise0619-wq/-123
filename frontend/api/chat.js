@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     "추정치는 추정이라고 밝혀라. 답은 한국어로, 짧고 실용적으로. 숫자에는 단위를 붙여라.\n\n" +
     "데이터:\n" + (context || "(현재 선택된 상권/업종 데이터 없음)");
 
-  const r2 = await complete({ selected: reqModel, system, user: message, temperature: 0.4, maxTokens: 600 });
+  const r2 = await complete({ selected: reqModel, system, user: message, temperature: 0.4, maxTokens: 1500 });
   if (r2.text) return res.status(200).json({ reply: r2.text, model: r2.model, provider: r2.provider, configured: true });
   return res.status(200).json({ reply: "AI 응답 오류: " + r2.error, configured: true, error: true });
 }

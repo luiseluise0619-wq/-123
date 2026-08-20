@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     selected: reqModel,
     system: SYSTEM,
     user: "다음은 지도에서 클릭한 지점의 데이터다. 규칙대로 요약해라.\n\n" + context,
-    temperature: 0.3, maxTokens: 700,
+    temperature: 0.3, maxTokens: 2048,
   });
   if (r2.text) return res.status(200).json({ insight: r2.text, model: r2.model, provider: r2.provider, configured: true });
   return res.status(200).json({ insight: "", configured: true, error: "AI 오류 — " + r2.error });
