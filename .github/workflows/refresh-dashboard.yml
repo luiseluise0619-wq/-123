@@ -9,9 +9,9 @@ on:
   workflow_dispatch:             # 수동 실행 버튼
     inputs:
       heavy:
-        description: "상권 전량 빌드까지 실행(분기 1회만 ON). 평소엔 OFF로 빠르게."
+        description: "상권 전량 빌드 포함(기본 ON · 수십 분, 상권/자치구/상권×업종 갱신). 빠른 갱신만 원하면 끄세요."
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write                # 갱신된 HTML 커밋용
