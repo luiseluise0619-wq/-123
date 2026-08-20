@@ -102,6 +102,12 @@
       </div>
     </div>
   </div>
+
+  <div class="card" id="c-open">
+    <h2>지금 뜨는 업종 vs 지는 업종</h2>
+    <p class="desc">업종별 <b>개업 − 폐업</b> 순증감(최근 분기, 서울 전체). 초록=개업이 더 많음(확장), 빨강=폐업이 더 많음(축소). 서울 상권분석 점포.</p>
+    <div class="figwrap"><div id="open-bar"></div><div class="tip" id="openbar-tip"></div></div>
+  </div>
 </div>
 
 <script src="data-bundle.js"></script>
@@ -182,7 +188,7 @@ function lineChart(mount, tipEl, series, xLabels, yFmt, opts){
 // ── 범용 가로 막대(순위) ───────────────────────────────────────
 // rows:[{name,val,on}], valFmt, onClick
 function barChart(mount, tipEl, rows, valFmt, onClick){
-  const W=560, rowH=22, m={t:8,r:64,b:8,l:66};
+  const W=560, rowH=22, m={t:8,r:64,b:8,l:94};
   const H=m.t+m.b+rows.length*rowH;
   const iw=W-m.l-m.r;
   const hi=Math.max(...rows.map(r=>r.val),0), lo=Math.min(...rows.map(r=>r.val),0);
@@ -193,14 +199,14 @@ function barChart(mount, tipEl, rows, valFmt, onClick){
     const g=el('g',{cursor:'pointer'});
     const x0=Math.min(zero,bx), w=Math.abs(bx-zero);
     g.appendChild(el('rect',{x:x0,y:y+3,width:Math.max(w,1),height:rowH-8,rx:3,
-      fill:r.on?'var(--accent)':'#2b466a',opacity:r.on?1:.85}));
+      fill:r.color||(r.on?'var(--accent)':'#2b466a'),opacity:r.on?1:.85}));
     const nm=el('text',{x:m.l-8,y:y+rowH/2+3,'text-anchor':'end'});nm.textContent=r.name;
     if(r.on)nm.setAttribute('fill','var(--ink)');svg.appendChild(nm);
     const vt=el('text',{x:bx+6,y:y+rowH/2+3});vt.textContent=valFmt(r.val);vt.setAttribute('fill','var(--ink)');
     g.appendChild(vt);
-    g.addEventListener('click',()=>onClick(r.name));
+    g.addEventListener('click',()=>onClick&&onClick(r.name));
     g.addEventListener('mousemove',ev=>{const rr=mount.getBoundingClientRect();
-      tipEl.innerHTML=`<div class="th">${r.name}</div><div class="row"><span class="nm">폐업 증감률</span><b>${valFmt(r.val)}</b></div>`;
+      tipEl.innerHTML=`<div class="th">${r.name}</div>${r.tipHtml||`<div class="row"><span class="nm">폐업 증감률</span><b>${valFmt(r.val)}</b></div>`}`;
       tipEl.style.opacity=1;tipEl.style.left=Math.min(ev.clientX-rr.left+8,rr.width-140)+'px';tipEl.style.top=(ev.clientY-rr.top+8)+'px';});
     g.addEventListener('mouseleave',()=>tipEl.style.opacity=0);
     svg.appendChild(g);
@@ -275,6 +281,21 @@ fetch('rent.json').then(r=>r.json()).then(rj=>{
   };
   sel.onchange=draw; draw();
 }).catch(()=>{document.getElementById('rent-fig').innerHTML='<div class="empty">임대료 데이터를 불러오지 못했습니다.</div>';});
+
+// 4) 업종 개업 vs 폐업 순증감 (stores_by_industry.json — opened/closed 이미 포함)
+fetch('stores_by_industry.json').then(r=>r.json()).then(d=>{
+  const ind=d.ind||{};
+  const rows=Object.keys(ind).map(k=>({name:k,net:(ind[k].opened||0)-(ind[k].closed||0),op:ind[k].opened||0,cl:ind[k].closed||0}))
+    .filter(r=>r.op||r.cl).sort((a,b)=>b.net-a.net);
+  const pick=[...rows.slice(0,8),...rows.slice(-8)].filter((r,i,a)=>a.findIndex(x=>x.name===r.name)===i);
+  const bars=pick.map(r=>({name:r.name,val:r.net,color:r.net>=0?'var(--s3)':'var(--s8)',
+    tipHtml:`<div class="row"><span class="nm">개업</span><b>${num(r.op)}</b></div>`+
+            `<div class="row"><span class="nm">폐업</span><b>${num(r.cl)}</b></div>`+
+            `<div class="row"><span class="nm">순증감</span><b>${r.net>=0?'+':''}${num(r.net)}</b></div>`}));
+  const t=d.quarter?`${String(d.quarter).slice(0,4)}년 ${String(d.quarter).slice(4)}분기 기준`:'';
+  if(t)document.querySelector('#c-open .desc').insertAdjacentHTML('beforeend',` <span style="color:var(--mut)">· ${t}</span>`);
+  barChart(document.getElementById('open-bar'),document.getElementById('openbar-tip'),bars,v=>(v>=0?'+':'')+num(v));
+}).catch(()=>{document.getElementById('open-bar').innerHTML='<div class="empty">점포 개폐업 데이터를 불러오지 못했습니다.</div>';});
 </script>
 </body>
 </html>
