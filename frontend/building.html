@@ -198,7 +198,7 @@
 <!-- 개요 지도 기본 데이터(자치구 폐업추세 등). window.__SANGGWON 을 세팅 → 핀 분석의 폐업추세에 사용. -->
 <script src="data-bundle.js"></script>
 <script>
-let MAP=null, GU=null, ST=null, ZONE=null, POP=null, PARK=null, STORE=null, DD=null, DONGPOP=null, DONGGEO=null, guCenters={}, IW=null, pinMk=null, pinCircle=null, lastPin=null, pinGu=null, pinData=null;
+let MAP=null, GU=null, ST=null, ZONE=null, POP=null, PARK=null, STORE=null, DD=null, DONGPOP=null, DONGGEO=null, ZC=null, ZA=null, guCenters={}, IW=null, pinMk=null, pinCircle=null, lastPin=null, pinGu=null, pinData=null;
 
 // 점이 폴리곤(외곽 링) 안에 있는지 — ray casting
 function pointInRing(lng,lat,ring){let c=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if(((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi))c=!c;}return c;}
@@ -327,7 +327,7 @@ function analyzePin(latlng){
     stAsof:(ST&&ST.date)?fmtYmd(ST.date):null,
     znAsof:(ZONE&&ZONE.quarter)?fmtQ(ZONE.quarter):null,
     near: near?near.map(o=>({nm:o.s.nm,d:Math.round(o.d),total:o.s.total})):null,
-    zone: znBest?{nm:znBest.nm,d:Math.round(znDist),stores:znBest.stores}:null,
+    zone: znBest?{nm:znBest.nm,cd:znBest.cd,d:Math.round(znDist),stores:znBest.stores}:null,
     premium: (near&&near.length)?(DD&&DD.available?'있음':'준비중'):null,
     addr:null,gu:null,dong:null,popTot:null,popScope:null,mp:null,fp:null,topAge:null,
     store:null,lots:null,slots:null,trend:null,y2024:null,chosenName:null,cats:null,density:null};
@@ -628,6 +628,10 @@ function renderInlineCompare(){
     [catNm+' 가게', s=>s.catN, 'lo', v=>num(v)+'곳'],
     ['폐업 2년', s=>s.trend, 'lo', v=>(v>=0?'+':'')+v+'%'],
     ['가까운 상권 점포', s=>s.zoneStores, 'hi', v=>num(v)],
+    ['상권 등급', s=>s.grade, null, v=>esc(v)],
+    ['평균 생존기간', s=>s.oprMt, 'hi', v=>num(v)+'개월'],
+    ['배후 아파트', s=>s.aptHshld, 'hi', v=>num(v)+'세대'],
+    ['아파트 평균시가', s=>s.aptPrice, 'hi', v=>v+'억'],
     ['최근접 역', s=>s.nearD, 'lo', v=>fmtM(v)],
     ['자치구 가게수', s=>s.store, null, v=>num(v)],
   ];
@@ -721,6 +725,9 @@ function comparePrint(){
 function savePin(){
   if(!lastPin||!pinData) return;
   const cat=(pinData.cats||[]).find(c=>c.nm===pinData.chosenName);
+  const zcd=pinData.zone?pinData.zone.cd:null;
+  const zg=(zcd&&ZC&&ZC.zones)?ZC.zones[zcd]:null;   // 상권 등급·생존개월
+  const za=(zcd&&ZA&&ZA.zones)?ZA.zones[zcd]:null;   // 배후 아파트
   const a=loadSaved();
   a.unshift({lat:lastPin.getLat(), lng:lastPin.getLng(),
     label:(pinData.popScope&&pinData.popScope!=='자치구')?pinData.popScope:(pinData.gu||'지점'),
@@ -728,7 +735,9 @@ function savePin(){
     gu:pinData.gu||null, store:pinData.store,
     zoneNm:pinData.zone?pinData.zone.nm:null, zoneStores:pinData.zone?pinData.zone.stores:null,
     nearNm:(pinData.near&&pinData.near[0])?pinData.near[0].nm:null,
-    nearD:(pinData.near&&pinData.near[0])?pinData.near[0].d:null});
+    nearD:(pinData.near&&pinData.near[0])?pinData.near[0].d:null,
+    grade:zg?(zg.ix_nm||zg.ix):null, oprMt:zg?zg.opr:null,
+    aptHshld:za?za.hshld:null, aptPrice:za?za.price_eok:null});
   saveSaved(a); renderSaved();
   const b=document.getElementById('pin-save-btn'), t=b.textContent; b.textContent='저장됨'; setTimeout(()=>b.textContent=t,1400);
 }
@@ -814,8 +823,8 @@ function initMap(){
   kakao.maps.event.addListener(MAP,'click',me=>analyzePin(me.latLng));
 }
 function boot(){
-  Promise.all([loadJSON('seoul_gu.geojson'),loadJSON('subway_stations.json'),loadJSON('trade_zones.json'),loadJSON('livepop_gu.json'),loadJSON('parking_gu.json'),loadJSON('storeinfo_gu.json'),loadJSON('distance_decay.json'),loadJSON('livepop_dong.json'),loadJSON('seoul_dong.geojson')])
-    .then(([g,s,z,p,pk,so,dd,dp,dg])=>{GU=g;ST=s;ZONE=z;POP=p;PARK=pk;STORE=so;DD=dd;DONGPOP=dp;DONGGEO=dg;})
+  Promise.all([loadJSON('seoul_gu.geojson'),loadJSON('subway_stations.json'),loadJSON('trade_zones.json'),loadJSON('livepop_gu.json'),loadJSON('parking_gu.json'),loadJSON('storeinfo_gu.json'),loadJSON('distance_decay.json'),loadJSON('livepop_dong.json'),loadJSON('seoul_dong.geojson'),loadJSON('zone_change.json'),loadJSON('zone_apt.json')])
+    .then(([g,s,z,p,pk,so,dd,dp,dg,zc,za])=>{GU=g;ST=s;ZONE=z;POP=p;PARK=pk;STORE=so;DD=dd;DONGPOP=dp;DONGGEO=dg;ZC=(zc&&zc.available!==false)?zc:null;ZA=(za&&za.available!==false)?za:null;})
     .finally(()=>{
       if(window.kakao&&kakao.maps){kakao.maps.load(initMap);}
       else{document.getElementById('mapfail').classList.add('on');setStat();}
