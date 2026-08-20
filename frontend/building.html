@@ -6,6 +6,15 @@
 <title>상권 인텔리전스 · 건물 단위 지도</title>
 <style>
   :root{ --bg:#0F1826; --panel:#132033; --line:#22334d; --ink:#eaf1fb; --mut:#93a7c4; --accent:#2A78D6; --amber:#E0973A; --green:#2FB27A; }
+  .btnlink{display:block;text-align:center;text-decoration:none;background:var(--accent);color:#fff;border-radius:8px;padding:9px;font-size:13px;font-weight:600;margin-top:6px;box-sizing:border-box}
+  #cmp-inline .cmpnames{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--mut);margin-bottom:6px}
+  #cmp-inline .cmpname b{color:var(--ink)}
+  table.cmpt{width:100%;border-collapse:collapse;font-size:11.5px}
+  table.cmpt td{border:1px solid var(--line);padding:5px 6px;text-align:right;font-variant-numeric:tabular-nums}
+  table.cmpt td.mh{text-align:left;color:var(--mut);white-space:nowrap}
+  table.cmpt td.win{color:#8ff3c8;font-weight:700;background:rgba(47,178,122,.16)}
+  table.cmpt td.na{color:#5c6b82}
+  #cmp-inline .cmpnote{font-size:10px;color:var(--mut);margin-top:5px;line-height:1.5}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink)}
   #app{position:fixed;inset:0;display:flex;flex-direction:column}
@@ -152,6 +161,9 @@
       <section id="saved-sec" style="display:none">
         <h3>저장한 지점 <span class="sw" id="saved-n"></span></h3>
         <div id="saved-list"></div>
+        <button id="cmp-view-btn" style="width:100%;margin-top:6px">지점 비교표 보기</button>
+        <div id="cmp-inline" style="display:none;margin-top:8px"></div>
+        <a class="btnlink" href="compare.html">업종·자치구 세부 비교 페이지 →</a>
         <button id="cmp-btn" class="sec" style="width:100%;margin-top:6px">비교표 · PDF로 저장</button>
       </section>
 
@@ -576,6 +588,7 @@ function renderSaved(){
     const s=a[+el.dataset.i], pos=new kakao.maps.LatLng(s.lat,s.lng); MAP.setCenter(pos); MAP.setLevel(4); analyzePin(pos);
   });
   drawSavedMarkers();
+  renderInlineCompare();
 }
 // 저장 지점을 지도에 번호(①②③) 마커로
 function drawSavedMarkers(){
@@ -586,6 +599,40 @@ function drawSavedMarkers(){
     el.onclick=()=>{const pos=new kakao.maps.LatLng(s.lat,s.lng);MAP.setCenter(pos);MAP.setLevel(4);analyzePin(pos);};
     savedMk.push(new kakao.maps.CustomOverlay({map:MAP,position:new kakao.maps.LatLng(s.lat,s.lng),yAnchor:1.1,content:el}));
   });
+}
+// 저장 지점 인라인 비교표(색상: 각 항목 유리한 값 초록) — 새 창 없이 페이지 안에서
+let cmpOpen=false;
+function renderInlineCompare(){
+  const box=document.getElementById('cmp-inline'); if(!box) return;
+  const a=loadSaved();
+  if(!cmpOpen||!a.length){box.style.display='none';box.innerHTML='';return;}
+  box.style.display='';
+  const catNm=(a.find(s=>s.catNm)||{}).catNm||'경쟁';
+  // [라벨, 값getter, 방향('hi'큰게 유리|'lo'작은게 유리|null), 포맷]
+  const metrics=[
+    ['유동인구', s=>s.pop, 'hi', v=>num(Math.round(v))],
+    [catNm+' 가게', s=>s.catN, 'lo', v=>num(v)+'곳'],
+    ['폐업 2년', s=>s.trend, 'lo', v=>(v>=0?'+':'')+v+'%'],
+    ['가까운 상권 점포', s=>s.zoneStores, 'hi', v=>num(v)],
+    ['최근접 역', s=>s.nearD, 'lo', v=>fmtM(v)],
+    ['자치구 가게수', s=>s.store, null, v=>num(v)],
+  ];
+  const body=metrics.map(([label,get,dir,fmt])=>{
+    const vals=a.map(get);
+    const nn=vals.filter(v=>v!=null);
+    const best=(dir&&nn.length)?(dir==='hi'?Math.max(...nn):Math.min(...nn)):null;
+    const cells=vals.map(v=>{
+      if(v==null)return '<td class="na">—</td>';
+      const win=best!=null&&v===best&&nn.length>1;
+      return `<td class="${win?'win':''}">${fmt(v)}</td>`;
+    }).join('');
+    return `<tr><td class="mh">${label}</td>${cells}</tr>`;
+  }).join('');
+  const heads=a.map((s,i)=>`<td class="win" style="text-align:center;background:none;color:var(--ink)">${i+1}</td>`).join('');
+  const names=a.map((s,i)=>`<div class="cmpname"><b>${i+1}.</b> ${esc(s.label)}</div>`).join('');
+  box.innerHTML=`<div class="cmpnames">${names}</div>`+
+    `<table class="cmpt"><thead><tr><td class="mh"></td>${heads}</tr></thead><tbody>${body}</tbody></table>`+
+    `<div class="cmpnote">초록 = 그 항목에서 유리한 값(유동인구·상권 점포는 클수록, 경쟁·폐업·역거리는 작을수록). 항목별 실측이며 예상 매출 아님.</div>`;
 }
 // 단일 지점 리포트 → 새 창(인쇄로 PDF 저장)
 function reportPrint(){
@@ -663,7 +710,11 @@ function savePin(){
   const a=loadSaved();
   a.unshift({lat:lastPin.getLat(), lng:lastPin.getLng(),
     label:(pinData.popScope&&pinData.popScope!=='자치구')?pinData.popScope:(pinData.gu||'지점'),
-    pop:pinData.popTot, catNm:pinData.chosenName, catN:cat?cat.n:null, trend:pinData.trend});
+    pop:pinData.popTot, catNm:pinData.chosenName, catN:cat?cat.n:null, trend:pinData.trend,
+    gu:pinData.gu||null, store:pinData.store,
+    zoneNm:pinData.zone?pinData.zone.nm:null, zoneStores:pinData.zone?pinData.zone.stores:null,
+    nearNm:(pinData.near&&pinData.near[0])?pinData.near[0].nm:null,
+    nearD:(pinData.near&&pinData.near[0])?pinData.near[0].d:null});
   saveSaved(a); renderSaved();
   const b=document.getElementById('pin-save-btn'), t=b.textContent; b.textContent='저장됨'; setTimeout(()=>b.textContent=t,1400);
 }
@@ -728,6 +779,9 @@ function initMap(){
   document.getElementById('pin-opp-btn').onclick=opportunityAnalysis;
   document.getElementById('pin-share-btn').onclick=shareLink;
   document.getElementById('pin-save-btn').onclick=savePin;
+  document.getElementById('cmp-view-btn').onclick=()=>{cmpOpen=!cmpOpen;
+    document.getElementById('cmp-view-btn').textContent=cmpOpen?'비교표 접기 ▴':'지점 비교표 보기';
+    renderInlineCompare();};
   document.getElementById('pin-report-btn').onclick=reportPrint;
   document.getElementById('cmp-btn').onclick=comparePrint;
   renderSaved();
