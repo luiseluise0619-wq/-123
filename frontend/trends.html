@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>연도별 추이 · 서울 상권 인텔리전스</title>
+<style>
+  :root{ --bg:#0F1826; --panel:#132033; --line:#22334d; --ink:#eaf1fb; --mut:#93a7c4; --accent:#2A78D6; --soft:#0b1420;
+         --grid:#1c2b42; --axis:#3a4d6b; }
+  /* 검증된 카테고리 팔레트(dataviz 스킬 기본, dark 컬럼 — 인접 CVD ΔE≥8) */
+  :root{ --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#4a9e4a; --s7:#9085e9; --s8:#e66767; }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.55}
+  a{color:#7db4f2}
+  header.top{position:sticky;top:0;z-index:5;background:rgba(15,24,38,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:12px 20px}
+  header.top .brand{font-size:14px;font-weight:700}
+  header.top .brand span{color:var(--mut);font-weight:400;font-size:12px}
+  header.top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  header.top nav a{font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 11px;border-radius:8px;background:var(--soft)}
+  header.top nav a:hover{border-color:var(--accent)}
+  header.top nav a.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .wrap{max-width:1040px;margin:0 auto;padding:22px 20px 90px}
+  h1{font-size:22px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--mut);font-size:13.5px;margin:0 0 22px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;margin-bottom:22px}
+  .card h2{font-size:16px;font-weight:800;margin:0 0 3px}
+  .card .desc{color:var(--mut);font-size:12.5px;margin:0 0 14px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+  .lchip{display:inline-flex;align-items:center;gap:6px;background:var(--soft);border:1px solid var(--line);
+    border-radius:20px;padding:4px 11px;font-size:12px;color:var(--mut);cursor:pointer;user-select:none}
+  .lchip .dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+  .lchip.on{color:var(--ink);border-color:var(--axis)}
+  .lchip.off{opacity:.45}
+  .figwrap{position:relative;width:100%;overflow-x:auto}
+  svg.chart{display:block;width:100%;height:auto;font-family:inherit}
+  svg .grid{stroke:var(--grid);stroke-width:1}
+  svg .axis{stroke:var(--axis);stroke-width:1}
+  svg text{fill:var(--mut);font-size:11px}
+  svg text.dlabel{fill:var(--ink);font-size:11px;font-weight:600}
+  svg text.ytitle{fill:var(--mut);font-size:11px}
+  .tip{position:absolute;pointer-events:none;background:#0a1220;border:1px solid var(--axis);border-radius:8px;
+    padding:8px 10px;font-size:12px;color:var(--ink);opacity:0;transition:opacity .08s;z-index:3;min-width:120px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+  .tip .th{color:var(--mut);font-size:11px;margin-bottom:5px}
+  .tip .row{display:flex;align-items:center;gap:6px;justify-content:space-between;white-space:nowrap}
+  .tip .row .nm{display:flex;align-items:center;gap:6px}
+  .tip .row .dot{width:8px;height:8px;border-radius:50%}
+  .tip .row b{font-variant-numeric:tabular-nums}
+  .note{background:var(--soft);border-left:3px solid var(--accent);border-radius:6px;padding:9px 12px;color:var(--mut);font-size:12px;margin-top:12px}
+  select{background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:13px}
+  .row2{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .empty{color:var(--mut);font-size:13px;padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">서울 상권 인텔리전스 <span>· 연도별 추이</span></div>
+  <nav>
+    <a href="index.html">개요 지도</a>
+    <a href="compare.html">세부 비교</a>
+    <a href="trends.html" class="on">연도별 추이</a>
+    <a href="about.html">소개</a>
+  </nav>
+</header>
+<div class="wrap">
+  <h1>연도별 추이</h1>
+  <p class="sub">업종 매출·자치구 폐업·상권 임대료가 해마다 어떻게 달라졌는지. 서울시 상권분석·국세청·한국부동산원 실데이터.</p>
+
+  <div class="card" id="c-sales">
+    <h2>업종별 추정매출 추이</h2>
+    <p class="desc">2021~2025 연간 추정매출(조원). 칩을 눌러 업종을 켜고 끕니다. 추정매출은 카드매출 귀속 기준이라 과대추정 경향.</p>
+    <div class="chips" id="sales-chips"></div>
+    <div class="figwrap"><div id="sales-fig"></div><div class="tip" id="sales-tip"></div></div>
+  </div>
+
+  <div class="card" id="c-close">
+    <h2>자치구별 폐업 추이</h2>
+    <p class="desc">2022→2024 자치구별 폐업 사업자 증감률(%). 막대를 누르면 옆의 3년 추이가 바뀝니다. 국세청 국세통계.</p>
+    <div class="row2">
+      <div class="figwrap"><div id="close-bar"></div><div class="tip" id="closebar-tip"></div></div>
+      <div>
+        <div id="close-line-t" style="font-size:12px;color:var(--mut);margin:0 0 6px 2px">폐업 사업자 (건)</div>
+        <div class="figwrap"><div id="close-line"></div><div class="tip" id="closeline-tip"></div></div>
+      </div>
+    </div>
+    <div class="note" id="close-note"></div>
+  </div>
+
+  <div class="card" id="c-rent">
+    <h2>상권 임대료·공실률 추이</h2>
+    <p class="desc">2024 3분기~2026 2분기 8개 분기. 한국부동산원 중대형 상가. 서울 평균 + 선택 상권.
+      <select id="rent-sel"></select></p>
+    <div class="row2">
+      <div>
+        <div style="font-size:12px;color:var(--mut);margin:0 0 6px 2px">임대료 (만원/㎡·월)</div>
+        <div class="figwrap"><div id="rent-fig"></div><div class="tip" id="rent-tip"></div></div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--mut);margin:0 0 6px 2px">공실률 (%)</div>
+        <div class="figwrap"><div id="vac-fig"></div><div class="tip" id="vac-tip"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data-bundle.js"></script>
+<script>
+const SERIES = ['var(--s1)','var(--s2)','var(--s3)','var(--s4)','var(--s5)','var(--s6)','var(--s7)','var(--s8)'];
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in (a||{}))e.setAttribute(k,a[k]);return e;};
+const num=n=>n==null?'—':(Math.round(n*10)/10).toLocaleString('ko-KR');
+
+// ── 범용 라인차트 ──────────────────────────────────────────────
+// series:[{name,color,vals:[y|null]}], xLabels:[..], yFmt, tipEl, opts{label:bool}
+function lineChart(mount, tipEl, series, xLabels, yFmt, opts){
+  opts=opts||{};
+  const W=opts.w||560, H=opts.h||300, m={t:16,r:opts.r!=null?opts.r:96,b:34,l:46};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b;
+  const vis=series.filter(s=>!s.hidden);
+  let lo=Infinity,hi=-Infinity;
+  vis.forEach(s=>s.vals.forEach(v=>{if(v!=null){lo=Math.min(lo,v);hi=Math.max(hi,v);}}));
+  if(!isFinite(lo)){mount.innerHTML='<div class="empty">표시할 계열이 없습니다.</div>';return;}
+  if(opts.zero)lo=Math.min(lo,0);
+  const pad=(hi-lo)*0.12||1; hi+=pad; lo=Math.max(0,lo-pad);
+  const n=xLabels.length;
+  const X=i=>m.l+(n===1?iw/2:iw*i/(n-1));
+  const Y=v=>m.t+ih-ih*(v-lo)/(hi-lo);
+  const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMinYMin meet'});
+  // y 그리드 + 눈금(4단계)
+  for(let g=0;g<=4;g++){
+    const v=lo+(hi-lo)*g/4, y=Y(v);
+    svg.appendChild(el('line',{class:'grid',x1:m.l,y1:y,x2:m.l+iw,y2:y}));
+    const t=el('text',{x:m.l-8,y:y+3,'text-anchor':'end'});t.textContent=yFmt(v);svg.appendChild(t);
+  }
+  // x 축 라벨
+  xLabels.forEach((lb,i)=>{const t=el('text',{x:X(i),y:H-12,'text-anchor':'middle'});t.textContent=lb;svg.appendChild(t);});
+  svg.appendChild(el('line',{class:'axis',x1:m.l,y1:m.t+ih,x2:m.l+iw,y2:m.t+ih}));
+  // 라인 + 마커 + 끝 라벨
+  vis.forEach(s=>{
+    let d='',started=false;
+    s.vals.forEach((v,i)=>{if(v==null)return;d+=(started?'L':'M')+X(i)+' '+Y(v);started=true;});
+    if(d)svg.appendChild(el('path',{d,fill:'none',stroke:s.color,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+    s.vals.forEach((v,i)=>{if(v==null)return;
+      svg.appendChild(el('circle',{cx:X(i),cy:Y(v),r:3.2,fill:s.color,stroke:'var(--panel)','stroke-width':1.5}));});
+  });
+  // 끝 라벨(겹침 방지: y로 정렬 후 최소 간격 확보) — 마진 안에서만
+  if(opts.label!==false){
+    const labs=[];
+    vis.forEach(s=>{let li=s.vals.length-1;while(li>=0&&s.vals[li]==null)li--;
+      if(li>=0)labs.push({y:Y(s.vals[li]),x:X(li),name:s.name,color:s.color});});
+    labs.sort((a,b)=>a.y-b.y);
+    const gap=13, top=m.t+4, bot=m.t+ih-2;
+    for(let i=1;i<labs.length;i++)if(labs[i].y-labs[i-1].y<gap)labs[i].y=labs[i-1].y+gap;
+    let over=labs.length?labs[labs.length-1].y-bot:0;
+    if(over>0)labs.forEach(L=>L.y=Math.max(top,L.y-over));
+    labs.forEach(L=>{const t=el('text',{class:'dlabel',x:L.x+8,y:L.y+3});t.textContent=L.name;t.setAttribute('fill',L.color);svg.appendChild(t);});
+  }
+  // 호버: 세로선 + 최근접 x
+  const hoverLine=el('line',{class:'axis',x1:0,y1:m.t,x2:0,y2:m.t+ih,opacity:0,'stroke-dasharray':'3 3'});
+  svg.appendChild(hoverLine);
+  const hit=el('rect',{x:m.l,y:m.t,width:iw,height:ih,fill:'transparent'});
+  svg.appendChild(hit);
+  const move=(ev)=>{
+    const r=svg.getBoundingClientRect(), sx=(ev.clientX-r.left)/r.width*W;
+    let i=Math.round((sx-m.l)/(iw/(n-1||1))); i=Math.max(0,Math.min(n-1,i));
+    hoverLine.setAttribute('x1',X(i));hoverLine.setAttribute('x2',X(i));hoverLine.setAttribute('opacity',1);
+    let rows='';
+    vis.forEach(s=>{if(s.vals[i]==null)return;
+      rows+=`<div class="row"><span class="nm"><span class="dot" style="background:${s.color}"></span>${s.name}</span><b>${yFmt(s.vals[i])}</b></div>`;});
+    tipEl.innerHTML=`<div class="th">${xLabels[i]}</div>${rows||'<div class="row">데이터 없음</div>'}`;
+    tipEl.style.opacity=1;
+    const px=X(i)/W*r.width; const fw=tipEl.offsetWidth;
+    tipEl.style.left=Math.min(Math.max(0,px-fw/2),r.width-fw)+'px';
+    tipEl.style.top='6px';
+  };
+  hit.addEventListener('mousemove',move);
+  svg.addEventListener('mouseleave',()=>{hoverLine.setAttribute('opacity',0);tipEl.style.opacity=0;});
+  mount.innerHTML='';mount.appendChild(svg);
+}
+
+// ── 범용 가로 막대(순위) ───────────────────────────────────────
+// rows:[{name,val,on}], valFmt, onClick
+function barChart(mount, tipEl, rows, valFmt, onClick){
+  const W=560, rowH=22, m={t:8,r:64,b:8,l:66};
+  const H=m.t+m.b+rows.length*rowH;
+  const iw=W-m.l-m.r;
+  const hi=Math.max(...rows.map(r=>r.val),0), lo=Math.min(...rows.map(r=>r.val),0);
+  const span=(hi-lo)||1; const X=v=>m.l+iw*(v-lo)/span; const zero=X(0);
+  const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMinYMin meet'});
+  rows.forEach((r,i)=>{
+    const y=m.t+i*rowH, bx=X(r.val);
+    const g=el('g',{cursor:'pointer'});
+    const x0=Math.min(zero,bx), w=Math.abs(bx-zero);
+    g.appendChild(el('rect',{x:x0,y:y+3,width:Math.max(w,1),height:rowH-8,rx:3,
+      fill:r.on?'var(--accent)':'#2b466a',opacity:r.on?1:.85}));
+    const nm=el('text',{x:m.l-8,y:y+rowH/2+3,'text-anchor':'end'});nm.textContent=r.name;
+    if(r.on)nm.setAttribute('fill','var(--ink)');svg.appendChild(nm);
+    const vt=el('text',{x:bx+6,y:y+rowH/2+3});vt.textContent=valFmt(r.val);vt.setAttribute('fill','var(--ink)');
+    g.appendChild(vt);
+    g.addEventListener('click',()=>onClick(r.name));
+    g.addEventListener('mousemove',ev=>{const rr=mount.getBoundingClientRect();
+      tipEl.innerHTML=`<div class="th">${r.name}</div><div class="row"><span class="nm">폐업 증감률</span><b>${valFmt(r.val)}</b></div>`;
+      tipEl.style.opacity=1;tipEl.style.left=Math.min(ev.clientX-rr.left+8,rr.width-140)+'px';tipEl.style.top=(ev.clientY-rr.top+8)+'px';});
+    g.addEventListener('mouseleave',()=>tipEl.style.opacity=0);
+    svg.appendChild(g);
+  });
+  svg.appendChild(el('line',{class:'axis',x1:zero,y1:m.t,x2:zero,y2:H-m.b}));
+  mount.innerHTML='';mount.appendChild(svg);
+}
+
+// ── 데이터 로드 & 렌더 ─────────────────────────────────────────
+const yr=['2021','2022','2023','2024','2025'];
+
+// 1) 업종 매출
+fetch('sales_history.json').then(r=>r.json()).then(sh=>{
+  const ind=sh.ind||{};
+  const yearly=s=>yr.map(y=>{const vs=['1','2','3','4'].map(q=>s[y+q]).filter(v=>v!=null&&v!=='');
+    return vs.length?vs.reduce((a,b)=>a+ (+b),0)/1e12:null;});
+  const tot=k=>{const y=yearly(ind[k]);return y[y.length-1]||0;};
+  const top=Object.keys(ind).sort((a,b)=>tot(b)-tot(a)).slice(0,8);
+  const series=top.map((k,i)=>({name:k,color:SERIES[i],vals:yearly(ind[k]),hidden:i>=6}));
+  const chips=document.getElementById('sales-chips');
+  const draw=()=>lineChart(document.getElementById('sales-fig'),document.getElementById('sales-tip'),
+      series,yr,v=>num(v)+'조',{});
+  series.forEach((s,i)=>{
+    const c=document.createElement('span');c.className='lchip '+(s.hidden?'off':'on');c.style.color=s.color;
+    c.innerHTML=`<span class="dot"></span><span style="color:var(--ink)">${s.name}</span>`;
+    c.onclick=()=>{s.hidden=!s.hidden;c.classList.toggle('off',s.hidden);c.classList.toggle('on',!s.hidden);draw();};
+    chips.appendChild(c);
+  });
+  draw();
+}).catch(()=>{document.getElementById('sales-fig').innerHTML='<div class="empty">매출 이력 데이터를 불러오지 못했습니다(배포 사이트에서 동작).</div>';});
+
+// 2) 자치구 폐업
+(function(){
+  const D=window.__SANGGWON;
+  const gu=D&&D.core&&D.core.gu;
+  if(!gu){document.getElementById('close-bar').innerHTML='<div class="empty">폐업 데이터(data-bundle.js)를 불러오지 못했습니다.</div>';return;}
+  const cy=['y2022','y2023','y2024'];
+  const rows=Object.keys(gu).map(k=>({name:k,
+    chg:gu[k].y2022?((gu[k].y2024-gu[k].y2022)/gu[k].y2022*100):0}))
+    .sort((a,b)=>b.chg-a.chg);
+  let sel=rows[0].name;
+  const seoulTot=cy.map(y=>Object.values(gu).reduce((a,g)=>a+(g[y]||0),0));
+  const drawLine=()=>{
+    // 선택 자치구 단독(서울 전체와 스케일 50배 차이라 같은 축에 못 얹음 → 별도)
+    const one=cy.map(y=>gu[sel][y]||0);
+    document.getElementById('close-line-t').textContent=`${sel} 폐업 사업자 (건)`;
+    lineChart(document.getElementById('close-line'),document.getElementById('closeline-tip'),
+      [{name:sel,color:'var(--s2)',vals:one}],['2022','2023','2024'],v=>Math.round(v).toLocaleString('ko-KR'),{r:74});
+    document.getElementById('close-note').textContent=
+      `서울 전체 폐업: ${seoulTot[0].toLocaleString('ko-KR')} → ${seoulTot[1].toLocaleString('ko-KR')} → ${seoulTot[2].toLocaleString('ko-KR')}건 (2022→2024)`;
+  };
+  const drawBar=()=>barChart(document.getElementById('close-bar'),document.getElementById('closebar-tip'),
+    rows.map(r=>({name:r.name,val:r.chg,on:r.name===sel})),v=>(v>=0?'+':'')+num(v)+'%',
+    (nm)=>{sel=nm;drawBar();drawLine();});
+  drawBar();drawLine();
+})();
+
+// 3) 임대료·공실
+fetch('rent.json').then(r=>r.json()).then(rj=>{
+  const qs=(rj.quarters||[]).map(q=>{const mo=q.match(/(\d{4})년\s*(\d)분기/);return mo?`'${mo[1].slice(2)} Q${mo[2]}`:q;});
+  const zones=rj.zones||[]; const S=rj.seoul||{};
+  const sel=document.getElementById('rent-sel');
+  zones.slice().sort((a,b)=>a.nm.localeCompare(b.nm,'ko')).forEach(z=>{const o=document.createElement('option');o.value=z.nm;o.textContent=z.nm;sel.appendChild(o);});
+  sel.value = zones.find(z=>z.nm==='명동')?'명동':(zones[0]&&zones[0].nm)||'';
+  const draw=()=>{
+    const z=zones.find(x=>x.nm===sel.value);
+    const rSeries=[{name:'서울',color:'var(--s1)',vals:S.rent_trend||[]}];
+    const vSeries=[{name:'서울',color:'var(--s1)',vals:S.vacancy_trend||[]}];
+    if(z){rSeries.push({name:z.nm,color:'var(--s2)',vals:z.rent_trend});vSeries.push({name:z.nm,color:'var(--s2)',vals:z.vacancy_trend});}
+    lineChart(document.getElementById('rent-fig'),document.getElementById('rent-tip'),rSeries,qs,v=>num(v)+'만',{r:70,h:260});
+    lineChart(document.getElementById('vac-fig'),document.getElementById('vac-tip'),vSeries,qs,v=>num(v)+'%',{r:70,h:260});
+  };
+  sel.onchange=draw; draw();
+}).catch(()=>{document.getElementById('rent-fig').innerHTML='<div class="empty">임대료 데이터를 불러오지 못했습니다.</div>';});
+</script>
+</body>
+</html>
