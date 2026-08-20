@@ -88,6 +88,7 @@
   #saved-list .r:hover{border-color:var(--accent)}#saved-list .r .c{color:var(--mut);font-size:11px}
   #saved-list .del{float:right;cursor:pointer;color:var(--mut);padding:0 2px}#saved-list .del:hover{color:#e6866f}
   .numpin{width:26px;height:26px;border-radius:50%;background:#2A78D6;color:#fff;font:700 14px -apple-system;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45);cursor:pointer}
+  .numpin.sel{background:var(--amber);box-shadow:0 0 0 3px rgba(224,151,58,.55),0 1px 5px rgba(0,0,0,.45)}
   .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--mut);background:rgba(15,24,38,.72);padding:7px 10px;border-radius:8px}
   .legend .k{display:inline-flex;align-items:center;gap:4px;margin-left:8px}
   .legend .d{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -371,6 +372,7 @@ function analyzePin(latlng){
   }
   document.getElementById('pin-opp').innerHTML='';   // 새 지점: 기회 업종 초기화
   updateURL();
+  drawSavedMarkers();   // 선택 상태(주황) 반영 — 저장 마커를 다시 누르면 제거되는 힌트
 
   // 이 건물(건축물대장) 실시간 조회 — 좌표→법정동코드→표제부(서버 함수, 키는 서버에만)
   (function(){
@@ -596,7 +598,19 @@ function drawSavedMarkers(){
   if(!MAP)return;
   loadSaved().forEach((s,i)=>{
     const el=document.createElement('div'); el.className='numpin'; el.textContent=i+1;
-    el.onclick=()=>{const pos=new kakao.maps.LatLng(s.lat,s.lng);MAP.setCenter(pos);MAP.setLevel(4);analyzePin(pos);};
+    el.title='클릭: 이 지점 분석 · 선택된 상태에서 다시 클릭: 제거';
+    const sel=lastPin&&Math.abs(lastPin.getLat()-s.lat)<1e-7&&Math.abs(lastPin.getLng()-s.lng)<1e-7;
+    if(sel) el.classList.add('sel');
+    el.onclick=()=>{
+      // 이미 선택(분석)된 지점을 다시 누르면 제거(토글)
+      if(lastPin&&Math.abs(lastPin.getLat()-s.lat)<1e-7&&Math.abs(lastPin.getLng()-s.lng)<1e-7){
+        const arr=loadSaved(); const k=arr.findIndex(x=>Math.abs(x.lat-s.lat)<1e-7&&Math.abs(x.lng-s.lng)<1e-7);
+        if(k>-1){arr.splice(k,1);saveSaved(arr);}
+        if(pinMk){pinMk.setMap(null);pinMk=null;} if(pinCircle){pinCircle.setMap(null);pinCircle=null;}
+        lastPin=null; renderSaved(); return;
+      }
+      const pos=new kakao.maps.LatLng(s.lat,s.lng);MAP.setCenter(pos);MAP.setLevel(4);analyzePin(pos);
+    };
     savedMk.push(new kakao.maps.CustomOverlay({map:MAP,position:new kakao.maps.LatLng(s.lat,s.lng),yAnchor:1.1,content:el}));
   });
 }
