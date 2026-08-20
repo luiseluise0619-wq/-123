@@ -68,6 +68,14 @@ def main():
 
     srows = read_csv_any(a.stores)
     srows = [{k.lower():v for k,v in r.items()} for r in srows]
+    # 컬럼 존재 가드 — 없으면 KeyError로 죽거나 조용히 0이 되므로 명확히 실패시킴
+    cols = set(srows[0].keys()) if srows else set()
+    miss = [c for c in ("stdr_yyqu_cd","trdar_cd","svc_induty_cd_nm","stor_co") if c not in cols]
+    if not srows or miss:
+        json.dump({"available":False,"reason":f"필수 컬럼 없음: {miss or '빈 파일'} (있는 컬럼 {sorted(cols)[:15]})",
+                   "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d")},
+                  open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
+        print("필수 컬럼 없음:", miss); return 1
     q = max(r["stdr_yyqu_cd"] for r in srows)          # 최신 분기
     srows = [r for r in srows if r["stdr_yyqu_cd"] == q]
     print(f"점포-상권 최신 분기 {q} · {len(srows):,}행")

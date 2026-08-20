@@ -114,6 +114,17 @@ def main():
 
     acc = {}   # quarter -> gu -> ind -> blank
     fh = open_csv(a.sales); r = csv.DictReader(fh); n = 0
+    # 컬럼 존재 가드 — 매출 컬럼이 없으면 조용히 0이 되므로 명확히 실패시킴(대소문자 무시)
+    cols = {(c or "").lower() for c in (r.fieldnames or [])}
+    need = [("stdr_yyqu_cd","기준_년분기_코드"),("trdar_cd","상권_코드"),
+            ("svc_induty_cd_nm","서비스_업종_코드_명"),("thsmon_selng_amt","당월_매출_금액")]
+    miss = [ko for en,ko in need if en not in cols and ko not in cols]
+    if miss:
+        fh.close()
+        json.dump({"available":False,"reason":f"필수 컬럼 없음: {miss} (있는 컬럼 {sorted(cols)[:15]})",
+                   "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d")},
+                  open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
+        print("필수 컬럼 없음:", miss); return 3
     for row in r:
         low = {k.lower():v for k,v in row.items()}
         q = gv(low,"stdr_yyqu_cd","기준_년분기_코드")

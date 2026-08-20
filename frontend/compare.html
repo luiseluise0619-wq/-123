@@ -474,15 +474,15 @@ function renderRent(){
   };
 
   let body='';
-  // 임대료: 낮을수록 '유리'로 강조(비용) — dir='low'
-  body+=rowNum('임대료','만원/㎡·월 · 낮을수록 강조', z=>z.rent, v=>num(v), 'low');
+  // 임대료: 낮을수록 '유리'로 강조(비용) — dir='low'. 만원/㎡라 소수1자리로.
+  body+=rowNum('임대료','만원/㎡·월 · 낮을수록 강조', z=>z.rent, v=>v.toFixed(1), 'low');
   body+=rowNum('공실률','% · 낮을수록 강조', z=>z.vacancy, v=>((Math.round(v*10)/10)+'%'), 'low');
   body+=rowSpark('임대료 추이','rent_trend','#C6803E');
   body+=rowSpark('공실률 추이','vacancy_trend','#5B84C6');
 
   const miss=cols.filter(c=>!c.z).map(c=>c.nm);
   out.innerHTML=
-    `<div class="sub" style="margin-bottom:10px">서울 평균 임대료 <b>${num(S.rent)}</b>만원/㎡ · 공실률 <b>${S.vacancy}%</b> (${(RENT.quarters||[]).slice(-1)[0]||''})</div>`+
+    `<div class="sub" style="margin-bottom:10px">서울 평균 임대료 <b>${S.rent}</b>만원/㎡ · 공실률 <b>${S.vacancy}%</b> (${(RENT.quarters||[]).slice(-1)[0]||''})</div>`+
     `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">임대 지표</th>${th}</tr></thead><tbody>${body}</tbody></table></div>`+
     (miss.length?`<div class="note" style="border-left-color:#C65B87;margin-top:14px">찾지 못한 이름: <b>${miss.join(', ')}</b> — 칸을 눌러 후보 목록에서 고르세요.</div>`:'')+
     `<div class="note" style="margin-top:14px">${RENT.source}. 임대료는 <b>중대형 상가 ㎡당 월 임대료(만원)</b>, 공실률은 %. 이 상권 구분은 <b>한국부동산원 30여개 권역</b>이라 서울시 상권분석(강남역·홍대 등 1564개)과는 다른 지리입니다. 임대료가 낮고 공실률이 높으면 <b>비용은 싸지만 수요가 약할 수</b> 있어 매출 지표와 함께 보세요.</div>`;

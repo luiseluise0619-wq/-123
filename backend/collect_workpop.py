@@ -39,10 +39,14 @@ def fetch(start, end, qu=""):
         return r.read().decode("utf-8")
 
 def latest_quarter():
-    y = datetime.date.today().year
+    today = datetime.date.today()
+    cur = today.year*10 + (today.month-1)//3 + 1   # 현재 캘린더 분기(YYYYQ)
+    y = today.year
     for yy in (y, y-1, y-2):
         for q in (4,3,2,1):
             qu=f"{yy}{q}"
+            if int(qu) > cur:   # 아직 오지 않은 미래 분기는 건너뜀(잘못된 라벨·잠정치 방지)
+                continue
             try:
                 rt=ET.fromstring(fetch(1,1,qu))
                 if rt.findtext(".//RESULT/CODE")=="INFO-000" and int(rt.findtext(".//list_total_count") or 0)>0:
@@ -92,10 +96,15 @@ def main():
         write_unavailable("응답 파싱 결과 총계 0 — 필드명/스키마 불일치 가능")
         return 3
 
+    # 상권 배후지 합산이라 겹침만큼 중복 계산(서울 실제 직장인구 아님). 비율만 신뢰 가능.
+    agesum=sum(acc["age"]) or 1; mf=(acc["m"]+acc["f"]) or 1
     out={"service":SERVICE,"quarter":qu,"available":True,
          "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d"),
+         "caveat":"tot·age는 상권 배후지 합산(중복 포함)이라 인구 실측이 아님. 연령·성별은 비율(age_pct/ml_pct)로 해석.",
          "tot":round(acc["tot"]),"m":round(acc["m"]),"f":round(acc["f"]),
-         "age":[round(v) for v in acc["age"]]}
+         "age":[round(v) for v in acc["age"]],
+         "age_pct":[round(v/agesum*100,1) for v in acc["age"]],
+         "ml_pct":round(acc["m"]/mf*100,1),"fml_pct":round(acc["f"]/mf*100,1)}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
     print("저장:", OUT, "· 직장인구(과다집계 절대값, 참고)", out["tot"])

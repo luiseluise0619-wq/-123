@@ -71,11 +71,16 @@ def main():
         n = min(len(q_rent), len(q_vac))
         quarters = q_rent[:n]
 
+    # CSV 임대료 값은 천원/㎡ 단위(예: 52.8 = 52,800원/㎡ = 5.28만원/㎡).
+    # 지도(core.rentZones)와 동일하게 만원/㎡로 환산(÷10, 소수1자리). 공실률은 %라 그대로.
+    def to_manwon(v):
+        return round(v / 10.0, 1) if v is not None else None
+
     zones = []
     seoul = None
     for key in rent:                            # rent/vacancy 키 집합은 동일(검증됨)
         gwon, sang = key
-        rt = rent.get(key, [])
+        rt = [to_manwon(v) for v in rent.get(key, [])]
         vt = vac.get(key, [])
         rec = {
             "nm": sang, "gwon": gwon,
@@ -105,7 +110,7 @@ def main():
         "available": True,
         "updated": datetime.datetime.utcnow().strftime("%Y-%m-%d"),
         "source": "한국부동산원 상업용부동산 임대동향조사(중대형 상가)",
-        "unit": "임대료=만원/㎡(월), 공실률=%",
+        "unit": "임대료=만원/㎡(월, 원자료 천원→만원 환산), 공실률=%",
         "note": "권역·상권 단위(한국부동산원 30여개 상권). 서울시 상권분석 1564개 상권과는 다른 지리.",
         "quarters": quarters,
         "seoul": seoul,

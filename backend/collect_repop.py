@@ -37,10 +37,14 @@ def fetch(start, end, qu=""):
         return r.read().decode("utf-8")
 
 def latest_quarter():
-    y = datetime.date.today().year
+    today = datetime.date.today()
+    cur = today.year*10 + (today.month-1)//3 + 1   # 현재 캘린더 분기(YYYYQ)
+    y = today.year
     for yy in (y, y-1, y-2):
         for q in (4,3,2,1):
             qu=f"{yy}{q}"
+            if int(qu) > cur:   # 아직 오지 않은 미래 분기는 건너뜀(잘못된 라벨·잠정치 방지)
+                continue
             try:
                 rt=ET.fromstring(fetch(1,1,qu))
                 if rt.findtext(".//RESULT/CODE")=="INFO-000" and int(rt.findtext(".//list_total_count") or 0)>0:
@@ -79,10 +83,16 @@ def main():
         if (s//step)%5==0 or e==total: print(f"  {s:,}~{e:,} 처리")
         time.sleep(0.12)
 
+    # 상권 배후지를 합산하므로 배후지 겹침만큼 중복 계산된다(서울 실제 인구가 아님).
+    # 절대 총량은 '규모 지표'일 뿐이고, 연령·성별은 비율로만 해석해야 한다 → 비율을 함께 저장.
+    tot=acc["tot"]; agesum=sum(acc["age"]) or 1; mf=(acc["m"]+acc["f"]) or 1
     out={"service":SERVICE,"quarter":qu,
          "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d"),
-         "tot":round(acc["tot"]),"m":round(acc["m"]),"f":round(acc["f"]),
+         "caveat":"tot·age·hshld는 상권 배후지 합산(중복 포함)이라 인구 실측이 아님. 연령·성별은 비율(age_pct/ml_pct)로 해석.",
+         "tot":round(tot),"m":round(acc["m"]),"f":round(acc["f"]),
          "age":[round(v) for v in acc["age"]],
+         "age_pct":[round(v/agesum*100,1) for v in acc["age"]],
+         "ml_pct":round(acc["m"]/mf*100,1),"fml_pct":round(acc["f"]/mf*100,1),
          "hshld":round(acc["hshld"]),"apt":round(acc["apt"]),"nonapt":round(acc["nonapt"])}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
