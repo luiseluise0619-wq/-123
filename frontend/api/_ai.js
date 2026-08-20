@@ -38,7 +38,7 @@ export function parseModel(sel) {
 function defaults(prov) {
   const env = { gemini: "GEMINI_MODEL", openai: "OPENAI_MODEL", anthropic: "ANTHROPIC_MODEL" }[prov];
   const base = {
-    gemini: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite", "gemini-1.5-flash"],
+    gemini: ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite"],
     openai: ["gpt-4o-mini", "gpt-4.1-mini", "gpt-4o"],
     anthropic: ["claude-haiku-4-5", "claude-3-5-haiku-latest", "claude-3-5-sonnet-latest"],
   }[prov] || [];
@@ -50,16 +50,29 @@ function defaults(prov) {
 
 // ── 제공자별 단일 호출(성공 시 텍스트, 실패 시 throw) ──
 async function callGemini(key, model, system, user, temperature, maxTokens) {
+  // Gemini 2.5/3.x 는 추론(thinking) 모델이라 maxOutputTokens 를 사고에 다 써
+  // 답변 텍스트가 비어 나올 수 있다 → thinkingBudget:0 으로 사고를 끄고 짧게 답하게 한다.
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
-  const body = {
+  const mk = (noThink) => ({
     systemInstruction: { parts: [{ text: system }] },
     contents: [{ role: "user", parts: [{ text: user }] }],
-    generationConfig: { temperature, maxOutputTokens: maxTokens },
+    generationConfig: noThink
+      ? { temperature, maxOutputTokens: maxTokens, thinkingConfig: { thinkingBudget: 0 } }
+      : { temperature, maxOutputTokens: maxTokens },
+  });
+  const send = async (body) => {
+    const rr = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const dd = await rr.json().catch(() => ({}));
+    return { rr, dd };
   };
-  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const d = await r.json().catch(() => ({}));
+  let { rr: r, dd: d } = await send(mk(true));
+  // thinkingConfig 를 지원하지 않는 모델이면 그 필드 빼고 재시도
+  if (!r.ok && /thinking|generationConfig|unknown|not supported|INVALID_ARGUMENT/i.test(d?.error?.message || "")) {
+    ({ rr: r, dd: d } = await send(mk(false)));
+  }
   if (!r.ok) throw new Error(d?.error?.message || String(r.status));
-  return d?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
+  const parts = d?.candidates?.[0]?.content?.parts || [];
+  return parts.map((p) => p.text || "").join("");
 }
 
 async function callOpenAI(key, model, system, user, temperature, maxTokens) {
