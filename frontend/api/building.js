@@ -12,6 +12,9 @@ const BLD_BASE = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleIn
 
 function pad4(v){ const s=String(v==null?0:v).replace(/[^0-9]/g,""); return s.padStart(4,"0").slice(-4); }
 function num(v){ const n=Number(v); return Number.isFinite(n)?n:null; }
+// data.go.kr 인증키는 Encoding(%2B…)·Decoding(원본) 두 형태. 이미 인코딩돼 있으면
+// 그대로, 아니면 encodeURIComponent — 사용자가 어느 걸 넣어도 동작하게.
+function encKey(k){ return /%[0-9A-Fa-f]{2}/.test(k) ? k : encodeURIComponent(k); }
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
@@ -48,10 +51,10 @@ export default async function handler(req, res) {
     const bun = pad4(a.main_address_no), ji = pad4(a.sub_address_no);
     const addr = a.address_name || "";
 
-    // 2) 건축물대장 표제부
-    const qs = new URLSearchParams({ serviceKey: govKey, sigunguCd, bjdongCd, platGbCd, bun, ji,
-                                     _type:"json", numOfRows:"20", pageNo:"1" });
-    const br = await fetch(`${BLD_BASE}?${qs}`);
+    // 2) 건축물대장 표제부 (serviceKey는 형태 자동 처리 후 수동 조립, 나머지는 인코딩)
+    const rest = new URLSearchParams({ sigunguCd, bjdongCd, platGbCd, bun, ji,
+                                       _type:"json", numOfRows:"20", pageNo:"1" });
+    const br = await fetch(`${BLD_BASE}?serviceKey=${encKey(govKey)}&${rest}`);
     const bd = await br.json().catch(() => ({}));
     const head = bd?.response?.header;
     if (head && head.resultCode && !["00","000","INFO-000"].includes(String(head.resultCode))) {
