@@ -166,6 +166,7 @@ const TMZ=['0-6시','6-11시','11-14시','14-17시','17-21시','21-24시'];
 const DOW=['월','화','수','목','금','토','일'];
 let SALES=null, STORE=null, ZONES=null, ZBYNAME={}, INDS=[], GUS=[];
 let ZI=null, ZI_TRIED=false;   // zone_industry.json (상권×업종 세부) — 상권 모드 첫 사용 시 지연 로드
+let ZC=null, ZF=null, ZA=null, ZCF_TRIED=false;   // zone_change(등급·생존개월) · zone_facility(집객시설) · zone_apt(아파트)
 let RENT=null, RENT_TRIED=false, RBYNAME={};   // rent.json (임대료·공실률) — 임대료 모드 첫 사용 시 지연 로드
 let MODE='gu';
 
@@ -210,6 +211,17 @@ function loadRent(cb){
   }).catch(()=>{cb&&cb();});
 }
 
+// 상권 등급·생존개월(zone_change) + 집객시설(zone_facility) 지연 로드
+function loadZCF(cb){
+  if(ZCF_TRIED){cb&&cb();return;}
+  ZCF_TRIED=true;
+  Promise.all([
+    fetch('zone_change.json').then(r=>r.json()).catch(()=>null),
+    fetch('zone_facility.json').then(r=>r.json()).catch(()=>null),
+    fetch('zone_apt.json').then(r=>r.json()).catch(()=>null),
+  ]).then(([c,f,a])=>{ if(c&&c.available!==false)ZC=c; if(f&&f.available!==false)ZF=f; if(a&&a.available!==false)ZA=a; cb&&cb(); });
+}
+
 // 모드 전환
 function setMode(m){
   MODE=m;
@@ -217,7 +229,7 @@ function setMode(m){
     document.getElementById('m-'+x).classList.toggle('on',m===x);
     document.getElementById('ctl-'+x).style.display=m===x?'':'none';
   });
-  if(m==='zone') loadZI(render);
+  if(m==='zone') loadZI(()=>loadZCF(render));
   else if(m==='rent') loadRent(render);
   else render();
 }
@@ -398,6 +410,28 @@ function renderZones(){
     return `<td><div class="chips">${chips||'—'}</div></td>`;
   }).join('');
   body+=`<tr><td class="metric">대표 업종<small>점포 수 상위</small></td>${topCells}</tr>`;
+
+  // 상권변화지표(등급·평균 생존개월) — zone_change.json, cd로 조인
+  const zc=c=>(c.z&&ZC&&ZC.zones)?ZC.zones[c.z.cd]:null;
+  if(ZC){
+    const gcells=cols.map(c=>{const g=zc(c);return g?`<td><b>${g.ix_nm||g.ix}</b> <span style="color:var(--mut);font-size:11px">${g.ix}</span></td>`:'<td class="na">—</td>';}).join('');
+    body+=`<tr><td class="metric">상권 등급<small>변화지표(뜨는/지는)</small></td>${gcells}</tr>`;
+    body+=rowNum('평균 생존기간',`개월 · 서울평균 ${ZC.seoul?ZC.seoul.opr:'—'}`, z=>{const g=ZC.zones[z.cd];return g?g.opr:null;}, num, 'high');
+  }
+  // 집객시설(배후 수요 앵커) — zone_facility.json
+  if(ZF){
+    const fcells=cols.map(c=>{const f=(c.z&&ZF.zones)?ZF.zones[c.z.cd]:null;
+      if(!f)return '<td class="na">—</td>';
+      const top=Object.entries(f.fac||{}).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>`<span class="chip">${k} ${v}</span>`).join('');
+      return `<td><div class="chips">${top||'—'}</div></td>`;}).join('');
+    body+=`<tr><td class="metric">배후 시설<small>집객 앵커 · 수요</small></td>${fcells}</tr>`;
+  }
+  // 배후 아파트(주거 구매력) — zone_apt.json
+  if(ZA){
+    const za=z=>(ZA.zones?ZA.zones[z.cd]:null);
+    body+=rowNum('배후 아파트','세대 · 많을수록 강조', z=>{const a=za(z);return a?a.hshld:null;}, num, 'high');
+    body+=rowNum('아파트 평균 시가','억원 · 구매력', z=>{const a=za(z);return a&&a.price_eok?a.price_eok:null;}, v=>num(v), 'high');
+  }
 
   const miss=cols.filter(c=>!c.z).map(c=>c.nm);
   out.innerHTML=
