@@ -443,7 +443,7 @@ function renderZones(){
   if(ZA){
     const za=z=>(ZA.zones?ZA.zones[z.cd]:null);
     body+=rowNum('배후 아파트','세대 · 많을수록 강조', z=>{const a=za(z);return a?a.hshld:null;}, num, 'high');
-    body+=rowNum('아파트 평균 시가','억원 · 구매력', z=>{const a=za(z);return a&&a.price_eok?a.price_eok:null;}, v=>num(v), 'high');
+    body+=rowNum('아파트 평균 시가','억원 · 공시가 기준 상대비교(실거래가 아님)', z=>{const a=za(z);return a&&a.price_eok?a.price_eok:null;}, v=>num(v), 'high');
   }
 
   const miss=cols.filter(c=>!c.z).map(c=>c.nm);

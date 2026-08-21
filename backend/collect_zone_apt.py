@@ -11,7 +11,7 @@
 출력: frontend/zone_apt.json
   { available, quarter, updated, n_zones,
     zones:{ "<cd>":{ nm, danji, hshld, price_eok, area } } }
-  danji=단지수, hshld=총세대, price_eok=평균시가(억), area=평균면적(㎡)
+  danji=단지수, hshld=총세대, price_eok=평균시가(억, 공시가/시가표준액 기준 — 실거래가보다 낮음, 상대비교용), area=평균면적(㎡)
 
     SEOUL_API_KEY=... python collect_zone_apt.py
     python collect_zone_apt.py --check
@@ -99,7 +99,7 @@ def main():
 
     out={"service":SERVICE,"quarter":qu,
          "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d"),
-         "note":"상권별 배후 아파트. danji=단지수, hshld=총세대, price_eok=평균시가(억), area=평균면적㎡.",
+         "note":"상권별 배후 아파트. danji=단지수, hshld=총세대, price_eok=평균시가(억, 공시가/시가표준액 기준 — 실거래가보다 낮음, 상대비교용), area=평균면적㎡.",
          "n_zones":len(zones),"zones":zones}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
