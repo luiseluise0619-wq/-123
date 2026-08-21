@@ -813,7 +813,7 @@ class Component extends DCLogic {
       { name: '상권분석 점포', source: '서울 열린데이터광장 · 업종별 점포 수와 개·폐업', period: on(this.stores, this.stores && this.stores.quarter + '분기'), use: '업종 폐업률, 경쟁 밀도, 프랜차이즈 비중' },
       { name: '상주인구', source: '서울 열린데이터광장 · 상권 단위 거주 인구', period: on(this.repop, this.repop && this.repop.quarter + '분기'), use: '배후 수요 성격 파악' },
       { name: '직장인구', source: '서울 열린데이터광장 · 상권 단위 직장 인구', period: on(this.work && this.work.available, this.work && this.work.quarter + '분기'), use: '점심·퇴근 수요 파악' },
-      { name: '소득·소비', source: '서울 열린데이터광장 · 상권 단위 소득과 지출', period: on(this.income && this.income.available, ''), use: '현재 미공표. 화면에 빈 상태로 표시' },
+      { name: '소비(소득소비-자치구)', source: '서울 열린데이터광장 · 자치구별 지출 구성', period: on(this.income && this.income.available, (this.income && this.income.quarter) || ''), use: '자치구별 소비 지출 구성비. 소득은 원본 종료(2026-05)로 미제공' },
       { name: '주차장 정보', source: '전국주차장정보표준데이터 · 공영·민영 주차장', period: q, use: '면적당 주차장 밀도' },
       { name: '버스 정류소', source: '서울시 버스·마을버스 정류소 목록', period: q, use: '면적당 정류소 밀도' },
       { name: '자치구 경계', source: 'KOSTAT 2013 행정경계 (southkorea/seoul-maps)', period: '2013년', use: '지도 렌더링, 면적 추정' },
@@ -1119,29 +1119,34 @@ class Component extends DCLogic {
     }
 
     if (id === 'income') {
-      title = '소득과 소비'; lede = '서울 상권의 소비자들이 어디에 돈을 쓰는지 봅니다.';
-      const IC = this.income;   // income.json → { available, quarter, income_avg, spend:[{name,pct}] }
+      title = '소득과 소비'; lede = '선택한 자치구 소비자들이 어디에 돈을 쓰는지 봅니다.';
+      const IC = this.income;   // income.json → { available, quarter, income_avg, spend:[{name,pct}], gu:{구:{quarter,spend}} }
+      // 선택 자치구 데이터가 있으면 그것을, 없으면 서울 전체 합계로 폴백.
+      const guData = IC && IC.gu && IC.gu[this.state.gu];
+      const spendArr = guData ? guData.spend : (IC && IC.spend);
+      const scope = guData ? this.state.gu : '서울 전체';
+      const qu = (guData && guData.quarter) || (IC && IC.quarter);
       // 데이터 자체가 없거나 available=false 일 때만 정직하게 빈 상태로.
-      if (!IC || IC.available === false || !(IC.spend && IC.spend.length)) {
-        B.push({ isEmpty: true, text: '소비 구성 데이터를 불러오지 못했습니다.', sub: (IC && IC.reason) ? IC.reason : '서울 상권분석서비스 소득·소비 지표가 아직 공표되지 않았습니다. 공표되는 대로 이 화면에 반영됩니다.' });
-        source = '서울 상권분석서비스 소득소비 (미공표)';
+      if (!IC || IC.available === false || !(spendArr && spendArr.length)) {
+        B.push({ isEmpty: true, text: '소비 구성 데이터를 불러오지 못했습니다.', sub: (IC && IC.reason) ? IC.reason : '서울 상권분석서비스 소비 지표가 아직 공표되지 않았습니다. 공표되는 대로 이 화면에 반영됩니다.' });
+        source = '서울 상권분석서비스 소비 (미공표)';
       } else {
-        // 소득 평균: 서울시가 '월 평균 소득 금액' 필드를 2026-05-13 삭제(2020년부터 수급 중단)해 더 이상 제공되지 않는다.
+        // 소득 평균: 서울시가 '월 평균 소득 금액'을 2020년 수급 중단·2026-05-13 삭제해 더 이상 제공되지 않는다.
         // 있으면 표시하고, 없으면(현재) 왜 없는지 정직하게 안내한다 — 지어내지 않는다.
         if (IC.income_avg) {
-          H('상권 평균 월소득 ' + this.won(Math.round(IC.income_avg / 10000)));
-          T('상권별 평균 소득의 단순 평균입니다. 상권마다 편차가 큽니다.');
+          H('평균 월소득 ' + this.won(Math.round(IC.income_avg / 10000)));
+          T('평균 소득의 단순 평균입니다. 지역마다 편차가 큽니다.');
         } else {
-          N('평균 소득 금액은 서울시가 2026년 5월 원본 데이터 수급 중단으로 제공을 종료해 표시하지 않습니다. 소득 대신 아래 소비 구성으로 이 상권 소비자의 지출 성향을 봅니다. (자치구별 소득이 필요하면 국세청·국민연금 통계가 대체 자료입니다.)');
+          N((IC.income_note) || '평균 소득 금액은 서울시가 2026년 5월 원본 데이터 수급 중단으로 제공을 종료해 표시하지 않습니다. 자치구별 소득이 필요하면 국세청·국민연금 통계가 대체 자료입니다.');
         }
-        // 소비 구성: 지출 카테고리 비율(%) — 절대금액은 상권 겹침으로 과다집계되므로 비율만 [실측].
-        H('소비 지출은 어디로 가나 — 구성비');
-        const spend = IC.spend.slice().sort((a, b) => b.pct - a.pct);   // 큰 항목부터
+        // 소비 구성: 지출 카테고리 비율(%) — 절대금액은 자치구 규모차로 오해 소지 → 비율만 [실측].
+        H(scope + ' 소비 지출은 어디로 가나 — 구성비');
+        const spend = spendArr.slice().sort((a, b) => b.pct - a.pct);   // 큰 항목부터
         BAR(spend.map(s => [s.name, s.pct]), v => v.toFixed(1) + '%', 'var(--ink)');
         const top = spend[0];
-        T('지출이 가장 많은 항목은 ' + top.name + '(' + top.pct.toFixed(1) + '%)입니다. 이 상권 소비자들의 지갑이 어디로 향하는지 보여줍니다.');
-        N('지출 카테고리별 구성비입니다(합계 100%). 절대 금액은 상권이 겹쳐 과다집계되므로 비율만 씁니다. 소득·소비는 카드·통계 기반 추정입니다.');
-        source = '서울 상권분석서비스 소득소비 · ' + (IC.quarter ? IC.quarter.slice(0, 4) + ' ' + IC.quarter.slice(4) + '분기' : '');
+        T('지출이 가장 많은 항목은 ' + top.name + '(' + top.pct.toFixed(1) + '%)입니다. ' + scope + ' 소비자들의 지갑이 어디로 향하는지 보여줍니다.');
+        N('지출 카테고리별 구성비입니다(합계 100%). 절대 금액은 자치구 규모가 달라 비율만 씁니다. 소비는 카드·통계 기반 추정입니다.');
+        source = '서울 상권분석서비스 소비-자치구 · ' + (qu ? qu.slice(0, 4) + ' ' + qu.slice(4) + '분기' : '');
       }
     }
 
@@ -1279,11 +1284,13 @@ class Component extends DCLogic {
     if (pd) L.push('유동인구(오후2시)=' + this.num(pd.tot) + '명 (남 ' + this.num(pd.m) + ' · 여 ' + this.num(pd.f) + ')');
     const R = (c && c.R) || (core && core.rentSeoul);
     if (R) L.push('임대료=' + R.rent + '만원/㎡(월), 공실률=' + R.vacancy + '%' + (R.zone ? ' · ' + R.zone : ''));
-    // 소비 지출 구성비(실측) — 상위 항목을 상담 근거로 제공.
+    // 소비 지출 구성비(실측) — 선택 자치구 우선, 없으면 서울 전체. 상위 항목을 상담 근거로 제공.
     const IC = this.income;
-    if (IC && IC.spend && IC.spend.length) {
-      const sp = IC.spend.slice().sort((a, b) => b.pct - a.pct).slice(0, 5).map(s => s.name + ' ' + s.pct + '%').join(', ');
-      L.push('소비 지출 구성비(실측): ' + sp + (IC.income_avg ? ' · 상권 평균 월소득 ' + this.won(Math.round(IC.income_avg / 10000)) : ''));
+    const icSpend = (IC && IC.gu && IC.gu[this.state.gu] && IC.gu[this.state.gu].spend) || (IC && IC.spend);
+    if (icSpend && icSpend.length) {
+      const icScope = (IC.gu && IC.gu[this.state.gu]) ? this.state.gu : '서울 전체';
+      const sp = icSpend.slice().sort((a, b) => b.pct - a.pct).slice(0, 5).map(s => s.name + ' ' + s.pct + '%').join(', ');
+      L.push('소비 지출 구성비(실측·' + icScope + '): ' + sp + (IC.income_avg ? ' · 평균 월소득 ' + this.won(Math.round(IC.income_avg / 10000)) : ' · 소득 데이터는 원본 종료로 없음'));
     }
     L.push('기준시점=' + ((core && core.quarter) || '2026 2분기'));
     return L.join('\n');

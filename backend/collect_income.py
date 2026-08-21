@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 """
-서울 상권분석 소득소비(VwsmTrdarIncmCnsmpQq) → 서울 상권 평균 소득 + 소비 구성.
+서울 상권분석 소비-자치구(VwsmSignguNcmCnsmpW) → 자치구별 소비 지출 구성 + 서울 전체 합계.
 
-상권별 '월 평균 소득금액'과 '지출 카테고리별 금액'을 서울 전체로 요약.
-- 소득: 상권 평균소득의 (단순)평균 → '서울 상권 평균 월소득' (평균이라 겹침에 강함)
-- 소비: 카테고리 지출을 합산 후 '구성비(%)'로 정규화 → 어디에 돈을 쓰나 (비율이라 겹침에 강함)
+왜 이 서비스인가:
+- 서울시가 '월 평균 소득 금액'을 2020년 수급 중단 → 2026-05-13 삭제해 '소득'은 더 이상 없다(income_avg=null).
+- 상권(trdarNcmCnsmp) 서비스는 표준단위구역 전환 중이라 빈 행이 많다.
+- 반면 소비-자치구(VwsmSignguNcmCnsmpW)는 25개 자치구가 빠짐없이 채워져 있어 '어디에 돈을 쓰나'를 정확히 보여준다.
 
-정직: 지출 '절대 합계'는 상권 겹침으로 과다집계되므로 저장하지 않고 비율만 쓴다.
-      SEOUL_API_KEY 없거나 필드 불일치(전부 0)면 available=false.
+정직 원칙:
+- 지출 '절대 금액'은 자치구마다 규모가 달라 그대로 비교하면 오해 → '구성비(%)'로만 저장/표시한다.
+- 소득은 원본이 없어 null 로 두고, 지어내지 않는다.
 
 출력: frontend/income.json
-  { service, quarter, updated, available, income_avg, spend:[{name,pct}, ...] }
+  {
+    service, quarter(대표=최신), updated, available,
+    income_avg: null, income_note,          # 소득은 원본 종료
+    spend: [ {name, pct}, ... ],            # 서울 전체 합계 구성비(하위호환)
+    gu: { "강남구": { quarter, spend:[{name,pct}] }, ... }   # 자치구별 구성비
+  }
 
     python collect_income.py           # 수집·집계·저장
-    python collect_income.py --check
+    python collect_income.py --check   # 키 존재 여부만 확인
 """
 import os, sys, json, time, datetime, urllib.request, urllib.parse
 import xml.etree.ElementTree as ET
@@ -22,62 +29,47 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 OUT  = os.path.join(ROOT, "frontend", "income.json")
 KEY  = os.environ.get("SEOUL_API_KEY", "").strip()
-SERVICE = "trdarNcmCnsmp"
+SERVICE = "VwsmSignguNcmCnsmpW"      # 소득소비-자치구(소비만 제공, 소득 컬럼은 폐지)
 BASE = "http://openapi.seoul.go.kr:8088"
-# 지출 카테고리(한글명, 서울 상권분석 표준 필드)
+
+# 지출 카테고리(표시명, 자치구 서비스의 표준 필드). EXPNDTR_TOTAMT = 아래 10개 합계(검증됨).
 SPEND = [
-    ("식료품",   "FDSTFFS_EXPNDTR_TOTAMT"),
+    ("식료품",    "FDSTFFS_EXPNDTR_TOTAMT"),
+    ("음식",      "FD_EXPNDTR_TOTAMT"),          # 외식 등 음식 지출
+    ("의료비",    "MCP_EXPNDTR_TOTAMT"),
+    ("교통",      "TRNSPORT_EXPNDTR_TOTAMT"),
+    ("교육",      "EDC_EXPNDTR_TOTAMT"),
+    ("여가·문화", "LSR_CLTUR_EXPNDTR_TOTAMT"),   # 자치구 서비스는 여가+문화 합산 필드
     ("의류·신발", "CLTHS_FTWR_EXPNDTR_TOTAMT"),
-    ("생활용품", "LVSPL_EXPNDTR_TOTAMT"),
-    ("의료비",   "MCP_EXPNDTR_TOTAMT"),
-    ("교통",     "TRNSPORT_EXPNDTR_TOTAMT"),
-    ("여가",     "LSR_EXPNDTR_TOTAMT"),
-    ("문화",     "CLTUR_EXPNDTR_TOTAMT"),
-    ("교육",     "EDC_EXPNDTR_TOTAMT"),
-    ("유흥",     "PLESR_EXPNDTR_TOTAMT"),
+    ("생활용품",  "LVSPL_EXPNDTR_TOTAMT"),
+    ("유흥",      "PLESR_EXPNDTR_TOTAMT"),
+    ("기타",      "ETC_EXPNDTR_TOTAMT"),
 ]
 
 def fnum(x):
     try: return float(x)
     except: return 0.0
 
-# 소득소비 서비스명 후보(정확한 명칭이 문서마다 달라, 응답되는 것을 자동 선택).
-# 실제로 데이터가 오는 서비스명을 찾으면 SERVICE 에 확정.
-SERVICE_CANDIDATES = [
-    "trdarNcmCnsmp",          # 정답: seoul_trdar_client.SERVICES['spend'] 에서 확인된 실제 서비스명(Vwsm 패턴 아님)
-    "VwsmTrdarIncmCnsmpQq",   # 이하 과거 후보(폴백)
-    "VwsmTrdarIcmCnsmpQq",
-    "VwsmTrdarSelngIncmQq",
-    "VwsmTrdarIncomeConsumeQq",
-]
-
-def fetch(service, start, end, qu=""):
-    url = f"{BASE}/{urllib.parse.quote(KEY)}/xml/{service}/{start}/{end}/"
-    if qu: url += f"{qu}/"
-    req = urllib.request.Request(url, headers={"User-Agent":"sangkwon-collector"})
+def fetch(start, end):
+    url = f"{BASE}/{urllib.parse.quote(KEY)}/xml/{SERVICE}/{start}/{end}/"
+    req = urllib.request.Request(url, headers={"User-Agent": "sangkwon-collector"})
     with urllib.request.urlopen(req, timeout=45) as r:
         return r.read().decode("utf-8")
 
-def resolve_service():
-    """응답되는 서비스명을 찾고, 그 서비스의 최신 분기를 반환."""
-    y = datetime.date.today().year
-    for svc in SERVICE_CANDIDATES:
-        for yy in (y, y-1, y-2):
-            for q in (4,3,2,1):
-                qu=f"{yy}{q}"
-                try:
-                    rt=ET.fromstring(fetch(svc,1,1,qu))
-                    if rt.findtext(".//RESULT/CODE")=="INFO-000" and int(rt.findtext(".//list_total_count") or 0)>0:
-                        return svc, qu, int(rt.findtext(".//list_total_count"))
-                except Exception: continue
-    return None, None, 0
-
 def write_unavailable(reason):
-    out={"service":SERVICE,"available":False,"reason":reason,
-         "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d")}
+    out = {"service": SERVICE, "available": False, "reason": reason,
+           "income_avg": None,
+           "updated": datetime.datetime.utcnow().strftime("%Y-%m-%d")}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    json.dump(out, open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
+    json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False)
     print("available=false 저장:", reason)
+
+def pct_list(amounts):
+    """카테고리 금액 dict → [{name,pct}] (합계 100%). 합이 0이면 None."""
+    tot = sum(amounts.values())
+    if tot <= 0:
+        return None
+    return [{"name": n, "pct": round(100 * amounts[n] / tot, 1)} for n, _ in SPEND]
 
 def main():
     if not KEY:
@@ -87,51 +79,71 @@ def main():
     if "--check" in sys.argv:
         print("SEOUL_API_KEY 존재 — 수집 가능"); return 0
 
-    svc, qu, total = resolve_service()
-    if not qu:
-        write_unavailable("서비스명/분기 탐색 실패 — 후보 서비스명이 모두 응답 없음(정확한 소득소비 서비스명 필요)"); return 2
-    print(f"서비스 {svc} · 최신 분기 {qu} · 총 {total:,}행")
+    # 총 건수 확인
+    try:
+        head = ET.fromstring(fetch(1, 1))
+    except Exception as e:
+        write_unavailable(f"첫 요청 실패: {e}"); return 2
+    if head.findtext(".//RESULT/CODE") != "INFO-000":
+        write_unavailable("RESULT 코드 비정상 — " + (head.findtext(".//RESULT/MESSAGE") or "")); return 2
+    total = int(head.findtext(".//list_total_count") or 0)
+    if total <= 0:
+        write_unavailable("list_total_count=0"); return 2
+    print(f"서비스 {SERVICE} · 총 {total:,}행")
 
-    inc_sum=0.0; inc_n=0
-    spend=[0.0]*len(SPEND)
-    income_field=None   # 응답에서 자동 감지(서비스 버전마다 소득 필드명이 다름)
-    step=1000
-    for s in range(1, total+1, step):
-        e=min(s+step-1, total)
+    # 자치구별 '최신 분기' 행만 남긴다(응답이 분기 섞여 오므로 max STDR_YYQU_CD 유지).
+    latest = {}   # 자치구명 → (분기, {카테고리: 금액})
+    step = 1000
+    for s in range(1, total + 1, step):
+        e = min(s + step - 1, total)
         for attempt in range(4):
-            try: xml=fetch(svc,s,e,qu); break
+            try: xml = fetch(s, e); break
             except Exception:
-                if attempt==3: raise
-                time.sleep(2*(attempt+1))
+                if attempt == 3: raise
+                time.sleep(2 * (attempt + 1))
         for row in ET.fromstring(xml).findall(".//row"):
-            if income_field is None:
-                tags=[el.tag for el in list(row)]
-                # 'INCOME'+'AMT' 포함 태그 중 평균(AVRG/AVG) 우선 선택
-                cands=[t for t in tags if "INCOME" in t.upper() and "AMT" in t.upper()]
-                cands.sort(key=lambda t: 0 if ("AVRG" in t.upper() or "AVG" in t.upper()) else 1)
-                income_field = cands[0] if cands else "MT_AVRG_INCOME_AMT"
-                print("  감지된 소득 필드:", income_field, "| 후보:", cands, "| 컬럼 예시:", tags[:18])
-            v=fnum(row.findtext(income_field))
-            if v>0: inc_sum+=v; inc_n+=1
-            for i,(_,k) in enumerate(SPEND): spend[i]+=fnum(row.findtext(k))
-        if (s//step)%5==0 or e==total: print(f"  {s:,}~{e:,} 처리")
+            gu = (row.findtext("SIGNGU_CD_NM") or "").strip()
+            qu = (row.findtext("STDR_YYQU_CD") or "").strip()
+            if not gu or not qu:
+                continue
+            amounts = {n: fnum(row.findtext(k)) for n, k in SPEND}
+            if sum(amounts.values()) <= 0:
+                continue   # 빈 행 스킵(지어내지 않음)
+            prev = latest.get(gu)
+            if prev is None or qu > prev[0]:
+                latest[gu] = (qu, amounts)
         time.sleep(0.12)
 
-    tot_spend=sum(spend)
-    # 정직 가드: 소득·지출 둘 다 0이면 필드 불일치 → 지어낸 0 금지.
-    if inc_n==0 and tot_spend<=0:
-        write_unavailable("응답 파싱 결과 소득/지출 0 — 필드명/스키마 불일치 가능")
-        return 3
+    if not latest:
+        write_unavailable("자치구 소비 데이터 0 — 필드/스키마 불일치 가능"); return 3
 
-    spend_out=[{"name":n,"pct":round(100*spend[i]/tot_spend,1) if tot_spend>0 else 0.0}
-               for i,(n,_) in enumerate(SPEND)]
-    out={"service":svc,"quarter":qu,"available":True,
-         "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d"),
-         "income_avg":round(inc_sum/inc_n) if inc_n else None,
-         "spend":spend_out}
+    # 자치구별 구성비 + 서울 전체 합계 구성비
+    gu_out = {}
+    seoul_amt = {n: 0.0 for n, _ in SPEND}
+    rep_quarter = ""
+    for gu, (qu, amounts) in latest.items():
+        pl = pct_list(amounts)
+        if pl is None:
+            continue
+        gu_out[gu] = {"quarter": qu, "spend": pl}
+        for n, _ in SPEND:
+            seoul_amt[n] += amounts[n]
+        if qu > rep_quarter:
+            rep_quarter = qu
+
+    out = {
+        "service": SERVICE,
+        "quarter": rep_quarter,
+        "available": True,
+        "updated": datetime.datetime.utcnow().strftime("%Y-%m-%d"),
+        "income_avg": None,   # 서울시 '월 평균 소득' 원본 종료(2026-05) → 없음. 지어내지 않는다.
+        "income_note": "서울시가 '월 평균 소득 금액'을 2020년 수급 중단·2026-05-13 삭제해 소득은 제공하지 않습니다. 자치구별 소득은 국세청·국민연금 통계가 대체 자료입니다.",
+        "spend": pct_list(seoul_amt),   # 서울 전체 합계 구성비(하위호환)
+        "gu": gu_out,
+    }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    json.dump(out, open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
-    print("저장:", OUT, "· 평균 월소득", out["income_avg"], "· 지출 카테고리", len(spend_out))
+    json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False)
+    print(f"저장: {OUT} · 자치구 {len(gu_out)}개 · 대표분기 {rep_quarter}")
     return 0
 
 if __name__ == "__main__":
