@@ -456,10 +456,10 @@
                 <sc-for list="{{ indList }}" as="o" hint-placeholder-count="6"><option value="{{ o }}">{{ o }}</option></sc-for>
               </select>
             </label>
-            <sc-for list="{{ reportInputs }}" as="f" hint-placeholder-count="4">
+            <sc-for list="{{ reportInputs }}" as="f" hint-placeholder-count="7">
               <label style="display:flex;flex-direction:column;gap:6px">
                 <span style="font-size:13px;color:var(--ink2)">{{ f.label }}</span>
-                <input type="number" value="{{ f.value }}" onChange="{{ f.onChange }}" inputMode="numeric" style="font-size:16px;background:transparent;border:none;border-bottom:1px solid var(--line-strong);padding:6px 0 8px;min-height:44px;outline:none;color:var(--ink);font-variant-numeric:tabular-nums;width:100%">
+                <input type="number" value="{{ f.value }}" placeholder="{{ f.ph }}" onChange="{{ f.onChange }}" inputMode="numeric" style="font-size:16px;background:transparent;border:none;border-bottom:1px solid var(--line-strong);padding:6px 0 8px;min-height:44px;outline:none;color:var(--ink);font-variant-numeric:tabular-nums;width:100%">
               </label>
             </sc-for>
           </div>
@@ -692,7 +692,7 @@
 class Component extends DCLogic {
   state = {
     ready: false, screen: 'home', gu: '강남구', ind: '커피-음료', metric: 'trend',
-    topic: null, hover: null, area: 15, staff: 2, wage: 250, rent: null, rev: null, inv: null,
+    topic: null, hover: null, area: 15, staff: 2, wage: 250, rent: null, rev: null, inv: null, cogs: null, etc: null,
     cmpA: '강남구', cmpB: '마포구', chat: [], draft: '',
     budget: null, candArea: 15, candSort: 'pop', picks: [], dark: false
   };
@@ -944,9 +944,9 @@ class Component extends DCLogic {
     const wage = +this.state.wage || 0;
     const inv = this.state.inv == null ? i.invest : +this.state.inv || 0;
     const rentCost = this.state.rent == null ? Math.round(R.rent * area * 3.3) : +this.state.rent || 0;
-    const cogs = i.cogs / 100;
+    const cogs = (this.state.cogs == null ? i.cogs : +this.state.cogs || 0) / 100;   // 원가율(%) — 입력 시 덮어씀
     const laborCost = staff * wage;
-    const etc = i.etc;
+    const etc = this.state.etc == null ? i.etc : +this.state.etc || 0;                // 기타 운영비(만원) — 입력 시 덮어씀
     const fixed = rentCost + laborCost + etc;
     const cogsCost = Math.round(rev * cogs);
     const profit = rev - cogsCost - fixed;
@@ -1284,7 +1284,7 @@ class Component extends DCLogic {
         ? 'M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4L7 17M17 7l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'
         : 'M20 13.5A8 8 0 1 1 10.5 4a6.5 6.5 0 0 0 9.5 9.5z',
       onGu: e => this.setState({ gu: e.target.value }),
-      onInd: e => this.setState({ ind: e.target.value, rev: null, inv: null }),
+      onInd: e => this.setState({ ind: e.target.value, rev: null, inv: null, cogs: null, etc: null }),
       printReport: () => window.print()
     };
     if (!core) return base;
@@ -1451,11 +1451,18 @@ class Component extends DCLogic {
       };
     }
     const numIn = (k) => e => { const v = e.target.value; this.setState({ [k]: v === '' ? null : +v }); };
+    // 입력값은 '상태(사용자가 친 값)'에 묶는다. 안 쳤으면 빈칸(null→'')으로 두고,
+    // 기본값은 placeholder(회색 힌트)로만 보여준다 → 지우면 기본값으로 되돌아가지 않고 빈칸이 유지된다.
+    // 빈칸이면 calc()가 각 항목의 기본값(업종 표준·데이터 기반)으로 계산한다.
+    const box = v => (v == null ? '' : v);   // null 이면 빈 문자열(placeholder 노출)
     const reportInputs = c ? [
-      { label: '평수 (평)', value: S.area, onChange: numIn('area') },
-      { label: '월 임대료 (만원)', value: c.rentCost, onChange: numIn('rent') },
-      { label: '직원 수 (명)', value: S.staff, onChange: numIn('staff') },
-      { label: '월 예상 매출 (만원)', value: c.rev, onChange: numIn('rev') }
+      { label: '평수 (평)', value: box(S.area), ph: 15, onChange: numIn('area') },
+      { label: '월 임대료 (만원)', value: box(S.rent), ph: c.rentCost, onChange: numIn('rent') },       // 빈칸이면 상권 임대료×평수로 자동 추정
+      { label: '직원 수 (명)', value: box(S.staff), ph: 2, onChange: numIn('staff') },
+      { label: '1인 월급여 (만원)', value: box(S.wage), ph: 250, onChange: numIn('wage') },              // 인건비=직원수×급여(이제 급여도 직접 입력)
+      { label: '월 예상 매출 (만원)', value: box(S.rev), ph: Math.round(c.i.p50), onChange: numIn('rev') }, // 빈칸이면 업종 중위 매출
+      { label: '원가율 (%)', value: box(S.cogs), ph: c.i.cogs, onChange: numIn('cogs') },                 // 빈칸이면 업종 표준 원가율
+      { label: '기타 운영비 (만원)', value: box(S.etc), ph: c.i.etc, onChange: numIn('etc') }             // 빈칸이면 업종 표준 기타비
     ] : [];
 
     // ── 비교
