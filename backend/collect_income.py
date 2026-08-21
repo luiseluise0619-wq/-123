@@ -92,7 +92,8 @@ def main():
     print(f"서비스 {SERVICE} · 총 {total:,}행")
 
     # 자치구별 '최신 분기' 행만 남긴다(응답이 분기 섞여 오므로 max STDR_YYQU_CD 유지).
-    latest = {}   # 자치구명 → (분기, {카테고리: 금액})
+    # 자치구별로 '모든 분기'를 모은다(최신 분기만 쓰면 깨진 분기를 그대로 받게 됨).
+    byq = {}   # 자치구명 → { 분기: {카테고리: 금액} }
     step = 1000
     for s in range(1, total + 1, step):
         e = min(s + step - 1, total)
@@ -109,13 +110,34 @@ def main():
             amounts = {n: fnum(row.findtext(k)) for n, k in SPEND}
             if sum(amounts.values()) <= 0:
                 continue   # 빈 행 스킵(지어내지 않음)
-            prev = latest.get(gu)
-            if prev is None or qu > prev[0]:
-                latest[gu] = (qu, amounts)
+            byq.setdefault(gu, {})[qu] = amounts
         time.sleep(0.12)
 
+    # 완전성 검사: 특정 분기에서 카테고리 집계가 깨져 한 항목(예: 여가·문화)이
+    # 소비 대부분을 차지하는 경우가 있다(2026 1분기 일부 자치구). 생활 필수 지출
+    # (식료품·음식·의료비·교통) 합이 40% 미만이면 '깨진 분기'로 보고, 그 자치구는
+    # 필수 지출 비중이 정상인 '가장 최신 분기'로 대체한다. 정상 분기가 없으면 그 자치구는 뺀다.
+    ESSENTIALS = ("식료품", "음식", "의료비", "교통")
+    def ok(amounts):
+        tot = sum(amounts.values())
+        if tot <= 0:
+            return False
+        ess = sum(amounts.get(n, 0.0) for n in ESSENTIALS)
+        # 필수 지출이 40% 이상이고, 단일 항목이 50%를 넘지 않아야 '완전'로 본다.
+        return (ess / tot) >= 0.40 and (max(amounts.values()) / tot) <= 0.50
+    latest = {}   # 자치구명 → (분기, {카테고리: 금액})
+    dropped = []
+    for gu, qmap in byq.items():
+        for qu in sorted(qmap.keys(), reverse=True):   # 최신 분기부터
+            if ok(qmap[qu]):
+                latest[gu] = (qu, qmap[qu]); break
+        if gu not in latest:
+            dropped.append(gu)
+    if dropped:
+        print("완전한 분기 없어 제외된 자치구:", ", ".join(dropped))
+
     if not latest:
-        write_unavailable("자치구 소비 데이터 0 — 필드/스키마 불일치 가능"); return 3
+        write_unavailable("완전한 자치구 소비 데이터 0 — 모든 분기에서 카테고리 집계 이상"); return 3
 
     # 자치구별 구성비 + 서울 전체 합계 구성비
     gu_out = {}
