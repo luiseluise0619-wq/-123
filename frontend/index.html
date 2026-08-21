@@ -367,6 +367,24 @@
                   </sc-for>
                 </div>
               </sc-if>
+              <sc-if value="{{ b.isStack }}">
+                <!-- 100% 누적 구성 막대: 부분-전체(합계 100%)를 한 줄에 색으로 보여준다. 10개 카테고리엔 도넛보다 정확.
+                     색은 dataviz 검증 통과 팔레트, 각 조각에 직접 % 라벨(대비 WARN 해소) -->
+                <div style="margin-top:12px">
+                  <div style="display:flex;height:24px;border-radius:6px;overflow:hidden;background:var(--line-soft)">
+                    <sc-for list="{{ b.segs }}" as="s" hint-placeholder-count="8">
+                      <span style="{{ s.style }}" title="{{ s.title }}"></span>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:9px 16px;margin-top:16px">
+                    <sc-for list="{{ b.legend }}" as="l" hint-placeholder-count="8">
+                      <span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2)">
+                        <span style="{{ l.dot }}"></span>{{ l.name }} <b style="color:var(--ink);font-variant-numeric:tabular-nums">{{ l.value }}</b>
+                      </span>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
               <sc-if value="{{ b.isLine }}">
                 <svg viewBox="-10 0 660 215" style="width:100%;height:auto;display:block;margin-top:8px;overflow:visible">
                   <line x1="0" y1="20" x2="640" y2="20" style="stroke:var(--neutral);stroke-width:1"></line>
@@ -1023,12 +1041,41 @@ class Component extends DCLogic {
     }));
   }
 
+  // 100% 누적 구성 막대 블록 생성. items=[{name,pct}] → 상위 7개는 고유색, 나머지는 '기타'(회색)로 합침.
+  // 팔레트는 dataviz 스킬 검증 통과(색약 안전). 각 조각은 직접 % 라벨을 달아 대비 경고를 해소.
+  stackComp(items) {
+    const PAL = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9'];  // 검증된 카테고리 색
+    const OTHER = '#8A8F98';   // '기타' 중립 회색(순위가 아니라 '나머지'라는 뜻)
+    const named = items.filter(x => x.name !== '기타').slice().sort((a, b) => b.pct - a.pct);
+    const etc0 = items.filter(x => x.name === '기타').reduce((s, x) => s + x.pct, 0);   // 데이터에 이미 있는 '기타'
+    const head = named.slice(0, PAL.length);
+    const tailPct = named.slice(PAL.length).reduce((s, x) => s + x.pct, 0);
+    const segsData = head.map((x, i) => ({ name: x.name, pct: x.pct, color: PAL[i] }));
+    const otherPct = Math.round((etc0 + tailPct) * 10) / 10;
+    if (otherPct > 0) segsData.push({ name: '기타', pct: otherPct, color: OTHER });
+    const fmt = v => (Math.round(v * 10) / 10).toFixed(1) + '%';
+    const last = segsData.length - 1;
+    const segs = segsData.map((s, i) => ({
+      title: s.name + ' ' + fmt(s.pct),
+      // 세그먼트 폭=구성비%. 마지막 조각 빼고 오른쪽에 2px 배경색 간격(조각 경계 분리 — dataviz 규칙).
+      style: 'flex:0 0 ' + s.pct + '%;background:' + s.color + ';height:100%;' + (i === last ? '' : 'box-shadow:inset -2px 0 0 var(--bg);') +
+        'animation:growX .6s cubic-bezier(.2,.7,.3,1) both;transform-origin:left;animation-delay:' + (i * 55) + 'ms'
+    }));
+    const legend = segsData.map(s => ({
+      name: s.name, value: fmt(s.pct),
+      dot: 'width:10px;height:10px;border-radius:3px;background:' + s.color + ';display:inline-block;flex:none'
+    }));
+    return { isStack: true, segs, legend };
+  }
+
   buildTopic(id) {
     const B = [];
     const H = t => B.push({ isHead: true, text: t });
     const T = t => B.push({ isText: true, text: t });
     const N = t => B.push({ isNote: true, text: t });
     const BAR = (rows, fmt, color) => B.push({ isBars: true, rows: this.bars(rows, fmt, color) });
+    // 100% 누적 구성 막대(부분-전체). items=[{name,pct}] → 상위 7개 + 기타(회색). dataviz 검증 팔레트.
+    const STACK = (items) => B.push(this.stackComp(items));
     const core = this.core;
     let title = '', lede = '', source = '';
 
@@ -1140,9 +1187,10 @@ class Component extends DCLogic {
           N((IC.income_note) || '평균 소득 금액은 서울시가 2026년 5월 원본 데이터 수급 중단으로 제공을 종료해 표시하지 않습니다. 자치구별 소득이 필요하면 국세청·국민연금 통계가 대체 자료입니다.');
         }
         // 소비 구성: 지출 카테고리 비율(%) — 절대금액은 자치구 규모차로 오해 소지 → 비율만 [실측].
+        // 100% 누적 구성 막대로 부분-전체를 한눈에(도넛보다 10개 카테고리 비교에 정확).
         H(scope + ' 소비 지출은 어디로 가나 — 구성비');
         const spend = spendArr.slice().sort((a, b) => b.pct - a.pct);   // 큰 항목부터
-        BAR(spend.map(s => [s.name, s.pct]), v => v.toFixed(1) + '%', 'var(--ink)');
+        STACK(spend);
         const top = spend[0];
         T('지출이 가장 많은 항목은 ' + top.name + '(' + top.pct.toFixed(1) + '%)입니다. ' + scope + ' 소비자들의 지갑이 어디로 향하는지 보여줍니다.');
         N('지출 카테고리별 구성비입니다(합계 100%). 절대 금액은 자치구 규모가 달라 비율만 씁니다. 소비는 카드·통계 기반 추정입니다.');
