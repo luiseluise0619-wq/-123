@@ -481,6 +481,14 @@
             </sc-for>
           </div>
           <p style="font-size:15px;color:var(--ink2);margin:24px 0 0;text-wrap:pretty">{{ profitNote }}</p>
+          <!-- 데이터 출처 안내: 어떤 값이 '실측'이고 어떤 값이 '가정'인지 사용자에게 솔직히 밝힌다.
+               실측 = 서울 공공데이터에서 그대로 가져온 값(객단가·매출분포·임대료·유동인구).
+               가정 = 업종 표준으로 넣어둔 기본값이라 실제와 다를 수 있고, 위 입력칸에서 바꿀 수 있다. -->
+          <p style="font-size:12.5px;color:var(--ink3);margin:14px 0 0;line-height:1.6;text-wrap:pretty">
+            객단가·매출 분포·임대료·유동인구는 서울시 공공데이터 <b>실측값</b>입니다.
+            원가율·인건비·기타 운영비·창업비는 <b>업종 표준 가정값</b>이라 실제 가게마다 다릅니다 —
+            위 입력칸에 직접 넣으면 그 값으로 다시 계산됩니다.
+          </p>
 
           <sc-if value="{{ hasDist }}">
             <div style="margin-top:48px">
@@ -692,6 +700,8 @@
 class Component extends DCLogic {
   state = {
     ready: false, screen: 'home', gu: '강남구', ind: '커피-음료', metric: 'trend',
+    // 진단 입력 기본값. area/staff/wage 는 [가정] 초기값(평수 15평·직원 2명·급여 250만) — 사용자가 바꾸는 출발점일 뿐 실측 아님.
+    // rent/rev/inv/cogs/etc 는 null = "아직 안 침" → calc()가 업종별 기본값(실측 매출·표준 가정)으로 대신 계산한다.
     topic: null, hover: null, area: 15, staff: 2, wage: 250, rent: null, rev: null, inv: null, cogs: null, etc: null,
     cmpA: '강남구', cmpB: '마포구', chat: [], draft: '',
     budget: null, candArea: 15, candSort: 'pop', picks: [], dark: false
@@ -909,6 +919,8 @@ class Component extends DCLogic {
     const P = this.pop, K = this.park, A = this.areaKm2 || {};
     return {
       trend: { label: '폐업 추세', unit: '%', diverging: true, get: (n, g) => g.trend, fmt: v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%', note: '2022년 대비 2024년 폐업 증감률입니다. 늘어난 곳일수록 진하게 표시합니다.', caption: '증가율 높은 순', source: '국세청 자치구별 폐업통계 (2022–2024)' },
+      // '오후 2시' = 데이터의 기준 시각(pop.hour="14")과 일치하는 [실측] 표기. 생활인구는 2026-07-31로 서비스 종료돼 이 시점에 고정.
+      // (수집기가 다른 시각을 넣으면 이 문구는 P.hour 를 따라가도록 고쳐야 함 — 현재 데이터는 14시로 확정.)
       pop: { label: '유동인구', unit: '명', get: n => (P && P.gu[n] ? P.gu[n].tot : 0), fmt: v => this.num(v) + '명', note: '오후 2시 기준 자치구 체류인구입니다.', caption: '체류인구 많은 순', source: '서울 열린데이터광장 생활인구' },
       bus: { label: '대중교통', unit: '개/㎢', get: (n, g) => g.bus / (A[n] || 1), fmt: v => v.toFixed(1) + '개/㎢', note: '면적당 정류소 수입니다. 자치구 크기가 다르므로 밀도로 비교합니다.', caption: '정류소 밀도 높은 순', source: '서울시 버스·마을버스·선착장 정류소' },
       park: { label: '주차', unit: '곳/㎢', get: n => (K && K.gu[n] ? K.gu[n].lots : 0) / (A[n] || 1), fmt: v => v.toFixed(1) + '곳/㎢', note: '면적당 공영·민영 주차장 수입니다.', caption: '주차장 밀도 높은 순', source: '전국주차장정보표준데이터' },
@@ -932,21 +944,26 @@ class Component extends DCLogic {
     return v > 0 ? pos[i] : neg[i];
   }
 
-  // ── BEP (기존 로직 보존)
+  // ── BEP(손익분기) 계산 (기존 로직 보존)
+  // 여기 쓰이는 값은 두 종류다. 초보자를 위해 구분해 둔다:
+  //   [실측] 서울시 공공데이터에서 그대로 온 값 → i.p50(매출 중앙값), i.unit(객단가), R.rent(임대료).
+  //   [가정] 업종 표준으로 넣어둔 기본값 → i.cogs(원가율), i.etc(기타비), i.invest(창업비), wage(급여).
+  //          가정값은 사용자가 입력칸에 직접 넣으면(this.state.x) 그 값으로 덮어쓴다.
   calc() {
     const core = this.core; if (!core) return null;
     const i = core.ind[this.state.ind]; if (!i) return null;
     // 자치구 대표 상권의 임대료를 사용(구를 바꾸면 임대료·손익분기가 바뀜). 매핑 없으면 서울 평균으로 폴백.
+    // { rent: 5.3, vacancy: 6.4 } 은 core 로딩 실패 시에만 쓰는 [폴백]값(서울 평균 근사) — 정상 로딩 시 도달 안 함.
     const R = this.rentZoneOf(this.state.gu) || core.rentSeoul || { rent: 5.3, vacancy: 6.4 };
     const area = +this.state.area || 0;
-    const rev = this.state.rev == null ? Math.round(i.p50) : +this.state.rev || 0;
+    const rev = this.state.rev == null ? Math.round(i.p50) : +this.state.rev || 0;   // 빈칸이면 [실측] 매출 중앙값
     const staff = +this.state.staff || 0;
-    const wage = +this.state.wage || 0;
-    const inv = this.state.inv == null ? i.invest : +this.state.inv || 0;
-    const rentCost = this.state.rent == null ? Math.round(R.rent * area * 3.3) : +this.state.rent || 0;
-    const cogs = (this.state.cogs == null ? i.cogs : +this.state.cogs || 0) / 100;   // 원가율(%) — 입력 시 덮어씀
+    const wage = +this.state.wage || 0;                                              // 1인 급여 — 기본 250만(state 기본값), [가정]
+    const inv = this.state.inv == null ? i.invest : +this.state.inv || 0;            // 빈칸이면 [가정] 업종 표준 창업비
+    const rentCost = this.state.rent == null ? Math.round(R.rent * area * 3.3) : +this.state.rent || 0; // 3.3 = 평→㎡(실측 단가 변환)
+    const cogs = (this.state.cogs == null ? i.cogs : +this.state.cogs || 0) / 100;   // 원가율(%) — 빈칸이면 [가정], 입력 시 덮어씀
     const laborCost = staff * wage;
-    const etc = this.state.etc == null ? i.etc : +this.state.etc || 0;                // 기타 운영비(만원) — 입력 시 덮어씀
+    const etc = this.state.etc == null ? i.etc : +this.state.etc || 0;                // 기타 운영비(만원) — 빈칸이면 [가정], 입력 시 덮어씀
     const fixed = rentCost + laborCost + etc;
     const cogsCost = Math.round(rev * cogs);
     const profit = rev - cogsCost - fixed;
@@ -956,6 +973,8 @@ class Component extends DCLogic {
   }
 
   // 손익분기가 이 업종 매출 분포의 어디에 놓이는지 (분위 보간 — 기존 계산 로직 유지)
+  // p25~p90 은 [실측] 분위값. 양 끝(0%·100%)은 공개데이터에 없어서
+  // p25*0.7, p90*1.4 로 [추정]해 곡선 끝을 이어붙인 것 — 정확한 값이 아니라 그래프가 끊기지 않게 하는 근사다.
   pctBelow(x, bep) {
     const p = [[0, x.p25 * 0.7], [25, x.p25], [40, x.p40], [50, x.p50], [75, x.p75], [90, x.p90], [100, x.p90 * 1.4]];
     for (let i = 1; i < p.length; i++) {
@@ -1014,6 +1033,8 @@ class Component extends DCLogic {
     let title = '', lede = '', source = '';
 
     if (id === 'bench') {
+      // core.bench 는 통계청 전국 자영업 [실측] 벤치마크. 아래 { } 객체는 core 로딩 실패 시에만 쓰는 [폴백]
+      // 근사값(전국 평균 영업이익 258만·창업비 8500만 등) — 정상 로딩 시엔 도달하지 않는다.
       const b = (core && core.bench) || { profit_month: 258, revenue_month: 1950, startup: 8500, survival1: 64.4 };
       title = '전국 자영업 벤치마크'; lede = '내 가게가 잘 되고 있는지는 혼자서는 알 수 없습니다. 전국 평균이 기준선입니다.';
       H('평균적인 가게는 월 ' + this.won(b.revenue_month) + '을 팝니다.');
@@ -1364,6 +1385,7 @@ class Component extends DCLogic {
     const detailPositives = [], detailCautions = [];
     if (popD) {
       const pr = this.rank(S.gu, n => (this.pop.gu[n] ? this.pop.gu[n].tot : 0), true);
+      // rank<=8 = 25개 자치구 중 상위 약 1/3을 '상위권'으로 보는 [표시 기준](임의 임계값, 데이터 아님). 순위 자체는 [실측].
       if (pr.rank <= 8) detailPositives.push('유동인구가 서울 25개 자치구 중 ' + pr.rank + '위입니다. 오후 2시 기준 ' + this.num(popD.tot) + '명이 머뭅니다.');
       else detailCautions.push('유동인구는 25개 중 ' + pr.rank + '위로 상위권이 아닙니다. 체류인구 ' + this.num(popD.tot) + '명입니다.');
       const ages = [['10대', popD.a10], ['20대', popD.a20], ['30대', popD.a30], ['40대', popD.a40], ['50대', popD.a50], ['60대 이상', popD.a60]].sort((a, b) => b[1] - a[1]);
@@ -1397,15 +1419,17 @@ class Component extends DCLogic {
         row('− 기타 운영비', this.won(c.etc)),
         row('월 순이익', (c.profit < 0 ? '−' : '') + this.won(Math.abs(c.profit)), true)
       ];
+      // 전국 평균 영업이익은 [실측] core.bench.profit_month 에서 가져온다(하드코딩 금지 — 데이터 갱신 시 자동 반영).
+      const natProfit = (core && core.bench && core.bench.profit_month) || 258;
       profitNote = c.profit > 0
-        ? '이 조건이면 월 ' + this.won(c.profit) + '이 남습니다. 초기 투자 ' + this.won(c.inv) + '을 회수하는 데 ' + (c.payback ? c.payback.toFixed(1) + '개월' : '—') + ' 걸립니다. 전국 평균 영업이익은 월 258만원입니다.'
+        ? '이 조건이면 월 ' + this.won(c.profit) + '이 남습니다. 초기 투자 ' + this.won(c.inv) + '을 회수하는 데 ' + (c.payback ? c.payback.toFixed(1) + '개월' : '—') + ' 걸립니다. 전국 평균 영업이익은 월 ' + natProfit + '만원입니다.'
         : '이 조건이면 월 ' + this.won(-c.profit) + ' 적자입니다. 매출을 올리거나 평수·인원·원가 중 하나를 줄여야 합니다.';
 
       const sales = this.sales && this.sales.ind[S.ind];
       if (g.trend < 0) positives.push('폐업이 2년간 ' + Math.abs(g.trend) + '% 줄었습니다.');
       if (popD && this.rank(S.gu, n => (this.pop.gu[n] ? this.pop.gu[n].tot : 0), true).rank <= 8) positives.push('유동인구 상위권입니다 (' + this.num(popD.tot) + '명, 14시 기준).');
       if (busRank.rank <= 10) positives.push('대중교통 밀도 ' + busRank.rank + '위로 접근성이 확보됩니다.');
-      if (c.profit > 258) positives.push('입력한 조건의 월 순이익이 전국 평균(258만원)을 넘습니다.');
+      if (c.profit > natProfit) positives.push('입력한 조건의 월 순이익이 전국 평균(' + natProfit + '만원)을 넘습니다.');  // [실측] 전국 평균 대비
       if (sales) { const top = ['00–06', '06–11', '11–14', '14–17', '17–21', '21–24'][sales.tmzon.indexOf(Math.max(...sales.tmzon))]; positives.push(S.ind + '은 ' + top + '시에 매출이 몰립니다. 인력 배치를 여기에 맞출 수 있습니다.'); }
       if (g.trend >= 0) cautions.push('폐업이 2년간 ' + g.trend + '% 늘었습니다 (증가율 ' + trendRank.rank + '위).');
       if (st && st.close_rate >= 2) cautions.push(S.ind + ' 분기 폐업률 ' + st.close_rate + '%로 높은 편입니다.');
