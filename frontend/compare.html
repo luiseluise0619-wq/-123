@@ -165,6 +165,8 @@ const AGE=['10대','20대','30대','40대','50대','60대+'];
 const TMZ=['0-6시','6-11시','11-14시','14-17시','17-21시','21-24시'];
 const DOW=['월','화','수','목','금','토','일'];
 let SALES=null, STORE=null, ZONES=null, ZBYNAME={}, INDS=[], GUS=[];
+let INCOME=null;   // income.json — 자치구별 소비 지출 구성(gu:{자치구:{spend:[{name,pct}]}})
+fetch('income.json').then(r=>r.json()).then(d=>{ if(d&&d.available!==false) INCOME=d; if(typeof render==='function'&&SALES) render(); }).catch(()=>{});
 let ZI=null, ZI_TRIED=false;   // zone_industry.json (상권×업종 세부) — 상권 모드 첫 사용 시 지연 로드
 let ZC=null, ZF=null, ZA=null, ZCF_TRIED=false;   // zone_change(등급·생존개월) · zone_facility(집객시설) · zone_apt(아파트)
 let RENT=null, RENT_TRIED=false, RBYNAME={};   // rent.json (임대료·공실률) — 임대료 모드 첫 사용 시 지연 로드
@@ -364,7 +366,15 @@ function render(){
       return `<div class="dblk"><div class="dt">${title}</div>${bars}</div>`;
     };
     const gender=(c.ml!=null)?`<div class="dblk"><div class="dt">성별(매출 기준)</div><div class="gender"><span class="m" style="width:${c.ml}%">남 ${c.ml}%</span><span class="f" style="width:${c.fml}%">여 ${c.fml}%</span></div></div>`:'';
-    dists+=`<div class="dcard"><h4>${c.gu}</h4>${gender}${barset('연령대',AGE,c.age)}${barset('요일',DOW,c.dow,true)}${barset('시간대',TMZ,c.tmz,true)}</div>`;
+    // 소비 지출 구성(income.json · 자치구별 실측). 상위 6개만, 큰 항목부터.
+    let spendBlk='';
+    const ic=INCOME&&INCOME.gu&&INCOME.gu[c.gu];
+    if(ic&&ic.spend&&ic.spend.length){
+      const sp=[...ic.spend].sort((a,b)=>b.pct-a.pct).slice(0,6);
+      const labels=sp.map(s=>s.name), arr=sp.map(s=>s.pct);
+      spendBlk=barset('소비 지출 구성',labels,arr,true);
+    }
+    dists+=`<div class="dcard"><h4>${c.gu}</h4>${gender}${barset('연령대',AGE,c.age)}${barset('요일',DOW,c.dow,true)}${barset('시간대',TMZ,c.tmz,true)}${spendBlk}</div>`;
   });
 
   out.innerHTML=
