@@ -1168,15 +1168,35 @@ class Component extends DCLogic {
     if (id === 'income') {
       title = '소득과 소비'; lede = '선택한 자치구 소비자들이 어디에 돈을 쓰는지 봅니다.';
       const IC = this.income;   // income.json → { available, quarter, income_avg, spend:[{name,pct}], gu:{구:{quarter,spend}} }
-      // 선택 자치구 데이터가 있으면 그것을, 없으면 서울 전체 합계로 폴백.
+      // 방어 가드: 특정 분기 카테고리 집계가 깨지면 한 항목(예: 여가·문화)이 소비 대부분을
+      // 차지하는 이상치가 나온다. 생활 필수(식료품·음식·의료비·교통)가 40% 이상이고 단일 항목이
+      // 50%를 넘지 않을 때만 '정상'으로 본다. 서버 수집기와 같은 기준(이중 안전장치).
+      const spendOK = (arr) => {
+        if (!arr || !arr.length) return false;
+        const tot = arr.reduce((s, x) => s + x.pct, 0) || 1;
+        const ess = arr.filter(x => ['식료품', '음식', '의료비', '교통'].includes(x.name)).reduce((s, x) => s + x.pct, 0);
+        const mx = Math.max(...arr.map(x => x.pct));
+        return ess / tot >= 0.40 && mx / tot <= 0.50;
+      };
+      // 선택 자치구가 정상이면 그것을, 아니면 서울 전체가 정상이면 그것을 쓴다.
       const guData = IC && IC.gu && IC.gu[this.state.gu];
-      const spendArr = guData ? guData.spend : (IC && IC.spend);
-      const scope = guData ? this.state.gu : '서울 전체';
-      const qu = (guData && guData.quarter) || (IC && IC.quarter);
-      // 데이터 자체가 없거나 available=false 일 때만 정직하게 빈 상태로.
+      const guOK = guData && spendOK(guData.spend);
+      const seoulOK = IC && spendOK(IC.spend);
+      const spendArr = guOK ? guData.spend : (seoulOK ? IC.spend : null);
+      const scope = guOK ? this.state.gu : '서울 전체';
+      const qu = (guOK && guData.quarter) || (IC && IC.quarter);
+      // 데이터가 없거나(available=false) 정상 소비 데이터가 하나도 없으면 빈 상태로.
       if (!IC || IC.available === false || !(spendArr && spendArr.length)) {
-        B.push({ isEmpty: true, text: '소비 구성 데이터를 불러오지 못했습니다.', sub: (IC && IC.reason) ? IC.reason : '서울 상권분석서비스 소비 지표가 아직 공표되지 않았습니다. 공표되는 대로 이 화면에 반영됩니다.' });
-        source = '서울 상권분석서비스 소비 (미공표)';
+        // 데이터 자체가 없는 경우 vs 최신 분기 집계가 깨져 정상값이 없는 경우를 구분해 안내.
+        const brokenButPresent = IC && IC.available !== false && (IC.spend || guData);
+        B.push({
+          isEmpty: true,
+          text: brokenButPresent ? '소비 구성 데이터를 보정 중입니다.' : '소비 구성 데이터를 불러오지 못했습니다.',
+          sub: brokenButPresent
+            ? '최신 분기 카테고리 집계에 이상치가 있어 표시를 보류했습니다. 정상 분기 데이터로 다시 채워집니다.'
+            : ((IC && IC.reason) ? IC.reason : '서울 상권분석서비스 소비 지표가 아직 공표되지 않았습니다. 공표되는 대로 이 화면에 반영됩니다.')
+        });
+        source = '서울 상권분석서비스 소비 (보정 중)';
       } else {
         // 소득 평균: 서울시가 '월 평균 소득 금액'을 2020년 수급 중단·2026-05-13 삭제해 더 이상 제공되지 않는다.
         // 있으면 표시하고, 없으면(현재) 왜 없는지 정직하게 안내한다 — 지어내지 않는다.
@@ -1332,11 +1352,13 @@ class Component extends DCLogic {
     if (pd) L.push('유동인구(오후2시)=' + this.num(pd.tot) + '명 (남 ' + this.num(pd.m) + ' · 여 ' + this.num(pd.f) + ')');
     const R = (c && c.R) || (core && core.rentSeoul);
     if (R) L.push('임대료=' + R.rent + '만원/㎡(월), 공실률=' + R.vacancy + '%' + (R.zone ? ' · ' + R.zone : ''));
-    // 소비 지출 구성비(실측) — 선택 자치구 우선, 없으면 서울 전체. 상위 항목을 상담 근거로 제공.
+    // 소비 지출 구성비(실측) — 선택 자치구 우선, 없으면 서울 전체. 깨진 분기(이상치)는 제외.
     const IC = this.income;
-    const icSpend = (IC && IC.gu && IC.gu[this.state.gu] && IC.gu[this.state.gu].spend) || (IC && IC.spend);
+    const okSpend = (arr) => { if (!arr || !arr.length) return false; const tot = arr.reduce((s, x) => s + x.pct, 0) || 1; const ess = arr.filter(x => ['식료품', '음식', '의료비', '교통'].includes(x.name)).reduce((s, x) => s + x.pct, 0); return ess / tot >= 0.40 && Math.max(...arr.map(x => x.pct)) / tot <= 0.50; };
+    const guSp = IC && IC.gu && IC.gu[this.state.gu] && IC.gu[this.state.gu].spend;
+    const icSpend = okSpend(guSp) ? guSp : (okSpend(IC && IC.spend) ? IC.spend : null);
     if (icSpend && icSpend.length) {
-      const icScope = (IC.gu && IC.gu[this.state.gu]) ? this.state.gu : '서울 전체';
+      const icScope = (guSp && okSpend(guSp)) ? this.state.gu : '서울 전체';
       const sp = icSpend.slice().sort((a, b) => b.pct - a.pct).slice(0, 5).map(s => s.name + ' ' + s.pct + '%').join(', ');
       L.push('소비 지출 구성비(실측·' + icScope + '): ' + sp + (IC.income_avg ? ' · 평균 월소득 ' + this.won(Math.round(IC.income_avg / 10000)) : ' · 소득 데이터는 원본 종료로 없음'));
     }

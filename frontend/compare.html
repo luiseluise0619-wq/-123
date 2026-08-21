@@ -367,9 +367,12 @@ function render(){
     };
     const gender=(c.ml!=null)?`<div class="dblk"><div class="dt">성별(매출 기준)</div><div class="gender"><span class="m" style="width:${c.ml}%">남 ${c.ml}%</span><span class="f" style="width:${c.fml}%">여 ${c.fml}%</span></div></div>`:'';
     // 소비 지출 구성(income.json · 자치구별 실측). 상위 6개만, 큰 항목부터.
+    // 방어 가드: 최신 분기 집계가 깨지면 한 항목이 소비 대부분을 차지하는 이상치가 나온다.
+    // 생활 필수(식료품·음식·의료비·교통) 40% 이상 + 단일 항목 50% 이하일 때만 표시(수집기와 같은 기준).
     let spendBlk='';
     const ic=INCOME&&INCOME.gu&&INCOME.gu[c.gu];
-    if(ic&&ic.spend&&ic.spend.length){
+    const spendOK=(arr)=>{ if(!arr||!arr.length)return false; const tot=arr.reduce((s,x)=>s+x.pct,0)||1; const ess=arr.filter(x=>['식료품','음식','의료비','교통'].includes(x.name)).reduce((s,x)=>s+x.pct,0); const mx=Math.max(...arr.map(x=>x.pct)); return ess/tot>=0.40&&mx/tot<=0.50; };
+    if(ic&&spendOK(ic.spend)){
       const sp=[...ic.spend].sort((a,b)=>b.pct-a.pct).slice(0,6);
       const labels=sp.map(s=>s.name), arr=sp.map(s=>s.pct);
       spendBlk=barset('소비 지출 구성',labels,arr,true);
