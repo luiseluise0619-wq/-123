@@ -1587,7 +1587,7 @@ class Component extends DCLogic {
         for (let i = cur.length - 1; i >= 0; i--) { if (cur[i].role === 'a' && cur[i].pending) { cur[i] = { role: 'a', text: text, meta: meta }; break; } }
         this.setState({ chat: cur });
       };
-      fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: q, context: ctx }) })
+      fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: q, context: ctx, model: 'gemini:gemini-2.5-flash-lite' }) })
         .then(r => r.json()).then(d => {
           if (d && d.reply && !d.error) {
             const meta = baseMeta.slice();
