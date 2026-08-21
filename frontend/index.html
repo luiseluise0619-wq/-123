@@ -1220,6 +1220,26 @@ class Component extends DCLogic {
     meta.push({ k: '기준시점', v: (core && core.quarter) || '2026 2분기' });
     return { text, meta };
   }
+  // AI 상담용 컨텍스트: 현재 선택(자치구·업종)의 실제 수치를 모아 Gemini 가 근거로 쓰게 한다(지어냄 방지).
+  chatContext() {
+    const c = this.calc(), core = this.core, g = core ? core.gu[this.state.gu] : null;
+    const P = this.pop, S = this.stores;
+    const L = [];
+    L.push('선택: 자치구=' + this.state.gu + ', 업종=' + this.state.ind + (c ? ', 평수=' + c.area + '평, 직원=' + c.staff + '명' : ''));
+    if (c) L.push('손익분기 월매출=' + this.won(c.bep) + ' (고정비 ' + this.won(c.fixed) + ', 원가율 ' + c.i.cogs + '%, 임대료 ' + this.won(c.rentCost) + ', 인건비 ' + this.won(c.laborCost) + ', 기타 ' + this.won(c.etc) + ')');
+    const sd = this.sales && this.sales.ind[this.state.ind];
+    if (sd && sd.unit) L.push('객단가(실측)=' + this.num(sd.unit) + '원');
+    if (sd && sd.p50) L.push('점포당 월매출 중위=' + this.won(sd.p50) + ' · 실측 ' + this.num(sd.n) + '개 상권');
+    if (g) L.push('폐업 추세: 2022 ' + this.num(g.y2022) + '건 → 2024 ' + this.num(g.y2024) + '건 (' + (g.trend >= 0 ? '+' : '') + g.trend + '%)');
+    const st = S && S.ind[this.state.ind];
+    if (st) L.push(this.state.ind + ' 분기 폐업률=' + st.close_rate + '%, 점포수=' + this.num(st.stores) + ', 프랜차이즈비중=' + st.fr_share + '%');
+    const pd = P && P.gu[this.state.gu];
+    if (pd) L.push('유동인구(오후2시)=' + this.num(pd.tot) + '명 (남 ' + this.num(pd.m) + ' · 여 ' + this.num(pd.f) + ')');
+    const R = (c && c.R) || (core && core.rentSeoul);
+    if (R) L.push('임대료=' + R.rent + '만원/㎡(월), 공실률=' + R.vacancy + '%' + (R.zone ? ' · ' + R.zone : ''));
+    L.push('기준시점=' + ((core && core.quarter) || '2026 2분기'));
+    return L.join('\n');
+  }
 
   renderVals() {
     const S = this.state, core = this.core;
@@ -1557,8 +1577,28 @@ class Component extends DCLogic {
     const chatLog = S.chat.map(m => ({ isUser: m.role === 'u', isBot: m.role === 'a', text: m.text, meta: m.meta || [] }));
     const send = () => {
       const q = (S.draft || '').trim(); if (!q) return;
-      const a = this.answer(q);
-      this.setState({ chat: S.chat.concat([{ role: 'u', text: q }, { role: 'a', text: a.text, meta: a.meta }]), draft: '' });
+      const local = this.answer(q);                 // 규칙기반(폴백·근거 메타)
+      const ctx = this.chatContext();               // 현재 선택의 실제 수치
+      const baseMeta = local.meta.slice(-2);         // 출처·기준시점
+      // 사용자 메시지 + 'AI가 정리 중…' 임시 답변 즉시 표시
+      this.setState({ chat: S.chat.concat([{ role: 'u', text: q }, { role: 'a', text: 'AI가 데이터로 정리 중…', meta: [], pending: true }]), draft: '' });
+      const replacePending = (text, meta) => {
+        const cur = this.state.chat.slice();
+        for (let i = cur.length - 1; i >= 0; i--) { if (cur[i].role === 'a' && cur[i].pending) { cur[i] = { role: 'a', text: text, meta: meta }; break; } }
+        this.setState({ chat: cur });
+      };
+      fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: q, context: ctx }) })
+        .then(r => r.json()).then(d => {
+          if (d && d.reply && !d.error) {
+            const meta = baseMeta.slice();
+            if (d.provider) meta.unshift({ k: 'AI', v: d.provider + (d.model ? ' · ' + d.model : '') });
+            replacePending(d.reply, meta);
+          } else {
+            // AI 실패/미설정 → 규칙기반 답변으로 폴백
+            replacePending(local.text, local.meta);
+          }
+        })
+        .catch(() => replacePending(local.text, local.meta));
     };
 
     return Object.assign(base, {
