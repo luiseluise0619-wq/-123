@@ -997,7 +997,7 @@ class Component extends DCLogic {
       { id: 'consumer', title: '유동인구', desc: '자치구·연령·성별 체류인구 분포', src: '서울 생활인구', on: () => !!this.pop },
       { id: 'repop', title: '거주 인구', desc: '동네 주민의 연령·성별 구성', src: '서울 상주인구', on: () => !!this.repop },
       { id: 'work', title: '직장 인구', desc: '출근하는 사람들. 점심과 퇴근 수요', src: '서울 직장인구', on: () => !!(this.work && this.work.available) },
-      { id: 'income', title: '소득과 소비', desc: '평균 소득과 지출 구성비', src: '서울 소득소비', on: () => !!(this.income && this.income.available) },
+      { id: 'income', title: '소득과 소비', desc: '소비자들이 어디에 돈을 쓰는지 — 지출 구성비', src: '서울 소득소비', on: () => !!(this.income && this.income.available && this.income.spend && this.income.spend.length) },
       { id: 'sales', title: '소비 패턴과 매출', desc: '업종별 시간대·요일·연령 매출과 객단가', src: '서울 추정매출', on: () => !!this.sales },
       { id: 'stores', title: '업종 위험도와 경쟁', desc: '업종별 폐업률, 점포 수, 프랜차이즈 비중', src: '서울 점포', on: () => !!this.stores },
       { id: 'forecast', title: '매출 예측이 가능한 업종', desc: '관성을 이기는 업종만. 나머지는 손익분기로 판단', src: '백테스트', on: () => !!this.forecast }
@@ -1119,9 +1119,27 @@ class Component extends DCLogic {
     }
 
     if (id === 'income') {
-      title = '소득과 소비'; lede = '';
-      B.push({ isEmpty: true, text: '현재 이 항목의 상권 단위 데이터가 공개되어 있지 않습니다.', sub: '서울 상권분석서비스의 소득·소비 지표는 최신 분기 공표가 지연되고 있습니다. 공표되는 대로 이 화면에 그대로 반영됩니다.' });
-      source = '서울 상권분석서비스 소득소비 (미공표)';
+      title = '소득과 소비'; lede = '서울 상권의 소비자들이 어디에 돈을 쓰는지 봅니다.';
+      const IC = this.income;   // income.json → { available, quarter, income_avg, spend:[{name,pct}] }
+      // 데이터 자체가 없거나 available=false 일 때만 정직하게 빈 상태로.
+      if (!IC || IC.available === false || !(IC.spend && IC.spend.length)) {
+        B.push({ isEmpty: true, text: '소비 구성 데이터를 불러오지 못했습니다.', sub: (IC && IC.reason) ? IC.reason : '서울 상권분석서비스 소득·소비 지표가 아직 공표되지 않았습니다. 공표되는 대로 이 화면에 반영됩니다.' });
+        source = '서울 상권분석서비스 소득소비 (미공표)';
+      } else {
+        // 소득 평균: API 소득 필드가 이 서비스에 없어 null 인 경우가 있음 → 있을 때만 표시(지어내지 않음).
+        if (IC.income_avg) {
+          H('상권 평균 월소득 ' + this.won(Math.round(IC.income_avg / 10000)));
+          T('상권별 평균 소득의 단순 평균입니다. 상권마다 편차가 큽니다.');
+        }
+        // 소비 구성: 지출 카테고리 비율(%) — 절대금액은 상권 겹침으로 과다집계되므로 비율만 [실측].
+        H('소비 지출은 어디로 가나 — 구성비');
+        const spend = IC.spend.slice().sort((a, b) => b.pct - a.pct);   // 큰 항목부터
+        BAR(spend.map(s => [s.name, s.pct]), v => v.toFixed(1) + '%', 'var(--ink)');
+        const top = spend[0];
+        T('지출이 가장 많은 항목은 ' + top.name + '(' + top.pct.toFixed(1) + '%)입니다. 이 상권 소비자들의 지갑이 어디로 향하는지 보여줍니다.');
+        N('지출 카테고리별 구성비입니다(합계 100%). 절대 금액은 상권이 겹쳐 과다집계되므로 비율만 씁니다. 소득·소비는 카드·통계 기반 추정입니다.');
+        source = '서울 상권분석서비스 소득소비 · ' + (IC.quarter ? IC.quarter.slice(0, 4) + ' ' + IC.quarter.slice(4) + '분기' : '');
+      }
     }
 
     if (id === 'sales') {
@@ -1258,6 +1276,12 @@ class Component extends DCLogic {
     if (pd) L.push('유동인구(오후2시)=' + this.num(pd.tot) + '명 (남 ' + this.num(pd.m) + ' · 여 ' + this.num(pd.f) + ')');
     const R = (c && c.R) || (core && core.rentSeoul);
     if (R) L.push('임대료=' + R.rent + '만원/㎡(월), 공실률=' + R.vacancy + '%' + (R.zone ? ' · ' + R.zone : ''));
+    // 소비 지출 구성비(실측) — 상위 항목을 상담 근거로 제공.
+    const IC = this.income;
+    if (IC && IC.spend && IC.spend.length) {
+      const sp = IC.spend.slice().sort((a, b) => b.pct - a.pct).slice(0, 5).map(s => s.name + ' ' + s.pct + '%').join(', ');
+      L.push('소비 지출 구성비(실측): ' + sp + (IC.income_avg ? ' · 상권 평균 월소득 ' + this.won(Math.round(IC.income_avg / 10000)) : ''));
+    }
     L.push('기준시점=' + ((core && core.quarter) || '2026 2분기'));
     return L.join('\n');
   }
