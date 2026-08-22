@@ -224,6 +224,11 @@ jobs:
         continue-on-error: true       # 실패해도 기존 번들 유지 — 지도는 계속 동작
         run: python build_bundle.py   # core/geo 보존 + 동적 레이어를 최신 JSON으로 교체
 
+      - name: 데이터 무결성 점검(분기 깨짐 조기 감지 · 비차단 리포트)
+        working-directory: backend
+        continue-on-error: true       # 데이터는 고치지 않고 로그로만 경고 — 배포는 막지 않음
+        run: python check_data.py     # 비율합·범위·소비 구성 이상치 리포트(FAIL 있으면 로그에 표시)
+
       - name: 변경분 커밋
         run: |
           git config user.name  "dashboard-bot"
