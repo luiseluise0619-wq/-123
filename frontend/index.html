@@ -3,6 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 프레임워크 런타임(React·ReactDOM·Babel)을 외부 CDN(unpkg) 대신 같은 출처(./vendor)에서 로드.
+     support.js 의 cdnScriptFor 가 window.__resources[url] 을 우선 사용한다(프레임워크 내장 오버라이드).
+     → unpkg 장애·차단 시에도 앱이 뜨고, 사용자 다운로드량은 동일(같은 파일). support.js 는 수정하지 않음. -->
+<script>
+window.__resources = {
+  "https://unpkg.com/react@18.3.1/umd/react.production.min.js": "./vendor/react.production.min.js",
+  "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js": "./vendor/react-dom.production.min.js",
+  "https://unpkg.com/@babel/standalone@7.29.0/babel.min.js": "./vendor/babel.min.js"
+};
+</script>
 <script src="./support.js"></script>
 <style media="print">
   header{display:none!important}
