@@ -113,13 +113,18 @@
 
 <script src="data-bundle.js"></script>
 <script>
-const SERIES = ['var(--s1)','var(--s2)','var(--s3)','var(--s4)','var(--s5)','var(--s6)','var(--s7)','var(--s8)'];
-const NS='http://www.w3.org/2000/svg';
-const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in (a||{}))e.setAttribute(k,a[k]);return e;};
-const num=n=>n==null?'—':(Math.round(n*10)/10).toLocaleString('ko-KR');
+// 이 파일이 하는 일:
+//   연도별 매출 이력(sales_history.json)을 읽어 '선 그래프'와 '막대 그래프'로 그린다.
+//   차트는 외부 라이브러리 없이 SVG(그림 태그)를 직접 만들어 그린다 → el() 헬퍼로 SVG 요소 생성.
 
-// ── 범용 라인차트 ──────────────────────────────────────────────
-// series:[{name,color,vals:[y|null]}], xLabels:[..], yFmt, tipEl, opts{label:bool}
+const SERIES = ['var(--s1)','var(--s2)','var(--s3)','var(--s4)','var(--s5)','var(--s6)','var(--s7)','var(--s8)']; // 업종별 선 색(색약 안전 팔레트)
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in (a||{}))e.setAttribute(k,a[k]);return e;}; // SVG 요소 하나 만드는 헬퍼
+const num=n=>n==null?'—':(Math.round(n*10)/10).toLocaleString('ko-KR'); // 숫자 보기 좋게(천단위 콤마), 없으면 '—'
+
+// ── 범용 라인차트(선 그래프) 그리는 함수 ──────────────────────────
+// 여러 업종의 연도별 값을 겹쳐 그린다. 마우스 올리면 그 해 값이 툴팁으로 뜬다.
+// series:[{name,color,vals:[y값 또는 null]}], xLabels:연도라벨, yFmt:세로축 숫자표기, opts:{label:끝에 이름표}
 function lineChart(mount, tipEl, series, xLabels, yFmt, opts){
   opts=opts||{};
   const W=opts.w||560, H=opts.h||300, m={t:16,r:opts.r!=null?opts.r:96,b:34,l:46};
@@ -186,8 +191,9 @@ function lineChart(mount, tipEl, series, xLabels, yFmt, opts){
   mount.innerHTML='';mount.appendChild(svg);
 }
 
-// ── 범용 가로 막대(순위) ───────────────────────────────────────
-// rows:[{name,val,on}], valFmt, onClick
+// ── 범용 가로 막대그래프(순위 비교) 그리는 함수 ────────────────────
+// 항목을 가로 막대로 나열해 크기를 비교한다. 막대 클릭 시 onClick 실행(예: 그 업종 상세로).
+// rows:[{name:이름, val:값, on:강조여부}], valFmt:값 표기, onClick:클릭 콜백
 function barChart(mount, tipEl, rows, valFmt, onClick){
   const W=560, rowH=22, m={t:8,r:64,b:8,l:94};
   const H=m.t+m.b+rows.length*rowH;
@@ -219,14 +225,16 @@ function barChart(mount, tipEl, rows, valFmt, onClick){
 // ── 데이터 로드 & 렌더 ─────────────────────────────────────────
 const yr=['2021','2022','2023','2024','2025'];
 
-// 1) 업종 매출
+// 1) 업종 매출 추이
+//    sales_history.json 에는 업종별 분기 매출(예: "20241")이 들어있다.
+//    yearly(): 한 해의 4개 분기(1~4)를 더해 '연매출(조 단위)'로 바꾼다. → 연도별 선 그래프용.
 fetch('sales_history.json').then(r=>r.json()).then(sh=>{
   const ind=sh.ind||{};
   const yearly=s=>yr.map(y=>{const vs=['1','2','3','4'].map(q=>s[y+q]).filter(v=>v!=null&&v!=='');
-    return vs.length?vs.reduce((a,b)=>a+ (+b),0)/1e12:null;});
-  const tot=k=>{const y=yearly(ind[k]);return y[y.length-1]||0;};
-  const top=Object.keys(ind).sort((a,b)=>tot(b)-tot(a)).slice(0,8);
-  const series=top.map((k,i)=>({name:k,color:SERIES[i],vals:yearly(ind[k]),hidden:i>=6}));
+    return vs.length?vs.reduce((a,b)=>a+ (+b),0)/1e12:null;}); // 4분기 합 ÷ 1조 = 연매출(조원)
+  const tot=k=>{const y=yearly(ind[k]);return y[y.length-1]||0;}; // 가장 최근 해 매출(정렬 기준)
+  const top=Object.keys(ind).sort((a,b)=>tot(b)-tot(a)).slice(0,8); // 매출 큰 업종 상위 8개만
+  const series=top.map((k,i)=>({name:k,color:SERIES[i],vals:yearly(ind[k]),hidden:i>=6})); // 상위 6개만 기본 표시
   const chips=document.getElementById('sales-chips');
   const draw=()=>lineChart(document.getElementById('sales-fig'),document.getElementById('sales-tip'),
       series,yr,v=>num(v)+'조',{});
