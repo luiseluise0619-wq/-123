@@ -121,13 +121,28 @@ window.__resources = {
       <div style="max-width:860px;margin:0 auto;padding:56px 24px 80px">
         <div style="font-size:14px;margin-bottom:24px"><span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer">← 지역 다시 선택</span></div>
         <h1 style="font-size:clamp(26px,3.6vw,38px);font-weight:600;letter-spacing:-0.02em;margin:0 0 6px">{{ regionWaitName }}</h1>
-        <p style="font-size:15px;color:var(--ink2);margin:0 0 4px">{{ rprevCount }}개 {{ regionUnitOf }} · 아래는 {{ regionDataLabel }} (큰 순). 매출·소비 상세는 준비 중입니다.</p>
-        <div style="font-size:13px;color:var(--ink3);margin:0 0 18px">시·군을 인구가 많은 순으로 정렬했습니다.</div>
+        <p style="font-size:15px;color:var(--ink2);margin:0 0 4px">{{ regionSummary }}</p>
+        <div style="font-size:13px;color:var(--ink3);margin:0 0 18px">점포·업종은 소상공인시장진흥공단 상가업소(실측) 기준. 매출·소비 상세는 준비 중입니다.</div>
         <svg viewBox="0 0 760 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:52vh;display:block">
           <sc-for list="{{ rshapes }}" as="s" hint-placeholder-count="25"><path d="{{ s.d }}" style="{{ s.style }}"></path></sc-for>
         </svg>
-        <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:22px">
-          <sc-for list="{{ regionChips }}" as="c" hint-placeholder-count="15"><span style="background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:9px 16px;font-size:14px">{{ c.name }} <b style="color:var(--ink2);font-weight:500;font-variant-numeric:tabular-nums">{{ c.val }}</b></span></sc-for>
+        <sc-if value="{{ hasIndustry }}">
+          <div style="margin-top:28px">
+            <div style="font-size:15px;font-weight:600;margin-bottom:12px">업종별 점포 분포 <span style="font-size:12px;color:var(--ink3);font-weight:400">(상위 8종)</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ regionIndustry }}" as="r" hint-placeholder-count="8">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="flex:0 0 88px;font-size:13px;color:var(--ink2);text-align:right">{{ r.name }}</div>
+                  <div style="flex:1;background:var(--surface);border-radius:6px;height:22px;position:relative;overflow:hidden"><div style="{{ r.barStyle }}"></div></div>
+                  <div style="flex:0 0 118px;font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right">{{ r.val }} · {{ r.pct }}%</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <div style="font-size:15px;font-weight:600;margin:28px 0 12px">시·군별 <span style="font-size:12px;color:var(--ink3);font-weight:400">(점포 많은 순 · 점포 수 · 인구)</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:9px">
+          <sc-for list="{{ regionChips }}" as="c" hint-placeholder-count="15"><span style="background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:9px 16px;font-size:14px">{{ c.name }} <b style="color:var(--ink2);font-weight:500;font-variant-numeric:tabular-nums">{{ c.stores }}</b> <span style="color:var(--ink3);font-size:12px;font-variant-numeric:tabular-nums">{{ c.val }}</span></span></sc-for>
         </div>
       </div>
     </div>
@@ -806,8 +821,8 @@ class Component extends DCLogic {
   regionDefs() {
     return {
       '서울특별시': { file: 'seoul_gu.geojson', key: 'name', unit: '자치구', note: '25개 자치구 · 매출·소비·유동인구까지 상세 분석', full: true },
-      '충청북도':   { file: 'geo_chungbuk.json', key: 'sigun', unit: '시·군', note: '11개 시·군(3시 8군) · 점포·인구 연동 준비 중', full: false },
-      '충청남도':   { file: 'geo_chungnam.json', key: 'sigun', unit: '시·군', note: '15개 시·군(8시 7군) · 점포·인구 연동 준비 중', full: false }
+      '충청북도':   { file: 'geo_chungbuk.json', key: 'sigun', unit: '시·군', note: '11개 시·군 · 점포 9.4만개·업종 분포 (매출 준비 중)', full: false },
+      '충청남도':   { file: 'geo_chungnam.json', key: 'sigun', unit: '시·군', note: '15개 시·군 · 점포 12.5만개·업종 분포 (매출 준비 중)', full: false }
     };
   }
   // 지역 geojson → SVG 경로(그 지역 bbox에 맞춰 760x520 에 꽉 채움). 시군별로 묶는다.
@@ -815,8 +830,10 @@ class Component extends DCLogic {
     const cfg = this.regionDefs()[name];
     // 지역 데이터 파일(있으면): region_<slug>.json — 시군별 지표(예: 충북 인구). 서울은 전체 앱이라 불필요.
     const slug = { '충청북도': 'chungbuk', '충청남도': 'chungnam' }[name];
-    const dataP = slug ? fetch('region_' + slug + '.json').then(r => r.ok ? r.json() : null).catch(() => null) : Promise.resolve(null);
-    Promise.all([fetch(cfg.file).then(r => r.json()), dataP]).then(([geo, data]) => {
+    const dataP  = slug ? fetch('region_' + slug + '.json').then(r => r.ok ? r.json() : null).catch(() => null) : Promise.resolve(null);
+    // 점포 데이터(소진공 상가업소, 실측): stores_<slug>.json — 시군별 점포 수 + 업종 분포.
+    const storeP = slug ? fetch('stores_' + slug + '.json').then(r => r.ok ? r.json() : null).catch(() => null) : Promise.resolve(null);
+    Promise.all([fetch(cfg.file).then(r => r.json()), dataP, storeP]).then(([geo, data, stores]) => {
       const feats = geo.features, W = 760, H = 520, pad = 24;
       let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
       const scan = c => c.forEach(x => { if (typeof x[0] === 'number') { minX = Math.min(minX, x[0]); maxX = Math.max(maxX, x[0]); minY = Math.min(minY, x[1]); maxY = Math.max(maxY, x[1]); } else scan(x); });
@@ -829,12 +846,41 @@ class Component extends DCLogic {
       // 첫 화면 미리보기는 '지역 모양'만 깔끔하게 — 균일한 연한 색(데이터 색칠 X, 한 지역만 튀는 것 방지).
       const gd = (data && data.gu) || {}, mkey = data && data.metric;
       const shapes = feats.map(f => ({ d: toPath(f.geometry), style: 'fill:var(--surface);stroke:#fff;stroke-width:1.4' }));
-      // 인구 등 데이터는 지도 색이 아니라 시군 목록(숫자)으로 보여준다. 큰 값부터 정렬.
+      // 점포 데이터는 청주시·천안시가 '구' 단위로 쪼개져 옴(청주시 상당구 등). 지도(시·군 단위)에 맞춰 시로 합친다.
+      const gustore = {};
+      if (stores && stores.gu) Object.entries(stores.gu).forEach(([k, v]) => {
+        const city = k.split(' ')[0];   // '청주시 상당구' → '청주시', '충주시' → '충주시'
+        (gustore[city] || (gustore[city] = { total: 0 })).total += (v.total || 0);
+      });
+      // 시군 칩: 점포 수(실측) 우선, 인구(있으면) 병기. 점포 많은 순(없으면 인구 순).
       const chips = siguns
-        .map(sg => ({ name: sg, v: gd[sg] && gd[sg][mkey] }))
-        .sort((a, b) => (b.v || 0) - (a.v || 0))
-        .map(x => ({ name: x.name, val: (x.v != null) ? this.num(x.v) + (data.unit || '') : null }));
-      this.setState({ rprev: name, rshapes: shapes, rsiguns: siguns, rdata: { chips, label: data && data.metricLabel, period: data && data.period } });
+        .map(sg => ({ name: sg, v: (gd[sg] && gd[sg][mkey]) || null, st: gustore[sg] ? gustore[sg].total : null }))
+        .sort((a, b) => ((b.st || b.v || 0) - (a.st || a.v || 0)))
+        .map(x => ({
+          name: x.name,
+          val: (x.v != null) ? this.num(x.v) + (data.unit || '') : null,
+          stores: (x.st != null) ? this.num(x.st) + '개' : null
+        }));
+      // 업종 분포(지역 전체 실측): 상위 8종을 막대로. 폭 스타일은 JS에서 완성해 넘김(부분 보간 회피).
+      let industry = [], storeTotal = null;
+      if (stores && stores.by_industry) {
+        const ent = Object.entries(stores.by_industry).sort((a, b) => b[1] - a[1]);
+        storeTotal = stores.total || ent.reduce((s, e) => s + e[1], 0);
+        const mx = ent.length ? ent[0][1] : 1;
+        industry = ent.slice(0, 8).map(([nm, c]) => ({
+          name: nm, val: this.num(c) + '개', pct: Math.round(c / storeTotal * 100),
+          barStyle: 'position:absolute;top:0;bottom:0;left:0;width:' + Math.max(3, Math.round(c / mx * 100)) + '%;background:var(--accent);opacity:.85;border-radius:6px'
+        }));
+      }
+      this.setState({
+        rprev: name, rshapes: shapes, rsiguns: siguns,
+        rdata: {
+          chips, industry,
+          label: data && data.metricLabel,
+          period: (data && data.period) || (stores && stores.period),
+          storeTotal: (storeTotal != null) ? this.num(storeTotal) : null
+        }
+      });
     }).catch(() => this.setState({ rprev: name, rshapes: [], rsiguns: [] }));
   }
   regionConfirm() {
@@ -1537,7 +1583,13 @@ class Component extends DCLogic {
       regionUnitOf: (this.regionDefs()[S.region] || {}).unit || '시·군',
       regionWaitName: S.region || '',
       regionDataLabel: (S.rdata && S.rdata.label) ? (S.rdata.label + (S.rdata.period ? ' · ' + S.rdata.period : '') + ' 기준') : '',
-      regionChips: (S.rdata && S.rdata.chips) ? S.rdata.chips : (S.rsiguns || []).map(sg => ({ name: sg, val: null })),
+      // 준비중 뷰 요약줄: 시군 수 · 총 점포(실측) · 기준분기
+      regionSummary: ((S.rsiguns || []).length + '개 ' + ((this.regionDefs()[S.region] || {}).unit || '시·군'))
+        + ((S.rdata && S.rdata.storeTotal) ? ' · 총 ' + S.rdata.storeTotal + '개 점포' : '')
+        + ((S.rdata && S.rdata.period) ? ' · ' + S.rdata.period + ' 기준' : ''),
+      regionIndustry: (S.rdata && S.rdata.industry) || [],
+      hasIndustry: !!(S.rdata && S.rdata.industry && S.rdata.industry.length),
+      regionChips: (S.rdata && S.rdata.chips) ? S.rdata.chips : (S.rsiguns || []).map(sg => ({ name: sg, val: null, stores: null })),
       regionConfirm: () => this.regionConfirm(),
       regionReset: () => this.regionReset(),
       dataRows: this.dataRows(), formulas: this.formulas(), assumptions: this.assumptions(),
