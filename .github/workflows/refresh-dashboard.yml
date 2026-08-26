@@ -123,6 +123,20 @@ jobs:
           SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
         run: python collect_zone_apt.py
 
+      - name: 충북 점포·업종 수집(소진공 상가업소)
+        working-directory: backend
+        continue-on-error: true
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: python collect_stores_region.py 43 충청북도
+
+      - name: 충남 점포·업종 수집(소진공 상가업소)
+        working-directory: backend
+        continue-on-error: true
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: python collect_stores_region.py 44 충청남도
+
       - name: 역·자치구 데이터 1차 커밋(무거운 상권 빌드와 분리)
         continue-on-error: true       # 1차 커밋 실패해도 이후 스텝·최종 커밋은 계속
         run: |
@@ -130,7 +144,7 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           # 지하철 수집(14번)까지의 산출물만 먼저 커밋 — 상권 전량 빌드(15번)에
           # 묶이지 않게 역·자치구 데이터를 master 에 즉시 반영한다.
-          for f in frontend/subway_stations.json frontend/subway_gu.json frontend/storeinfo_gu.json frontend/livepop_gu.json frontend/livepop_dong.json frontend/parking_gu.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/zone_change.json frontend/zone_facility.json frontend/zone_apt.json; do
+          for f in frontend/subway_stations.json frontend/subway_gu.json frontend/storeinfo_gu.json frontend/livepop_gu.json frontend/livepop_dong.json frontend/parking_gu.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/zone_change.json frontend/zone_facility.json frontend/zone_apt.json frontend/stores_chungbuk.json frontend/stores_chungnam.json; do
             [ -f "$f" ] && git add "$f" || true
           done
           if git diff --cached --quiet; then
@@ -234,7 +248,7 @@ jobs:
           git config user.name  "dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
           # 파일별로 개별 add — 하나가 없어도(수집 실패) 나머지는 정상 스테이징
-          for f in frontend/dashboard.html frontend/data-bundle.js frontend/livepop_gu.json frontend/livepop_dong.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/sales_history.json frontend/sales_forecast.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/storeinfo_gu.json frontend/subway_gu.json frontend/subway_stations.json frontend/distance_decay.json frontend/trade_zones.json frontend/zone_industry.json frontend/rent.json frontend/sales_gu_ind.json frontend/store_gu_ind.json frontend/zone_change.json frontend/zone_facility.json frontend/zone_apt.json frontend/updates.json; do
+          for f in frontend/dashboard.html frontend/data-bundle.js frontend/livepop_gu.json frontend/livepop_dong.json frontend/parking_gu.json frontend/sales_by_industry.json frontend/stores_by_industry.json frontend/sales_history.json frontend/sales_forecast.json frontend/repop.json frontend/workpop.json frontend/income.json frontend/storeinfo_gu.json frontend/subway_gu.json frontend/subway_stations.json frontend/distance_decay.json frontend/trade_zones.json frontend/zone_industry.json frontend/rent.json frontend/sales_gu_ind.json frontend/store_gu_ind.json frontend/zone_change.json frontend/zone_facility.json frontend/zone_apt.json frontend/stores_chungbuk.json frontend/stores_chungnam.json frontend/updates.json; do
             [ -f "$f" ] && git add "$f" || true
           done
           if git diff --cached --quiet; then
