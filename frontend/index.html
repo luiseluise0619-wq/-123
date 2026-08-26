@@ -79,6 +79,54 @@ window.__resources = {
 
 <div style="min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6;letter-spacing:-0.011em">
 
+  <!-- ── 첫 화면: 지역 선택(오버레이). region 미선택 시 앱 위를 덮는다(페이지 이동 없음) ── -->
+  <sc-if value="{{ isIntro }}">
+    <div style="position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto">
+      <div style="max-width:860px;margin:0 auto;padding:72px 24px 80px">
+        <h1 style="font-size:clamp(28px,4vw,44px);font-weight:600;letter-spacing:-0.03em;line-height:1.15;margin:0 0 14px">어느 지역을<br>보시겠어요?</h1>
+        <p style="font-size:17px;color:var(--ink2);margin:0 0 40px;max-width:520px">지역을 고르면 지도를 보여드리고, 확인을 누르면 그 지역의 구·군으로 들어갑니다.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+          <sc-for list="{{ introCards }}" as="c" hint-placeholder-count="3">
+            <div onClick="{{ c.on }}" style="{{ c.style }}">
+              <div style="font-size:20px;font-weight:600;letter-spacing:-0.01em">{{ c.name }}</div>
+              <div style="font-size:13.5px;color:var(--ink2);margin-top:6px">{{ c.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ rprevChosen }}">
+          <div style="margin-top:40px">
+            <div style="font-size:22px;font-weight:600;letter-spacing:-0.02em">{{ rprevName }}</div>
+            <div style="font-size:14px;color:var(--ink2);margin:4px 0 16px">{{ rprevCount }}개 {{ rprevUnit }} · 마우스를 올리면 강조됩니다</div>
+            <svg viewBox="0 0 760 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:56vh;display:block">
+              <sc-for list="{{ rshapes }}" as="s" hint-placeholder-count="25"><path d="{{ s.d }}" style="{{ s.style }}"></path></sc-for>
+            </svg>
+            <div style="display:flex;gap:16px;margin-top:24px;align-items:center;flex-wrap:wrap">
+              <button onClick="{{ regionConfirm }}" style="background:var(--ink);color:var(--bg);border:none;border-radius:12px;padding:14px 26px;font-size:15px;font-weight:600;cursor:pointer">이 지역으로 확인 →</button>
+              <span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer;font-size:14px">다시 선택</span>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ── 충북·충남 선택 시: 지도 + 시군 목록(상세 준비 중). 서울만 전체 앱으로 진입 ── -->
+  <sc-if value="{{ isRegionWait }}">
+    <div style="position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto">
+      <div style="max-width:860px;margin:0 auto;padding:56px 24px 80px">
+        <div style="font-size:14px;margin-bottom:24px"><span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer">← 지역 다시 선택</span></div>
+        <h1 style="font-size:clamp(26px,3.6vw,38px);font-weight:600;letter-spacing:-0.02em;margin:0 0 6px">{{ regionWaitName }}</h1>
+        <p style="font-size:15px;color:var(--ink2);margin:0 0 20px">{{ rprevCount }}개 {{ regionUnitOf }} · 점포·인구 데이터 연동 준비 중입니다. 지도와 구·군은 확인할 수 있어요.</p>
+        <svg viewBox="0 0 760 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:52vh;display:block">
+          <sc-for list="{{ rshapes }}" as="s" hint-placeholder-count="25"><path d="{{ s.d }}" style="{{ s.style }}"></path></sc-for>
+        </svg>
+        <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:22px">
+          <sc-for list="{{ regionChips }}" as="c" hint-placeholder-count="15"><span style="background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:9px 16px;font-size:14px">{{ c.name }}</span></sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <header style="position:sticky;top:0;z-index:20;background:var(--bg-blur);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)">
     <div style="max-width:1120px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;gap:32px">
       <div onClick="{{ goHome }}" style="font-size:15px;font-weight:600;letter-spacing:-0.02em;cursor:pointer;flex:none">사장님인사이트</div>
@@ -124,7 +172,7 @@ window.__resources = {
 
           <div style="margin-top:40px;font-size:14px;display:flex;gap:20px;flex-wrap:wrap">
             <span onClick="{{ goMap }}" style="color:var(--accent);cursor:pointer">지도에서 먼저 둘러보기</span>
-            <a href="region.html" style="color:var(--accent);cursor:pointer;text-decoration:none">다른 지역 보기 (서울·충북·충남) →</a>
+            <span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer">지역 다시 선택</span>
           </div>
         </div>
 
@@ -743,8 +791,42 @@ class Component extends DCLogic {
     // rent/rev/inv/cogs/etc 는 null = "아직 안 침" → calc()가 업종별 기본값(실측 매출·표준 가정)으로 대신 계산한다.
     topic: null, hover: null, area: 15, staff: 2, wage: 250, rent: null, rev: null, inv: null, cogs: null, etc: null,
     cmpA: '강남구', cmpB: '마포구', chat: [], draft: '',
-    budget: null, candArea: 15, candSort: 'pop', picks: [], dark: false
+    budget: null, candArea: 15, candSort: 'pop', picks: [], dark: false,
+    // 지역 선택(첫 화면). region=null 이면 인트로 오버레이를 띄운다. rprev=미리보기 중인 지역, rshapes=그 지역 지도 경로.
+    region: null, rprev: null, rshapes: [], rsiguns: []
   };
+
+  // 지역 정의 — 서울은 전체 앱, 충북·충남은 지도+시군(상세 준비 중).
+  regionDefs() {
+    return {
+      '서울특별시': { file: 'seoul_gu.geojson', key: 'name', unit: '자치구', note: '25개 자치구 · 매출·소비·유동인구까지 상세 분석', full: true },
+      '충청북도':   { file: 'geo_chungbuk.json', key: 'sigun', unit: '시·군', note: '11개 시·군(3시 8군) · 점포·인구 연동 준비 중', full: false },
+      '충청남도':   { file: 'geo_chungnam.json', key: 'sigun', unit: '시·군', note: '15개 시·군(8시 7군) · 점포·인구 연동 준비 중', full: false }
+    };
+  }
+  // 지역 geojson → SVG 경로(그 지역 bbox에 맞춰 760x520 에 꽉 채움). 시군별로 묶는다.
+  regionPreview(name) {
+    const cfg = this.regionDefs()[name];
+    fetch(cfg.file).then(r => r.json()).then(geo => {
+      const feats = geo.features, W = 760, H = 520, pad = 24;
+      let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+      const scan = c => c.forEach(x => { if (typeof x[0] === 'number') { minX = Math.min(minX, x[0]); maxX = Math.max(maxX, x[0]); minY = Math.min(minY, x[1]); maxY = Math.max(maxY, x[1]); } else scan(x); });
+      feats.forEach(f => scan(f.geometry.coordinates));
+      const s = Math.min((W - 2 * pad) / (maxX - minX), (H - 2 * pad) / (maxY - minY));
+      const ox = pad + ((W - 2 * pad) - (maxX - minX) * s) / 2, oy = pad + ((H - 2 * pad) - (maxY - minY) * s) / 2;
+      const P = (lon, lat) => [ox + (lon - minX) * s, oy + (maxY - lat) * s];
+      const toPath = g => { const rings = g.type === 'Polygon' ? [g.coordinates] : g.coordinates; let d = ''; rings.forEach(poly => poly.forEach(ring => { ring.forEach((pt, i) => { const xy = P(pt[0], pt[1]); d += (i ? 'L' : 'M') + xy[0].toFixed(1) + ' ' + xy[1].toFixed(1); }); d += 'Z'; })); return d; };
+      const siguns = [...new Set(feats.map(f => f.properties[cfg.key]))].sort();
+      const shapes = feats.map(f => ({ d: toPath(f.geometry), style: 'fill:var(--surface);stroke:#fff;stroke-width:1.4;transition:fill .15s' }));
+      this.setState({ rprev: name, rshapes: shapes, rsiguns: siguns });
+    }).catch(() => this.setState({ rprev: name, rshapes: [], rsiguns: [] }));
+  }
+  regionConfirm() {
+    const name = this.state.rprev; const cfg = this.regionDefs()[name];
+    if (cfg && cfg.full) this.setState({ region: name });            // 서울: 전체 앱으로
+    else this.setState({ region: name });                             // 충북·충남: region 설정(앱은 준비중 뷰)
+  }
+  regionReset() { this.setState({ region: null, rprev: null, rshapes: [], rsiguns: [] }); }
 
   applyTheme(dark) {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -1421,6 +1503,23 @@ class Component extends DCLogic {
       navItems, quarter: (core && core.quarter) || '2026 2분기',
       isHome: S.screen === 'home', isMap: S.screen === 'map', isDetail: S.screen === 'detail',
       isData: S.screen === 'data', isReport: S.screen === 'report', isCompare: S.screen === 'compare', isChat: S.screen === 'chat', isMethod: S.screen === 'method',
+      // ── 지역 선택(첫 화면) ──
+      isIntro: !S.region,                                         // region 미선택 → 인트로 오버레이
+      isRegionWait: !!(S.region && !(this.regionDefs()[S.region] || {}).full),  // 충북·충남 선택 → 준비중 뷰
+      introCards: Object.entries(this.regionDefs()).map(([name, cfg]) => ({
+        name, note: cfg.note, on: () => this.regionPreview(name),
+        style: 'border:1px solid ' + (S.rprev === name ? 'var(--accent)' : 'var(--line)') + ';border-radius:16px;padding:22px 20px;cursor:pointer;text-align:left;transition:.15s;background:' + (S.rprev === name ? 'var(--selection)' : 'var(--bg)')
+      })),
+      rprevName: S.rprev || S.region || '',
+      rprevChosen: !!S.rprev,
+      rprevUnit: (this.regionDefs()[S.rprev] || {}).unit || '시·군',
+      rprevCount: (S.rsiguns || []).length,
+      rshapes: S.rshapes || [],
+      regionUnitOf: (this.regionDefs()[S.region] || {}).unit || '시·군',
+      regionWaitName: S.region || '',
+      regionChips: (S.rsiguns || []).map(sg => ({ name: sg })),
+      regionConfirm: () => this.regionConfirm(),
+      regionReset: () => this.regionReset(),
       dataRows: this.dataRows(), formulas: this.formulas(), assumptions: this.assumptions(),
       notDoing: [
         '종합 점수를 만들지 않습니다. 서로 다른 단위의 지표에 가중치를 주려면 그 가중치의 근거가 필요한데, 우리에게 없습니다.',
