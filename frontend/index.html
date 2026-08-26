@@ -115,36 +115,64 @@ window.__resources = {
     </div>
   </sc-if>
 
-  <!-- ── 충북·충남 선택 시: 지도 + 시군 목록(상세 준비 중). 서울만 전체 앱으로 진입 ── -->
+  <!-- ── 충북·충남: 서울과 같은 디자인(헤더·히어로·푸터). 내용만 그 지역 데이터 ── -->
   <sc-if value="{{ isRegionWait }}">
-    <div style="position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto">
-      <div style="max-width:860px;margin:0 auto;padding:56px 24px 80px">
-        <div style="font-size:14px;margin-bottom:24px"><span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer">← 지역 다시 선택</span></div>
-        <h1 style="font-size:clamp(26px,3.6vw,38px);font-weight:600;letter-spacing:-0.02em;margin:0 0 6px">{{ regionWaitName }}</h1>
-        <p style="font-size:15px;color:var(--ink2);margin:0 0 4px">{{ regionSummary }}</p>
-        <div style="font-size:13px;color:var(--ink3);margin:0 0 18px">점포·업종은 소상공인시장진흥공단 상가업소(실측) 기준. 매출·소비 상세는 준비 중입니다.</div>
-        <svg viewBox="0 0 760 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:52vh;display:block">
-          <sc-for list="{{ rshapes }}" as="s" hint-placeholder-count="25"><path d="{{ s.d }}" style="{{ s.style }}"></path></sc-for>
-        </svg>
-        <sc-if value="{{ hasIndustry }}">
-          <div style="margin-top:28px">
-            <div style="font-size:15px;font-weight:600;margin-bottom:12px">업종별 점포 분포 <span style="font-size:12px;color:var(--ink3);font-weight:400">(상위 8종)</span></div>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <sc-for list="{{ regionIndustry }}" as="r" hint-placeholder-count="8">
-                <div style="display:flex;align-items:center;gap:12px">
-                  <div style="flex:0 0 88px;font-size:13px;color:var(--ink2);text-align:right">{{ r.name }}</div>
-                  <div style="flex:1;background:var(--surface);border-radius:6px;height:22px;position:relative;overflow:hidden"><div style="{{ r.barStyle }}"></div></div>
-                  <div style="flex:0 0 118px;font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right">{{ r.val }} · {{ r.pct }}%</div>
-                </div>
-              </sc-for>
-            </div>
+    <div style="position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto;display:flex;flex-direction:column">
+      <!-- 헤더: 서울 홈과 동일한 디자인 -->
+      <header style="position:sticky;top:0;z-index:20;background:var(--bg-blur);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line);flex:none">
+        <div style="max-width:1120px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;gap:32px">
+          <div onClick="{{ regionReset }}" style="font-size:15px;font-weight:600;letter-spacing:-0.02em;cursor:pointer;flex:none">사장님인사이트</div>
+          <nav style="display:flex;gap:24px;align-items:center;flex:1;overflow-x:auto">
+            <span style="font-size:14px;color:var(--ink);font-weight:500;white-space:nowrap">{{ regionWaitName }}</span>
+            <span onClick="{{ regionReset }}" style="font-size:14px;color:var(--accent);cursor:pointer;white-space:nowrap">지역 다시 선택</span>
+          </nav>
+          <div style="font-size:12px;color:var(--ink3);flex:none;white-space:nowrap;display:flex;align-items:center;gap:16px">
+            <span>{{ regionPeriodShort }}</span>
+            <span onClick="{{ toggleTheme }}" title="{{ themeLabel }}" style="cursor:pointer;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .2s" style-hover="background:var(--line-soft)">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="{{ themeIcon }}"></path></svg>
+            </span>
           </div>
-        </sc-if>
-        <div style="font-size:15px;font-weight:600;margin:28px 0 12px">시·군별 <span style="font-size:12px;color:var(--ink3);font-weight:400">(점포 많은 순 · 점포 수 · 인구)</span></div>
-        <div style="display:flex;flex-wrap:wrap;gap:9px">
-          <sc-for list="{{ regionChips }}" as="c" hint-placeholder-count="15"><span style="background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:9px 16px;font-size:14px">{{ c.name }} <b style="color:var(--ink2);font-weight:500;font-variant-numeric:tabular-nums">{{ c.stores }}</b> <span style="color:var(--ink3);font-size:12px;font-variant-numeric:tabular-nums">{{ c.val }}</span></span></sc-for>
         </div>
-      </div>
+      </header>
+      <main style="flex:1">
+        <section style="max-width:1120px;margin:0 auto;padding:0 24px">
+          <!-- 히어로: 서울 홈과 동일한 타이포·간격 -->
+          <div style="padding:72px 0 40px;max-width:720px">
+            <h1 style="font-size:clamp(30px,4.6vw,48px);font-weight:600;line-height:1.25;letter-spacing:-0.03em;margin:0;text-wrap:pretty">{{ regionWaitName }}에서<br>어떤 장사를 시작하시나요?</h1>
+            <p style="font-size:17px;color:var(--ink2);margin:20px 0 0;max-width:560px">{{ regionSummary }}. 점포·업종·인구는 실측이고, 매출·소비 상세는 준비 중입니다.</p>
+          </div>
+          <!-- 지도 + 데이터: 홈과 같은 카드/타이포 -->
+          <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:8px">
+            <div style="font-size:13px;color:var(--ink2)">{{ regionWaitName }} · {{ rprevCount }}개 {{ regionUnitOf }}</div>
+          </div>
+          <svg viewBox="0 0 760 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:46vh;display:block">
+            <sc-for list="{{ rshapes }}" as="s" hint-placeholder-count="25"><path d="{{ s.d }}" style="{{ s.style }}"></path></sc-for>
+          </svg>
+          <sc-if value="{{ hasIndustry }}">
+            <div style="margin-top:36px">
+              <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em;margin-bottom:16px">업종별 점포 분포 <span style="font-size:13px;color:var(--ink3);font-weight:400">· 상위 8종</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ regionIndustry }}" as="r" hint-placeholder-count="8">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <div style="flex:0 0 88px;font-size:13px;color:var(--ink2);text-align:right">{{ r.name }}</div>
+                    <div style="flex:1;background:var(--surface);border-radius:6px;height:22px;position:relative;overflow:hidden"><div style="{{ r.barStyle }}"></div></div>
+                    <div style="flex:0 0 118px;font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right">{{ r.val }} · {{ r.pct }}%</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em;margin:40px 0 16px">시·군별 <span style="font-size:13px;color:var(--ink3);font-weight:400">· 점포 많은 순 · 점포 수 · 인구</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:9px">
+            <sc-for list="{{ regionChips }}" as="c" hint-placeholder-count="15"><span style="background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:9px 16px;font-size:14px">{{ c.name }} <b style="color:var(--ink2);font-weight:500;font-variant-numeric:tabular-nums">{{ c.stores }}</b> <span style="color:var(--ink3);font-size:12px;font-variant-numeric:tabular-nums">{{ c.val }}</span></span></sc-for>
+          </div>
+          <!-- 푸터: 서울 홈과 동일한 출처 표기 -->
+          <div style="border-top:1px solid var(--line);margin-top:56px;padding:28px 0 96px;font-size:12px;color:var(--ink3);line-height:1.7">
+            {{ regionPeriodShort }} · 소상공인시장진흥공단 상가업소(점포·업종, 실측) · 행정안전부 주민등록인구 · KOSTAT 행정경계<br>
+            매출·소비·임대료·유동인구 등 상세 지표는 이 지역의 공개 데이터가 확보되면 서울과 같은 화면으로 추가됩니다.
+          </div>
+        </section>
+      </main>
     </div>
   </sc-if>
 
@@ -1589,6 +1617,7 @@ class Component extends DCLogic {
         + ((S.rdata && S.rdata.period) ? ' · ' + S.rdata.period + ' 기준' : ''),
       regionIndustry: (S.rdata && S.rdata.industry) || [],
       hasIndustry: !!(S.rdata && S.rdata.industry && S.rdata.industry.length),
+      regionPeriodShort: (S.rdata && S.rdata.period) || '',   // 헤더·푸터 기준시점(예: 2026Q3)
       regionChips: (S.rdata && S.rdata.chips) ? S.rdata.chips : (S.rsiguns || []).map(sg => ({ name: sg, val: null, stores: null })),
       regionConfirm: () => this.regionConfirm(),
       regionReset: () => this.regionReset(),
