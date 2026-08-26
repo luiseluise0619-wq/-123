@@ -82,30 +82,35 @@ window.__resources = {
   <!-- ── 첫 화면: 지역 선택(오버레이). region 미선택 시 앱 위를 덮는다(페이지 이동 없음) ── -->
   <sc-if value="{{ isIntro }}">
     <div style="position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto">
-      <div style="max-width:860px;margin:0 auto;padding:72px 24px 80px">
-        <h1 style="font-size:clamp(28px,4vw,44px);font-weight:600;letter-spacing:-0.03em;line-height:1.15;margin:0 0 14px">어느 지역을<br>보시겠어요?</h1>
-        <p style="font-size:17px;color:var(--ink2);margin:0 0 40px;max-width:520px">지역을 고르면 지도를 보여드리고, 확인을 누르면 그 지역의 구·군으로 들어갑니다.</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
-          <sc-for list="{{ introCards }}" as="c" hint-placeholder-count="3">
-            <div onClick="{{ c.on }}" style="{{ c.style }}">
-              <div style="font-size:20px;font-weight:600;letter-spacing:-0.01em">{{ c.name }}</div>
-              <div style="font-size:13.5px;color:var(--ink2);margin-top:6px">{{ c.note }}</div>
-            </div>
-          </sc-for>
-        </div>
-        <sc-if value="{{ rprevChosen }}">
-          <div style="margin-top:40px">
-            <div style="font-size:22px;font-weight:600;letter-spacing:-0.02em">{{ rprevName }}</div>
-            <div style="font-size:14px;color:var(--ink2);margin:4px 0 16px">{{ rprevCount }}개 {{ rprevUnit }} · 마우스를 올리면 강조됩니다</div>
-            <svg viewBox="0 0 760 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:56vh;display:block">
-              <sc-for list="{{ rshapes }}" as="s" hint-placeholder-count="25"><path d="{{ s.d }}" style="{{ s.style }}"></path></sc-for>
-            </svg>
-            <div style="display:flex;gap:16px;margin-top:24px;align-items:center;flex-wrap:wrap">
-              <button onClick="{{ regionConfirm }}" style="background:var(--ink);color:var(--bg);border:none;border-radius:12px;padding:14px 26px;font-size:15px;font-weight:600;cursor:pointer">이 지역으로 확인 →</button>
-              <span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer;font-size:14px">다시 선택</span>
+      <div style="max-width:1120px;margin:0 auto;padding:0 24px;min-height:100vh;display:flex;align-items:center">
+        <div style="display:flex;gap:48px;align-items:center;flex-wrap:wrap;width:100%;padding:64px 0">
+          <!-- 왼쪽: 지역 드롭다운 -->
+          <div style="flex:1 1 380px;min-width:300px">
+            <h1 style="font-size:clamp(30px,4.6vw,48px);font-weight:600;line-height:1.25;letter-spacing:-0.03em;margin:0;text-wrap:pretty">어디에서 장사를<br>시작하시나요?</h1>
+            <p style="font-size:17px;color:var(--ink2);margin:20px 0 0;max-width:460px">먼저 지역을 고르세요. 서울은 매출·소비·유동인구까지, 충북·충남은 점포·인구 지도를 보여드립니다.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:24px;margin-top:48px;align-items:flex-end">
+              <label style="display:flex;flex-direction:column;gap:8px;min-width:220px">
+                <span style="font-size:13px;color:var(--ink2)">지역</span>
+                <select value="{{ rprevValue }}" onChange="{{ onRegionSelect }}" style="appearance:none;font-size:17px;font-weight:500;color:var(--ink);background:transparent;border:none;border-bottom:1px solid var(--line-strong);padding:8px 24px 10px 0;min-height:44px;outline:none;cursor:pointer">
+                  <option value="">지역 선택…</option>
+                  <sc-for list="{{ regionOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+                </select>
+              </label>
+              <sc-if value="{{ rprevChosen }}">
+                <button onClick="{{ regionConfirm }}" style="font-size:15px;font-weight:500;color:var(--bg);background:var(--ink);border:none;border-radius:10px;padding:0 28px;height:48px;min-height:44px;cursor:pointer;letter-spacing:-0.01em">분석하기 →</button>
+              </sc-if>
             </div>
           </div>
-        </sc-if>
+          <!-- 오른쪽: 선택 지역의 작은 지도 -->
+          <sc-if value="{{ rprevChosen }}">
+            <div style="flex:0 1 400px;min-width:260px">
+              <div style="font-size:15px;font-weight:600;color:var(--ink2);margin-bottom:8px">{{ rprevName }} · {{ rprevCount }}개 {{ rprevUnit }}</div>
+              <svg viewBox="0 0 760 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:44vh;display:block">
+                <sc-for list="{{ rshapes }}" as="s" hint-placeholder-count="25"><path d="{{ s.d }}" style="{{ s.style }}"></path></sc-for>
+              </svg>
+            </div>
+          </sc-if>
+        </div>
       </div>
     </div>
   </sc-if>
@@ -116,12 +121,13 @@ window.__resources = {
       <div style="max-width:860px;margin:0 auto;padding:56px 24px 80px">
         <div style="font-size:14px;margin-bottom:24px"><span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer">← 지역 다시 선택</span></div>
         <h1 style="font-size:clamp(26px,3.6vw,38px);font-weight:600;letter-spacing:-0.02em;margin:0 0 6px">{{ regionWaitName }}</h1>
-        <p style="font-size:15px;color:var(--ink2);margin:0 0 20px">{{ rprevCount }}개 {{ regionUnitOf }} · 점포·인구 데이터 연동 준비 중입니다. 지도와 구·군은 확인할 수 있어요.</p>
+        <p style="font-size:15px;color:var(--ink2);margin:0 0 4px">{{ rprevCount }}개 {{ regionUnitOf }} · 지도는 {{ regionDataLabel }} 색으로 채웠어요. 매출·소비 상세는 준비 중입니다.</p>
+        <div style="font-size:13px;color:var(--ink3);margin:0 0 18px">진할수록 값이 큰 곳입니다.</div>
         <svg viewBox="0 0 760 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:52vh;display:block">
           <sc-for list="{{ rshapes }}" as="s" hint-placeholder-count="25"><path d="{{ s.d }}" style="{{ s.style }}"></path></sc-for>
         </svg>
         <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:22px">
-          <sc-for list="{{ regionChips }}" as="c" hint-placeholder-count="15"><span style="background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:9px 16px;font-size:14px">{{ c.name }}</span></sc-for>
+          <sc-for list="{{ regionChips }}" as="c" hint-placeholder-count="15"><span style="background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:9px 16px;font-size:14px">{{ c.name }} <b style="color:var(--ink2);font-weight:500;font-variant-numeric:tabular-nums">{{ c.val }}</b></span></sc-for>
         </div>
       </div>
     </div>
@@ -793,7 +799,7 @@ class Component extends DCLogic {
     cmpA: '강남구', cmpB: '마포구', chat: [], draft: '',
     budget: null, candArea: 15, candSort: 'pop', picks: [], dark: false,
     // 지역 선택(첫 화면). region=null 이면 인트로 오버레이를 띄운다. rprev=미리보기 중인 지역, rshapes=그 지역 지도 경로.
-    region: null, rprev: null, rshapes: [], rsiguns: []
+    region: null, rprev: null, rshapes: [], rsiguns: [], rdata: null
   };
 
   // 지역 정의 — 서울은 전체 앱, 충북·충남은 지도+시군(상세 준비 중).
@@ -807,7 +813,10 @@ class Component extends DCLogic {
   // 지역 geojson → SVG 경로(그 지역 bbox에 맞춰 760x520 에 꽉 채움). 시군별로 묶는다.
   regionPreview(name) {
     const cfg = this.regionDefs()[name];
-    fetch(cfg.file).then(r => r.json()).then(geo => {
+    // 지역 데이터 파일(있으면): region_<slug>.json — 시군별 지표(예: 충북 인구). 서울은 전체 앱이라 불필요.
+    const slug = { '충청북도': 'chungbuk', '충청남도': 'chungnam' }[name];
+    const dataP = slug ? fetch('region_' + slug + '.json').then(r => r.ok ? r.json() : null).catch(() => null) : Promise.resolve(null);
+    Promise.all([fetch(cfg.file).then(r => r.json()), dataP]).then(([geo, data]) => {
       const feats = geo.features, W = 760, H = 520, pad = 24;
       let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
       const scan = c => c.forEach(x => { if (typeof x[0] === 'number') { minX = Math.min(minX, x[0]); maxX = Math.max(maxX, x[0]); minY = Math.min(minY, x[1]); maxY = Math.max(maxY, x[1]); } else scan(x); });
@@ -817,8 +826,17 @@ class Component extends DCLogic {
       const P = (lon, lat) => [ox + (lon - minX) * s, oy + (maxY - lat) * s];
       const toPath = g => { const rings = g.type === 'Polygon' ? [g.coordinates] : g.coordinates; let d = ''; rings.forEach(poly => poly.forEach(ring => { ring.forEach((pt, i) => { const xy = P(pt[0], pt[1]); d += (i ? 'L' : 'M') + xy[0].toFixed(1) + ' ' + xy[1].toFixed(1); }); d += 'Z'; })); return d; };
       const siguns = [...new Set(feats.map(f => f.properties[cfg.key]))].sort();
-      const shapes = feats.map(f => ({ d: toPath(f.geometry), style: 'fill:var(--surface);stroke:#fff;stroke-width:1.4;transition:fill .15s' }));
-      this.setState({ rprev: name, rshapes: shapes, rsiguns: siguns });
+      // 데이터 있으면 지표 최소~최대로 정규화해 지도 색칠(rampColor). 없으면 중립 회색.
+      const gd = (data && data.gu) || {}, mkey = data && data.metric;
+      const vals = Object.values(gd).map(v => v && v[mkey]).filter(x => x != null);
+      const mn = vals.length ? Math.min(...vals) : 0, mx = vals.length ? Math.max(...vals) : 1;
+      const shapes = feats.map(f => {
+        const sg = f.properties[cfg.key], v = gd[sg] && gd[sg][mkey];
+        const fill = (v != null && mx > mn) ? this.rampColor((v - mn) / (mx - mn)) : 'var(--surface)';
+        return { d: toPath(f.geometry), style: 'fill:' + fill + ';stroke:#fff;stroke-width:1.4;transition:fill .15s' };
+      });
+      const chips = siguns.map(sg => ({ name: sg, val: (gd[sg] && gd[sg][mkey] != null) ? this.num(gd[sg][mkey]) + (data.unit || '') : null }));
+      this.setState({ rprev: name, rshapes: shapes, rsiguns: siguns, rdata: { chips, label: data && data.metricLabel, period: data && data.period } });
     }).catch(() => this.setState({ rprev: name, rshapes: [], rsiguns: [] }));
   }
   regionConfirm() {
@@ -826,7 +844,7 @@ class Component extends DCLogic {
     if (cfg && cfg.full) this.setState({ region: name });            // 서울: 전체 앱으로
     else this.setState({ region: name });                             // 충북·충남: region 설정(앱은 준비중 뷰)
   }
-  regionReset() { this.setState({ region: null, rprev: null, rshapes: [], rsiguns: [] }); }
+  regionReset() { this.setState({ region: null, rprev: null, rshapes: [], rsiguns: [], rdata: null }); }
 
   applyTheme(dark) {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -1512,12 +1530,16 @@ class Component extends DCLogic {
       })),
       rprevName: S.rprev || S.region || '',
       rprevChosen: !!S.rprev,
+      regionOptions: Object.keys(this.regionDefs()),        // 드롭다운 목록(서울·충북·충남)
+      rprevValue: S.rprev || '',                            // 드롭다운 선택값
+      onRegionSelect: e => { const v = e.target.value; if (v) this.regionPreview(v); },
       rprevUnit: (this.regionDefs()[S.rprev] || {}).unit || '시·군',
       rprevCount: (S.rsiguns || []).length,
       rshapes: S.rshapes || [],
       regionUnitOf: (this.regionDefs()[S.region] || {}).unit || '시·군',
       regionWaitName: S.region || '',
-      regionChips: (S.rsiguns || []).map(sg => ({ name: sg })),
+      regionDataLabel: (S.rdata && S.rdata.label) ? (S.rdata.label + (S.rdata.period ? ' · ' + S.rdata.period : '') + ' 기준') : '',
+      regionChips: (S.rdata && S.rdata.chips) ? S.rdata.chips : (S.rsiguns || []).map(sg => ({ name: sg, val: null })),
       regionConfirm: () => this.regionConfirm(),
       regionReset: () => this.regionReset(),
       dataRows: this.dataRows(), formulas: this.formulas(), assumptions: this.assumptions(),
