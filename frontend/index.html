@@ -122,7 +122,10 @@ window.__resources = {
             <button onClick="{{ goDetail }}" style="font-size:15px;font-weight:500;color:var(--bg);background:var(--ink);border:none;border-radius:10px;padding:0 28px;height:48px;min-height:44px;cursor:pointer;letter-spacing:-0.01em" style-hover="opacity:.88">분석하기</button>
           </div>
 
-          <div style="margin-top:40px;font-size:14px"><span onClick="{{ goMap }}" style="color:var(--accent);cursor:pointer">지도에서 먼저 둘러보기</span></div>
+          <div style="margin-top:40px;font-size:14px;display:flex;gap:20px;flex-wrap:wrap">
+            <span onClick="{{ goMap }}" style="color:var(--accent);cursor:pointer">지도에서 먼저 둘러보기</span>
+            <a href="region.html" style="color:var(--accent);cursor:pointer;text-decoration:none">다른 지역 보기 (서울·충북·충남) →</a>
+          </div>
         </div>
 
         <div style="border-top:1px solid var(--line);padding:28px 0 96px;font-size:12px;color:var(--ink3);line-height:1.7">
