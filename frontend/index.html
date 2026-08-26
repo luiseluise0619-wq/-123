@@ -121,8 +121,8 @@ window.__resources = {
       <div style="max-width:860px;margin:0 auto;padding:56px 24px 80px">
         <div style="font-size:14px;margin-bottom:24px"><span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer">← 지역 다시 선택</span></div>
         <h1 style="font-size:clamp(26px,3.6vw,38px);font-weight:600;letter-spacing:-0.02em;margin:0 0 6px">{{ regionWaitName }}</h1>
-        <p style="font-size:15px;color:var(--ink2);margin:0 0 4px">{{ rprevCount }}개 {{ regionUnitOf }} · 지도는 {{ regionDataLabel }} 색으로 채웠어요. 매출·소비 상세는 준비 중입니다.</p>
-        <div style="font-size:13px;color:var(--ink3);margin:0 0 18px">진할수록 값이 큰 곳입니다.</div>
+        <p style="font-size:15px;color:var(--ink2);margin:0 0 4px">{{ rprevCount }}개 {{ regionUnitOf }} · 아래는 {{ regionDataLabel }} (큰 순). 매출·소비 상세는 준비 중입니다.</p>
+        <div style="font-size:13px;color:var(--ink3);margin:0 0 18px">시·군을 인구가 많은 순으로 정렬했습니다.</div>
         <svg viewBox="0 0 760 520" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:52vh;display:block">
           <sc-for list="{{ rshapes }}" as="s" hint-placeholder-count="25"><path d="{{ s.d }}" style="{{ s.style }}"></path></sc-for>
         </svg>
@@ -826,16 +826,14 @@ class Component extends DCLogic {
       const P = (lon, lat) => [ox + (lon - minX) * s, oy + (maxY - lat) * s];
       const toPath = g => { const rings = g.type === 'Polygon' ? [g.coordinates] : g.coordinates; let d = ''; rings.forEach(poly => poly.forEach(ring => { ring.forEach((pt, i) => { const xy = P(pt[0], pt[1]); d += (i ? 'L' : 'M') + xy[0].toFixed(1) + ' ' + xy[1].toFixed(1); }); d += 'Z'; })); return d; };
       const siguns = [...new Set(feats.map(f => f.properties[cfg.key]))].sort();
-      // 데이터 있으면 지표 최소~최대로 정규화해 지도 색칠(rampColor). 없으면 중립 회색.
+      // 첫 화면 미리보기는 '지역 모양'만 깔끔하게 — 균일한 연한 색(데이터 색칠 X, 한 지역만 튀는 것 방지).
       const gd = (data && data.gu) || {}, mkey = data && data.metric;
-      const vals = Object.values(gd).map(v => v && v[mkey]).filter(x => x != null);
-      const mn = vals.length ? Math.min(...vals) : 0, mx = vals.length ? Math.max(...vals) : 1;
-      const shapes = feats.map(f => {
-        const sg = f.properties[cfg.key], v = gd[sg] && gd[sg][mkey];
-        const fill = (v != null && mx > mn) ? this.rampColor((v - mn) / (mx - mn)) : 'var(--surface)';
-        return { d: toPath(f.geometry), style: 'fill:' + fill + ';stroke:#fff;stroke-width:1.4;transition:fill .15s' };
-      });
-      const chips = siguns.map(sg => ({ name: sg, val: (gd[sg] && gd[sg][mkey] != null) ? this.num(gd[sg][mkey]) + (data.unit || '') : null }));
+      const shapes = feats.map(f => ({ d: toPath(f.geometry), style: 'fill:var(--surface);stroke:#fff;stroke-width:1.4' }));
+      // 인구 등 데이터는 지도 색이 아니라 시군 목록(숫자)으로 보여준다. 큰 값부터 정렬.
+      const chips = siguns
+        .map(sg => ({ name: sg, v: gd[sg] && gd[sg][mkey] }))
+        .sort((a, b) => (b.v || 0) - (a.v || 0))
+        .map(x => ({ name: x.name, val: (x.v != null) ? this.num(x.v) + (data.unit || '') : null }));
       this.setState({ rprev: name, rshapes: shapes, rsiguns: siguns, rdata: { chips, label: data && data.metricLabel, period: data && data.period } });
     }).catch(() => this.setState({ rprev: name, rshapes: [], rsiguns: [] }));
   }
