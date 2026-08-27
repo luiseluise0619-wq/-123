@@ -1714,7 +1714,10 @@ class Component extends DCLogic {
       onInd: e => this.setState({ ind: e.target.value, rev: null, inv: null, cogs: null, etc: null }),
       printReport: () => window.print()
     };
-    if (!core) return base;
+    // 부팅/인트로 최적화: region 미선택(인트로 화면)에선 앱 전체 계산(지도 투영·손익분기·토픽·
+    // AI컨텍스트)이 전혀 불필요하다. base 만 반환하면 인트로·미리보기 지도가 값싸게 즉시 뜬다.
+    // (base 는 인트로/미리보기에 필요한 vars 를 모두 담고 있고, 아래 !core 폴백과 같은 안전한 반환이다.)
+    if (!core || !S.region) return base;
 
     // ── 지도
     const M = this.metricDefs();
