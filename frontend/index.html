@@ -622,6 +622,7 @@ window.__resources = {
                가정 = 업종 표준으로 넣어둔 기본값이라 실제와 다를 수 있고, 위 입력칸에서 바꿀 수 있다. -->
           <p style="font-size:12.5px;color:var(--ink3);margin:14px 0 0;line-height:1.6;text-wrap:pretty">
             객단가·매출 분포·임대료·유동인구는 서울시 공공데이터 <b>실측값</b>입니다.
+            (객단가는 <b>카드 결제 1건당 금액</b>이라, 여러 명이 함께 결제하는 식당·카페는 1인 지출보다 큽니다. 현금 결제는 빠져 있습니다.)
             원가율·인건비·기타 운영비·창업비는 <b>업종 표준 가정값</b>이라 실제 가게마다 다릅니다 —
             위 입력칸에 직접 넣으면 그 값으로 다시 계산됩니다.
           </p>
@@ -1446,8 +1447,9 @@ class Component extends DCLogic {
           ]
         });
         N('요일과 시간대를 교차한 매출(예: 금요일 저녁)은 공개되지 않습니다. 각각의 비중만 따로 공표되므로 곱해서 추정하지 않습니다.');
-        H('객단가는 ' + this.num(d.unit) + '원입니다.');
-        T('손익분기 매출을 객단가로 나누면 하루에 받아야 할 손님 수가 나옵니다.');
+        H('객단가(건당 결제액)는 ' + this.num(d.unit) + '원입니다.');
+        N('카드 결제 1건 기준입니다. 여러 명이 한 번에 결제하면 1인 지출보다 큽니다(식당·카페·주점 특히). 현금 결제는 빠져 있습니다.');
+        T('손익분기 매출을 이 값으로 나누면 하루에 필요한 결제 건수(팀 수)가 나옵니다. 머릿수(손님 수)와는 다릅니다.');
         source = '서울 상권분석서비스 추정매출 · ' + S.quarter + '분기';
       }
     }
@@ -1499,7 +1501,7 @@ class Component extends DCLogic {
       if (c) {
         const d = this.sales && this.sales.ind[this.state.ind] ? this.sales.ind[this.state.ind].unit : null;
         text = this.state.gu + '에서 ' + this.state.ind + ' ' + c.area + '평 · 직원 ' + c.staff + '명 조건이면 월 ' + this.won(c.bep) + '을 팔아야 본전입니다.'
-          + (d ? ' 객단가 ' + this.num(d) + '원 기준으로 하루 약 ' + Math.round(c.bep * 10000 / 30 / d) + '명입니다.' : '');
+          + (d ? ' 건당 결제액 ' + this.num(d) + '원(카드 1건 기준)으로 나누면 하루 약 ' + Math.round(c.bep * 10000 / 30 / d) + '건(팀)이 필요합니다. 머릿수와는 다릅니다.' : '');
         meta.push({ k: '근거', v: '고정비 ' + this.won(c.fixed) + ' ÷ (1 − 원가율 ' + c.i.cogs + '%)' });
         meta.push({ k: '데이터', v: '임대료 ' + this.won(c.rentCost) + ' · 인건비 ' + this.won(c.laborCost) + ' · 기타 ' + this.won(c.etc) });
       }
@@ -1545,7 +1547,7 @@ class Component extends DCLogic {
     L.push('선택: 자치구=' + this.state.gu + ', 업종=' + this.state.ind + (c ? ', 평수=' + c.area + '평, 직원=' + c.staff + '명' : ''));
     if (c) L.push('손익분기 월매출=' + this.won(c.bep) + ' (고정비 ' + this.won(c.fixed) + ', 원가율 ' + c.i.cogs + '%, 임대료 ' + this.won(c.rentCost) + ', 인건비 ' + this.won(c.laborCost) + ', 기타 ' + this.won(c.etc) + ')');
     const sd = this.sales && this.sales.ind[this.state.ind];
-    if (sd && sd.unit) L.push('객단가(실측)=' + this.num(sd.unit) + '원');
+    if (sd && sd.unit) L.push('객단가=건당 결제액(실측, 카드 1건 기준, 현금 제외, 다인 결제면 1인 지출보다 큼)=' + this.num(sd.unit) + '원');
     if (sd && sd.p50) L.push('점포당 월매출 중위=' + this.won(sd.p50) + ' · 실측 ' + this.num(sd.n) + '개 상권');
     if (g) L.push('폐업 추세: 2022 ' + this.num(g.y2022) + '건 → 2024 ' + this.num(g.y2024) + '건 (' + (g.trend >= 0 ? '+' : '') + g.trend + '%)');
     const st = S && S.ind[this.state.ind];
@@ -1976,7 +1978,7 @@ class Component extends DCLogic {
       rentZones: Object.entries(core.rentZones || {}).filter(([k, v]) => k !== '서울' && v.rent).sort((a, b) => b[1].rent - a[1].rent).slice(0, 12).map(([k, v]) => ({ name: k.replace('서울·', ''), rent: v.rent.toFixed(1), vacancy: v.vacancy.toFixed(1) })),
       guFacts,
       detailSales: ind ? this.won(ind.p50) : '—',
-      detailSalesSub: ind ? '서울 전체 ' + S.ind + ' 점포당 월매출 중위값 · 실측 ' + this.num(ind.n) + '개 상권 · ' + core.quarter : '',
+      detailSalesSub: ind ? '서울 전체 ' + S.ind + ' 점포당 월매출 중위(상권 카드매출÷점포수) · 자치구와 무관하게 동일 · 현금 제외·대형상권 영향으로 실제보다 높을 수 있어 참고용 · 실측 ' + this.num(ind.n) + '개 상권 · ' + core.quarter : '',
       detailPositives, detailCautions,
       detailSource: '출처: 서울 상권분석서비스 추정매출 · 서울 생활인구 · 국세청 폐업통계. 이 값은 개별 점포 매출이 아닌 상권 단위 추정값입니다.',
       topics, topicOpen: !!T, topicClosed: !T,
