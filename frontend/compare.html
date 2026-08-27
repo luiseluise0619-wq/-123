@@ -111,12 +111,9 @@
         </div>
       </div>
       <div style="margin-top:14px">
-        <div class="lbl">비교할 자치구 (최대 3)</div>
-        <div class="gurow">
-          <div class="gucol"><select id="gu0"></select></div>
-          <div class="gucol"><select id="gu1"></select></div>
-          <div class="gucol"><select id="gu2"></select></div>
-        </div>
+        <div class="lbl">비교할 자치구 <span style="font-weight:400;color:var(--mut)">· + 로 추가, − 로 제거</span></div>
+        <div id="guwrap" class="gurow"></div>
+        <button id="addgu" class="sec" type="button" style="margin-top:10px">+ 자치구 추가</button>
       </div>
     </div>
 
@@ -252,10 +249,14 @@ Promise.all([
   INDS=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
   const indSel=document.getElementById('ind');
   INDS.forEach((v,i)=>opt(indSel,v,v,i===0));
-  const g0=document.getElementById('gu0'),g1=document.getElementById('gu1'),g2=document.getElementById('gu2');
-  const sortedGu=[...GUS].sort();
-  sortedGu.forEach(g=>{opt(g0,g,g,g==='강남구');opt(g1,g,g,g==='마포구');opt(g2,g,g,g==='종로구');});
-  opt(g2,'', '(없음)');   // 세 번째는 비워둘 수 있게
+  window.__GU_SORTED=[...GUS].sort();
+  addGuCol('강남구');   // 처음엔 자치구 1개만. + 로 계속 추가, − 로 제거.
+  document.getElementById('addgu').onclick=()=>{
+    if(guCount()>=8) return;                       // 열 과다 방지
+    const used=guVals();
+    const next=window.__GU_SORTED.find(g=>!used.includes(g))||window.__GU_SORTED[0];
+    addGuCol(next); render();
+  };
   document.getElementById('asof').textContent='기준 '+(sa.quarter||'')+' · 매출/점포 상권분석';
   render();
 }).catch(e=>{document.getElementById('out').innerHTML='<div class="empty">데이터를 불러오지 못했습니다(배포 사이트에서 동작). '+String(e)+'</div>';});
@@ -278,6 +279,24 @@ function spark(vals,color){
   const up=v[v.length-1]>=v[0];
   const c=color||(up?'#3E9E6E':'#C65B87');
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="vertical-align:middle"><polyline fill="none" stroke="${c}" stroke-width="1.6" points="${pts}"/></svg>`;
+}
+
+// 동적 자치구 열: + 로 추가, − 로 제거(최소 1개). 각 열은 select.gu + 제거버튼.
+function guCount(){return document.querySelectorAll('#guwrap .gucol').length;}
+function guVals(){return [...document.querySelectorAll('#guwrap select.gu')].map(s=>s.value).filter(Boolean);}
+function addGuCol(def){
+  const wrap=document.getElementById('guwrap');
+  const col=document.createElement('div'); col.className='gucol';
+  col.style.display='flex'; col.style.gap='6px'; col.style.alignItems='stretch';
+  const sel=document.createElement('select'); sel.className='gu'; sel.style.flex='1';
+  (window.__GU_SORTED||[]).forEach(g=>opt(sel,g,g,g===def));
+  sel.onchange=render;
+  const rm=document.createElement('button'); rm.type='button'; rm.className='sec';
+  rm.textContent='−'; rm.title='이 자치구 제거';
+  rm.style.flex='0 0 auto'; rm.style.padding='9px 13px'; rm.style.fontWeight='700';
+  rm.onclick=()=>{ if(guCount()<=1) return; col.remove(); render(); };
+  col.appendChild(sel); col.appendChild(rm);
+  wrap.appendChild(col);
 }
 
 function pick(ind,gu){
@@ -316,7 +335,7 @@ function render(){
   if(MODE==='rent') return renderRent();
   if(!SALES)return;
   const ind=document.getElementById('ind').value;
-  const guv=[document.getElementById('gu0').value,document.getElementById('gu1').value,document.getElementById('gu2').value]
+  const guv=[...document.querySelectorAll('#guwrap select.gu')].map(s=>s.value)
     .filter((g,i,a)=>g&&a.indexOf(g)===i);
   const cols=guv.map(g=>pick(ind,g));
   const out=document.getElementById('out');
