@@ -1142,7 +1142,7 @@ class Component extends DCLogic {
       trend: { label: '폐업 추세', unit: '%', diverging: true, get: (n, g) => g.trend, fmt: v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%', note: '2022년 대비 2024년 폐업 증감률입니다. 늘어난 곳일수록 진하게 표시합니다.', caption: '증가율 높은 순', source: '국세청 자치구별 폐업통계 (2022–2024)' },
       // '오후 2시' = 데이터의 기준 시각(pop.hour="14")과 일치하는 [실측] 표기. 생활인구는 2026-07-31로 서비스 종료돼 이 시점에 고정.
       // (수집기가 다른 시각을 넣으면 이 문구는 P.hour 를 따라가도록 고쳐야 함 — 현재 데이터는 14시로 확정.)
-      pop: { label: '유동인구', unit: '명', get: n => (P && P.gu[n] ? P.gu[n].tot : 0), fmt: v => this.num(v) + '명', note: '오후 2시 기준 자치구 체류인구입니다.', caption: '체류인구 많은 순', source: '서울 열린데이터광장 생활인구' },
+      pop: { label: '유동인구', unit: '명', get: n => (P && P.gu[n] ? P.gu[n].tot : 0), fmt: v => this.num(v) + '명', note: '자치구 체류인구입니다' + (P && P.stdr_date ? ' (' + P.stdr_date.slice(0, 4) + '-' + P.stdr_date.slice(4, 6) + '-' + P.stdr_date.slice(6) + ' ' + (P.hour || '14') + '시 기준 하루 스냅샷)' : ' (오후 2시 기준)') + '.', caption: '체류인구 많은 순', source: '서울 열린데이터광장 생활인구' },
       bus: { label: '대중교통', unit: '개/㎢', get: (n, g) => g.bus / (A[n] || 1), fmt: v => v.toFixed(1) + '개/㎢', note: '면적당 정류소 수입니다. 자치구 크기가 다르므로 밀도로 비교합니다.', caption: '정류소 밀도 높은 순', source: '서울시 버스·마을버스·선착장 정류소' },
       park: { label: '주차', unit: '곳/㎢', get: n => (K && K.gu[n] ? K.gu[n].lots : 0) / (A[n] || 1), fmt: v => v.toFixed(1) + '곳/㎢', note: '면적당 공영·민영 주차장 수입니다.', caption: '주차장 밀도 높은 순', source: '전국주차장정보표준데이터' },
       subway: { label: '지하철 (역 단위)', station: true, note: '자치구가 아니라 역 단위입니다. 점 하나가 역 하나, 크기는 최근 평일 하루 승하차 인원입니다. 배경 경계는 2013년 단순화 자치구 경계라 정밀하지 않고 도로·건물은 없습니다. 역 단위까지만 실측이며 건물 단위 판단에는 쓸 수 없습니다.', caption: '승하차 많은 역 순', source: '서울 열린데이터광장 지하철 역별 승하차' },
@@ -1178,6 +1178,13 @@ class Component extends DCLogic {
     const q = rec && rec.perstore_q;
     if (!q || q.length < 3 || !(q[1] > 0)) return null;
     return { p25: q[0], p50: q[1], p75: q[2], n: rec.n_trdar || 0, quarter: this.salesGu.quarter };
+  }
+  // 표시용 기준분기: 헤더·진단은 '매출' 데이터 분기를 기준으로 삼는다(손익분기·분포의 근거가 매출이라서).
+  // "20261" → "2026 1분기". 인구·아파트 등은 API 최신 분기가 달라 항목별 캡션에 각자 시점을 표기한다(하나로 안 뭉갬).
+  salesQuarter() {
+    const q = this.sales && this.sales.quarter && String(this.sales.quarter);
+    if (q && /^\d{5}$/.test(q)) return q.slice(0, 4) + ' ' + q.slice(4) + '분기';
+    return (this.core && this.core.quarter) || '';
   }
   calc() {
     const core = this.core; if (!core) return null;
@@ -1570,7 +1577,7 @@ class Component extends DCLogic {
       meta.push({ k: '근거', v: '없음 — 추측하지 않습니다' });
     }
     meta.push({ k: '출처', v: '국세청 · 한국부동산원 · 서울 열린데이터광장' });
-    meta.push({ k: '기준시점', v: (core && core.quarter) || '2026 2분기' });
+    meta.push({ k: '기준시점', v: (this.salesQuarter() || '—') + ' · 매출 기준(인구·아파트 등은 항목별 시점 상이)' });
     return { text, meta };
   }
   // AI 상담용 컨텍스트: 현재 선택(자치구·업종)의 실제 수치를 모아 Gemini 가 근거로 쓰게 한다(지어냄 방지).
@@ -1600,7 +1607,7 @@ class Component extends DCLogic {
       const sp = icSpend.slice().sort((a, b) => b.pct - a.pct).slice(0, 5).map(s => s.name + ' ' + s.pct + '%').join(', ');
       L.push('소비 지출 구성비(실측·' + icScope + '): ' + sp + (IC.income_avg ? ' · 평균 월소득 ' + this.won(Math.round(IC.income_avg / 10000)) : ' · 소득 데이터는 원본 종료로 없음'));
     }
-    L.push('기준시점=' + ((core && core.quarter) || '2026 2분기'));
+    L.push('기준시점(매출)=' + (this.salesQuarter() || '—') + ' · 인구/아파트는 API별 최신분기라 항목마다 시점 다를 수 있음');
     return L.join('\n');
   }
 
@@ -1626,7 +1633,7 @@ class Component extends DCLogic {
     });
 
     const base = {
-      navItems, quarter: (core && core.quarter) || '2026 2분기',
+      navItems, quarter: this.salesQuarter() || (core && core.quarter) || '',
       isHome: S.screen === 'home', isMap: S.screen === 'map', isDetail: S.screen === 'detail',
       isData: S.screen === 'data', isReport: S.screen === 'report', isCompare: S.screen === 'compare', isChat: S.screen === 'chat', isMethod: S.screen === 'method',
       // ── 지역 선택(첫 화면) ──
