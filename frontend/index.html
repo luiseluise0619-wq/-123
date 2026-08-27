@@ -962,6 +962,10 @@ class Component extends DCLogic {
     const loadJson = (u) => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
     loadJson('subway_stations.json').then(s => s || loadJson('frontend/subway_stations.json'))
       .then(s => { if (s && s.available && s.stations) { this.stations = s; this.setState({ stationsReady: true }); } });
+    // 자치구×업종 점포당 월매출(실측, 자동 갱신) — 있으면 구별로 매출·손익분기가 실제로 달라진다.
+    // 번들엔 없어 항상 별도 로드. 없거나 해당 구·업종이 비면 서울 전체값으로 폴백.
+    loadJson('sales_gu_ind.json').then(s => s || loadJson('frontend/sales_gu_ind.json'))
+      .then(s => { if (s && s.available && s.gu) { this.salesGu = s; this.setState({ salesGuReady: true }); } });
     this._hash = () => {
       const h = (location.hash || '').replace('#', '');
       if (h && this.topicDefs().find(t => t.id === h)) this.setState({ screen: 'data', topic: h });
@@ -1166,14 +1170,26 @@ class Component extends DCLogic {
   //   [실측] 서울시 공공데이터에서 그대로 온 값 → i.p50(매출 중앙값), i.unit(객단가), R.rent(임대료).
   //   [가정] 업종 표준으로 넣어둔 기본값 → i.cogs(원가율), i.etc(기타비), i.invest(창업비), wage(급여).
   //          가정값은 사용자가 입력칸에 직접 넣으면(this.state.x) 그 값으로 덮어쓴다.
+  // 자치구×업종 점포당 월매출(실측). sales_gu_ind.json 의 perstore_q=[하위25,중위,상위25] 만원.
+  // 해당 구·업종에 데이터가 있으면 그 구의 실측 분위를 돌려주고, 없으면 null → 호출부에서 서울값 폴백.
+  guSales(gu, ind) {
+    const g = this.salesGu && this.salesGu.gu && this.salesGu.gu[gu];
+    const rec = g && g[ind];
+    const q = rec && rec.perstore_q;
+    if (!q || q.length < 3 || !(q[1] > 0)) return null;
+    return { p25: q[0], p50: q[1], p75: q[2], n: rec.n_trdar || 0, quarter: this.salesGu.quarter };
+  }
   calc() {
     const core = this.core; if (!core) return null;
     const i = core.ind[this.state.ind]; if (!i) return null;
+    // 자치구 실측 매출(있으면). 구를 바꾸면 매출·손익분기 위치가 실제로 달라진다.
+    const gs = this.guSales(this.state.gu, this.state.ind);
+    const baseRev = gs ? gs.p50 : i.p50;   // 빈칸일 때 기본 매출: 구 실측 중위 우선, 없으면 서울 업종 중위
     // 자치구 대표 상권의 임대료를 사용(구를 바꾸면 임대료·손익분기가 바뀜). 매핑 없으면 서울 평균으로 폴백.
     // { rent: 5.3, vacancy: 6.4 } 은 core 로딩 실패 시에만 쓰는 [폴백]값(서울 평균 근사) — 정상 로딩 시 도달 안 함.
     const R = this.rentZoneOf(this.state.gu) || core.rentSeoul || { rent: 5.3, vacancy: 6.4 };
     const area = +this.state.area || 0;
-    const rev = this.state.rev == null ? Math.round(i.p50) : +this.state.rev || 0;   // 빈칸이면 [실측] 매출 중앙값
+    const rev = this.state.rev == null ? Math.round(baseRev) : +this.state.rev || 0;   // 빈칸이면 [실측] 매출 중앙값(구 우선)
     const staff = +this.state.staff || 0;
     const wage = +this.state.wage || 0;                                              // 1인 급여 — 기본 250만(state 기본값), [가정]
     const inv = this.state.inv == null ? i.invest : +this.state.inv || 0;            // 빈칸이면 [가정] 업종 표준 창업비
@@ -1186,18 +1202,36 @@ class Component extends DCLogic {
     const profit = rev - cogsCost - fixed;
     const bep = fixed / (1 - cogs);
     const payback = profit > 0 ? inv / profit : null;
-    return { i, R, area, rev, staff, wage, inv, rentCost, cogs, laborCost, etc, fixed, cogsCost, profit, bep, payback };
+    return { i, gs, R, area, rev, staff, wage, inv, rentCost, cogs, laborCost, etc, fixed, cogsCost, profit, bep, payback };
   }
 
   // 손익분기가 이 업종 매출 분포의 어디에 놓이는지 (분위 보간 — 기존 계산 로직 유지)
   // p25~p90 은 [실측] 분위값. 양 끝(0%·100%)은 공개데이터에 없어서
   // p25*0.7, p90*1.4 로 [추정]해 곡선 끝을 이어붙인 것 — 정확한 값이 아니라 그래프가 끊기지 않게 하는 근사다.
-  pctBelow(x, bep) {
-    const p = [[0, x.p25 * 0.7], [25, x.p25], [40, x.p40], [50, x.p50], [75, x.p75], [90, x.p90], [100, x.p90 * 1.4]];
+  pctBelow(curve, bep) {
+    const p = curve;
     for (let i = 1; i < p.length; i++) {
       if (bep <= p[i][1]) { const [a, av] = p[i - 1], [b, bv] = p[i]; return Math.round(a + (b - a) * (bep - av) / ((bv - av) || 1)); }
     }
     return 98;
+  }
+  // 매출 분포: 구 실측(perstore_q=하위25/중위/상위25 3점, 만원)이 있으면 그 구, 없으면 서울 업종 분위(5점).
+  // 곡선의 양 끝(0%·100%)만 근사로 이어붙이고(그래프 끊김 방지), 가운데 점은 실측만 쓴다(없는 분위 지어내지 않음).
+  salesDist(c) {
+    if (c.gs) {
+      const g = c.gs;   // p25/p50/p75 는 만원 단위(서울 core.ind 와 동일). bep 도 만원 → 변환 불필요.
+      return {
+        scope: this.state.gu, n: g.n,
+        points: [[25, g.p25], [50, g.p50], [75, g.p75]],
+        curve: [[0, g.p25 * 0.7], [25, g.p25], [50, g.p50], [75, g.p75], [100, g.p75 * 1.5]]
+      };
+    }
+    const i = c.i;
+    return {
+      scope: '서울', n: i.n,
+      points: [[25, i.p25], [40, i.p40], [50, i.p50], [75, i.p75], [90, i.p90]],
+      curve: [[0, i.p25 * 0.7], [25, i.p25], [40, i.p40], [50, i.p50], [75, i.p75], [90, i.p90], [100, i.p90 * 1.4]]
+    };
   }
 
   rank(name, getter, desc) {
@@ -1717,6 +1751,7 @@ class Component extends DCLogic {
 
     // ── 상세
     const ind = core.ind[S.ind];
+    const gsD = this.guSales(S.gu, S.ind);   // 선택 자치구 실측 매출(있으면). 헤드라인 추정매출에 사용.
     const st = this.stores && this.stores.ind[S.ind];
     const detailPositives = [], detailCautions = [];
     if (popD) {
@@ -1798,16 +1833,17 @@ class Component extends DCLogic {
     }
     let dist = null;
     if (c) {
-      const failN = this.pctBelow(c.i, c.bep);
+      const sd = this.salesDist(c);                       // 구 실측(3분위) 있으면 그 구, 없으면 서울(5분위)
+      const failN = this.pctBelow(sd.curve, c.bep);
       const pos = p => 'position:absolute;left:' + p + '%;transform:translateX(-50%);top:0;text-align:center;width:84px';
       dist = {
-        points: [[25, c.i.p25], [40, c.i.p40], [50, c.i.p50], [75, c.i.p75], [90, c.i.p90]].map(([q, v], i) => ({
+        points: sd.points.map(([q, v], i) => ({
           q: '하위 ' + q + '%', value: this.won(v), style: pos(q) + ';animation:riseIn .5s cubic-bezier(.2,.7,.3,1) both;animation-delay:' + (i * 70) + 'ms'
         })),
         markerStyle: 'position:absolute;left:' + Math.min(97, Math.max(3, failN)) + '%;top:0;bottom:22px;width:1.5px;background:var(--bad);transform:translateX(-50%);animation:fadeIn .5s ease both;animation-delay:.45s',
         markerLabelStyle: 'position:absolute;left:' + Math.min(88, Math.max(12, failN)) + '%;transform:translateX(-50%);bottom:0;font-size:12px;color:var(--bad);white-space:nowrap;font-weight:500',
         markerLabel: '손익분기 ' + this.won(c.bep),
-        note: '서울 ' + this.num(c.i.n) + '개 상권의 ' + S.ind + ' 점포당 월매출 분포입니다. 이 조건의 손익분기는 하위 ' + failN + '% 지점에 있습니다. 하위 ' + failN + '%에 들지 않아야 본전을 넘깁니다.'
+        note: sd.scope + ' ' + this.num(sd.n) + '개 상권의 ' + S.ind + ' 점포당 월매출 분포입니다' + (c.gs ? '(이 자치구 실측)' : '(구별 데이터 없어 서울 전체)') + '. 이 조건의 손익분기는 하위 ' + failN + '% 지점에 있습니다. 하위 ' + failN + '%에 들지 않아야 본전을 넘깁니다.'
       };
     }
     const numIn = (k) => e => { const v = e.target.value; this.setState({ [k]: v === '' ? null : +v }); };
@@ -1977,8 +2013,10 @@ class Component extends DCLogic {
       rentAvg: core.rentSeoul.rent, rentVacancy: core.rentSeoul.vacancy,
       rentZones: Object.entries(core.rentZones || {}).filter(([k, v]) => k !== '서울' && v.rent).sort((a, b) => b[1].rent - a[1].rent).slice(0, 12).map(([k, v]) => ({ name: k.replace('서울·', ''), rent: v.rent.toFixed(1), vacancy: v.vacancy.toFixed(1) })),
       guFacts,
-      detailSales: ind ? this.won(ind.p50) : '—',
-      detailSalesSub: ind ? '서울 전체 ' + S.ind + ' 점포당 월매출 중위(상권 카드매출÷점포수) · 자치구와 무관하게 동일 · 현금 제외·대형상권 영향으로 실제보다 높을 수 있어 참고용 · 실측 ' + this.num(ind.n) + '개 상권 · ' + core.quarter : '',
+      detailSales: gsD ? this.won(gsD.p50) : (ind ? this.won(ind.p50) : '—'),
+      detailSalesSub: gsD
+        ? (S.gu + ' ' + S.ind + ' 점포당 월매출 중위(상권 카드매출÷점포수, 자치구 실측) · 실측 ' + this.num(gsD.n) + '개 상권 · 현금 제외라 참고용 · ' + (gsD.quarter || core.quarter))
+        : (ind ? '서울 전체 ' + S.ind + ' 점포당 월매출 중위(이 자치구 데이터가 없어 서울값) · 현금 제외·대형상권 영향으로 참고용 · 실측 ' + this.num(ind.n) + '개 상권 · ' + core.quarter : ''),
       detailPositives, detailCautions,
       detailSource: '출처: 서울 상권분석서비스 추정매출 · 서울 생활인구 · 국세청 폐업통계. 이 값은 개별 점포 매출이 아닌 상권 단위 추정값입니다.',
       topics, topicOpen: !!T, topicClosed: !T,
