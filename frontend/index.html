@@ -954,7 +954,7 @@ class Component extends DCLogic {
     try { saved = localStorage.getItem('sanggwon-theme'); } catch (e) { }
     const dark = saved ? saved === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
     this.applyTheme(dark);
-    this.setState({ dark });
+    // 부팅 최적화: dark 만을 위한 별도 setState 제거(전체 재렌더 1회 절감). dark 는 아래 ready setState 에 함께 실린다.
     const D = window.__SANGGWON;
     if (D) {
       this.core = D.core; this.geo = D.geo; this.pop = D.pop; this.park = D.park;
@@ -978,19 +978,23 @@ class Component extends DCLogic {
       this.income = income; this.forecast = forecast;
       if (geo) this.computeAreas(geo);
       const h = (location.hash || '').replace('#', '');
-      const patch = { ready: true };
+      const patch = { ready: true, dark };
       if (h && this.topicDefs().find(t => t.id === h)) { patch.screen = 'data'; patch.topic = h; }
       this.setState(patch);
     });
-    // 역 단위 지하철은 구운 번들(__SANGGWON)에 없으므로 항상 별도 로드. 파일이 생기면 표시.
-    // data-bundle.js 와 같은 형제 경로가 프로덕션(루트=frontend/) 기준. dev(레포루트)용 접두사 폴백.
+    // 부팅 최적화: 아래 두 파일(지하철·구별매출)은 첫 화면엔 불필요한데, 로드 후 setState 가
+    // 156K 템플릿을 통째로 재렌더시켜 부팅을 느리게 했다. 첫 렌더가 끝나고 브라우저가 한가할 때 지연 로드한다.
     const loadJson = (u) => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
-    loadJson('subway_stations.json').then(s => s || loadJson('frontend/subway_stations.json'))
-      .then(s => { if (s && s.available && s.stations) { this.stations = s; this.setState({ stationsReady: true }); } });
-    // 자치구×업종 점포당 월매출(실측, 자동 갱신) — 있으면 구별로 매출·손익분기가 실제로 달라진다.
-    // 번들엔 없어 항상 별도 로드. 없거나 해당 구·업종이 비면 서울 전체값으로 폴백.
-    loadJson('sales_gu_ind.json').then(s => s || loadJson('frontend/sales_gu_ind.json'))
-      .then(s => { if (s && s.available && s.gu) { this.salesGu = s; this.setState({ salesGuReady: true }); } });
+    const deferLoads = () => {
+      // 역 단위 지하철(번들에 없음). 프로덕션(루트=frontend/) 기준, dev용 접두사 폴백.
+      loadJson('subway_stations.json').then(s => s || loadJson('frontend/subway_stations.json'))
+        .then(s => { if (s && s.available && s.stations) { this.stations = s; this.setState({ stationsReady: true }); } });
+      // 자치구×업종 점포당 월매출(실측). 있으면 구별로 매출·손익분기가 달라짐. 없으면 서울 전체값 폴백.
+      loadJson('sales_gu_ind.json').then(s => s || loadJson('frontend/sales_gu_ind.json'))
+        .then(s => { if (s && s.available && s.gu) { this.salesGu = s; this.setState({ salesGuReady: true }); } });
+    };
+    if (window.requestIdleCallback) requestIdleCallback(deferLoads, { timeout: 2500 });
+    else setTimeout(deferLoads, 1200);
     this._hash = () => {
       const h = (location.hash || '').replace('#', '');
       if (h && this.topicDefs().find(t => t.id === h)) this.setState({ screen: 'data', topic: h });
