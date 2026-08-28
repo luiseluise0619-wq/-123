@@ -19,36 +19,47 @@
   }}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;line-height:1.6;letter-spacing:-.011em;-webkit-font-smoothing:antialiased;word-break:keep-all}
-  .wrap{max-width:640px;margin:0 auto;padding:28px 20px 64px}
+  *{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+  ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+  .wrap{max-width:660px;margin:0 auto;padding:28px 20px 72px}
   h1{font-size:clamp(24px,5vw,32px);font-weight:600;letter-spacing:-.03em;margin:0 0 6px}
   .sub{color:var(--ink2);font-size:15px;margin:0 0 24px}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
   label{display:block;font-size:13px;color:var(--ink2);margin:0 0 6px;font-weight:500}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  select,input{width:100%;font-family:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line-strong);border-radius:10px;padding:11px 12px;min-height:46px;outline:none}
+  select,input[type=number]{width:100%;font-family:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line-strong);border-radius:10px;padding:11px 12px;min-height:46px;outline:none}
   select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A8F' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
   select option{background:var(--surface);color:var(--ink)}
   .field{margin-bottom:14px}
-  .hint{font-size:12px;color:var(--ink3);margin-top:5px}
   button.go{width:100%;font-family:inherit;font-size:17px;font-weight:600;color:#fff;background:var(--accent);border:none;border-radius:12px;padding:15px;min-height:52px;cursor:pointer;margin-top:4px}
-  button.go:active{opacity:.9}
-  /* 3초 판정 카드 */
   #verdict{display:none;border-radius:18px;padding:24px;margin-bottom:16px;border:1px solid}
-  #verdict.good{background:var(--good-bg);border-color:var(--good)}
-  #verdict.warn{background:var(--warn-bg);border-color:var(--warn)}
-  #verdict.bad{background:var(--bad-bg);border-color:var(--bad)}
+  #verdict.good{background:var(--good-bg);border-color:var(--good)}#verdict.warn{background:var(--warn-bg);border-color:var(--warn)}#verdict.bad{background:var(--bad-bg);border-color:var(--bad)}
   #verdict .tag{font-size:13px;font-weight:700;letter-spacing:.04em}
   #verdict.good .tag{color:var(--good)}#verdict.warn .tag{color:var(--warn)}#verdict.bad .tag{color:var(--bad)}
-  #verdict .head{font-size:clamp(22px,5vw,28px);font-weight:700;letter-spacing:-.03em;margin:8px 0 4px;line-height:1.25}
+  #verdict .head{font-size:clamp(21px,5vw,27px);font-weight:700;letter-spacing:-.03em;margin:8px 0 6px;line-height:1.25}
   #verdict .why{font-size:15px;color:var(--ink);opacity:.92}
   .kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px}
-  .kpi{background:var(--bg);padding:16px}
-  .kpi .k{font-size:12px;color:var(--ink3)}
-  .kpi .v{font-size:20px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi{background:var(--bg);padding:16px}.kpi .k{font-size:12px;color:var(--ink3)}.kpi .v{font-size:20px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
   .kpi .v.neg{color:var(--bad)}.kpi .v.pos{color:var(--good)}
-  .note{font-size:12px;color:var(--ink3);line-height:1.7;margin-top:4px}
+  .whatif label{display:flex;justify-content:space-between;font-size:14px;color:var(--ink);font-weight:500;margin-bottom:8px}
+  .whatif label b{font-variant-numeric:tabular-nums}
+  .whatif .sl{margin-bottom:18px}
+  input[type=range]{width:100%;accent-color:var(--accent);height:28px}
+  .peak{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+  .peak .p{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .peak .p .k{font-size:12px;color:var(--ink3)}.peak .p .v{font-size:16px;font-weight:600;margin-top:2px}
+  .note{font-size:12px;color:var(--ink3);line-height:1.7}
   .badge{display:inline-block;font-size:11px;color:var(--ink3);border:1px solid var(--line);border-radius:20px;padding:2px 8px;margin-right:4px}
+  .actions{display:flex;gap:10px;margin-bottom:16px}
+  .actions button{flex:1;font-family:inherit;font-size:15px;font-weight:600;padding:13px;border-radius:12px;cursor:pointer;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink)}
   #result{display:none}
+  h3{font-size:15px;margin:0 0 14px}
+  @media print{
+    .noprint{display:none!important}
+    body{background:#fff;color:#000}
+    .card,#verdict,.kpi{border-color:#ccc!important}
+    .wrap{max-width:100%}
+  }
 </style>
 </head>
 <body>
@@ -56,7 +67,7 @@
   <h1>3초 창업 진단</h1>
   <p class="sub">조건만 넣으면 이 자리에서 <b>버틸 수 있을지</b> 바로 보여드립니다.</p>
 
-  <div class="card">
+  <div class="card noprint">
     <div class="row">
       <div class="field"><label>지역 (자치구)</label><select id="gu"></select></div>
       <div class="field"><label>업종</label><select id="ind"></select></div>
@@ -65,20 +76,36 @@
       <div class="field"><label>가진 창업 자금 (만원)</label><input id="budget" type="number" inputmode="numeric" placeholder="예: 5000"></div>
       <div class="field"><label>매장 평수 (평)</label><input id="area" type="number" inputmode="numeric" placeholder="예: 15"></div>
     </div>
-    <div class="field"><label>예상 월세 (만원) · 비우면 지역 평균으로 추정</label><input id="rent" type="number" inputmode="numeric" placeholder="비워두면 자동"></div>
     <button class="go" id="run">진단하기</button>
   </div>
 
   <div id="verdict"><div class="tag"></div><div class="head"></div><div class="why"></div></div>
 
   <div id="result">
+    <div class="actions noprint">
+      <button id="pdf">리포트 저장 (PDF)</button>
+    </div>
     <div class="kpis" id="kpis"></div>
+
+    <div class="card noprint whatif">
+      <h3>이것저것 바꿔보기 (What-If)</h3>
+      <div class="sl"><label>월세 <b id="v_rent"></b></label><input type="range" id="s_rent" min="0"></div>
+      <div class="sl"><label>직원 수 <b id="v_staff"></b></label><input type="range" id="s_staff" min="0" max="10" step="1"></div>
+      <div class="sl"><label>객단가(결제 단가) <b id="v_unit"></b></label><input type="range" id="s_unit" min="0"></div>
+      <div class="note">슬라이더를 움직이면 위 판정·손익이 실시간으로 바뀝니다.</div>
+    </div>
+
+    <div class="card">
+      <h3>언제 손님이 몰리나 (피크)</h3>
+      <div class="peak" id="peak"></div>
+    </div>
+
     <div class="card">
       <div class="note" id="detail"></div>
       <div class="note" style="margin-top:10px">
-        <span class="badge">실측</span> 매출 분위·폐업 추세는 공공데이터 실측입니다.
-        <span class="badge">가정</span> 인건비·원가율은 업종 표준값 가정이라 실제와 다를 수 있습니다.
-        <span class="badge">추정</span> 예상 매출은 서울 업종 기준 추정 — 개별 점포 실적을 보장하지 않습니다.
+        <span class="badge">실측</span> 구별 점포당 매출·시간대·폐업추세는 공공데이터 실측.
+        <span class="badge">가정</span> 인건비·원가율은 업종 표준 가정.
+        <span class="badge">추정</span> 개별 점포 실적을 보장하지 않는 추정치입니다.
       </div>
     </div>
   </div>
@@ -86,68 +113,95 @@
 
 <script>
 (function(){
-  var D = window.__SANGGWON, C = D && D.core;
-  if(!C){ document.body.innerHTML='<p style="padding:40px">데이터를 불러오지 못했습니다.</p>'; return; }
-  var guSel=document.getElementById('gu'), indSel=document.getElementById('ind');
-  Object.keys(C.gu).sort().forEach(function(g){ var o=document.createElement('option'); o.value=g; o.textContent=g; guSel.appendChild(o); });
-  Object.keys(C.ind).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=k; indSel.appendChild(o); });
-  indSel.value = C.ind['커피-음료'] ? '커피-음료' : Object.keys(C.ind)[0];
+  var D=window.__SANGGWON, C=D&&D.core;
+  if(!C){document.body.innerHTML='<p style="padding:40px">데이터를 불러오지 못했습니다.</p>';return;}
+  // 앱 rentZoneOf() 와 동일한 자치구→상권 매핑 (구별 임대료)
+  var ZMAP={'종로구':'서울·종로','중구':'서울·명동','용산구':'서울·이태원','성동구':'서울·왕십리','광진구':'서울·건대입구','동대문구':'서울·청량리','중랑구':'서울·상봉역','성북구':'서울·성신여대','강북구':'서울·수유','노원구':'서울·상계역','은평구':'서울·연신내','서대문구':'서울·신촌/이대','마포구':'서울·홍대/합정','양천구':'서울·목동','강서구':'서울·화곡','구로구':'서울·오류동역','금천구':'서울·독산/시흥','영등포구':'서울·영등포역','동작구':'서울·노량진','관악구':'서울·신림역','서초구':'서울·교대역','강남구':'서울·강남대로','송파구':'서울·잠실/송파','강동구':'서울·천호'};
+  function rentOf(gu){var z=C.rentZones[ZMAP[gu]];return z?z.rent:C.rentSeoul.rent;} // 만원/㎡
 
-  var rentSeoul = (C.rentSeoul && C.rentSeoul.rent) || 5.3;  // 만원/㎡
-  function fmt(man){ man=Math.round(man); if(Math.abs(man)>=10000){ var eok=Math.floor(Math.abs(man)/10000), m=Math.abs(man)%10000; return (man<0?'-':'')+eok+'억'+(m?' '+m.toLocaleString()+'만':''); } return man.toLocaleString()+'만'; }
+  var SGI=null; // sales_gu_ind (구별 실측)
+  fetch('sales_gu_ind.json').then(function(r){return r.json();}).then(function(d){SGI=d&&d.gu?d.gu:null;}).catch(function(){});
+
+  var guSel=document.getElementById('gu'), indSel=document.getElementById('ind');
+  Object.keys(C.gu).sort().forEach(function(g){var o=document.createElement('option');o.value=g;o.textContent=g;guSel.appendChild(o);});
+  Object.keys(C.ind).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;indSel.appendChild(o);});
+  indSel.value=C.ind['커피-음료']?'커피-음료':Object.keys(C.ind)[0];
+
+  function fmt(man){man=Math.round(man);if(Math.abs(man)>=10000){var e=Math.floor(Math.abs(man)/10000),r=Math.abs(man)%10000;return (man<0?'-':'')+e+'억'+(r?' '+r.toLocaleString()+'만':'');}return man.toLocaleString()+'만';}
+  var TMZ=['새벽(0-6시)','오전(6-11시)','점심(11-14시)','오후(14-17시)','저녁(17-21시)','밤(21-24시)'];
+  var DOW=['월','화','수','목','금','토','일'];
+  function maxIdx(a){var m=0;for(var i=1;i<a.length;i++)if(a[i]>a[m])m=i;return m;}
+
+  var st=null; // 현재 진단 상태(슬라이더 재계산용)
+
+  function baseInputs(){
+    var g=guSel.value,k=indSel.value,i=C.ind[k],gu=C.gu[g];
+    var rec=(SGI&&SGI[g]&&SGI[g][k])||null;               // 구×업종 실측
+    var q=rec&&rec.perstore_q;                            // [하위25,중위,상위25] 만원
+    var p25=q?q[0]:i.p25, p50=q?q[1]:i.p50, p75=q?q[2]:i.p75; // 구 실측 우선, 없으면 서울 업종
+    var unit=(rec&&rec.unit)||i.unit;                    // 객단가(원)
+    var area=+document.getElementById('area').value||0;
+    var budget=+document.getElementById('budget').value||0;
+    return {g:g,k:k,i:i,gu:gu,rec:rec,guData:!!q,p25:p25,p50:p50,p75:p75,unit:unit,area:area,budget:budget,
+            rentDefault:Math.round(rentOf(g)*area*3.3), staffDefault:Math.max(1,Math.round(area/13))};
+  }
+
+  function compute(s, ov){
+    var i=s.i, cogs=i.cogs/100, etc=i.etc, wage=250;
+    var rentCost=ov.rent, staff=ov.staff, unit=ov.unit;
+    var rev=Math.round(s.p50*(unit/s.unit));             // 객단가 바꾸면 매출도 비례(건수 고정 가정)
+    var fixed=rentCost+staff*wage+etc;
+    var profit=rev-Math.round(rev*cogs)-fixed;
+    var bep=fixed/(1-cogs);
+    var payback=profit>0?Math.ceil(i.invest/profit):null;
+    return {rev:rev,cogs:cogs,fixed:fixed,rentCost:rentCost,staff:staff,etc:etc,profit:profit,bep:bep,payback:payback,unit:unit};
+  }
+
+  function render(){
+    var s=st, ov={rent:+document.getElementById('s_rent').value, staff:+document.getElementById('s_staff').value, unit:+document.getElementById('s_unit').value};
+    var r=compute(s,ov);
+    // 슬라이더 라벨
+    document.getElementById('v_rent').textContent=fmt(ov.rent)+'원';
+    document.getElementById('v_staff').textContent=ov.staff+'명';
+    document.getElementById('v_unit').textContent=ov.unit.toLocaleString()+'원';
+    // 판정
+    var trend=s.gu.trend, shortFund=s.budget>0&&s.budget<s.i.invest;
+    var level,tag,reasons=[];
+    if(r.profit<=0){level='bad';tag='위험';reasons.push('예상 순이익이 <b>적자('+fmt(r.profit)+'원/월)</b> 구조');}
+    else if((r.payback&&r.payback>36)||trend>=18){level='warn';tag='주의';}
+    else{level='good';tag='해볼 만함';}
+    if(trend>=15)reasons.push('최근 '+s.g+' 폐업 <b>+'+trend+'%</b>');
+    if(shortFund)reasons.push('업종 표준 창업비('+fmt(s.i.invest)+'원)보다 자금 <b>부족</b>');
+    if(r.profit>0&&r.payback)reasons.push('흑자 시 회수 <b>약 '+r.payback+'개월</b>');
+    if(!reasons.length)reasons.push('예상 순이익 흑자, 폐업 추세도 안정적');
+    var v=document.getElementById('verdict');v.className=level;v.style.display='block';
+    v.querySelector('.tag').textContent='3초 진단 결과'+(s.guData?'':' · (서울 업종 기준)');
+    v.querySelector('.head').textContent=fmt(s.budget||s.i.invest)+'원으로 '+s.g+' '+s.k+' → '+tag;
+    v.querySelector('.why').innerHTML=reasons.slice(0,2).join(' · ');
+    // KPI
+    var kpis=[['예상 월매출(구 실측 범위)',fmt(s.p25)+'~'+fmt(s.p75)+'원',''],['손익분기 매출',fmt(r.bep)+'원/월',''],['예상 월 순이익',fmt(r.profit)+'원',r.profit<0?'neg':'pos'],['투자 회수',r.payback?'약 '+r.payback+'개월':'흑자 전환 안 됨',r.payback?'':'neg']];
+    document.getElementById('kpis').innerHTML=kpis.map(function(x){return '<div class="kpi"><div class="k">'+x[0]+'</div><div class="v '+x[2]+'">'+x[1]+'</div></div>';}).join('');
+    // 피크(시간대·요일)
+    var pk=document.getElementById('peak'), rec=s.rec;
+    if(rec&&rec.tmz&&rec.dow){pk.innerHTML='<div class="p"><div class="k">피크 시간대</div><div class="v">'+TMZ[maxIdx(rec.tmz)]+'</div></div><div class="p"><div class="k">피크 요일</div><div class="v">'+DOW[maxIdx(rec.dow)]+'요일</div></div>';}
+    else{pk.innerHTML='<div class="note">이 구·업종은 시간대 데이터가 없어 피크를 표시하지 않습니다.</div>';}
+    // 상세
+    document.getElementById('detail').innerHTML='고정비(월세 '+fmt(r.rentCost)+' + 인건비 '+fmt(r.staff*250)+' + 기타 '+fmt(r.etc)+') = <b>'+fmt(r.fixed)+'원/월</b>. 손익분기('+fmt(r.bep)+')를 예상 매출('+fmt(r.rev)+')이 '+(r.rev>=r.bep?'넘습니다':'<b>못 넘습니다</b>')+'. '+s.g+' 폐업 +'+trend+'% · '+C.quarter+' 기준.';
+    document.getElementById('result').style.display='block';
+  }
 
   function run(){
-    var g=guSel.value, k=indSel.value, i=C.ind[k], gu=C.gu[g];
-    var area = +document.getElementById('area').value || 0;
-    var budget = +document.getElementById('budget').value || 0;
-    var rentIn = document.getElementById('rent').value;
-    // ── 기존 앱 calc() 와 동일한 공식 ──
-    var rev = i.p50;                                   // 예상 월매출(중위, 만원) [추정]
-    var cogs = i.cogs/100;                             // 원가율 [가정]
-    var staff = Math.max(1, Math.round(area/13));      // 인력 [가정: 13평당 1명]
-    var wage = 250;                                    // 1인 월급 250만 [가정]
-    var etc = i.etc;                                   // 기타 운영비 [가정]
-    var rentCost = rentIn!=='' ? (+rentIn||0) : Math.round(rentSeoul*area*3.3); // 3.3=평→㎡
-    var fixed = rentCost + staff*wage + etc;
-    var profit = rev - Math.round(rev*cogs) - fixed;   // 예상 월 순이익
-    var bep = fixed/(1-cogs);                          // 손익분기 매출
-    var payback = profit>0 ? Math.ceil(i.invest/profit) : null; // 회수 개월(투자=업종 표준 창업비)
-    var trend = gu.trend;                              // 자치구 폐업 증가율(%)
-    var shortFund = budget>0 && budget < i.invest;     // 자금 부족?
-
-    // ── 3초 판정 ──
-    var level, tag, reasons=[];
-    if(profit<=0){ level='bad'; tag='위험'; reasons.push('예상 순이익이 <b>적자('+fmt(profit)+'원/월)</b> 구조'); }
-    else if((payback && payback>36) || trend>=18){ level='warn'; tag='주의'; }
-    else { level='good'; tag='해볼 만함'; }
-    if(trend>=15) reasons.push('최근 '+g+' 폐업이 <b>+'+trend+'%</b> 늘어나는 중');
-    if(shortFund) reasons.push('업종 표준 창업비('+fmt(i.invest)+'원)보다 자금이 <b>부족</b>');
-    if(profit>0 && payback) reasons.push('흑자면 투자 회수에 <b>약 '+payback+'개월</b>');
-    if(!reasons.length) reasons.push('예상 순이익 흑자, 폐업 추세도 안정적');
-
-    var v=document.getElementById('verdict'); v.className=level; v.style.display='block';
-    v.querySelector('.tag').textContent='3초 진단 결과';
-    v.querySelector('.head').textContent = fmt(budget||i.invest)+'원으로 '+g+' '+k+' → '+tag;
-    v.querySelector('.why').innerHTML = reasons.slice(0,2).join(' · ');
-
-    // ── KPI ──
-    var kpis=[
-      ['예상 월매출(추정 범위)', fmt(i.p25)+'~'+fmt(i.p75)+'원', ''],
-      ['손익분기 매출', fmt(bep)+'원/월', ''],
-      ['예상 월 순이익', fmt(profit)+'원', profit<0?'neg':'pos'],
-      ['투자 회수', payback? '약 '+payback+'개월' : '흑자 전환 안 됨', payback?'':'neg']
-    ];
-    document.getElementById('kpis').innerHTML = kpis.map(function(x){
-      return '<div class="kpi"><div class="k">'+x[0]+'</div><div class="v '+x[2]+'">'+x[1]+'</div></div>';
-    }).join('');
-    document.getElementById('detail').innerHTML =
-      '고정비(월세 '+fmt(rentCost)+' + 인건비 '+fmt(staff*wage)+' + 기타 '+fmt(etc)+') = <b>'+fmt(fixed)+'원/월</b>. '+
-      '손익분기 매출('+fmt(bep)+')을 예상 매출('+fmt(rev)+')이 '+(rev>=bep?'넘습니다':'<b>못 넘습니다</b>')+'. '+
-      g+' 폐업 추세 +'+trend+'% ('+C.quarter+' 기준).';
-    document.getElementById('result').style.display='block';
-    v.scrollIntoView({behavior:'smooth',block:'start'});
+    st=baseInputs();
+    // 슬라이더 초기값·범위 세팅
+    var sr=document.getElementById('s_rent'); sr.max=Math.max(50,st.rentDefault*2); sr.value=st.rentDefault; sr.step=Math.max(1,Math.round(st.rentDefault/50));
+    var ss=document.getElementById('s_staff'); ss.value=st.staffDefault;
+    var su=document.getElementById('s_unit'); su.max=Math.max(2000,st.unit*2); su.value=st.unit; su.step=Math.max(100,Math.round(st.unit/50));
+    render();
+    document.getElementById('verdict').scrollIntoView({behavior:'smooth',block:'start'});
   }
-  document.getElementById('run').addEventListener('click', run);
+  document.getElementById('run').addEventListener('click',run);
+  ['s_rent','s_staff','s_unit'].forEach(function(id){document.getElementById(id).addEventListener('input',render);});
+  document.getElementById('pdf').addEventListener('click',function(){window.print();});
 })();
 </script>
 </body>

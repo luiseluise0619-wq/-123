@@ -1656,6 +1656,11 @@ class Component extends DCLogic {
       label: l, go: nav(k),
       style: 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:' + (S.screen === k ? 'var(--ink)' : 'var(--ink3)') + ';font-weight:' + (S.screen === k ? '500' : '400')
     }));
+    // 3초 진단: 조건→손익/위험 판정 단일 페이지(mvp.html)
+    navItems.push({
+      label: '3초 진단', go: () => { location.href = 'mvp.html'; },
+      style: 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:var(--accent);font-weight:600'
+    });
     // 건물 지도: 별도 정적 페이지(building.html, 카카오 실지도)라 인앱 뷰 전환이 아닌 전체-페이지 이동
     navItems.push({
       label: '건물지도', go: () => { location.href = 'building.html'; },
