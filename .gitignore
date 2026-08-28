@@ -30,3 +30,6 @@ backend/app/data/real_data/
 Thumbs.db
 backend/app/data/market/*.csv
 backend/app/data/market/*.pkl
+
+# 루트 Node 의존성(pg 등)
+/node_modules/
