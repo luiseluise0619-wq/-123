@@ -83,6 +83,7 @@
 
   <div id="result">
     <div class="actions noprint">
+      <button id="csv">엑셀 다운로드</button>
       <button id="pdf">리포트 저장 (PDF)</button>
     </div>
     <div class="kpis" id="kpis"></div>
@@ -111,6 +112,21 @@
   </div>
 </div>
 
+<div id="modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:420px;width:100%;padding:24px">
+    <h3 style="font-size:18px;margin:0 0 6px">진단 결과 엑셀 받기</h3>
+    <p class="note" style="margin:0 0 16px">이메일을 남기면 이 진단을 엑셀(CSV)로 내려받을 수 있어요.</p>
+    <input id="m_email" type="email" placeholder="이메일 주소" style="width:100%;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line-strong);border-radius:10px;padding:11px 12px;min-height:46px;outline:none;margin-bottom:12px">
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink2);margin-bottom:8px;font-weight:400"><input id="m_agree" type="checkbox" style="margin-top:3px;width:auto;min-height:0"> <span>(필수) 자료 제공·서비스 안내 목적의 <b>개인정보 수집·이용</b>에 동의합니다.</span></label>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink2);margin-bottom:16px;font-weight:400"><input id="m_mkt" type="checkbox" style="margin-top:3px;width:auto;min-height:0"> <span>(선택) 창업 정보·마케팅 수신에 동의합니다.</span></label>
+    <div id="m_err" style="color:var(--bad);font-size:13px;margin-bottom:10px;display:none"></div>
+    <div style="display:flex;gap:10px">
+      <button id="m_cancel" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink);font-family:inherit;font-weight:600;cursor:pointer">취소</button>
+      <button id="m_submit" style="flex:2;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-weight:600;cursor:pointer">동의하고 받기</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   var D=window.__SANGGWON, C=D&&D.core;
@@ -132,7 +148,7 @@
   var DOW=['월','화','수','목','금','토','일'];
   function maxIdx(a){var m=0;for(var i=1;i<a.length;i++)if(a[i]>a[m])m=i;return m;}
 
-  var st=null; // 현재 진단 상태(슬라이더 재계산용)
+  var st=null, lastCalc=null; // 현재 진단 상태(슬라이더 재계산·다운로드용)
 
   function baseInputs(){
     var g=guSel.value,k=indSel.value,i=C.ind[k],gu=C.gu[g];
@@ -187,6 +203,7 @@
     else{pk.innerHTML='<div class="note">이 구·업종은 시간대 데이터가 없어 피크를 표시하지 않습니다.</div>';}
     // 상세
     document.getElementById('detail').innerHTML='고정비(월세 '+fmt(r.rentCost)+' + 인건비 '+fmt(r.staff*250)+' + 기타 '+fmt(r.etc)+') = <b>'+fmt(r.fixed)+'원/월</b>. 손익분기('+fmt(r.bep)+')를 예상 매출('+fmt(r.rev)+')이 '+(r.rev>=r.bep?'넘습니다':'<b>못 넘습니다</b>')+'. '+s.g+' 폐업 +'+trend+'% · '+C.quarter+' 기준.';
+    lastCalc={s:s,r:r,tag:tag};   // 다운로드/저장용 최신 결과
     document.getElementById('result').style.display='block';
   }
 
@@ -202,6 +219,42 @@
   document.getElementById('run').addEventListener('click',run);
   ['s_rent','s_staff','s_unit'].forEach(function(id){document.getElementById(id).addEventListener('input',render);});
   document.getElementById('pdf').addEventListener('click',function(){window.print();});
+
+  // ── 엑셀(CSV) 다운로드 + 이메일 수집(리드) ──
+  function esc(x){return '"'+String(x==null?'':x).replace(/"/g,'""')+'"';}
+  function buildCSV(){
+    var s=lastCalc.s,r=lastCalc.r;
+    var rows=[['항목','값'],
+      ['지역',s.g],['업종',s.k],['가진 자금(만원)',s.budget||''],['평수',s.area||''],
+      ['예상 월매출 범위(만원)',s.p25+'~'+s.p75],['손익분기 매출(만원)',Math.round(r.bep)],
+      ['예상 월 순이익(만원)',r.profit],['투자 회수(개월)',r.payback||'적자'],
+      ['월세(만원)',r.rentCost],['직원 수',r.staff],['객단가(원)',r.unit],
+      ['폐업 추세(%)',s.gu.trend],['판정',lastCalc.tag],['기준분기',C.quarter],['생성일',new Date().toISOString().slice(0,10)]];
+    return '﻿'+rows.map(function(row){return row.map(esc).join(',');}).join('\r\n'); // BOM: 엑셀 한글깨짐 방지
+  }
+  function download(){
+    var blob=new Blob([buildCSV()],{type:'text/csv;charset=utf-8'});
+    var url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url; a.download='창업진단_'+lastCalc.s.g+'_'+lastCalc.s.k+'.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+  var modal=document.getElementById('modal');
+  document.getElementById('csv').addEventListener('click',function(){ if(lastCalc) modal.style.display='flex'; });
+  document.getElementById('m_cancel').addEventListener('click',function(){ modal.style.display='none'; });
+  document.getElementById('m_submit').addEventListener('click',function(){
+    var email=document.getElementById('m_email').value.trim(), agree=document.getElementById('m_agree').checked;
+    var err=document.getElementById('m_err');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='이메일 형식을 확인해 주세요.';err.style.display='block';return;}
+    if(!agree){err.textContent='개인정보 수집·이용 동의가 필요합니다.';err.style.display='block';return;}
+    err.style.display='none';
+    var s=lastCalc.s;
+    // 리드 저장(실패해도 다운로드는 막지 않음 — DB 미연결 대비)
+    fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      email:email, agreed:true, marketing_opt_in:document.getElementById('m_mkt').checked,
+      item:s.g+' '+s.k+' 창업진단', item_type:'진단CSV', region:s.g, industry:s.k, format:'csv', referrer:location.href
+    })}).catch(function(){});
+    modal.style.display='none'; download();
+  });
 })();
 </script>
 </body>
