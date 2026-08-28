@@ -82,6 +82,7 @@
   <div id="verdict"><div class="tag"></div><div class="head"></div><div class="why"></div></div>
 
   <div id="result">
+    <div class="card"><h3>한 줄 판단</h3><ul id="intel" style="margin:0;padding-left:18px;font-size:15px;color:var(--ink);line-height:1.9"></ul></div>
     <div class="actions noprint">
       <button id="csv">엑셀 다운로드</button>
       <button id="pdf">리포트 저장 (PDF)</button>
@@ -150,7 +151,9 @@
   if(!C){document.body.innerHTML='<p style="padding:40px">데이터를 불러오지 못했습니다.</p>';return;}
   // 앱 rentZoneOf() 와 동일한 자치구→상권 매핑 (구별 임대료)
   var ZMAP={'종로구':'서울·종로','중구':'서울·명동','용산구':'서울·이태원','성동구':'서울·왕십리','광진구':'서울·건대입구','동대문구':'서울·청량리','중랑구':'서울·상봉역','성북구':'서울·성신여대','강북구':'서울·수유','노원구':'서울·상계역','은평구':'서울·연신내','서대문구':'서울·신촌/이대','마포구':'서울·홍대/합정','양천구':'서울·목동','강서구':'서울·화곡','구로구':'서울·오류동역','금천구':'서울·독산/시흥','영등포구':'서울·영등포역','동작구':'서울·노량진','관악구':'서울·신림역','서초구':'서울·교대역','강남구':'서울·강남대로','송파구':'서울·잠실/송파','강동구':'서울·천호'};
-  function rentOf(gu){var z=C.rentZones[ZMAP[gu]];return z?z.rent:C.rentSeoul.rent;} // 만원/㎡
+  function rentOf(gu){var z=C.rentZones[ZMAP[gu]];return z?{rent:z.rent,vacancy:z.vacancy}:{rent:C.rentSeoul.rent,vacancy:C.rentSeoul.vacancy};} // 만원/㎡, 공실률%
+  // 서울 25개 자치구 폐업 추세 평균(비교 기준선)
+  var AVGTREND=(function(){var a=Object.keys(C.gu).map(function(k){return C.gu[k].trend;});return a.reduce(function(x,y){return x+(y||0);},0)/a.length;})();
 
   var SGI=null; // sales_gu_ind (구별 실측)
   fetch('sales_gu_ind.json').then(function(r){return r.json();}).then(function(d){SGI=d&&d.gu?d.gu:null; if(lastCalc) run();}).catch(function(){});
@@ -197,8 +200,9 @@
     var unit=(rec&&rec.unit)||i.unit;                    // 객단가(원)
     var area=+document.getElementById('area').value||0;
     var budget=+document.getElementById('budget').value||0;
-    return {g:g,k:k,i:i,gu:gu,rec:rec,guData:!!q,p25:p25,p50:p50,p75:p75,unit:unit,area:area,budget:budget,
-            rentDefault:Math.round(rentOf(g)*area*3.3), staffDefault:Math.max(1,Math.round(area/13))};
+    var ro=rentOf(g);
+    return {g:g,k:k,i:i,gu:gu,rec:rec,guData:!!q,p25:p25,p50:p50,p75:p75,unit:unit,area:area,budget:budget,vacancy:ro.vacancy,
+            rentDefault:Math.round(ro.rent*area*3.3), staffDefault:Math.max(1,Math.round(area/13))};
   }
 
   function compute(s, ov){
@@ -247,6 +251,14 @@
     else{pk.innerHTML='<div class="note">이 구·업종은 시간대 데이터가 없어 피크를 표시하지 않습니다.</div>';}
     // 상세
     document.getElementById('detail').innerHTML='고정비(월세 '+fmt(r.rentCost)+' + 인건비 '+fmt(r.staff*250)+' + 기타 '+fmt(r.etc)+') = <b>'+fmt(r.fixed)+'원/월</b>. 손익분기('+fmt(r.bep)+')를 예상 매출('+fmt(r.rev)+')이 '+(r.rev>=r.bep?'넘습니다':'<b>못 넘습니다</b>')+'. '+s.g+' 폐업 +'+trend+'% · '+C.quarter+' 기준.';
+    // 한 줄 판단(인텔리전스) — 숫자만 주지 않고 "서울 평균 대비 유·불리"를 말해줌
+    var diff=s.gu.trend-AVGTREND, margin=Math.round((r.rev/r.bep-1)*100);
+    var intel=[
+      '<b>'+s.g+'</b> 폐업 추세 <b>+'+s.gu.trend+'%</b> — 서울 평균(+'+AVGTREND.toFixed(1)+'%)보다 <b>'+Math.abs(diff).toFixed(1)+'%p '+(diff>0?'높음(불리)':'낮음(유리)')+'</b>',
+      '이 상권 공실률 <b>'+s.vacancy+'%</b>'+(s.vacancy>=9?' — 다소 높아 <b>주의</b>':' — 안정적'),
+      '예상 매출이 손익분기를 <b>'+(margin>=0?'+'+margin+'% 여유로 넘김':margin+'% 못 넘김(적자)')+'</b>'
+    ];
+    document.getElementById('intel').innerHTML=intel.map(function(x){return '<li>'+x+'</li>';}).join('');
     fillGuides(s);                // 임장 체크리스트 + 마케팅 플레이북
     lastCalc={s:s,r:r,tag:tag};   // 다운로드/저장용 최신 결과
     document.getElementById('result').style.display='block';
