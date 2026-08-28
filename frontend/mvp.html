@@ -85,8 +85,15 @@
     <div class="actions noprint">
       <button id="csv">엑셀 다운로드</button>
       <button id="pdf">리포트 저장 (PDF)</button>
+      <button id="share">링크 복사</button>
     </div>
     <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <h3>매출 시나리오 · 예상 월 순이익</h3>
+      <div class="peak" id="scen"></div>
+      <div class="note" style="margin-top:8px">하위25%(비관) · 중위 · 상위25%(낙관) 매출일 때의 순이익입니다.</div>
+    </div>
 
     <div class="card noprint whatif">
       <h3>이것저것 바꿔보기 (What-If)</h3>
@@ -146,7 +153,7 @@
   function rentOf(gu){var z=C.rentZones[ZMAP[gu]];return z?z.rent:C.rentSeoul.rent;} // 만원/㎡
 
   var SGI=null; // sales_gu_ind (구별 실측)
-  fetch('sales_gu_ind.json').then(function(r){return r.json();}).then(function(d){SGI=d&&d.gu?d.gu:null;}).catch(function(){});
+  fetch('sales_gu_ind.json').then(function(r){return r.json();}).then(function(d){SGI=d&&d.gu?d.gu:null; if(lastCalc) run();}).catch(function(){});
 
   var guSel=document.getElementById('gu'), indSel=document.getElementById('ind');
   Object.keys(C.gu).sort().forEach(function(g){var o=document.createElement('option');o.value=g;o.textContent=g;guSel.appendChild(o);});
@@ -229,6 +236,11 @@
     // KPI
     var kpis=[['예상 월매출(구 실측 범위)',fmt(s.p25)+'~'+fmt(s.p75)+'원',''],['손익분기 매출',fmt(r.bep)+'원/월',''],['예상 월 순이익',fmt(r.profit)+'원',r.profit<0?'neg':'pos'],['투자 회수',r.payback?'약 '+r.payback+'개월':'흑자 전환 안 됨',r.payback?'':'neg']];
     document.getElementById('kpis').innerHTML=kpis.map(function(x){return '<div class="kpi"><div class="k">'+x[0]+'</div><div class="v '+x[2]+'">'+x[1]+'</div></div>';}).join('');
+    // 매출 시나리오(비관/중위/낙관) — 슬라이더 객단가 비율 반영
+    var ratio=r.unit/s.unit;
+    function pAt(base){var rv=Math.round(base*ratio);return rv-Math.round(rv*r.cogs)-r.fixed;}
+    var sc=[['비관(하위25%)',pAt(s.p25)],['중위',r.profit],['낙관(상위25%)',pAt(s.p75)]];
+    document.getElementById('scen').innerHTML=sc.map(function(x){return '<div class="p"><div class="k">'+x[0]+'</div><div class="v" style="color:'+(x[1]<0?'var(--bad)':'var(--good)')+'">'+fmt(x[1])+'원</div></div>';}).join('');
     // 피크(시간대·요일)
     var pk=document.getElementById('peak'), rec=s.rec;
     if(rec&&rec.tmz&&rec.dow){pk.innerHTML='<div class="p"><div class="k">피크 시간대</div><div class="v">'+TMZ[maxIdx(rec.tmz)]+'</div></div><div class="p"><div class="k">피크 요일</div><div class="v">'+DOW[maxIdx(rec.dow)]+'요일</div></div>';}
@@ -247,9 +259,23 @@
     var ss=document.getElementById('s_staff'); ss.value=st.staffDefault;
     var su=document.getElementById('s_unit'); su.max=Math.max(2000,st.unit*2); su.value=st.unit; su.step=Math.max(100,Math.round(st.unit/50));
     render();
+    history.replaceState(null,'','?gu='+encodeURIComponent(st.g)+'&ind='+encodeURIComponent(st.k)+'&budget='+(st.budget||'')+'&area='+(st.area||''));
     document.getElementById('verdict').scrollIntoView({behavior:'smooth',block:'start'});
   }
   document.getElementById('run').addEventListener('click',run);
+  // 공유 링크: URL 파라미터로 조건 복원 + 복사
+  (function(){var p=new URLSearchParams(location.search);
+    if(p.get('gu')&&C.gu[p.get('gu')]) guSel.value=p.get('gu');
+    if(p.get('ind')&&C.ind[p.get('ind')]) indSel.value=p.get('ind');
+    if(p.get('budget')) document.getElementById('budget').value=p.get('budget');
+    if(p.get('area')) document.getElementById('area').value=p.get('area');
+    if(p.get('gu')&&p.get('ind')) run();
+  })();
+  document.getElementById('share').addEventListener('click',function(){
+    var u=location.origin+location.pathname+'?gu='+encodeURIComponent(guSel.value)+'&ind='+encodeURIComponent(indSel.value)+'&budget='+(document.getElementById('budget').value||'')+'&area='+(document.getElementById('area').value||'');
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){alert('링크가 복사됐습니다.');},function(){prompt('링크 복사:',u);});}
+    else prompt('링크 복사:',u);
+  });
   ['s_rent','s_staff','s_unit'].forEach(function(id){document.getElementById(id).addEventListener('input',render);});
   document.getElementById('pdf').addEventListener('click',function(){window.print();});
 
