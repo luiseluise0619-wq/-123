@@ -12,7 +12,6 @@ import os
 import pickle
 from typing import Dict, Any
 
-import numpy as np
 import pandas as pd
 
 CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)),

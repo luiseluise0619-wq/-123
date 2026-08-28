@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from typing import Optional
 from app.ml.counterfactual_engine import CounterfactualEngine
 
 router = APIRouter()

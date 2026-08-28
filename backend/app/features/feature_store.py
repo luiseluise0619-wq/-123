@@ -1,4 +1,3 @@
-import json
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 from app.db.models import FeatureStoreRecord

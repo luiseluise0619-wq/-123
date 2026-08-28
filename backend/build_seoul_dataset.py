@@ -36,7 +36,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.data.collectors.seoul_trdar_client import (  # noqa: E402
     SERVICES,
-    KEY_COLS,
     fetch_service,
     get_api_key,
     merge_all,

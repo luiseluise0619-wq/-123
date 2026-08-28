@@ -12,9 +12,8 @@
 
 import os
 import time
-import json
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import pandas as pd
 import requests

@@ -1,7 +1,6 @@
 import shap
 import pandas as pd
-import numpy as np
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 KOREAN_FEATURE_MAP = {
     "foot_traffic_daily": "일일 유동인구",

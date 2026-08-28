@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, accuracy_score, roc_auc_score
-from typing import Dict, Any
+from typing import Dict
 
 class ModelEvaluator:
     """

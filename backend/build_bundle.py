@@ -20,7 +20,7 @@ JSON 들을 갱신해도 지도는 옛 스냅샷에 고정돼 있었다. 이 스
     python build_bundle.py
 출력: frontend/data-bundle.js
 """
-import os, sys, json, datetime
+import os, sys, json
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)

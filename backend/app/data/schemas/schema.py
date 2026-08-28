@@ -1,4 +1,3 @@
-from typing import Dict, Any
 import pandas as pd
 
 COLUMN_ALIAS_MAP = {

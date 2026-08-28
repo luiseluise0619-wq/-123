@@ -5,7 +5,7 @@ name: 대시보드 자동 갱신
 on:
   schedule:
     - cron: "10 21 * * 0"        # 매주 월요일 06:10 KST — 가벼운 주간 갱신(heavy 미포함)
-    - cron: "20 21 1 * *"        # 매월 1일 06:20 KST(≈) — heavy 자동 실행(분기 상권/자치구 데이터 반영)
+    - cron: "20 21 1 * *"        # 매월 2일 06:20 KST — 21:20 UTC(1일)+9h → 2일 새벽. heavy 자동 실행(분기 상권/자치구 데이터 반영)
   workflow_dispatch:             # 수동 실행 버튼
     inputs:
       heavy:

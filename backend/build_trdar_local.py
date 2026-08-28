@@ -16,7 +16,7 @@
 
     python build_trdar_local.py --stores 점포.csv --area 영역.csv
 """
-import os, sys, csv, json, glob, datetime, argparse
+import os, sys, csv, json, datetime, argparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)

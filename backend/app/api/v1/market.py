@@ -3,7 +3,7 @@
 실연동 가능한 것은 실데이터, 제한 소스는 RAG+LLM. 지어내지 않는다.
 """
 
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter
 from pydantic import BaseModel
 

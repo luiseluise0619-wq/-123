@@ -17,7 +17,7 @@ import sys
 import numpy as np
 import pandas as pd
 from lightgbm import LGBMRegressor
-from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.metrics import r2_score
 from sklearn.model_selection import GroupKFold
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

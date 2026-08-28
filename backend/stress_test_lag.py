@@ -14,7 +14,6 @@ lag 모델 스트레스 테스트.
 import os
 import sys
 
-import numpy as np
 import pandas as pd
 from lightgbm import LGBMRegressor
 from sklearn.metrics import mean_absolute_error, r2_score

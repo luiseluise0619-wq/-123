@@ -15,7 +15,6 @@ import sys
 
 os.environ.setdefault("TARGET_PER_STORE", "true")  # 점포당 매출 타겟
 
-import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import shap  # noqa: E402
 from lightgbm import LGBMRegressor  # noqa: E402
