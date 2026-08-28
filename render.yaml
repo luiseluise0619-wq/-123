@@ -1,0 +1,23 @@
+# Render Blueprint — 상권분석 웹서비스(Node). 무료 웹 서비스.
+# 대시보드에서 New → Blueprint 로 이 저장소를 연결하면 자동 인식됨.
+services:
+  - type: web
+    name: sangkwon-insight
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      # 값은 저장소에 넣지 말 것 — Render 대시보드 Environment 에 직접 입력(sync:false).
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: KAKAO_REST_KEY
+        sync: false
+      - key: DATA_GO_KR_KEY
+        sync: false
+      - key: ALLOWED_ORIGIN     # 예: https://sangkwon-insight.onrender.com (없어도 동작)
+        sync: false
