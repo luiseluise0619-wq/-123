@@ -102,6 +102,16 @@
     </div>
 
     <div class="card">
+      <h3>계약 전 · 현장(임장) 체크리스트</h3>
+      <ul id="checklist" style="margin:0;padding-left:18px;font-size:14px;color:var(--ink);line-height:1.9"></ul>
+    </div>
+    <div class="card">
+      <h3>오픈 첫 달 · 마케팅 플레이북</h3>
+      <ul id="playbook" style="margin:0;padding-left:18px;font-size:14px;color:var(--ink);line-height:1.9"></ul>
+      <div class="note" style="margin-top:10px">일반 실행 가이드입니다 — 데이터 분석이 아니라 창업 실무 팁이며, 지역·업종·피크에 맞춰 문구만 조정됩니다.</div>
+    </div>
+
+    <div class="card">
       <div class="note" id="detail"></div>
       <div class="note" style="margin-top:10px">
         <span class="badge">실측</span> 구별 점포당 매출·시간대·폐업추세는 공공데이터 실측.
@@ -147,6 +157,28 @@
   var TMZ=['새벽(0-6시)','오전(6-11시)','점심(11-14시)','오후(14-17시)','저녁(17-21시)','밤(21-24시)'];
   var DOW=['월','화','수','목','금','토','일'];
   function maxIdx(a){var m=0;for(var i=1;i<a.length;i++)if(a[i]>a[m])m=i;return m;}
+  function isFood(k){return /음식|한식|중식|일식|양식|분식|치킨|호프|주점|카페|커피|제과|베이커리|패스트|피자|고기|족발|음료|디저트|간이/.test(k);}
+  function fillGuides(s){
+    var food=isFood(s.k), peak=(s.rec&&s.rec.tmz)?TMZ[maxIdx(s.rec.tmz)]:null;
+    var chk=['건축물대장·불법건축물 여부 확인 (건물지도에서 조회)',
+      '전기 용량(kW) — 장비 감당되는지'+(food?' (냉장·조리 장비 많음)':''),
+      '상·하수도와 배수 상태',
+      '간판 위치·크기 규정, 건물 외관 제한',
+      '층·동선(계단/엘리베이터)과 안쪽/코너 시인성',
+      '주차·하역 공간',
+      '권리금 내역서(시설·영업·바닥 권리금 구분)와 전 임차인 업종·매출',
+      '계약 조건: 보증금·월세·관리비·인상률·계약기간·원상복구 범위'];
+    if(food) chk.splice(3,0,'가스 인입 여부','환기·후드·덕트 설치/신설 가능 여부','정화조 용량·소방 설비');
+    var pb=[];
+    if(peak) pb.push('피크(<b>'+peak+'</b>) 겨냥 세트·타임세일 구성');
+    pb.push('오픈 첫 주 이벤트 — 시식·할인·스탬프로 첫 방문 유도',
+      '<b>'+s.g+'</b> 당근마켓 동네광고로 반경 타겟에 오픈 알림',
+      '네이버 플레이스·인스타 등록 + 리뷰 이벤트');
+    if(food) pb.push('배달앱(배민·쿠팡이츠) 입점 + 신규 프로모션');
+    pb.push('인근 직장·주거 타겟 전단/쿠폰, 지역 커뮤니티(맘카페 등) 노출');
+    document.getElementById('checklist').innerHTML=chk.map(function(x){return '<li>'+x+'</li>';}).join('');
+    document.getElementById('playbook').innerHTML=pb.map(function(x){return '<li>'+x+'</li>';}).join('');
+  }
 
   var st=null, lastCalc=null; // 현재 진단 상태(슬라이더 재계산·다운로드용)
 
@@ -203,6 +235,7 @@
     else{pk.innerHTML='<div class="note">이 구·업종은 시간대 데이터가 없어 피크를 표시하지 않습니다.</div>';}
     // 상세
     document.getElementById('detail').innerHTML='고정비(월세 '+fmt(r.rentCost)+' + 인건비 '+fmt(r.staff*250)+' + 기타 '+fmt(r.etc)+') = <b>'+fmt(r.fixed)+'원/월</b>. 손익분기('+fmt(r.bep)+')를 예상 매출('+fmt(r.rev)+')이 '+(r.rev>=r.bep?'넘습니다':'<b>못 넘습니다</b>')+'. '+s.g+' 폐업 +'+trend+'% · '+C.quarter+' 기준.';
+    fillGuides(s);                // 임장 체크리스트 + 마케팅 플레이북
     lastCalc={s:s,r:r,tag:tag};   // 다운로드/저장용 최신 결과
     document.getElementById('result').style.display='block';
   }
