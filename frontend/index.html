@@ -89,6 +89,15 @@ window.__resources = {
   a:hover{color:var(--accent-hover);}
   input,select,button,textarea{font-family:inherit;}
   ::selection{background:var(--selection);}
+  /* 커스텀 스크롤바 — OS 기본(회색 두꺼운) 대신 얇고 테마에 맞춘 스크롤바 */
+  *{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px;border:2px solid transparent;background-clip:content-box;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--ink3);background-clip:content-box;}
+  /* select — 커스텀 드롭다운 화살표(appearance:none 로 사라진 것 복원) + 열린 목록 가독성 */
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A8F' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1px center;padding-right:20px !important;}
+  select option{background:var(--surface);color:var(--ink);}
 </style>
 </helmet>
 
