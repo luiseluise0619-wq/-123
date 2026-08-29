@@ -1653,7 +1653,7 @@ class Component extends DCLogic {
     const S = this.state, core = this.core;
     const nav = (k) => () => { if (k !== 'data' && location.hash) history.replaceState(null, '', location.pathname + location.search); this.setState({ screen: k, topic: null }); window.scrollTo(0, 0); };
     // 인앱 화면 메뉴(중복이던 report=진단, compare=비교 는 아래 mvp.html·compare.html 로 통합)
-    const navItems = [['map', '상권'], ['candidates', '후보지'], ['data', '데이터'], ['chat', '상담'], ['method', '방법']].map(([k, l]) => ({
+    const navItems = [['map', '상권'], ['candidates', '후보지'], ['data', '데이터'], ['chat', '상담']].map(([k, l]) => ({
       label: l, go: nav(k),
       style: 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:' + (S.screen === k ? 'var(--ink)' : 'var(--ink3)') + ';font-weight:' + (S.screen === k ? '500' : '400')
     }));
