@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>상권 인텔리전스 — 사장님인사이트</title>
+<meta name="description" content="서울 상권 1,564곳의 수요·공급·변화·전망을 실측 데이터로 판독합니다.">
+<style>
+/* 디자인 토큰은 index.html 과 동일하게 맞춘다. 새 페이지가 '따로 노는' 느낌을 없애기 위함. */
+:root{
+  --bg:#FFFFFF; --ink:#111112; --ink2:#6E6E73; --ink3:#A1A1A6;
+  --line:#EAEAE5; --line-soft:#F2F2EE; --line-strong:#C9C9C2;
+  --surface:#F5F4F0; --surface-2:#DCDCD6; --neutral:#EFEFEA;
+  --accent:#1F6FEB; --accent-hover:#1552B8; --selection:#DDE7F8;
+  --good:#1F7A4D; --warn:#A8620F; --bad:#B3503C;
+}
+html[data-theme="dark"]{
+  --bg:#0E0F10; --ink:#ECECEA; --ink2:#9A9DA2; --ink3:#6E7278;
+  --line:#22252A; --line-soft:#191C20; --line-strong:#3A3E44;
+  --surface:#16181B; --surface-2:#282C31; --neutral:#23262A;
+  --accent:#6AA5F5; --accent-hover:#8FBEFA; --selection:#1E3352;
+  --good:#4E9E6A; --warn:#C88A3A; --bad:#C4604E; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;
+  color:var(--ink);word-break:keep-all;-webkit-font-smoothing:antialiased;line-height:1.55}
+/* 숫자는 고정폭(tabular)으로. 표에서 자릿수가 흔들리면 싸구려로 보인다. */
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover)}
+*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::selection{background:var(--selection)}
+input,select,button{font-family:inherit;font-size:14px;color:var(--ink)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A8F' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+select option{background:var(--surface);color:var(--ink)}
+
+header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1120px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:18px}
+.brand{font-weight:700;font-size:15px;letter-spacing:-.01em}
+.brand span{color:var(--ink3);font-weight:500}
+nav{margin-left:auto;display:flex;gap:16px;font-size:13px}
+nav a{color:var(--ink2)}
+nav a:hover{color:var(--ink)}
+main{max-width:1120px;margin:0 auto;padding:0 20px 80px}
+
+/* ── 진입 화면 ── */
+.hero{padding:44px 0 26px;border-bottom:1px solid var(--line)}
+h1{font-size:30px;line-height:1.28;margin:0 0 10px;letter-spacing:-.022em;font-weight:700}
+.sub{color:var(--ink2);font-size:14px;margin:0}
+.meta{margin-top:14px;font-size:12px;color:var(--ink3)}
+.meta b{color:var(--ink2);font-weight:600}
+
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 0}
+.field{position:relative;flex:1 1 260px;min-width:200px}
+input[type=search]{width:100%;padding:11px 13px;border:1px solid var(--line-strong);border-radius:8px;
+  background:var(--bg);outline:none}
+input[type=search]:focus{border-color:var(--accent)}
+select.f{padding:11px 13px;border:1px solid var(--line-strong);border-radius:8px;background-color:var(--bg)}
+.sugg{position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--bg);
+  border:1px solid var(--line-strong);border-radius:8px;max-height:290px;overflow:auto;z-index:30;
+  box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.sugg div{padding:9px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line-soft)}
+.sugg div:last-child{border-bottom:0}
+.sugg div:hover,.sugg div.on{background:var(--surface)}
+.sugg .g{color:var(--ink3);font-size:11px;margin-left:6px}
+
+.tabs{display:flex;gap:2px;margin:26px 0 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{padding:10px 15px;font-size:13.5px;color:var(--ink2);cursor:pointer;border:0;background:none;
+  border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
+.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+
+.rank{margin-top:20px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.rowh,.row{display:grid;grid-template-columns:1.9fr .8fr .8fr .9fr;gap:10px;padding:11px 16px;align-items:center}
+.rowh{background:var(--surface);font-size:11.5px;color:var(--ink2);font-weight:600;letter-spacing:.02em}
+.row{border-top:1px solid var(--line-soft);cursor:pointer;font-size:13.5px}
+.row:hover{background:var(--surface)}
+.row .nm{font-weight:600}
+.row .gu{color:var(--ink3);font-size:11.5px;font-weight:400;margin-left:6px}
+.pos{color:var(--good)} .neg{color:var(--bad)} .mut{color:var(--ink3)}
+.bar{height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--ink3)}
+
+/* ── 상권 프로파일 ── */
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--ink2);font-size:13px;
+  margin:22px 0 0;cursor:pointer;background:none;border:0;padding:0}
+.back:hover{color:var(--ink)}
+.head{padding:16px 0 22px;border-bottom:1px solid var(--line)}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;
+  border:1px solid var(--line-strong);color:var(--ink2);margin-right:6px}
+.badge.b-good{color:var(--good);border-color:currentColor}
+.badge.b-warn{color:var(--warn);border-color:currentColor}
+.badge.b-bad{color:var(--bad);border-color:currentColor}
+h2{font-size:25px;margin:10px 0 6px;letter-spacing:-.02em;font-weight:700}
+.lede{font-size:15px;color:var(--ink);margin:0;max-width:62ch}
+.lede b{font-weight:700}
+
+section{padding:26px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h3{font-size:12px;color:var(--ink3);margin:0 0 14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.kpi{background:var(--bg);padding:15px 16px}
+.kpi .k{font-size:11.5px;color:var(--ink2);margin-bottom:5px}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.kpi .n{font-size:11.5px;color:var(--ink3);margin-top:3px}
+
+.gauge{display:grid;grid-template-columns:64px 1fr 60px;gap:12px;align-items:center;margin-bottom:9px;font-size:13px}
+.gauge .lab{color:var(--ink2);font-size:12px}
+.track{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.track i{display:block;height:100%;border-radius:4px;background:var(--ink)}
+.track i.acc{background:var(--accent)}
+.gauge .val{text-align:right;font-weight:600}
+
+.why{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+.wrow{display:grid;grid-template-columns:88px 1fr 56px;gap:10px;align-items:center;font-size:12.5px;margin-bottom:6px}
+.wbar{position:relative;height:16px}
+.wbar .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-strong)}
+.wbar i{position:absolute;top:3px;height:10px;border-radius:2px}
+.wbar i.p{background:var(--good);left:50%}
+.wbar i.n{background:var(--bad)}
+
+.chart{width:100%;height:230px;display:block}
+.legend{display:flex;gap:16px;font-size:11.5px;color:var(--ink2);margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid var(--ink);vertical-align:middle;margin-right:5px}
+.legend i.f{border-top-style:dashed;border-color:var(--accent)}
+.note{font-size:12.5px;color:var(--ink2);background:var(--surface);border-radius:8px;padding:12px 14px;
+  border-left:2px solid var(--line-strong)}
+.note.warn{border-left-color:var(--warn)}
+.note.bad{border-left-color:var(--bad)}
+.metrics{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:10px}
+.metrics b{color:var(--ink);font-weight:600}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line-soft)}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;color:var(--ink2);font-weight:600;border-bottom:1px solid var(--line)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 12px;border:1px solid var(--line-strong);border-radius:8px;font-size:13px;cursor:pointer;background:var(--bg)}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip .s{display:block;font-size:11px;color:var(--ink3);margin-top:2px}
+
+.btn{padding:10px 16px;border-radius:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);
+  font-weight:600;cursor:pointer;font-size:13.5px}
+.btn:hover{opacity:.88}
+.btn.ghost{background:none;color:var(--ink);border-color:var(--line-strong)}
+.btn.ghost:hover{border-color:var(--ink);opacity:1}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+.modal.on{display:flex}
+.sheet{background:var(--bg);border-radius:12px;max-width:420px;width:100%;padding:24px}
+.sheet h4{margin:0 0 6px;font-size:17px}
+.sheet p{margin:0 0 16px;font-size:13px;color:var(--ink2)}
+.sheet label{display:block;font-size:12px;color:var(--ink2);margin:12px 0 5px}
+.sheet input[type=email]{width:100%;padding:10px 12px;border:1px solid var(--line-strong);border-radius:8px;background:var(--bg)}
+.agree{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--ink2);margin:14px 0 4px;line-height:1.5}
+.msg{font-size:12.5px;margin-top:10px}
+.empty{padding:36px 16px;text-align:center;color:var(--ink3);font-size:13.5px}
+.skel{height:13px;background:var(--surface-2);border-radius:4px;animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:.9}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:640px){
+  h1{font-size:24px} h2{font-size:21px}
+  /* 좁은 화면에서 브랜드 부제가 줄바꿈되며 헤더가 2줄이 된다 — 부제를 숨긴다 */
+  .brand span{display:none}
+  .hwrap{gap:10px;padding:11px 16px} nav{gap:12px;font-size:12.5px}
+  .rowh,.row{grid-template-columns:1.6fr .7fr .9fr;font-size:12.5px;padding:10px 12px}
+  .rowh b:nth-child(3),.row .hidem{display:none}
+}
+@media print{
+  header,nav,.tabs,.controls,.acts,.back,.modal{display:none!important}
+  section{break-inside:avoid;border-bottom:1px solid #ddd}
+  body{color:#000}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand">사장님인사이트 <span>· 상권 인텔리전스</span></div>
+    <nav>
+      <a href="index.html">상권지도</a>
+      <a href="mvp.html">3초 진단</a>
+      <a href="compare.html">비교</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ══ 진입 화면 ══ -->
+  <div id="browse">
+    <div class="hero">
+      <h1>이 상권에서 지금 무슨 일이 일어나고 있는가</h1>
+      <p class="sub">서울 상권 <b class="num" id="nz">—</b>곳의 수요·공급·변화를 실측 데이터로 판독합니다. 추정하지 않은 값은 표시하지 않습니다.</p>
+      <div class="meta" id="src">데이터 확인 중…</div>
+
+      <div class="controls">
+        <div class="field">
+          <input type="search" id="q" placeholder="상권·동·자치구 검색 (예: 강남역, 서교동, 마포구)" autocomplete="off">
+          <div class="sugg" id="sugg" style="display:none"></div>
+        </div>
+        <select class="f" id="fgu"><option value="">자치구 전체</option></select>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-v="gap" aria-selected="true">기회 상권</button>
+      <button class="tab" role="tab" data-v="sat" aria-selected="false">과포화 경고</button>
+      <button class="tab" role="tab" data-v="big" aria-selected="false">규모 상위</button>
+      <button class="tab" role="tab" data-v="surv" aria-selected="false">오래 버티는 상권</button>
+    </div>
+    <p class="sub" id="tabdesc" style="margin:12px 0 0;font-size:13px"></p>
+    <div class="rank" id="rank"></div>
+  </div>
+
+  <!-- ══ 상권 프로파일 ══ -->
+  <div id="profile" style="display:none"></div>
+</main>
+
+<!-- 리포트 이메일 수집 -->
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h4>상권 리포트 받기</h4>
+    <p id="mtarget" class="num"></p>
+    <label for="em">이메일</label>
+    <input type="email" id="em" placeholder="name@company.com" autocomplete="email">
+    <div class="agree">
+      <input type="checkbox" id="ag" style="margin-top:2px">
+      <label for="ag" style="margin:0">리포트 발송을 위한 이메일 수집·이용에 동의합니다. 수집 항목은 <b>이메일·조회한 상권·업종·리포트 종류</b>이며, 그 외 개인정보는 수집하지 않습니다.</label>
+    </div>
+    <div class="acts" style="margin-top:16px">
+      <button class="btn" id="msend">받기</button>
+      <button class="btn ghost" id="mclose">닫기</button>
+    </div>
+    <div class="msg" id="mmsg"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+// ─────────────────────────────────────────────────────────────
+// 데이터는 "필요할 때" 받는다. 첫 화면은 경량 인덱스(zone_index)만.
+// 상세(zone_intel·zone_industry·signals)는 상권을 처음 열 때 1회만 받고 캐시한다.
+// ─────────────────────────────────────────────────────────────
+var IDX=null, INTEL=null, ZIND=null, SIG=null, HIST=null, ZHIST=null;
+var byCd={}, INDS=[], curInd="";
+var cache={};                                  // 지연 로딩 결과 캐시(같은 파일 두 번 안 받음)
+function get(url){
+  if(cache[url]) return cache[url];
+  cache[url]=fetch(url).then(function(r){ if(!r.ok) throw new Error(url+' '+r.status); return r.json(); })
+    .catch(function(e){ delete cache[url]; throw e; });   // 실패는 캐시하지 않는다(재시도 가능하게)
+  return cache[url];
+}
+var $=function(s,r){return (r||document).querySelector(s);};
+var el=function(t,c,h){var n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n;};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+
+// ── 숫자 표기 ──
+function won(v){                                   // 원 → 조/억/만
+  v=Number(v)||0; var a=Math.abs(v), s=v<0?'-':'';
+  if(a>=1e12) return s+(a/1e12).toFixed(a/1e12>=10?0:1)+'조';
+  if(a>=1e8)  return s+Math.round(a/1e8).toLocaleString()+'억';
+  if(a>=1e4)  return s+Math.round(a/1e4).toLocaleString()+'만';
+  return s+Math.round(a).toLocaleString();
+}
+function pct(v,d){ if(v==null||isNaN(v)) return '—'; return (v>0?'+':'')+Number(v).toFixed(d==null?1:d)+'%'; }
+function qLabel(q){ return q? q.slice(0,4)+'년 '+q.slice(4)+'분기' : '—'; }
+// 한글 조사 — "을지로2가은(는)" 같은 표기는 바로 아마추어처럼 보인다.
+// 한글 음절 코드(0xAC00~0xD7A3)에서 (코드-0xAC00)%28 이 0이 아니면 받침이 있다.
+// 상권명이 숫자나 영문·괄호로 끝나는 경우가 많아 그것도 처리한다.
+function josa(w, withBat, without){
+  var s=String(w||'').replace(/[)\]\s.·]+$/,''), c=s.charCodeAt(s.length-1);
+  var bat;
+  if(c>=0xAC00&&c<=0xD7A3) bat=((c-0xAC00)%28)!==0;
+  else if(c>=48&&c<=57)    bat=[1,0,0,0,0,0,1,1,0,0][c-48]===1;   // 0 1 3 6 7 8 = 받침(영,일,삼,육,칠,팔)
+  else if((c>=65&&c<=90)||(c>=97&&c<=122)) bat=/[lmnr]/i.test(s[s.length-1]);
+  else return without;                                             // 판단 불가 → 받침 없는 쪽
+  return bat? withBat : without;
+}
+var GRADE={LL:['다이나믹','창업·폐업이 모두 활발한 상권','b-warn'],
+           LH:['상권 확장','점포가 늘고 매출이 커지는 국면','b-good'],
+           HL:['상권 축소','점포·매출이 줄어드는 국면','b-bad'],
+           HH:['정체','변화가 적고 안정적인 상권','']};
+
+// ── 부팅 ──
+Promise.all([get('zone_index.json').catch(function(){return null;})]).then(function(r){
+  IDX=r[0];
+  if(!IDX||!IDX.rows){
+    $('#rank').innerHTML='<div class="empty">상권 인덱스를 불러오지 못했습니다.<br>데이터 자동 갱신(매월 2일) 이후 다시 시도해 주세요.</div>';
+    return;
+  }
+  var C=IDX.cols, ix={}; C.forEach(function(k,i){ix[k]=i;});
+  IDX.list=IDX.rows.map(function(r){
+    var o={}; C.forEach(function(k,i){o[k]=r[i];}); return o;
+  });
+  IDX.list.forEach(function(z){ byCd[z.cd]=z; });
+  $('#nz').textContent=IDX.list.filter(function(z){return !z.weak;}).length.toLocaleString();
+  $('#src').innerHTML='출처 <b>서울시 상권분석서비스 · 서울 열린데이터광장</b> · 기준 <b>'+esc(qLabel(IDX.quarter))+'</b> · 갱신 <b>'+esc(IDX.updated)+'</b>';
+  var gus=Array.from(new Set(IDX.list.map(function(z){return z.gu;}).filter(Boolean))).sort();
+  gus.forEach(function(g){ var o=document.createElement('option'); o.value=g; o.textContent=g; $('#fgu').appendChild(o); });
+  wire(); route();
+});
+
+// ── 진입 화면: 랭킹 4종 ──
+var VIEWS={
+  gap:{ t:'수요(배후 인구·집객시설·구매력)에 비해 점포가 적은 상권입니다. 경쟁이 덜한 대신, 왜 비어 있는지는 반드시 현장에서 확인해야 합니다. 점포 50개·분기매출 10억 미만 구역(공원·학교·병원)은 지표가 왜곡되어 제외했습니다.',
+        col:'기회지수', sort:function(a,b){return b.gap-a.gap;}, val:function(z){return (z.gap>0?'+':'')+z.gap.toFixed(0);}, cls:function(z){return z.gap>0?'pos':'neg';} },
+  sat:{ t:'수요에 비해 점포가 과도하게 많은 상권입니다. 신규 진입 시 가격 경쟁에 노출될 가능성이 큽니다.',
+        col:'포화지수', sort:function(a,b){return a.gap-b.gap;}, val:function(z){return z.gap.toFixed(0);}, cls:function(){return 'neg';} },
+  big:{ t:'분기 매출 규모가 큰 상권입니다. 규모가 크다고 개별 점포의 수익성이 높은 것은 아닙니다.',
+        col:'분기매출', sort:function(a,b){return b.sales-a.sales;}, val:function(z){return won(z.sales);}, cls:function(){return '';} },
+  surv:{ t:'점포 평균 운영기간이 긴 상권입니다. 서울시 상권변화지표의 실측값으로, 오래 버틴다는 것은 수요가 안정적이라는 신호입니다.',
+        col:'평균 운영', sort:function(a,b){return (b.opr||0)-(a.opr||0);}, val:function(z){return z.opr? (z.opr/12).toFixed(1)+'년':'—';}, cls:function(){return '';} }
+};
+var view='gap';
+function drawRank(){
+  var v=VIEWS[view], gu=$('#fgu').value;
+  $('#tabdesc').textContent=v.t;
+  var list=IDX.list.filter(function(z){ return !z.weak && (!gu||z.gu===gu); });
+  if(view==='surv') list=list.filter(function(z){return z.opr;});
+  list=list.slice().sort(v.sort).slice(0,25);
+  var h=['<div class="rowh"><b>상권</b><b>점포</b><b class="hidem">분기매출</b><b style="text-align:right">'+v.col+'</b></div>'];
+  if(!list.length) h.push('<div class="empty">조건에 맞는 상권이 없습니다.</div>');
+  list.forEach(function(z){
+    h.push('<div class="row" data-cd="'+z.cd+'">'+
+      '<div><span class="nm">'+esc(z.nm)+'</span><span class="gu">'+esc(z.gu||'')+(z.dong?' · '+esc(z.dong):'')+'</span></div>'+
+      '<div class="num mut">'+z.stores.toLocaleString()+'</div>'+
+      '<div class="num mut hidem">'+won(z.sales)+'</div>'+
+      '<div class="num '+v.cls(z)+'" style="text-align:right;font-weight:600">'+v.val(z)+'</div></div>');
+  });
+  $('#rank').innerHTML=h.join('');
+}
+
+// ── 검색 ──
+function search(term){
+  term=term.trim(); if(!term) return [];
+  return IDX.list.filter(function(z){
+    return (z.nm&&z.nm.indexOf(term)>=0)||(z.gu&&z.gu.indexOf(term)>=0)||(z.dong&&z.dong.indexOf(term)>=0);
+  }).sort(function(a,b){ return (a.weak-b.weak)||(b.sales-a.sales); }).slice(0,12);
+}
+function wire(){
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
+    t.addEventListener('click',function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(x){x.setAttribute('aria-selected','false');});
+      t.setAttribute('aria-selected','true'); view=t.dataset.v; drawRank();
+    });
+  });
+  $('#fgu').addEventListener('change',drawRank);
+  var q=$('#q'), sg=$('#sugg'), sel=-1, cur=[];
+  function close(){ sg.style.display='none'; sel=-1; }
+  q.addEventListener('input',function(){
+    cur=search(q.value);
+    if(!cur.length){ close(); return; }
+    sg.innerHTML=cur.map(function(z,i){
+      return '<div data-i="'+i+'">'+esc(z.nm)+'<span class="g">'+esc(z.gu||'')+(z.dong?' '+esc(z.dong):'')+' · 점포 '+z.stores+'</span></div>';
+    }).join('');
+    sg.style.display='block';
+  });
+  q.addEventListener('keydown',function(e){
+    if(sg.style.display==='none') return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault(); sel+=(e.key==='ArrowDown'?1:-1);
+      if(sel<0)sel=cur.length-1; if(sel>=cur.length)sel=0;
+      Array.prototype.forEach.call(sg.children,function(c,i){ c.className=(i===sel?'on':''); });
+    } else if(e.key==='Enter'){ e.preventDefault(); open(cur[sel<0?0:sel].cd); close(); }
+    else if(e.key==='Escape') close();
+  });
+  sg.addEventListener('click',function(e){
+    var d=e.target.closest('[data-i]'); if(!d) return;
+    open(cur[+d.dataset.i].cd); close(); q.value='';
+  });
+  document.addEventListener('click',function(e){ if(!e.target.closest('.field')) close(); });
+  $('#rank').addEventListener('click',function(e){
+    var r=e.target.closest('[data-cd]'); if(r) open(r.dataset.cd);
+  });
+  window.addEventListener('hashchange',route);
+}
+function route(){
+  var m=(location.hash||'').match(/^#z=([0-9]+)(?:&ind=(.*))?$/);
+  if(m&&byCd[m[1]]){ curInd=m[2]?decodeURIComponent(m[2]):''; open(m[1],true); }
+  else { $('#profile').style.display='none'; $('#browse').style.display=''; drawRank(); }
+}
+
+// ── 상권 프로파일 ──
+function open(cd, fromHash){
+  var z=byCd[cd]; if(!z) return;
+  if(!fromHash){ location.hash='z='+cd+(curInd?'&ind='+encodeURIComponent(curInd):''); return; }
+  $('#browse').style.display='none';
+  var p=$('#profile'); p.style.display='';
+  p.innerHTML='<button class="back" id="bk">← 상권 목록</button><div class="head"><h2>'+esc(z.nm)+'</h2>'+
+              '<p class="lede"><span class="skel" style="display:block;width:60%"></span></p></div>'+
+              '<section><div class="skel" style="height:80px"></div></section>';
+  $('#bk').addEventListener('click',function(){ location.hash=''; });
+  window.scrollTo(0,0);
+  Promise.all([
+    INTEL?Promise.resolve(INTEL):get('zone_intel.json').then(function(d){INTEL=d;return d;}),
+    ZIND ?Promise.resolve(ZIND) :get('zone_industry.json').then(function(d){ZIND=d;return d;}),
+    SIG  ?Promise.resolve(SIG)  :get('signals.json').then(function(d){SIG=d;return d;}).catch(function(){return null;}),
+    HIST ?Promise.resolve(HIST) :get('sales_history.json').then(function(d){HIST=d;return d;}).catch(function(){return null;}),
+    // 상권별 분기 이력은 아직 수집 전일 수 있다. 없으면 조용히 넘어가고 서울 업종 기준으로 그린다.
+    ZHIST?Promise.resolve(ZHIST):get('zone_history.json').then(function(d){ZHIST=d;return d;}).catch(function(){return null;})
+  ]).then(function(){ render(z); }).catch(function(e){
+    p.innerHTML='<button class="back" id="bk2">← 상권 목록</button><div class="empty">상세 데이터를 불러오지 못했습니다.<br><span class="mut">'+esc(e.message)+'</span></div>';
+    $('#bk2').addEventListener('click',function(){ location.hash=''; });
+  });
+}
+
+function render(z){
+  var o=(INTEL.zones||{})[z.cd]||{};
+  var zi=(ZIND.zones||{})[z.cd]||{}, inds=ZIND.inds||[];
+  var rows=(zi.rows||[]).map(function(r){
+    return {nm:inds[r[0]]||('업종'+r[0]), stores:r[1], sales:r[2], unit:r[3]};
+  }).sort(function(a,b){return b.sales-a.sales;});
+  INDS=rows;
+  if(!curInd && rows.length) curInd=rows[0].nm;
+
+  var g=GRADE[o.grade]||null;
+  var H=[];
+  H.push('<button class="back" id="bk">← 상권 목록</button>');
+
+  // ── 1) 핵심 변화: 화면을 열자마자 "무슨 일이 일어나고 있는지" 한 문장 ──
+  var badges=[];
+  if(g) badges.push('<span class="badge '+g[2]+'">'+esc(g[0])+'</span>');
+  if(o.gap>=15) badges.push('<span class="badge b-good">수요 우위</span>');
+  else if(o.gap<=-15) badges.push('<span class="badge b-bad">공급 과잉</span>');
+  if(z.weak) badges.push('<span class="badge">비교 제한</span>');
+  H.push('<div class="head">'+badges.join('')+
+    '<h2>'+esc(z.nm)+'</h2>'+
+    '<p class="lede">'+headline(z,o,g,rows)+'</p></div>');
+
+  // ── 2) 현재 상태 ──
+  H.push('<section><h3>현재 상태</h3><div class="kpis">'+
+    kpi('점포 수', z.stores.toLocaleString()+'<span style="font-size:14px">개</span>', '상권 내 전체 업종') +
+    kpi('분기 매출', won(z.sales)+'<span style="font-size:14px">원</span>', qLabel(IDX.quarter)+' 추정') +
+    kpi('평균 운영기간', o.opr?(o.opr/12).toFixed(1)+'<span style="font-size:14px">년</span>':'—',
+        o.opr?'서울시 상권변화지표 실측':'데이터 없음') +
+    kpi('수요−공급', (o.gap>0?'+':'')+ (o.gap!=null?o.gap.toFixed(0):'—'),
+        o.gap>0?'수요가 점포보다 앞섬':'점포가 수요보다 많음') +
+    '</div>');
+
+  // 수요/공급 게이지 + 요인 분해(가산 점수라 기여도가 정확히 떨어진다)
+  H.push('<div style="margin-top:20px">'+
+    gauge('수요', o.dem, 'acc') + gauge('공급', o.sup, '') +
+    '<p class="sub" style="font-size:12px;margin:10px 0 0">서울 상권 '+IDX.list.length.toLocaleString()+'곳 중 백분위입니다. 100에 가까울수록 상위입니다.</p>');
+  if(o.why){
+    var W=Object.entries(o.why).sort(function(a,b){return Math.abs(b[1])-Math.abs(a[1]);});
+    var LBL={hshld:'배후 세대수',livepop:'생활인구',fac:'집객시설',price:'주거 구매력'};
+    var mx=Math.max.apply(null,W.map(function(w){return Math.abs(w[1]);}))||1;
+    H.push('<div class="why"><h3 style="margin-bottom:10px">수요 점수를 만든 요인</h3>');
+    W.forEach(function(w){
+      var v=w[1], wd=Math.abs(v)/mx*48;
+      H.push('<div class="wrow"><span class="mut">'+esc(LBL[w[0]]||w[0])+'</span>'+
+        '<span class="wbar"><span class="mid"></span>'+
+        (v>=0?'<i class="p" style="width:'+wd+'%"></i>':'<i class="n" style="width:'+wd+'%;left:'+(50-wd)+'%"></i>')+
+        '</span><span class="num '+(v>=0?'pos':'neg')+'" style="text-align:right">'+(v>=0?'+':'')+v.toFixed(1)+'</span></div>');
+    });
+    H.push('<p class="sub" style="font-size:11.5px;margin:8px 0 0">서울 중간(50)을 기준으로 각 요인이 이 상권의 수요 점수를 얼마나 올리거나 내렸는지입니다. 합계가 곧 수요 점수이며, 추정이 아니라 가중합의 정확한 분해입니다.'+
+      (o.cov&&o.cov<1?' <b>이 상권은 지표 '+Math.round(o.cov*100)+'%만 확보돼 남은 지표로 재계산했습니다.</b>':'')+'</p></div>');
+  }
+  H.push('</div></section>');
+
+  // ── 3) 전망 ──
+  H.push('<section><h3>다음 분기 전망</h3>'+forecastBlock(z,o)+'</section>');
+
+  // ── 4) 이상징후 ──
+  var an=anomalyBlock();
+  if(an) H.push('<section><h3>이상 징후</h3>'+an+'</section>');
+
+  // ── 5) 상세: 업종 구성 ──
+  if(rows.length){
+    var med=(INTEL.seoul_med_per_store)||{};
+    H.push('<section><h3>업종 구성 <span style="text-transform:none;letter-spacing:0">· 매출 상위 '+rows.length+'개</span></h3><div class="scroll"><table><thead><tr>'+
+      '<th>업종</th><th>점포</th><th>분기매출</th><th>점포당 매출</th><th>서울 대비</th></tr></thead><tbody>');
+    var odd=0;
+    rows.forEach(function(r){
+      var ps=r.stores? r.sales/r.stores : null, m=med[r.nm], rel=(ps&&m)? (ps/m-1)*100 : null;
+      // 점포 0인데 매출이 잡히는 행이 원천에 존재한다(비식별 처리·집계 시점 차이).
+      // 조용히 0으로 나누거나 감추지 않고, 그런 행이라는 걸 표시한다.
+      var zero=(!r.stores && r.sales>0); if(zero) odd++;
+      H.push('<tr><td>'+esc(r.nm)+(zero?' <span class="mut" title="원천 데이터에 점포 수가 0으로 집계된 행">*</span>':'')+'</td>'+
+        '<td class="num">'+r.stores.toLocaleString()+'</td>'+
+        '<td class="num">'+won(r.sales)+'</td><td class="num">'+(ps?won(ps):'—')+'</td>'+
+        '<td class="num '+(rel==null?'mut':rel>=0?'pos':'neg')+'">'+(rel==null?'—':pct(rel,0))+'</td></tr>');
+    });
+    H.push('</tbody></table></div><p class="sub" style="font-size:11.5px;margin-top:10px">‘서울 대비’는 같은 업종의 서울 전체 점포당 매출 중위값과 비교한 값입니다. +면 이 상권에서 그 업종이 평균보다 잘 팔리고 있다는 뜻입니다.'+
+      (odd?' <b>*</b> 표시는 매출은 잡혔지만 점포 수가 0으로 집계된 행입니다(원천 데이터의 비식별 처리 또는 집계 시점 차이). 점포당 매출을 계산하지 않았습니다.':'')+'</p></section>');
+  }
+
+  // ── 6) 비슷한 상권 ──
+  if(o.sim&&o.sim.length){
+    H.push('<section><h3>성격이 비슷한 상권</h3><div class="chips">');
+    o.sim.forEach(function(c){
+      var s=byCd[c]; if(!s) return;
+      H.push('<button class="chip" data-go="'+c+'">'+esc(s.nm)+'<span class="s">'+esc(s.gu||'')+' · 점포 '+s.stores+' · 기회 '+(s.gap>0?'+':'')+s.gap.toFixed(0)+'</span></button>');
+    });
+    H.push('</div><p class="sub" style="font-size:11.5px;margin-top:10px">점포 수·매출 규모·수요 점수·평균 운영기간이 가장 가까운 상권입니다. 여기서 잘된 업종이 이 상권에서도 통할 가능성을 보는 용도입니다.</p></section>');
+  }
+
+  // ── 7) 다음 행동 ──
+  H.push('<section><h3>다음 행동</h3><div class="acts">'+
+    '<button class="btn" id="rep">상권 리포트 받기</button>'+
+    '<button class="btn ghost" id="prt">PDF로 저장</button>'+
+    '<button class="btn ghost" id="sim3">3초 손익 진단</button>'+
+    '<button class="btn ghost" id="shr">링크 복사</button></div>'+
+    '<p class="sub" style="font-size:12px;margin-top:12px">데이터는 상권의 조건까지만 말해 줍니다. 계약 전 임장 확인(전기 용량·환기·정화조·간판 규정·권리금 내역)은 3초 진단의 체크리스트를 쓰세요.</p></section>');
+
+  $('#profile').innerHTML=H.join('');
+  $('#bk').addEventListener('click',function(){ location.hash=''; });
+  $('#profile').addEventListener('click',function(e){
+    var c=e.target.closest('[data-go]'); if(c) location.hash='z='+c.dataset.go;
+  });
+  $('#prt').addEventListener('click',function(){ window.print(); });
+  $('#sim3').addEventListener('click',function(){
+    location.href='mvp.html?gu='+encodeURIComponent(z.gu||'')+'&ind='+encodeURIComponent(curInd||'');
+  });
+  $('#shr').addEventListener('click',function(){
+    var u=location.href;
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(function(){alert('링크가 복사됐습니다.');},function(){prompt('링크 복사:',u);});
+    else prompt('링크 복사:',u);
+  });
+  $('#rep').addEventListener('click',function(){ openModal(z); });
+  var fs=$('#fsel'); if(fs) fs.addEventListener('change',function(){ curInd=fs.value; render(z); });
+}
+
+function kpi(k,v,n){ return '<div class="kpi"><div class="k">'+k+'</div><div class="v num">'+v+'</div><div class="n">'+esc(n)+'</div></div>'; }
+function gauge(lab,v,cls){
+  if(v==null) return '';
+  return '<div class="gauge"><span class="lab">'+lab+'</span><span class="track"><i class="'+cls+'" style="width:'+Math.max(1,Math.min(100,v))+'%"></i></span><span class="val num">'+v.toFixed(0)+'</span></div>';
+}
+
+// 헤드라인 — 숫자를 나열하지 않고 "무슨 일이 일어나고 있는지" 한 문장으로.
+function headline(z,o,g,rows){
+  var s=[];
+  if(g) s.push('<b>'+esc(z.nm)+'</b>'+josa(z.nm,'은','는')+' 현재 <b>'+g[0]+'</b> 국면입니다 — '+g[1]+'.');
+  else  s.push('<b>'+esc(z.nm)+'</b>의 현재 상태입니다.');
+  if(o.gap!=null){
+    if(o.gap>=15) s.push('배후 수요가 점포 수보다 <b>앞서 있어</b>(수요 '+o.dem.toFixed(0)+' vs 공급 '+o.sup.toFixed(0)+') 경쟁 강도는 서울 평균보다 낮은 편입니다.');
+    else if(o.gap<=-15) s.push('점포 수가 배후 수요를 <b>크게 앞질러</b>(공급 '+o.sup.toFixed(0)+' vs 수요 '+o.dem.toFixed(0)+') 신규 진입 시 가격 경쟁 부담이 큽니다.');
+    else s.push('수요('+o.dem.toFixed(0)+')와 공급('+o.sup.toFixed(0)+')이 대체로 <b>균형</b>에 가깝습니다.');
+  }
+  if(o.opr) s.push('점포 평균 운영기간은 <b>'+(o.opr/12).toFixed(1)+'년</b>'+(o.cls?', 폐업 점포의 평균 생존은 '+(o.cls/12).toFixed(1)+'년':'')+'입니다.');
+  if(z.weak) s.push('<b>다만 이 구역은 점포 '+z.stores+'개 · 분기매출 '+won(z.sales)+'원으로 상업 규모가 작아</b> 상권 간 비교 지표(수요·공급·기회)의 신뢰도가 낮습니다. 공원·학교·병원처럼 상권이 아닌 구역일 수 있어 랭킹에서는 제외했습니다.');
+  return s.join(' ');
+}
+
+// ── 전망: 실측(실선) → 예측(점선). 검증을 통과한 것만 그린다. ──
+function forecastBlock(z,o){
+  var opts=INDS.map(function(r){return '<option'+(r.nm===curInd?' selected':'')+'>'+esc(r.nm)+'</option>';}).join('');
+  var head='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">'+
+    '<select class="f" id="fsel">'+opts+'</select>'+
+    '<span class="sub" style="font-size:12px">업종을 고르면 해당 업종의 분기 매출 추이를 봅니다.</span></div>';
+
+  if(!SIG||!SIG.ind||!HIST||!HIST.ind){
+    return head+'<div class="note">분기 시계열을 아직 불러오지 못했습니다. 데이터 자동 갱신 이후 표시됩니다.</div>';
+  }
+  // 어느 시계열을 쓸지 결정한다.
+  //  1순위: 이 상권 자체의 분기 매출(zone_history 가 수집된 뒤부터 가능) — 사용자가 진짜 궁금한 것
+  //  2순위: 서울 전체 해당 업종 — 상권 이력이 아직 없을 때. 무엇을 기준으로 그렸는지 화면에 명시한다.
+  var sc=null, series=null, qs=null, scope='';
+  if(SIG.zone && SIG.zone[z.cd] && ZHIST && ZHIST.zone && ZHIST.zone[z.cd]){
+    sc=SIG.zone[z.cd]; qs=ZHIST.quarters; series=ZHIST.zone[z.cd].slice();
+    scope='이 상권의 전체 매출';
+  } else if(SIG.ind[curInd] && HIST.ind[curInd]){
+    sc=SIG.ind[curInd]; qs=HIST.quarters;
+    series=qs.map(function(q){ return HIST.ind[curInd][q]||null; });
+    scope='서울 전체 '+curInd+' 업종';
+  }
+  if(!sc||!series){
+    return head+'<div class="note">'+esc(curInd)+' 업종은 분기 이력이 없어 전망을 계산하지 않았습니다.'+
+      (SIG.zone_pending?'<br><span class="mut">'+esc(SIG.zone_pending)+'</span>':'')+'</div>';
+  }
+  var f=sc.forecast||{};
+  var isZone=(scope==='이 상권의 전체 매출');
+  var chart=drawChart(qs, series, f.show? f.value:null, f.next_q);
+
+  // 무엇의 시계열인지 차트 '위에' 크게 밝힌다.
+  // 상권 매출이 4억인 화면에 서울 업종 전체 전망 '3.8조'가 크게 떠 있으면
+  // 사용자는 그걸 이 상권의 숫자로 읽는다. 기준을 작은 글씨로 두면 안 된다.
+  var scopeBar='<div class="note'+(isZone?'':' warn')+'" style="margin-bottom:12px">'+
+    '<b>기준: '+esc(scope)+'</b>'+
+    (isZone?'' : '<br>이 상권 자체의 분기 매출 이력은 아직 수집 전이라, 같은 업종의 <b>서울 전체</b> 흐름을 대신 보여줍니다. 아래 금액은 이 상권의 매출이 아닙니다.')+
+    '</div>';
+
+  var body=[scopeBar, chart,
+    '<div class="legend"><span><i></i>실측</span>'+(f.show?'<span><i class="f"></i>전망(검증 통과)</span>':'')+'</div>'];
+
+  if(f.show){
+    body.push('<div class="note" style="margin-top:14px">'+
+      '<b>'+esc(scope)+' · '+qLabel(f.next_q)+' 전망 '+won(f.value)+'원</b> · 방법 '+esc(f.method_ko)+
+      '<div class="metrics"><span>검증 오차 MAPE <b>'+f.mape+'%</b></span>'+
+      '<span>MAE <b>'+won(f.mae)+'원</b></span><span>RMSE <b>'+won(f.rmse)+'원</b></span>'+
+      '<span>기준선(직전 분기 유지) MAPE <b>'+f.baseline_mape+'%</b></span>'+
+      '<span>검증 구간 <b>'+f.holdout_n+'분기</b></span></div>'+
+      '<p style="margin:8px 0 0;font-size:11.5px;color:var(--ink3)">검증 구간은 학습에 전혀 쓰지 않은 최근 '+f.holdout_n+'분기입니다. 이 방법이 기준선보다 오차가 낮았을 때만 전망을 표시합니다.</p></div>');
+  } else {
+    body.push('<div class="note warn" style="margin-top:14px"><b>전망을 표시하지 않습니다.</b><br>'+
+      esc(f.reason||'검증 기준 미달')+'.'+
+      (f.baseline_mape!=null?' 기준선(직전 분기 유지)의 검증 오차는 '+f.baseline_mape+'%입니다.':'')+
+      '<p style="margin:8px 0 0;font-size:11.5px;color:var(--ink3)">맞을 확률이 동전 던지기보다 나을 근거가 없는 예측은 내보내지 않습니다. 대신 위의 실측 추이와 수요·공급 균형으로 판단하세요.</p></div>');
+  }
+  return head+body.join('');
+}
+
+// 순수 SVG 라인차트 — 라이브러리 없음(용량·인수인계 부담 없음).
+function drawChart(qs, vals, fc, fq){
+  var pts=[], W=760, H=230, PL=52, PR=14, PT=14, PB=26;
+  var idx=[]; vals.forEach(function(v,i){ if(v!=null){ idx.push(i); } });
+  if(idx.length<2) return '<div class="note">그릴 수 있는 분기가 부족합니다.</div>';
+  var all=idx.map(function(i){return vals[i];}); if(fc!=null) all=all.concat([fc]);
+  var mn=Math.min.apply(null,all), mx=Math.max.apply(null,all);
+  var pad=(mx-mn)*0.12||mx*0.1||1; mn=Math.max(0,mn-pad); mx=mx+pad;
+  var n=idx.length+(fc!=null?1:0);
+  var X=function(k){ return PL+(W-PL-PR)*(n<2?0:k/(n-1)); };
+  var Y=function(v){ return PT+(H-PT-PB)*(1-(v-mn)/((mx-mn)||1)); };
+  idx.forEach(function(i,k){ pts.push([X(k),Y(vals[i])]); });
+  var line=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' ');
+  var area=line+' L'+pts[pts.length-1][0].toFixed(1)+' '+(H-PB)+' L'+pts[0][0].toFixed(1)+' '+(H-PB)+' Z';
+  var s=['<svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="분기별 매출 추이">'];
+  // 가로 눈금 3줄 — 격자를 촘촘히 깔면 데이터보다 격자가 눈에 띈다.
+  [0,0.5,1].forEach(function(t){
+    var v=mn+(mx-mn)*(1-t), y=PT+(H-PT-PB)*t;
+    s.push('<line x1="'+PL+'" y1="'+y.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+y.toFixed(1)+'" stroke="var(--line)" stroke-width="1"/>');
+    s.push('<text x="'+(PL-8)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="10" fill="var(--ink3)">'+won(v)+'</text>');
+  });
+  s.push('<path d="'+area+'" fill="var(--surface)" opacity=".7"/>');
+  s.push('<path d="'+line+'" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>');
+  var last=pts[pts.length-1];
+  s.push('<circle cx="'+last[0].toFixed(1)+'" cy="'+last[1].toFixed(1)+'" r="3.5" fill="var(--ink)"/>');
+  if(fc!=null){
+    var fx=X(n-1), fy=Y(fc);
+    // 전망은 점선 + 반투명. 실측과 시각적으로 절대 헷갈리면 안 된다.
+    s.push('<path d="M'+last[0].toFixed(1)+' '+last[1].toFixed(1)+' L'+fx.toFixed(1)+' '+fy.toFixed(1)+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4" opacity=".85"/>');
+    s.push('<circle cx="'+fx.toFixed(1)+'" cy="'+fy.toFixed(1)+'" r="4" fill="none" stroke="var(--accent)" stroke-width="2"/>');
+  }
+  // x축 라벨은 처음·중간·마지막만. 21개 다 쓰면 읽을 수 없다.
+  // 전망점이 있으면 마지막 실측 라벨과 겹치므로 그 라벨은 빼고 전망 분기만 쓴다.
+  var ticks = fc!=null ? [0, Math.floor((idx.length-1)/2)] : [0, Math.floor((idx.length-1)/2), idx.length-1];
+  ticks.forEach(function(k){
+    s.push('<text x="'+X(k).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="10" fill="var(--ink3)">'+qs[idx[k]].slice(2,4)+'년 '+qs[idx[k]].slice(4)+'Q</text>');
+  });
+  if(fc!=null) s.push('<text x="'+X(n-1).toFixed(1)+'" y="'+(H-8)+'" text-anchor="end" font-size="10" fill="var(--accent)">'+(fq?fq.slice(2,4)+'년 '+fq.slice(4)+'Q 전망':'전망')+'</text>');
+  s.push('</svg>');
+  return s.join('');
+}
+
+function anomalyBlock(){
+  if(!SIG||!SIG.ind) return '';
+  var sc=SIG.ind[curInd]; if(!sc) return '';
+  if(!sc.anomaly && !sc.watch) return '';
+  var isA=!!sc.anomaly;
+  return '<div class="note '+(isA?'bad':'')+'"><b>'+esc(curInd)+' — '+esc(sc.anomaly||sc.watch)+'</b><br>'+
+    esc(sc.anomaly_detail||'')+
+    '<p style="margin:8px 0 0;font-size:11.5px;color:var(--ink3)">중앙값·MAD 기반으로 이 업종의 평소 변동폭을 구한 뒤, 최근 값이 그 범위를 얼마나 벗어났는지로 판정합니다. 평균·표준편차를 쓰면 이상치가 평균을 끌어당겨 이상을 놓칩니다.'+
+    (isA?'':' 경보 기준(3.0)에는 못 미쳐 참고용으로만 표시합니다.')+'</p></div>';
+}
+
+// ── 리포트 이메일 (수집 항목 최소화) ──
+var mz=null;
+function openModal(z){ mz=z; $('#mtarget').textContent=z.nm+' · '+(z.gu||'')+(curInd?' · '+curInd:''); $('#mmsg').textContent=''; $('#modal').classList.add('on'); $('#em').focus(); }
+$('#mclose').addEventListener('click',function(){ $('#modal').classList.remove('on'); });
+$('#modal').addEventListener('click',function(e){ if(e.target===$('#modal')) $('#modal').classList.remove('on'); });
+$('#msend').addEventListener('click',function(){
+  var em=$('#em').value.trim(), ag=$('#ag').checked, m=$('#mmsg');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ m.style.color='var(--bad)'; m.textContent='이메일 형식을 확인해 주세요.'; return; }
+  if(!ag){ m.style.color='var(--bad)'; m.textContent='수집·이용 동의가 필요합니다.'; return; }
+  m.style.color='var(--ink2)'; m.textContent='보내는 중…';
+  fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},
+    // 최소 수집: 이메일 / 조회 상권 / 업종 / 리포트 종류 / 동의. 이름·소속·연락처는 받지 않는다.
+    body:JSON.stringify({email:em,agreed:true,item:(mz&&mz.nm)||'',item_type:'zone_report',
+                         region:(mz&&mz.gu)||'',industry:curInd||'',format:'pdf'})})
+  .then(function(r){return r.json();}).then(function(j){
+    if(j.ok){ m.style.color='var(--good)'; m.textContent='신청됐습니다. 리포트를 보내드리겠습니다.'; setTimeout(function(){$('#modal').classList.remove('on');},1400); }
+    else if(j.configured===false){ m.style.color='var(--warn)'; m.textContent='리포트 발송 준비 중입니다. 우선 PDF로 저장해 주세요.'; }
+    else { m.style.color='var(--bad)'; m.textContent=j.error||'전송에 실패했습니다.'; }
+  }).catch(function(){ m.style.color='var(--bad)'; m.textContent='네트워크 오류입니다. 잠시 후 다시 시도해 주세요.'; });
+});
+})();
+</script>
+</body>
+</html>

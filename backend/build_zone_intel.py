@@ -32,14 +32,23 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 FE   = os.path.join(ROOT, "frontend")
 OUT  = os.path.join(FE, "zone_intel.json")
+IDXOUT = os.path.join(FE, "zone_index.json")   # 첫 화면용 경량 인덱스
 
 # 수요 합성점수 가중치 — 실측이 아니라 '가정'. 근거: 상권 수요는 (1) 거주 배후 (2) 유입 인구가
 # 대부분을 설명하고, 집객시설은 유입의 대리지표, 아파트 시가는 구매력의 대리지표라고 봤다.
 WEIGHTS = {"hshld": 0.35, "livepop": 0.35, "fac": 0.20, "price": 0.10}
 
 # 이 미만이면 '상권'으로 비교하지 않는다(공원·학교·병원·단지 구역).
-# 점포가 없으면 공급 백분위가 0에 붙어 gap 이 무조건 커지는 착시가 생긴다.
-MIN_STORES = 30
+# 점포가 적으면 공급 백분위가 0에 붙어 gap 이 무조건 커지는 착시가 생긴다.
+#
+# 기준을 어떻게 정했나 (감이 아니라 실제 분포에서):
+#   전 상권 점포수 분위 — 25%:24  50%:71  75%:166
+#   전 상권 분기매출 분위 — 25%:10억  50%:31억  75%:106억
+#   30개 컷으로 돌렸더니 상위 25곳이 초등학교·공원·우편취급국으로 채워졌다.
+#   50개 + 10억 컷으로 올리자 을지로2가·선정릉역·시청역·아현역 같은 실제 상권이 남았다.
+# 즉 "상업 실체가 있는 상권"의 하한선이며, 남는 상권은 1,564곳 중 927곳이다.
+MIN_STORES = 50
+MIN_SALES  = 10e8   # 분기 10억원
 
 
 def load(name):
@@ -216,7 +225,7 @@ def main():
         # 점포가 거의 없는 구역(공원·병원·학교·아파트 단지 등)은 '기회'가 아니라 '비교 불가'다.
         # 공급 백분위가 0에 가까워 gap 이 자동으로 커지므로, 여기서 걸러내지 않으면
         # 근린공원이 창업 기회 1위로 올라온다(실제로 그렇게 나왔다).
-        weak = (z.get("stores") or 0) < MIN_STORES
+        weak = (z.get("stores") or 0) < MIN_STORES or (z.get("sales") or 0) < MIN_SALES
         out[cd] = {
             "gu": gu_of.get(cd), "dong": dong_of.get(cd),
             **({"weak": 1} if weak else {}),
@@ -231,14 +240,29 @@ def main():
             "opr": ch.get("opr"), "cls": ch.get("cls"),   # 평균 운영개월 / 폐업개월(실측)
         }
 
-    # 6) 유사 상권 — 성격이 비슷한 곳 top5 (z-score 유클리드 거리)
-    print("4) 유사 상권 계산")
+    # 6) 유사 상권 — 성격이 비슷한 곳 top5
+    #
+    # 규모(점포수·매출)만 비교하면 실패한다. 실제로 그렇게 만들었더니
+    # 을지로2가(도심 오피스 상권)의 '비슷한 상권'으로 오동나무공원·수유1동주민센터가 나왔다.
+    # 숫자 크기만 닮았을 뿐 성격은 정반대다.
+    # → '무슨 업종이 모여 있는가'(업종 매출 구성)를 주 신호로 쓰고, 규모는 보조로 쓴다.
+    #   업종 구성 = 코사인 유사도(비중 벡터라 규모 영향 없음)
+    #   규모/수요/생존 = z-score 유클리드 → 1/(1+d) 로 유사도화
+    print("4) 유사 상권 계산 (업종 구성 60% + 규모·수요 40%)")
     zmap = {z["cd"]: z for z in zones}
-    feats, keys = [], []
+    keys, feats, mixes = [], [], []
     for cd, o in out.items():
         z = zmap.get(cd)
         if not z or o.get("weak"):
             continue      # 비교 불가 구역은 '비슷한 상권' 후보에서도 뺀다
+        rows = (zi.get(cd) or {}).get("rows") or []
+        tot = sum(r[2] for r in rows if r[2]) or 0
+        if not tot:
+            continue      # 업종 구성을 모르면 성격을 비교할 수 없다
+        # 업종 매출 비중 벡터(희소). 미리 L2 정규화해 두면 코사인이 내적 한 번이다.
+        m = {r[0]: r[2] / tot for r in rows if r[2]}
+        nrm = math.sqrt(sum(v * v for v in m.values())) or 1.0
+        mixes.append({k: v / nrm for k, v in m.items()})
         keys.append(cd)
         feats.append([
             math.log1p(z.get("stores") or 0),
@@ -247,22 +271,30 @@ def main():
             (o["opr"] or 0) / 100.0,
         ])
     dim = len(feats[0]) if feats else 0
-    mu = [sum(f[i] for f in feats) / len(feats) for i in range(dim)] if feats else []
-    sd = [(sum((f[i] - mu[i]) ** 2 for f in feats) / len(feats)) ** 0.5 or 1.0 for i in range(dim)] if feats else []
+    n = len(keys)
+    mu = [sum(f[i] for f in feats) / n for i in range(dim)] if n else []
+    sd = [(sum((f[i] - mu[i]) ** 2 for f in feats) / n) ** 0.5 or 1.0 for i in range(dim)] if n else []
     norm = [[(f[i] - mu[i]) / sd[i] for i in range(dim)] for f in feats]
-    for a in range(len(keys)):
-        va = norm[a]
+    for a in range(n):
+        va, ma = norm[a], mixes[a]
         best = []
-        for b in range(len(keys)):
+        for b in range(n):
             if b == a:
+                continue
+            mb = mixes[b]
+            # 희소 내적: 짧은 쪽만 순회
+            s, l = (ma, mb) if len(ma) <= len(mb) else (mb, ma)
+            cos = 0.0
+            for k, v in s.items():
+                w = l.get(k)
+                if w: cos += v * w
+            if cos < 0.25:        # 업종 구성이 아예 다르면 규모를 볼 것도 없다
                 continue
             d = 0.0
             for i in range(dim):
                 d += (va[i] - norm[b][i]) ** 2
-                if d > 9:      # 이미 멀면 나머지 차원 계산 생략(속도)
-                    break
-            best.append((d, keys[b]))
-        best.sort()
+            best.append((0.6 * cos + 0.4 / (1.0 + math.sqrt(d)), keys[b]))
+        best.sort(reverse=True)
         out[keys[a]]["sim"] = [c for _, c in best[:5]]
 
     res = {
@@ -270,10 +302,12 @@ def main():
         "quarter": tz.get("quarter"),
         "n_zones": len(out),
         "weights": WEIGHTS,
+        "min_stores": MIN_STORES, "min_sales": MIN_SALES,
         "note": ("상권 인텔리전스. dem/sup/gap 은 서울 전체 상권 중 백분위(0~100). "
                  "gap=dem-sup 이 크면 '수요 대비 점포가 적은 곳'(기회), 작으면 과포화. "
                  "가중치(weights)는 실측이 아니라 가정이며 cov 는 결측 반영률(1.0=지표 4개 모두 사용). "
-                 "opr/cls 는 서울시 상권변화지표의 평균 운영·폐업 개월수(실측)."),
+                 "opr/cls 는 서울시 상권변화지표의 평균 운영·폐업 개월수(실측). "
+                 "weak=1 은 점포 50개 미만 또는 분기매출 10억 미만이라 상권 간 비교에서 제외한 구역(공원·학교·병원 등)."),
         "seoul_med_per_store": seoul_med,
         "inds": inds,
         "zones": out,
@@ -285,6 +319,27 @@ def main():
 
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(res, f, ensure_ascii=False, separators=(",", ":"))
+
+    # 검색·목록·랭킹만 하는 화면이 462KB 를 통째로 받을 이유가 없다.
+    # 첫 화면용 경량 인덱스를 따로 뽑는다(상세는 상권을 열 때 지연 로딩).
+    # 배열로 저장(키 이름 반복 제거) — 같은 내용이 dict 보다 훨씬 작다.
+    idx_rows = []
+    for cd, o in out.items():
+        z = zmap.get(cd) or {}
+        idx_rows.append([cd, z.get("nm"), o.get("gu"), o.get("dong"),
+                         z.get("stores") or 0, round(z.get("sales") or 0),
+                         o["dem"], o["sup"], o["gap"], o.get("grade"),
+                         o.get("opr"), 1 if o.get("weak") else 0,
+                         round(z.get("lon") or 0, 5), round(z.get("lat") or 0, 5)])
+    idx_rows.sort(key=lambda r: -r[8])
+    with open(IDXOUT, "w", encoding="utf-8") as f:
+        json.dump({"updated": res["updated"], "quarter": res["quarter"],
+                   "cols": ["cd", "nm", "gu", "dong", "stores", "sales",
+                            "dem", "sup", "gap", "grade", "opr", "weak", "lon", "lat"],
+                   "note": "첫 화면(검색·랭킹)용 경량 인덱스. 상세는 zone_intel.json 지연 로딩.",
+                   "rows": idx_rows}, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"저장: {IDXOUT} · {os.path.getsize(IDXOUT)/1024:.0f}KB (경량 인덱스)")
+
     size = os.path.getsize(OUT) / 1024
     nweak = sum(1 for o in out.values() if o.get("weak"))
     print(f"저장: {OUT} · 상권 {len(out)} (비교불가 {nweak}) · {size:.0f}KB")
@@ -295,7 +350,7 @@ def main():
         z = zmap.get(cd, {})
         print(f"   {o.get('gu') or '?'} {z.get('nm', cd)} · 점포 {z.get('stores')} · "
               f"gap +{o['gap']} (수요 {o['dem']} / 공급 {o['sup']})")
-    print(f"과포화(공급>수요) 상위 5:")
+    print("과포화(공급>수요) 상위 5:")
     for cd, o in sorted(real.items(), key=lambda kv: kv[1]["gap"])[:5]:
         z = zmap.get(cd, {})
         print(f"   {o.get('gu') or '?'} {z.get('nm', cd)} · 점포 {z.get('stores')} · gap {o['gap']}")
