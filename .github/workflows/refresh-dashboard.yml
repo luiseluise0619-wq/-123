@@ -216,7 +216,15 @@ jobs:
         continue-on-error: true
         run: python make_zone_industry.py
 
-      - name: 매출 다분기 이력 수집(예측 학습용, 증분)
+      - name: 상권 인텔리전스 빌드(zone_intel.json · 수요/공급/기회·유사상권)
+        working-directory: backend
+        continue-on-error: true
+        # API 키 불필요 — 이미 받아둔 상권·아파트·집객시설·생활인구 JSON 을 결합만 한다.
+        # 반드시 collect_sales_history 앞에 둔다: 상권코드→자치구 매핑을 여기서 만들고
+        # 그 매핑으로 아래에서 자치구×업종 매출 이력을 집계하기 때문.
+        run: python build_zone_intel.py
+
+      - name: 매출 다분기 이력 수집(업종·상권·자치구×업종, 증분)
         working-directory: backend
         continue-on-error: true
         env:
@@ -227,6 +235,12 @@ jobs:
         working-directory: backend
         continue-on-error: true
         run: python forecast_sales.py
+
+      - name: 상권 신호 생성(변화·이상징후·전망 · signals.json)
+        working-directory: backend
+        continue-on-error: true
+        # 홀드아웃 검증을 통과한 예측만 show=true 로 내보낸다(화면은 show=false 를 표시하지 않음).
+        run: python build_signals.py
 
       - name: 임대료·공실률 레이어 생산(rent.json · 정적 CSV 파생, 키 불필요)
         working-directory: backend
