@@ -6,6 +6,11 @@
 //   *_MODEL            (선택)  각 제공자 기본 모델 강제 지정(쉼표로 여러 개)
 // 파일명이 '_' 로 시작해 Vercel 이 이 파일을 API 경로로 만들지 않는다(공용 유틸).
 
+// 상류 API 가 응답을 주지 않으면 요청이 무한정 매달려 커넥션을 점유한다.
+// 모든 외부 호출에 상한 시간을 둔다(Node 18+ / 브라우저 공통).
+const UPSTREAM_TIMEOUT_MS = 20000;
+const fx = (url, opts) => fetch(url, { ...(opts || {}), signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
+
 const PRIORITY = ["gemini", "openai", "anthropic"];
 const LABEL = { gemini: "Google Gemini", openai: "OpenAI", anthropic: "Anthropic Claude" };
 
@@ -61,7 +66,7 @@ async function callGemini(key, model, system, user, temperature, maxTokens) {
       : { temperature, maxOutputTokens: maxTokens },
   });
   const send = async (body) => {
-    const rr = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const rr = await fx(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const dd = await rr.json().catch(() => ({}));
     return { rr, dd };
   };
@@ -86,7 +91,7 @@ async function callOpenAI(key, model, system, user, temperature, maxTokens) {
   ];
   let lastErr = "";
   for (const b of variants) {
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    const r = await fx("https://api.openai.com/v1/chat/completions", {
       method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(b),
     });
     const d = await r.json().catch(() => ({}));
@@ -98,7 +103,7 @@ async function callOpenAI(key, model, system, user, temperature, maxTokens) {
 }
 
 async function callAnthropic(key, model, system, user, temperature, maxTokens) {
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
+  const r = await fx("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({ model, max_tokens: maxTokens, system, temperature, messages: [{ role: "user", content: user }] }),
@@ -118,7 +123,7 @@ function callOne(prov, key, model, system, user, temperature, maxTokens) {
 // ── 제공자별 사용 가능한 모델 목록(자가치유·드롭다운용) ──
 export async function listModels(prov, key) {
   if (prov === "gemini") {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}&pageSize=1000`);
+    const r = await fx(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}&pageSize=1000`);
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || String(r.status));
     return (d.models || [])
@@ -127,7 +132,7 @@ export async function listModels(prov, key) {
       .filter((n) => /gemini/i.test(n) && !/(embedding|aqa|image|audio|tts|vision)/i.test(n));
   }
   if (prov === "openai") {
-    const r = await fetch("https://api.openai.com/v1/models", { headers: { Authorization: `Bearer ${key}` } });
+    const r = await fx("https://api.openai.com/v1/models", { headers: { Authorization: `Bearer ${key}` } });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || String(r.status));
     return (d.data || []).map((m) => String(m.id))
@@ -135,7 +140,7 @@ export async function listModels(prov, key) {
       .sort();
   }
   if (prov === "anthropic") {
-    const r = await fetch("https://api.anthropic.com/v1/models?limit=1000", { headers: { "x-api-key": key, "anthropic-version": "2023-06-01" } });
+    const r = await fx("https://api.anthropic.com/v1/models?limit=1000", { headers: { "x-api-key": key, "anthropic-version": "2023-06-01" } });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || String(r.status));
     return (d.data || []).map((m) => String(m.id)).filter(Boolean);
@@ -192,18 +197,25 @@ export async function complete({ selected, system, user, temperature = 0.4, maxT
   const list = cand.filter((c) => { const key = c.provider + ":" + c.model; if (seen.has(key)) return false; seen.add(key); return true; });
 
   let err = "";
+  // 키가 잘못된 제공자는 남은 후보 모델을 아무리 더 시도해도 똑같이 실패한다.
+  // 한 번 인증 오류가 나면 그 제공자를 통째로 건너뛴다(불필요한 유료 호출·지연 제거).
+  const deadProviders = new Set();
+  const isAuthError = (m) => /401|403|api key|unauthorized|invalid[_ ]?api|permission|forbidden/i.test(m);
   for (const c of list) {
+    if (deadProviders.has(c.provider)) continue;
     try {
       const t = await callOne(c.provider, k[c.provider], c.model, system, user, temperature, maxTokens);
       if (t) return { text: t, model: c.model, provider: c.provider };
       err = `${c.provider}/${c.model}: 빈 응답`;
     } catch (e) {
-      err = `${c.provider}/${c.model}: ${String(e.message || e)}`;
-      // 인증 오류면 그 제공자 나머지 후보도 무의미 → 다음 제공자로(계속 진행).
+      const msg = String(e && e.message || e);
+      err = `${c.provider}/${c.model}: ${msg}`;
+      if (isAuthError(msg)) deadProviders.add(c.provider);
     }
   }
   // 마지막 수단: 우선 제공자의 실시간 모델 탐색.
-  const dprov = (sel.provider && k[sel.provider]) ? sel.provider : PRIORITY.find((p) => k[p]);
+  const alive = (p) => k[p] && !deadProviders.has(p);
+  const dprov = (sel.provider && alive(sel.provider)) ? sel.provider : PRIORITY.find(alive);
   if (dprov) {
     try {
       const listed = await listModels(dprov, k[dprov]);

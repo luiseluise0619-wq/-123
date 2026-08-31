@@ -215,7 +215,7 @@ function findDong(lng,lat){
 }
 const stationMk=[], zoneMk=[], searchMk=[], savedMk=[];
 
-function loadJSON(f){return fetch(f,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);}
+function loadJSON(f){return fetch(f).then(r=>r.ok?r.json():null).catch(()=>null);}
 function num(n){return (n==null||isNaN(n))?'—':Number(n).toLocaleString('ko-KR');}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function radiusOf(t,max){t=Math.max(0,t||0);return 70+Math.sqrt(t/(max||1))*300;}  // 작게 — 역 많아도 덜 겹치게

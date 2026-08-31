@@ -91,7 +91,7 @@ def check_income():
     if seoul_bad: FAIL("income", f"서울 전체 소비 이상({seoul_bad})")
     if bad: WARN("income", f"자치구 {len(bad)}개 소비 이상(가드로 화면엔 폴백): " + str(dict(list(bad.items())[:4])))
     if not seoul_bad and not bad: OK("income", f"서울+자치구 {len(gu)}개 소비 구성비 정상")
-    elif not seoul_bad: OK("income", f"서울 전체 소비 정상(자치구 일부 폴백)")
+    elif not seoul_bad: OK("income", "서울 전체 소비 정상(자치구 일부 폴백)")
 
 # ── 상권변화: 생존개월 범위 ──
 def check_zone_change():

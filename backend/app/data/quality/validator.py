@@ -6,8 +6,6 @@ class DataQualityValidator:
     """
     @staticmethod
     def validate_record(data: Dict[str, Any]) -> Dict[str, Any]:
-        missing_count = 0
-        total_fields = len(data) if data else 1
         
         # Key required variables
         required_keys = ["foot_traffic_daily", "avg_rent_m2", "competitor_count", "population_total", "card_sales_avg"]

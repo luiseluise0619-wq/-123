@@ -259,7 +259,7 @@
       '예상 매출이 손익분기를 <b>'+(margin>=0?'+'+margin+'% 여유로 넘김':margin+'% 못 넘김(적자)')+'</b>'
     ];
     document.getElementById('intel').innerHTML=intel.map(function(x){return '<li>'+x+'</li>';}).join('');
-    fillGuides(s);                // 임장 체크리스트 + 마케팅 플레이북
+    // 체크리스트·플레이북은 구/업종(st)만 보고 만든다. 슬라이더와 무관하므로 여기서 다시 그리지 않는다(run()에서 1회).
     lastCalc={s:s,r:r,tag:tag};   // 다운로드/저장용 최신 결과
     document.getElementById('result').style.display='block';
   }
@@ -270,6 +270,7 @@
     var sr=document.getElementById('s_rent'); sr.max=Math.max(50,st.rentDefault*2); sr.value=st.rentDefault; sr.step=Math.max(1,Math.round(st.rentDefault/50));
     var ss=document.getElementById('s_staff'); ss.value=st.staffDefault;
     var su=document.getElementById('s_unit'); su.max=Math.max(2000,st.unit*2); su.value=st.unit; su.step=Math.max(100,Math.round(st.unit/50));
+    fillGuides(st);   // 구/업종이 바뀔 때만 필요 → 진단 1회당 1회
     render();
     history.replaceState(null,'','?gu='+encodeURIComponent(st.g)+'&ind='+encodeURIComponent(st.k)+'&budget='+(st.budget||'')+'&area='+(st.area||''));
     document.getElementById('verdict').scrollIntoView({behavior:'smooth',block:'start'});
@@ -288,7 +289,12 @@
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){alert('링크가 복사됐습니다.');},function(){prompt('링크 복사:',u);});}
     else prompt('링크 복사:',u);
   });
-  ['s_rent','s_staff','s_unit'].forEach(function(id){document.getElementById(id).addEventListener('input',render);});
+  // 슬라이더는 드래그 중 'input' 이 초당 수십~수백 번 발생한다. 그때마다 render() 를 돌리면
+  // 브라우저 그리기 주기(60fps)보다 많이 계산해 버려 저사양 기기에서 끊긴다.
+  // requestAnimationFrame 으로 "화면 한 프레임당 최대 1회"로 묶는다(rAF 스로틀).
+  var rafId=0;
+  function renderThrottled(){ if(rafId) return; rafId=requestAnimationFrame(function(){ rafId=0; render(); }); }
+  ['s_rent','s_staff','s_unit'].forEach(function(id){document.getElementById(id).addEventListener('input',renderThrottled);});
   document.getElementById('pdf').addEventListener('click',function(){window.print();});
 
   // ── 엑셀(CSV) 다운로드 + 이메일 수집(리드) ──

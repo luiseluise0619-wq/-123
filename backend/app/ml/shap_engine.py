@@ -63,7 +63,7 @@ class ShapExplainabilityEngine:
                 "risk_factors": negative_factors,
                 "top_feature_importance": feature_importance
             }
-        except Exception as e:
+        except Exception:
             # Safe robust fallback
             return {
                 "positive_drivers": [

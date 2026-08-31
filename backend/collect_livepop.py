@@ -92,7 +92,7 @@ def main():
         for attempt in range(4):
             try:
                 xml = fetch(s, e, HOUR); break
-            except Exception as ex:
+            except Exception:
                 if attempt==3: raise
                 time.sleep(2*(attempt+1))
         rt = ET.fromstring(xml)

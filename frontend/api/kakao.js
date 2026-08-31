@@ -12,16 +12,13 @@
 
 const GROUP = new Set(["MT1","CS2","PS3","SC4","AC5","PK6","OL7","SW8","BK9","CT1","AG2","PO3","AT4","AD5","FD6","CE7","HP8","PM9"]);
 
+import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
   // 같은 사이트에서 온 요청만 허용 → REST 키 남용 차단(chat.js 와 동일 방어).
-  const origin = req.headers.origin || "";
-  const host = req.headers.host || "";
-  const allow = process.env.ALLOWED_ORIGIN;
-  const sameSite = origin && (origin.endsWith(host) || (host && origin.includes(host.split(":")[0])));
-  const okOrigin = allow ? origin === allow : (sameSite || origin.endsWith(".vercel.app") || !origin);
-  if (!okOrigin) return res.status(403).json({ error: "이 사이트에서만 사용할 수 있습니다." });
+  if (!isAllowedOrigin(req)) return res.status(403).json({ error: FORBIDDEN_MSG });
 
   const key = process.env.KAKAO_REST_KEY;
   if (!key) {

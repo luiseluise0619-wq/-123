@@ -79,11 +79,9 @@ def build_food():
 # ----------------------------------------------------------------- 2) 상권
 def load_sangkwon():
     """원본 CSV 있으면 재집계, 없으면 스냅샷 사용."""
-    if os.path.exists(TRDAR):
-        df = pd.read_csv(TRDAR, low_memory=False)
-        # 여기서 zone×industry 집계로 rows 재생성 (원본 스키마에 맞춰 확장 지점)
-        # 스냅샷과 동일 필드로 맞춰지도록 build_seoul_dataset 산출물을 재사용 권장.
-        # 최소 안전장치: 스냅샷이 있으면 그걸 신뢰.
+    # [확장 지점] 원본 CSV(TRDAR)로 zone×industry 를 재집계하려면 여기에 구현한다.
+    # 현재는 build_seoul_dataset 산출물(스냅샷)을 그대로 신뢰한다.
+    # 예전에는 CSV 를 pandas 로 읽어놓고 쓰지 않아 매 실행마다 파싱·메모리만 낭비했다 → 제거.
     if not os.path.exists(SNAP):
         raise FileNotFoundError(f"상권 스냅샷 없음: {SNAP}")
     return json.load(open(SNAP, encoding="utf-8"))

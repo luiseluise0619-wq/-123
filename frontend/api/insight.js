@@ -4,6 +4,7 @@
 // 필요 환경변수(하나 이상): GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY
 // 호출: POST /api/insight  { context, model }   model = "provider:모델명"(선택, 없으면 자동)
 import { complete, anyConfigured } from "./_ai.js";
+import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
 
 const SYSTEM = [
   "너는 데이터 분석 결과를 일반 사용자가 빠르게 이해하도록 설명하는 데이터 분석가다.",
@@ -39,12 +40,7 @@ const SYSTEM = [
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  const origin = req.headers.origin || "";
-  const host = req.headers.host || "";
-  const allow = process.env.ALLOWED_ORIGIN;
-  const sameSite = origin && (origin.endsWith(host) || (host && origin.includes(host.split(":")[0])));
-  const okOrigin = allow ? origin === allow : (sameSite || origin.endsWith(".vercel.app") || !origin);
-  if (!okOrigin) return res.status(403).json({ error: "이 사이트에서만 사용할 수 있습니다." });
+  if (!isAllowedOrigin(req)) return res.status(403).json({ error: FORBIDDEN_MSG });
 
   if (!anyConfigured()) {
     return res.status(200).json({

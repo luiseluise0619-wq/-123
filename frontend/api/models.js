@@ -2,13 +2,10 @@
 // 프론트 모델 선택 드롭다운 채우기용. 키는 노출하지 않음.
 // 반환: { ok, configured, groups:[{provider,label,models:[...]}], models:["provider:model", ...] }
 import { allModelGroups, anyConfigured } from "./_ai.js";
+import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
 
 export default async function handler(req, res) {
-  const origin = req.headers.origin || "", host = req.headers.host || "";
-  const allow = process.env.ALLOWED_ORIGIN;
-  const sameSite = origin && (origin.endsWith(host) || (host && origin.includes(host.split(":")[0])));
-  const okOrigin = allow ? origin === allow : (sameSite || origin.endsWith(".vercel.app") || !origin);
-  if (!okOrigin) return res.status(403).json({ ok: false, groups: [], models: [], error: "이 사이트에서만 사용할 수 있습니다." });
+  if (!isAllowedOrigin(req, { allowMissing: true })) return res.status(403).json({ ok: false, groups: [], models: [], error: FORBIDDEN_MSG });
 
   if (!anyConfigured()) {
     return res.status(200).json({ ok: false, configured: false, groups: [], models: [], error: "AI 키 미설정(GEMINI/OPENAI/ANTHROPIC)" });

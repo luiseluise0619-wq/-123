@@ -39,8 +39,14 @@ function vercelRes(nodeRes) {
 
 function readBody(req) {
   return new Promise((resolve) => {
-    let data = ""; req.on("data", (c) => { data += c; if (data.length > 2e6) req.destroy(); });
-    req.on("end", () => resolve(data)); req.on("error", () => resolve(""));
+    let data = "", done = false;
+    const finish = (v) => { if (!done) { done = true; resolve(v); } };
+    req.on("data", (c) => { data += c; if (data.length > 2e6) req.destroy(); });
+    req.on("end", () => finish(data));
+    req.on("error", () => finish(""));
+    // destroy()/클라이언트 중단 시 'end'·'error' 가 안 올 수 있다.
+    // 그러면 Promise 가 영영 안 풀려 요청 컨텍스트가 그대로 쌓인다(누수). 'close' 로도 반드시 종료시킨다.
+    req.on("close", () => finish(""));
   });
 }
 
@@ -48,7 +54,8 @@ async function serveStatic(pathname, nodeRes) {
   let rel = decodeURIComponent(pathname.split("?")[0]);
   if (rel.endsWith("/")) rel += "index.html";
   let file = path.normalize(path.join(ROOT, rel));
-  if (!file.startsWith(ROOT)) { nodeRes.writeHead(403); return nodeRes.end("Forbidden"); }
+  // 접두사만 비교하면 "frontendX" 같은 형제 경로가 통과한다. 구분자까지 포함해 검사.
+  if (file !== ROOT && !file.startsWith(ROOT + path.sep)) { nodeRes.writeHead(403); return nodeRes.end("Forbidden"); }
 
   async function tryFile(f) { try { const s = await stat(f); return s.isFile() ? f : null; } catch { return null; } }
 
@@ -86,8 +93,12 @@ const server = http.createServer(async (req, nodeRes) => {
 
     await serveStatic(pathname, nodeRes);
   } catch (e) {
+    // 핸들러가 이미 응답을 시작한 뒤 예외가 나면 writeHead 를 다시 부를 수 없다
+    // (ERR_HTTP_HEADERS_SENT → 처리되지 않는 예외). 헤더 전송 여부를 보고 안전하게 끝낸다.
+    console.error("[server]", e && e.stack || e);
+    if (nodeRes.headersSent) { try { nodeRes.end(); } catch { /* 이미 닫힘 */ } return; }
     nodeRes.writeHead(500, { "Content-Type": "application/json" });
-    nodeRes.end(JSON.stringify({ error: String(e && e.message || e) }));
+    nodeRes.end(JSON.stringify({ error: "internal error" }));
   }
 });
 

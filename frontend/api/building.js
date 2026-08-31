@@ -16,15 +16,12 @@ function num(v){ const n=Number(v); return Number.isFinite(n)?n:null; }
 // 그대로, 아니면 encodeURIComponent — 사용자가 어느 걸 넣어도 동작하게.
 function encKey(k){ return /%[0-9A-Fa-f]{2}/.test(k) ? k : encodeURIComponent(k); }
 
+import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  const origin = req.headers.origin || "";
-  const host = req.headers.host || "";
-  const allow = process.env.ALLOWED_ORIGIN;
-  const sameSite = origin && (origin.endsWith(host) || (host && origin.includes(host.split(":")[0])));
-  const okOrigin = allow ? origin === allow : (sameSite || origin.endsWith(".vercel.app") || !origin);
-  if (!okOrigin) return res.status(403).json({ error: "이 사이트에서만 사용할 수 있습니다." });
+  if (!isAllowedOrigin(req)) return res.status(403).json({ error: FORBIDDEN_MSG });
 
   const kakaoKey = process.env.KAKAO_REST_KEY;
   const govKey = process.env.DATA_GO_KR_KEY;

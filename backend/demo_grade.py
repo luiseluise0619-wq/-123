@@ -86,8 +86,8 @@ def main():
         induty = row.get("SVC_INDUTY_CD_NM", "")
         print(f"\n📍 {name} · {induty}")
         print(f"   창업 적합도: 상위 {top_pct:.0f}%  →  {g}등급")
-        print(f"   ▲ 강점: " + ", ".join(f"{lab(c)}" for c, _ in pos))
-        print(f"   ▼ 약점: " + ", ".join(f"{lab(c)}" for c, _ in neg))
+        print("   ▲ 강점: " + ", ".join(f"{lab(c)}" for c, _ in pos))
+        print("   ▼ 약점: " + ", ".join(f"{lab(c)}" for c, _ in neg))
     print("\n" + "=" * 60)
     print("※ 절대 매출액이 아닌 '상대 등급 + 근거'. R² 0.28 로도 성립하는 제품 형태.")
 

@@ -17,8 +17,9 @@
 <script>
 window.__resources = {
   "https://unpkg.com/react@18.3.1/umd/react.production.min.js": "./vendor/react.production.min.js",
-  "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js": "./vendor/react-dom.production.min.js",
-  "https://unpkg.com/@babel/standalone@7.29.0/babel.min.js": "./vendor/babel.min.js"
+  "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js": "./vendor/react-dom.production.min.js"
+  // Babel 은 x-import kind="jsx" 일 때만 로드되는데 이 프로젝트엔 jsx import 가 없어
+  // 로컬 사본(3.1MB)을 두지 않는다. 혹시 필요해지면 support.js 가 CDN(SRI 검증)으로 폴백한다.
 };
 </script>
 <script src="./support.js"></script>
@@ -975,7 +976,7 @@ class Component extends DCLogic {
       if (h0 && this.topicDefs().find(t => t.id === h0)) { p0.screen = 'data'; p0.topic = h0; }
       this.setState(p0);
     }
-    const j = (f) => (D ? Promise.resolve(null) : fetch(f, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null));
+    const j = (f) => (D ? Promise.resolve(null) : fetch(f).then(r => r.ok ? r.json() : null).catch(() => null));
     Promise.all([
       j('data/core.json'), j('data/seoul-gu-paths.json'), j('livepop_gu.json'),
       j('parking_gu.json'), j('stores_by_industry.json'), j('sales_by_industry.json'),
@@ -993,7 +994,7 @@ class Component extends DCLogic {
     });
     // 부팅 최적화: 아래 두 파일(지하철·구별매출)은 첫 화면엔 불필요한데, 로드 후 setState 가
     // 156K 템플릿을 통째로 재렌더시켜 부팅을 느리게 했다. 첫 렌더가 끝나고 브라우저가 한가할 때 지연 로드한다.
-    const loadJson = (u) => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+    const loadJson = (u) => fetch(u).then(r => r.ok ? r.json() : null).catch(() => null);
     const deferLoads = () => {
       // 역 단위 지하철(번들에 없음). 프로덕션(루트=frontend/) 기준, dev용 접두사 폴백.
       loadJson('subway_stations.json').then(s => s || loadJson('frontend/subway_stations.json'))

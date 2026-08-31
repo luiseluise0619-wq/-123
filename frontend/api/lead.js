@@ -7,6 +7,7 @@
 // 프론트 호출: POST /api/lead  { email, agreed, item, region, industry, format, name?, org?, purpose?, marketing_opt_in? }
 import pg from "pg";
 import crypto from "node:crypto";
+import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
 
 const { Pool } = pg;
 const DB_URL = process.env.DATABASE_URL || "";
@@ -14,6 +15,9 @@ const DB_URL = process.env.DATABASE_URL || "";
 const ssl = !DB_URL || /sslmode=disable|localhost|127\.0\.0\.1/.test(DB_URL) ? false : { rejectUnauthorized: false };
 // Pool 은 모듈 캐시로 재사용(요청마다 새로 안 만듦).
 const pool = DB_URL ? new Pool({ connectionString: DB_URL, ssl, max: 3 }) : null;
+// 유휴 커넥션이 끊기면(네트워크·DB 재시작) pg 가 pool 에 'error' 를 낸다.
+// 리스너가 없으면 uncaught exception 이 되어 서버 프로세스가 통째로 죽는다. 반드시 흡수한다.
+if (pool) pool.on("error", (e) => { console.error("[lead] pg pool error:", e && e.message); });
 
 let ready = false; // 테이블 자동 생성 1회
 async function ensureTable() {
@@ -40,11 +44,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
   // 최소 방어: 같은 사이트에서 온 요청만 허용(외부 스크립트 남용 차단)
-  const origin = req.headers.origin || "", host = req.headers.host || "";
-  const allow = process.env.ALLOWED_ORIGIN;
-  const sameSite = origin && (origin.endsWith(host) || (host && origin.includes(host.split(":")[0])));
-  const okOrigin = allow ? origin === allow : (sameSite || origin.endsWith(".vercel.app") || origin.endsWith(".onrender.com"));
-  if (!okOrigin) return res.status(403).json({ error: "이 사이트에서만 사용할 수 있습니다." });
+  if (!isAllowedOrigin(req)) return res.status(403).json({ error: FORBIDDEN_MSG });
 
   if (!pool) return res.status(200).json({ ok: false, configured: false, error: "DATABASE_URL 미설정 — Neon/카페24 Postgres 연결 문자열을 환경변수에 추가하세요." });
 

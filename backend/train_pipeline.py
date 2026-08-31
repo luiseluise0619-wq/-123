@@ -30,7 +30,7 @@ def run_pipeline(csv_path: str):
     print(f" Raw Records Count: {len(raw_df):,} rows | Raw Columns: {len(raw_df.columns)}")
     
     df_clean = schema_mapper.normalize_dataframe(raw_df)
-    print(f" Schema Normalized: Mapped headers into standardized ML features.")
+    print(" Schema Normalized: Mapped headers into standardized ML features.")
 
     # 2. Data Quality Check
     print("\n[2/7] Data Quality Check & Imputation")
@@ -42,7 +42,7 @@ def run_pipeline(csv_path: str):
     print("\n[3/7] Automated EDA Report Generation")
     eda_summary = auto_eda_generator.generate_eda_report(df_clean)
     print(f" Top Positive Revenue Driver: {eda_summary['top_positive'][0] if eda_summary['top_positive'] else 'N/A'}")
-    print(f" Automated eda_report.md exported successfully!")
+    print(" Automated eda_report.md exported successfully!")
 
     # 4. Dynamic Feature Engineering & Feature Selection
     print("\n[4/7] Dynamic Feature Engineering & Feature Selection")

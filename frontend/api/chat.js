@@ -5,19 +5,15 @@
 //   context = 현재 선택된 상권/업종의 실데이터 요약(있으면 근거로 사용)
 //   model   = "provider:모델명"(선택, 없으면 자동)
 import { complete, anyConfigured } from "./_ai.js";
+import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "POST only" });
   }
   // 최소 방어: 같은 사이트(브라우저)에서 온 요청만 허용 → 외부 스크립트의 토큰 남용 차단.
-  const origin = req.headers.origin || "";
-  const host = req.headers.host || "";
-  const allow = process.env.ALLOWED_ORIGIN;
-  const sameSite = origin && (origin.endsWith(host) || (host && origin.includes(host.split(":")[0])));
-  const okOrigin = allow ? origin === allow : (sameSite || origin.endsWith(".vercel.app"));
-  if (!okOrigin) {
-    return res.status(403).json({ error: "이 사이트에서만 사용할 수 있습니다.", reply: "요청 출처가 허용되지 않았습니다." });
+  if (!isAllowedOrigin(req)) {
+    return res.status(403).json({ error: FORBIDDEN_MSG, reply: "요청 출처가 허용되지 않았습니다." });
   }
   if (!anyConfigured()) {
     return res.status(200).json({

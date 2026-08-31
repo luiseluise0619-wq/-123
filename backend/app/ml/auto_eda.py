@@ -16,7 +16,6 @@ class AutoEDAGenerator:
         numeric_df = df.select_dtypes(include=[np.number])
         
         # 1. Target & Core Feature Correlations
-        correlations = {}
         target_col = "monthly_revenue" if "monthly_revenue" in numeric_df.columns else numeric_df.columns[-1]
         
         corr_series = numeric_df.corr()[target_col].drop(target_col, errors="ignore")

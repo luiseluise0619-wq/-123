@@ -33,3 +33,7 @@ backend/app/data/market/*.pkl
 
 # 루트 Node 의존성(pg 등)
 /node_modules/
+
+# 도구 캐시 / 로컬 DB 산출물
+.ruff_cache/
+*.db
