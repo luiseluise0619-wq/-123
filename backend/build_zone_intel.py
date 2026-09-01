@@ -379,6 +379,7 @@ def main():
     perf_rank  = {ii: pct_ranks(v) for ii, v in ind_perf.items() if len(v) >= 8}
 
     opp = {}
+    ranked_full = {}          # 자르기 전 전체 랭킹 — 아래 맞춤 탐색용 파일에서 쓴다
     for ii, sr in store_rank.items():
         name = inds[ii] if ii < len(inds) else str(ii)
         pr = perf_rank.get(ii, {})
@@ -424,6 +425,7 @@ def main():
             arr = sorted(ind_store[ii].values())
             m = len(arr)
             brk = [round(arr[min(m - 1, int(round(t / 100.0 * (m - 1))))]) for t in range(101)]
+            ranked_full[name] = ranked
             opp[name] = {"top": ranked[:20], "unproven": unproven[:8],
                          "n_zones": len(ranked),
                          "store_brk": brk,
@@ -440,6 +442,34 @@ def main():
                             "'되는 동네인지' 검증할 수 없는 곳 — 점수를 매기지 않는다."),
                    "ind": opp}, f, ensure_ascii=False, separators=(",", ":"))
     print(f"저장: {OPPOUT} · {os.path.getsize(OPPOUT)/1024:.0f}KB")
+
+    # ── 7-b) 맞춤 탐색용 전체 랭킹 ──────────────────────────────────────
+    #
+    # 위 파일의 top 은 20곳이다. 첫 화면에는 그걸로 충분하지만,
+    # "낮은 임대료가 제일 중요하다" 처럼 사용자가 가중치를 바꾸면 순위가 통째로 뒤집힌다.
+    # 기본 가중치로 300등이던 곳이 1등이 될 수 있는데, 20곳만 들고 다시 정렬하면
+    # 그 20곳 안에서만 순위가 바뀐다 — 맞춤이라 부를 수 없는 가짜 결과가 나온다.
+    # 그래서 점수를 매긴 상권 전부를 따로 내보낸다.
+    #
+    # 대신 무겁다(업종×상권 쌍이 1만 개가 넘는다). 두 가지로 줄인다:
+    #   ① 첫 화면과 분리된 별도 파일 — 맞춤 탐색을 열 때만 받는다.
+    #   ② 키 이름 없는 배열(컬럼 정의는 cols 에 한 번만). 상권명·자치구·수요는
+    #      zone_index.json 에 이미 있으므로 cd 로 이어 붙인다(중복 저장 안 함).
+    ALLOUT = os.path.join(FE, "zone_opportunity_all.json")
+    all_ind = {}
+    for name, rows in ranked_full.items():
+        all_ind[name] = [[r["cd"], r["stores"], r["scarce"], r["perf"],
+                          r["perf_raw"], round(r["psales"] / 10000)] for r in rows]
+    with open(ALLOUT, "w", encoding="utf-8") as f:
+        json.dump({"updated": res["updated"], "quarter": res["quarter"],
+                   "weights": OPP_W, "shrink_k": SHRINK_K,
+                   "cols": ["cd", "stores", "scarce", "perf", "perf_raw", "psales_man"],
+                   "note": ("맞춤 탐색(가중치 변경)용 전체 랭킹. 점수를 매긴 상권 전부. "
+                            "psales_man 은 점포당 분기매출(만원). 상권명·자치구·수요(dem)는 "
+                            "zone_index.json 에서 cd 로 이어 붙인다."),
+                   "ind": all_ind}, f, ensure_ascii=False, separators=(",", ":"))
+    npair = sum(len(v) for v in all_ind.values())
+    print(f"저장: {ALLOUT} · 업종×상권 {npair:,}쌍 · {os.path.getsize(ALLOUT)/1024:.0f}KB")
 
     for probe in ("커피-음료", "한식음식점", "치킨전문점"):
         d = opp.get(probe)

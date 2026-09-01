@@ -7,6 +7,9 @@
 <meta name="description" content="서울 상권 1,564곳의 수요·공급·변화·전망을 실측 데이터로 판독합니다.">
 <link rel="stylesheet" href="theme.css">
 <script src="command.js" defer></script>
+<!-- 자치구→부동산원 조사상권 매핑 1벌. 맞춤 탐색의 임대료 축이 이 표를 쓴다.
+     index.html·mvp.html 과 같은 파일이라 세 화면의 임대료가 어긋날 일이 없다. -->
+<script src="gu_rent_zone.js"></script>
 <style>
 /* 색·타이포·버튼·칩·시트·상태는 theme.css(디자인 시스템). 여기는 이 화면 고유 배치만. */
 
@@ -122,6 +125,29 @@ th{font-size:var(--f-cap);color:var(--ink3);font-weight:500;border-bottom:1px so
   .stickycta .lbl{display:none}
   .stickycta .in .btn{flex:1}
 }
+/* ── 맞춤 탐색 — 질문 하나씩 열리는 화면 ── */
+.qa{padding:var(--sp-6) 0;border-top:1px solid var(--line-soft)}
+.qa:first-child{border-top:0;padding-top:var(--sp-4)}
+.qa h3{font-size:var(--f-head);font-weight:600;letter-spacing:var(--ls-head);margin:0}
+.qa h3 i{font-style:normal;color:var(--ink3);font-weight:500;margin-right:var(--sp-3)}
+.qa .hint{font-size:var(--f-cap);color:var(--ink3);margin:var(--sp-2) 0 0}
+.qa .tabs{margin-top:var(--sp-4)}
+.qa .fields{display:flex;gap:var(--sp-4);flex-wrap:wrap;margin-top:var(--sp-4)}
+.qa .fields label{flex:1;min-width:150px;font-size:var(--f-cap);color:var(--ink2)}
+.qa .fields .input{margin-top:var(--sp-2)}
+/* 두 줄짜리 조건 칩 — 이름만으로는 무엇을 고르는지 알기 어렵다.
+   기본 .chip 은 inline-flex(가로)라 자식이 한 줄로 붙는다. 세로로 바꿔 준다. */
+.chip.two{height:auto;padding:var(--sp-3) var(--sp-4);text-align:left;line-height:1.35;
+  flex-direction:column;align-items:flex-start;gap:2px;border-radius:var(--r-md)}
+.chip.two b{font-weight:600;color:var(--ink)}
+.chip.two span{font-size:var(--f-cap);color:var(--ink3);font-weight:400}
+.chip.two.on b{color:inherit}
+.chip.two.on span{color:inherit;opacity:.7}
+/* 가중치 공개 막대 — 무엇이 얼마나 반영됐는지 숨기지 않는다 */
+.wbar{display:flex;height:8px;border-radius:var(--r-full);overflow:hidden;margin:var(--sp-3) 0 var(--sp-2)}
+.wbar i{display:block}
+.wkey{display:flex;gap:var(--sp-4);flex-wrap:wrap;font-size:var(--f-cap);color:var(--ink2)}
+.wkey s{text-decoration:none;display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
 @media print{.stickycta,.searchbox,.tabs{display:none!important}}
 </style>
 </head>
@@ -152,6 +178,10 @@ th{font-size:var(--f-cap);color:var(--ink3);font-weight:500;border-bottom:1px so
         <input class="input" type="search" id="q" placeholder="또는 상권 · 동 · 자치구 검색" autocomplete="off">
         <div class="sugg" id="sugg" hidden></div>
       </div>
+
+      <p style="margin-top:var(--sp-5)">
+        <a class="btn btn-tertiary" href="#fit">예산과 조건을 넣고 찾기</a>
+      </p>
     </section>
 
     <!-- 결과는 데이터다. 가운데 정렬을 물려받으면 읽기 힘들어진다. -->
@@ -159,6 +189,49 @@ th{font-size:var(--f-cap);color:var(--ink3);font-weight:500;border-bottom:1px so
       <div class="list" id="rank"></div>
       <div id="watchbox" hidden></div>
       <p class="t-cap" id="src" style="margin-top:var(--sp-6)"></p>
+    </section>
+  </div>
+
+  <!-- ═══ 맞춤 탐색 — 지도부터 보여주지 않고 조건부터 묻는다 ═══ -->
+  <div id="fit" hidden>
+    <section class="hero-c" style="padding-bottom:var(--sp-5)">
+      <h1 class="t-display">조건에 맞는<br>상권을 추려드립니다</h1>
+      <p class="hero-sub">세 가지만 답하시면 됩니다.</p>
+    </section>
+
+    <section class="sec" style="padding-top:0">
+      <div class="qa" id="fq1">
+        <h3><i>1</i>무슨 장사를 준비하세요?</h3>
+        <div class="tabs" id="fitind"></div>
+      </div>
+
+      <div class="qa" id="fq2" hidden>
+        <h3><i>2</i>가진 자금은 얼마인가요?</h3>
+        <p class="hint">예산으로 시작하기 어려운 상권을 빼기 위한 값입니다. 모르면 비워 두세요.</p>
+        <div class="fields">
+          <label>가진 자금 (만원)
+            <input class="input" type="number" id="fbudget" inputmode="numeric" placeholder="예: 10000 (=1억)">
+          </label>
+          <label>생각하는 매장 크기 (평)
+            <input class="input" type="number" id="farea" inputmode="numeric" value="15">
+          </label>
+        </div>
+        <p style="margin-top:var(--sp-4)">
+          <button class="btn btn-secondary btn-sm" id="fq2next">다음</button>
+        </p>
+      </div>
+
+      <div class="qa" id="fq3" hidden>
+        <h3><i>3</i>가장 중요한 건 무엇인가요?</h3>
+        <p class="hint">최대 두 개까지 고를 수 있습니다. 고른 항목에 점수 비중이 더 실립니다.</p>
+        <div class="tabs" id="fitpri"></div>
+      </div>
+
+      <div id="fitout"></div>
+
+      <p style="margin-top:var(--sp-7)">
+        <a class="btn btn-tertiary back" href="#">← 기회 상권 목록으로</a>
+      </p>
     </section>
   </div>
 
@@ -341,6 +414,308 @@ function drawOpp(){
   box.innerHTML=H.join('');
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// 맞춤 탐색 — "업종 → 예산 → 무엇이 중요한가" 순서로 묻고 순위를 다시 매긴다
+// ═══════════════════════════════════════════════════════════════════
+//
+// 왜 따로 만드나
+//   홈의 기회 랭킹은 가중치가 고정(수요 45 / 희소 35 / 매출 20)이다.
+//   그런데 "임대료가 제일 중요하다"는 사람과 "성장성이 제일 중요하다"는 사람에게
+//   같은 목록을 주는 건 맞춤이 아니다. 축을 두 개 더 붙이고 비중을 사용자가 정하게 한다.
+//
+// 어디까지가 실측이고 어디부터가 가정인지
+//   실측  수요·희소성·점포당매출 백분위(서울시 상권분석서비스·열린데이터광장)
+//   실측  임대료(한국부동산원) — 단, 자치구 대표 상권 한 곳의 값이다
+//   실측  상권변화지표 4단계(서울시)
+//   가정  가중치, 보증금=월세×10, 업종 표준 창업비
+//   → 화면에서 이 구분을 그대로 표기한다.
+
+var ALL=null, FITPICK=[], fitInd='', fitBudget=0, fitArea=15, fitStep=1,
+    fitShowOver=false, fitShowThin=false;
+
+// 축 정의. key 는 점수 계산에서 쓰는 이름.
+var FIT_PRI=[
+  {id:'sales', k:'perf',   nm:'높은 매출',   d:'있는 점포가 잘 버는 곳'},
+  {id:'gap',   k:'scarce', nm:'낮은 경쟁',   d:'그 업종 점포가 적은 곳'},
+  {id:'rent',  k:'rent',   nm:'낮은 임대료', d:'자치구 임대료가 싼 곳'},
+  {id:'grow',  k:'grow',   nm:'성장성',      d:'상권이 커지는 국면'}
+];
+var W_LBL={dem:'수요',scarce:'희소성',perf:'점포당 매출',rent:'임대료',grow:'성장성'};
+// 다섯 축이 서로 구분돼야 한다. --accent 는 --brand 와 같은 색이라 쓰지 않는다(막대 두 칸이 붙어 보인다).
+// 밝은/어두운 테마 양쪽에서 다 갈라지는 조합으로 골랐다.
+var W_COL={dem:'var(--ink3)',scarce:'var(--brand)',perf:'var(--up)',
+           rent:'var(--warn)',grow:'var(--ink)'};
+
+// 서울시 상권변화지표(4단계)를 성장성 점수로 옮긴다. 연속값이 아니라 4단계다.
+// LH(상권 확장)가 가장 높고 HL(상권 축소)이 가장 낮다.
+// LL(다이나믹)은 창업·폐업이 모두 활발한 국면이라 '정체'보다 위에 뒀다 —
+// 성장성 축이라서 그렇지, 위험이 낮다는 뜻이 아니다(그건 손익 진단에서 본다).
+var GROW={LH:100, LL:60, HH:45, HL:15};
+
+// 값 → 백분위(동점은 평균 순위). 서버의 pct_ranks 와 같은 규칙으로 맞춰 둔다.
+function pctMap(vals){
+  var a=vals.slice().sort(function(x,y){return x-y;}), n=a.length, m={}, i=0;
+  while(i<n){
+    var v=a[i], hi=i;
+    while(hi+1<n && a[hi+1]===v) hi++;
+    m[v] = n<2 ? 50 : ((i+hi)/2)/(n-1)*100;
+    i=hi+1;
+  }
+  return m;
+}
+
+// 기본 가중치는 홈과 같다. 고른 항목마다 그 축에 0.30 을 더하고 전체를 1로 다시 나눈다.
+// 우리가 정한 규칙이라 근거가 있는 값은 아니다. 대신 결과 가중치를 화면에 그대로 띄운다.
+function fitWeights(picks){
+  var w={dem:0.45, scarce:0.35, perf:0.20, rent:0, grow:0}, s=0, k;
+  picks.forEach(function(p){
+    for(var i=0;i<FIT_PRI.length;i++) if(FIT_PRI[i].id===p) w[FIT_PRI[i].k]+=0.30;
+  });
+  for(k in w) s+=w[k];
+  for(k in w) w[k]=w[k]/s;
+  return w;
+}
+
+// data-bundle.js 는 107KB 다. 첫 화면에서 받을 이유가 없어 맞춤 탐색을 열 때만 받는다.
+// 업종 표준 창업비(core.ind[업종].invest)와 임대료표(core.rentZones)가 여기 있다.
+var bundleP=null;
+function ensureBundle(){
+  if(bundleP) return bundleP;
+  bundleP=new Promise(function(res,rej){
+    if(window.__SANGGWON) return res(window.__SANGGWON);
+    var s=document.createElement('script');
+    s.src='data-bundle.js';
+    s.onload=function(){ window.__SANGGWON ? res(window.__SANGGWON) : rej(new Error('bundle')); };
+    s.onerror=function(){ rej(new Error('bundle')); };
+    document.head.appendChild(s);
+  });
+  return bundleP;
+}
+
+var fitBooted=false;
+function openFit(){
+  $('#browse').hidden=true; $('#profile').hidden=true; $('#fit').hidden=false;
+  window.scrollTo(0,0);
+  if(fitBooted) return;
+  fitBooted=true;
+  var box=$('#fitout');
+  box.innerHTML='<div class="skel" style="height:80px;margin-top:var(--sp-6)"></div>';
+  Promise.all([ ensureIndex(),
+                OPP?Promise.resolve(OPP):get('zone_opportunity.json').then(function(d){OPP=d;return d;}),
+                get('zone_opportunity_all.json'),
+                ensureBundle() ])
+  .then(function(r){
+    ALL=r[2];
+    box.innerHTML='';
+    var inds=Object.keys(ALL.ind||{});
+    var picks=TOP_INDS.filter(function(k){return ALL.ind[k];});
+    var etc=inds.filter(function(k){return picks.indexOf(k)<0;}).sort();
+    $('#fitind').innerHTML=picks.map(function(k){
+      return '<button class="chip" data-find="'+esc(k)+'">'+esc(k)+'</button>';
+    }).join('')+'<select class="chip chip-sel" id="fitmore"><option value="">전체 업종…</option>'+
+      etc.map(function(k){return '<option>'+esc(k)+'</option>';}).join('')+'</select>';
+    $('#fitpri').innerHTML=FIT_PRI.map(function(p){
+      return '<button class="chip two" data-pri="'+p.id+'"><b>'+esc(p.nm)+'</b><span>'+esc(p.d)+'</span></button>';
+    }).join('');
+    wireFit();
+    // 홈에서 이미 업종을 고르고 들어왔으면 1번 답은 채워 둔다(같은 질문 두 번 묻지 않는다).
+    if(curOppInd && ALL.ind[curOppInd]) setFitInd(curOppInd);
+  })
+  .catch(function(){
+    box.innerHTML='<div class="state"><p class="t">맞춤 탐색 데이터를 불러오지 못했습니다</p>'+
+      '<p class="d">잠시 후 다시 시도해 주세요.</p>'+
+      '<button class="btn btn-secondary btn-sm" onclick="location.reload()">다시 시도</button></div>';
+  });
+}
+
+function wireFit(){
+  $('#fitind').addEventListener('click',function(e){
+    var b=e.target.closest('[data-find]'); if(b) setFitInd(b.dataset.find);
+  });
+  $('#fitmore').addEventListener('change',function(){ if(this.value) setFitInd(this.value); });
+  function readMoney(){
+    fitBudget=+$('#fbudget').value||0;
+    fitArea=+$('#farea').value||15;
+  }
+  $('#fq2next').addEventListener('click',function(){
+    readMoney();
+    fitStep=Math.max(fitStep,3); $('#fq3').hidden=false;
+    drawFit();
+    $('#fq3').scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+  // 결과가 이미 떠 있는데 예산을 고치면 그 자리에서 다시 계산한다.
+  // '다음'을 또 눌러야 반영되면 사용자는 숫자가 안 바뀌는 걸 고장으로 읽는다.
+  ['#fbudget','#farea'].forEach(function(s){
+    $(s).addEventListener('change',function(){ readMoney(); if(fitStep>=3) drawFit(); });
+  });
+  $('#fitpri').addEventListener('click',function(e){
+    var b=e.target.closest('[data-pri]'); if(!b) return;
+    var id=b.dataset.pri, i=FITPICK.indexOf(id);
+    if(i>=0) FITPICK.splice(i,1);
+    else{ FITPICK.push(id); if(FITPICK.length>2) FITPICK.shift(); }   // 최대 2개, 오래된 것부터 밀어낸다
+    Array.prototype.forEach.call(this.querySelectorAll('[data-pri]'),function(x){
+      x.classList.toggle('on', FITPICK.indexOf(x.dataset.pri)>=0);
+    });
+    drawFit();
+  });
+  $('#fitout').addEventListener('click',function(e){
+    if(e.target.closest('[data-fover]')){ fitShowOver=!fitShowOver; drawFit(); return; }
+    if(e.target.closest('[data-fthin]')){ fitShowThin=!fitShowThin; drawFit(); return; }
+    var r=e.target.closest('[data-cd]');
+    if(r){ curInd=fitInd; location.hash='z='+r.dataset.cd+'&ind='+encodeURIComponent(fitInd); }
+  });
+}
+function setFitInd(k){
+  fitInd=k;
+  Array.prototype.forEach.call(document.querySelectorAll('#fitind .chip[data-find]'),function(x){
+    x.classList.toggle('on', x.dataset.find===k);
+  });
+  var sel=$('#fitmore'); if(sel) sel.value=(TOP_INDS.indexOf(k)>=0?'':k);
+  if(fitStep<2){ fitStep=2; $('#fq2').hidden=false; }
+  drawFit();
+}
+
+// 필요 자금 = 보증금 + 시설·집기
+//   월세      = 자치구 대표 상권 임대료(만원/㎡·월) × 평 × 3.3   ← 손익 진단(mvp.html)과 같은 식
+//   보증금    = 월세 × 10        [가정] 상가 임대 관행. 실측 아님
+//   시설·집기 = 업종 표준 창업비 [가정] data-bundle 의 수동값
+// 셋 중 둘이 가정이라 "이 예산이면 된다/안 된다"가 아니라 "대략 어느 선까지"로만 쓴다.
+function fitCost(rentSqm, invest){
+  var monthly = Math.round(rentSqm * fitArea * 3.3);
+  return { monthly: monthly, need: monthly*10 + (invest||0) };
+}
+
+function drawFit(){
+  var box=$('#fitout');
+  if(!ALL||!fitInd){ box.innerHTML=''; return; }
+  if(fitStep<3){ box.innerHTML=''; return; }
+
+  var core=(window.__SANGGWON||{}).core||{};
+  var invest=((core.ind||{})[fitInd]||{}).invest||0;
+  var cols=ALL.cols, rows=ALL.ind[fitInd]||[];
+  var C={}; cols.forEach(function(k,i){C[k]=i;});
+
+  // 1) 후보를 만든다 — 전체 랭킹 × zone_index(이름·자치구·수요·국면) 조인
+  var cand=[], rents=[];
+  rows.forEach(function(r){
+    var z=byCd[r[C.cd]]; if(!z) return;
+    var rz=window.guRentZone(z.gu, core);
+    var rentSqm=rz&&rz.rent!=null?rz.rent:null;
+    if(rentSqm!=null) rents.push(rentSqm);
+    var n=r[C.stores];
+    cand.push({ z:z, stores:n, scarce:r[C.scarce], perf:r[C.perf],
+                perf_raw:r[C.perf_raw], psales:r[C.psales_man]*10000,
+                dem:z.dem, rentSqm:rentSqm, rentZone:rz?rz.zone:null,
+                // 서버(build_zone_intel.py)와 같은 기준. 점포 3~4곳으로 낸 '점포당 매출'은
+                // 한두 곳에 크게 흔들린다 — 목록에는 남기되 대표 추천으로는 쓰지 않는다.
+                conf:(n>=10?'높음':(n>=5?'보통':'낮음')),
+                grow:GROW[z.grade]==null?50:GROW[z.grade] });
+  });
+  if(!cand.length){
+    box.innerHTML='<div class="state"><p class="t">'+esc(fitInd)+'은 비교할 상권이 없습니다</p>'+
+      '<p class="d">이 업종 점포가 있는 상권이 너무 적습니다.</p></div>';
+    return;
+  }
+  // 2) 임대료를 백분위로 바꾼다 — 다른 축과 같은 0~100 자로 재야 더할 수 있다.
+  //    자치구 대표 상권 값이라 실제로는 25개 값뿐이다(동점이 많다). 그래서 동점 평균 순위를 쓴다.
+  var rmap=pctMap(rents);
+  cand.forEach(function(c){ c.rent = c.rentSqm==null ? 50 : (100 - rmap[c.rentSqm]); });
+
+  // 3) 예산 판정
+  var over=0;
+  cand.forEach(function(c){
+    c.cost = c.rentSqm==null ? null : fitCost(c.rentSqm, invest);
+    c.over = !!(fitBudget && c.cost && c.cost.need > fitBudget);
+    if(c.over) over++;
+  });
+
+  // 4) 사용자가 정한 비중으로 다시 계산한다. 홈과 같은 가산식이라 정확한 재계산이다(근사 아님).
+  var w=fitWeights(FITPICK);
+  cand.forEach(function(c){
+    c.fit = w.dem*c.dem + w.scarce*c.scarce + w.perf*c.perf + w.rent*c.rent + w.grow*c.grow;
+  });
+  var pool=cand.filter(function(c){ return fitShowOver||!c.over; })
+               .sort(function(a,b){ return b.fit-a.fit; });
+
+  // '낮은 경쟁'에 비중을 실으면 희소성이 최대인 곳 — 즉 점포가 가장 적은 곳 — 이 위로 올라온다.
+  // 그런데 점포가 적을수록 그 업종이 여기서 되는지 확인할 근거도 얇다. 구조적으로 그렇다.
+  // 그대로 두면 상위 10곳이 전부 '점포 3곳'으로 채워져 쓸 수 없는 답이 된다(실제로 그랬다).
+  // → 기본은 점포 5곳 이상만 보여주고, 나머지는 버튼으로 펼친다. 감추는 게 아니라 나눠 둔다.
+  var thinN=0;
+  pool.forEach(function(c){ if(c.conf==='낮음') thinN++; });
+  var thinAll=(thinN===pool.length);
+  var list=(fitShowThin||thinAll) ? pool : pool.filter(function(c){ return c.conf!=='낮음'; });
+
+  var H=[];
+  // 결론 — 예산 때문에 다 걸러졌으면 그 사실부터 말한다.
+  if(!pool.length){
+    H.push('<div class="state"><p class="t">이 예산으로 시작할 수 있는 상권이 없습니다</p>'+
+      '<p class="d">'+esc(fitInd)+' 기준 '+cand.length+'곳이 모두 예산을 넘습니다. '+
+      '매장 크기를 줄이거나 예산을 다시 확인해 보세요.</p>'+
+      '<button class="btn btn-secondary btn-sm" data-fover>예산 넘는 곳도 보기</button></div>');
+    box.innerHTML=H.join(''); return;
+  }
+  var b0=list[0];
+  H.push('<h2 class="t-head" style="margin-top:var(--sp-6)">조건에 맞는 상권</h2>');
+  H.push('<p class="t-body" style="margin:var(--sp-3) 0 0"><b>'+esc(b0.z.gu||'')+' '+esc(b0.z.nm)+'</b>'+
+    josa(b0.z.nm,'이','가')+' 가장 잘 맞습니다. '+
+    (FITPICK.length
+      ? '<b>'+esc(FITPICK.map(function(p){
+          for(var i=0;i<FIT_PRI.length;i++) if(FIT_PRI[i].id===p) return FIT_PRI[i].nm;
+        }).join(' · '))+'</b>을 더 무겁게 놓고 다시 계산한 결과입니다.'
+      : '아직 중요한 조건을 고르지 않아 기본 비중으로 계산했습니다.')+'</p>');
+  if(thinAll && thinN)
+    H.push('<p class="t-cap" style="margin-top:var(--sp-2)">이 조건에는 '+esc(fitInd)+
+      ' 점포가 5곳 이상인 상권이 없습니다 — 점포당 매출이 한두 곳에 흔들려 근거가 얇습니다.</p>');
+
+  // 가중치 공개 — 무엇이 얼마나 반영됐는지
+  var ks=Object.keys(w).filter(function(k){return w[k]>0.001;});
+  H.push('<div class="wbar">'+ks.map(function(k){
+    return '<i style="width:'+(w[k]*100).toFixed(1)+'%;background:'+W_COL[k]+'"></i>';
+  }).join('')+'</div><div class="wkey">'+ks.map(function(k){
+    return '<span><s style="background:'+W_COL[k]+'"></s>'+esc(W_LBL[k])+' '+Math.round(w[k]*100)+'%</span>';
+  }).join('')+'</div>');
+
+  // 목록
+  H.push('<div class="list">'+list.slice(0,10).map(function(c){
+    var bits=['수요 '+Math.round(c.dem), '이 업종 점포 '+c.stores+'곳'];
+    if(c.cost) bits.push('월세 약 '+c.cost.monthly.toLocaleString()+'만');
+    var gl=(GRADE[c.z.grade]||[])[0]; if(gl) bits.push(gl);
+    if(c.conf!=='높음') bits.push('신뢰도 '+c.conf);
+    return '<div class="row" data-cd="'+c.z.cd+'"><div><div class="nm">'+esc(c.z.nm)+
+      (c.over?' <span class="badge badge-warn">예산 초과</span>':'')+'</div>'+
+      '<div class="sub">'+esc(c.z.gu||'')+' · '+esc(bits.join(' · '))+'</div></div>'+
+      '<div class="val">'+Math.round(c.fit)+'<small>적합도</small></div></div>';
+  }).join('')+'</div>');
+
+  var toggles=[];
+  if(fitBudget && over)
+    toggles.push('<button class="btn btn-tertiary btn-sm" data-fover>'+
+      (fitShowOver?'예산 넘는 '+over+'곳 숨기기':'예산을 넘는 '+over+'곳 보기')+'</button>');
+  if(thinN && !thinAll)
+    toggles.push('<button class="btn btn-tertiary btn-sm" data-fthin>'+
+      (fitShowThin?'근거가 얇은 '+thinN+'곳 빼기':'점포 5곳 미만인 '+thinN+'곳도 보기')+'</button>');
+  if(toggles.length)
+    H.push('<p class="acts" style="margin-top:var(--sp-4)">'+toggles.join('')+'</p>');
+  if(thinN && !thinAll && !fitShowThin)
+    H.push('<p class="t-cap" style="margin-top:var(--sp-2)">이 업종 점포가 5곳 미만인 상권 '+thinN+
+      '곳은 목록에서 뺐습니다. 점포당 매출이 한두 곳에 흔들려 순위를 믿기 어렵습니다 — '+
+      '특히 ‘낮은 경쟁’을 고르면 이런 곳이 위로 몰립니다.</p>');
+
+  // 근거 — 각 축이 무엇이고 어디까지 믿을 수 있는지
+  H.push('<div class="note" style="margin-top:var(--sp-5)">'+
+    '<b>이 순위가 나온 방법</b>'+
+    '<p style="margin:8px 0 0">적합도 = 위 비중대로 다섯 축을 더한 값입니다. 가산식이라 근사치가 아니라 정확한 재계산입니다.</p>'+
+    '<p style="margin:8px 0 0"><b>수요·희소성·점포당 매출</b>은 서울시 상권분석서비스·열린데이터광장 실측을 백분위로 바꾼 값입니다.'+
+    ' <b>성장성</b>은 서울시 상권변화지표 4단계(확장·다이나믹·정체·축소)를 점수로 옮긴 것이라 연속값이 아닙니다.'+
+    ' <b>임대료</b>는 한국부동산원 실측이지만 <b>자치구 대표 상권 한 곳</b>의 값이라, 같은 구 안에서는 모두 같은 점수입니다.</p>'+
+    '<p style="margin:8px 0 0">비중(0.30씩 더하고 1로 나눔)과 <b>보증금 = 월세 × 10</b>, '+
+    '<b>업종 표준 창업비 '+(invest?invest.toLocaleString()+'만원':'미상')+'</b>은 우리가 정한 가정입니다. '+
+    '예산 판정은 "대략 어느 선까지"로만 보시고, 실제 매물의 보증금·월세·권리금으로 다시 계산하세요.</p></div>');
+
+  box.innerHTML=H.join('');
+}
+
 // ── 검색 ──
 function search(term){
   term=term.trim(); if(!term||!IDX||!IDX.list) return [];
@@ -391,10 +766,11 @@ function route(){
   // 팔레트에서 "업종"을 골라 들어온 경우
   var pi=new URLSearchParams(location.search).get('ind');
   if(pi && OPP && OPP.ind && OPP.ind[pi] && curOppInd!==pi){ setInd(pi); }
+  if((location.hash||'')==='#fit'){ openFit(); return; }
   var m=(location.hash||'').match(/^#z=([0-9]+)(?:&ind=(.*))?$/);
   if(m&&byCd[m[1]]){ curInd=m[2]?decodeURIComponent(m[2]):''; open(m[1],true); }
   else {
-    $('#profile').hidden=true; $('#browse').hidden=false;
+    $('#profile').hidden=true; $('#fit').hidden=true; $('#browse').hidden=false;
     if(OPP) drawOpp();
     ensureIndex().then(drawWatch).catch(function(){});
   }
@@ -404,7 +780,7 @@ function route(){
 function open(cd, fromHash){
   var z=byCd[cd]; if(!z) return;
   if(!fromHash){ location.hash='z='+cd+(curInd?'&ind='+encodeURIComponent(curInd):''); return; }
-  $('#browse').hidden=true;
+  $('#browse').hidden=true; $('#fit').hidden=true;
   var p=$('#profile'); p.hidden=false;
   p.innerHTML='<section class="sec"><h1 class="t-title">'+esc(z.nm)+'</h1>'+
     '<ul class="steps" style="margin-top:var(--sp-5)">'+
