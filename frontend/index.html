@@ -255,9 +255,18 @@ window.__resources = {
             <button onClick="{{ goDetail }}" style="font-size:15px;font-weight:500;color:var(--bg);background:var(--ink);border:none;border-radius:10px;padding:0 28px;height:48px;min-height:44px;cursor:pointer;letter-spacing:-0.01em" style-hover="opacity:.88">분석하기</button>
           </div>
 
-          <div style="margin-top:40px;font-size:14px;display:flex;gap:20px;flex-wrap:wrap">
-            <span onClick="{{ goMap }}" style="color:var(--accent);cursor:pointer">지도에서 먼저 둘러보기</span>
-            <span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer">지역 다시 선택</span>
+          <!-- 이 화면은 '지역을 이미 정한 사람'을 위한 입구다.
+               아직 어디에 차릴지 모르는 사람이 훨씬 많다 — 그 사람에게는
+               업종만 고르면 상권을 찾아주는 인텔리전스가 맞는 입구다. -->
+          <div style="margin-top:48px;padding-top:28px;border-top:1px solid var(--line);max-width:520px">
+            <div style="font-size:15px;color:var(--ink)">아직 어디에 차릴지 못 정하셨나요?</div>
+            <div style="font-size:14px;color:var(--ink2);margin-top:6px">업종만 고르면 수요는 있는데 그 업종 점포가 적은 상권을 찾아드립니다.</div>
+            <div style="margin-top:14px"><span onClick="{{ goIntel }}" style="color:var(--accent);cursor:pointer;font-size:15px;font-weight:600">기회 상권 찾기 →</span></div>
+          </div>
+
+          <div style="margin-top:32px;font-size:14px;display:flex;gap:20px;flex-wrap:wrap">
+            <span onClick="{{ goMap }}" style="color:var(--ink2);cursor:pointer">지도에서 둘러보기</span>
+            <span onClick="{{ regionReset }}" style="color:var(--ink2);cursor:pointer">지역 다시 선택</span>
           </div>
         </div>
 
@@ -1628,6 +1637,7 @@ class Component extends DCLogic {
       ],
       gu: S.gu, ind: S.ind,
       guList: core ? Object.keys(core.gu) : [], indList: core ? Object.keys(core.ind) : [],
+      goIntel: () => { location.href = 'zone.html'; },
       goHome: nav('home'), goMap: nav('map'), goDetail: nav('detail'), goData: nav('data'), goReport: nav('report'), goCompare: nav('compare'), goChat: nav('chat'),
       toggleTheme: () => { const d = !S.dark; this.applyTheme(d); this.setState({ dark: d }); },
       themeLabel: S.dark ? '밝게 보기' : '어둡게 보기',

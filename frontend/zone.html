@@ -35,6 +35,10 @@
 
 /* ── 차트 ── */
 .chart{width:100%;height:260px;display:block}
+/* 차트 위 지점 — 평소엔 숨기고 마우스를 올린 것만 드러낸다(격자 대신 값으로 읽게) */
+.chart .pt circle:first-child{transition:opacity var(--t-fast) var(--ease)}
+.chart .pt:hover circle:first-child{opacity:1}
+.chart .pt{cursor:crosshair}
 .legend{display:flex;gap:var(--sp-5);font-size:var(--f-cap);color:var(--ink2);margin-top:var(--sp-3)}
 .legend i{display:inline-block;width:20px;height:0;border-top:2px solid var(--ink);
   vertical-align:middle;margin-right:6px}
@@ -619,6 +623,19 @@ function drawChart(qs, vals, fc, fq){
     s.push('<text x="'+X(k).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="10" fill="var(--ink3)">'+qs[idx[k]].slice(2,4)+'년 '+qs[idx[k]].slice(4)+'Q</text>');
   });
   if(fc!=null) s.push('<text x="'+X(n-1).toFixed(1)+'" y="'+(H-8)+'" text-anchor="end" font-size="10" fill="var(--accent)">'+(fq?fq.slice(2,4)+'년 '+fq.slice(4)+'Q 전망':'전망')+'</text>');
+  // Hover — 각 분기 위에 넉넉한 투명 원을 얹는다. 마우스가 정확히 선 위에 없어도 잡히게.
+  // 툴팁 라이브러리를 쓰지 않고 <title> 로 처리한다(의존성 0, 모바일에선 탭으로 뜬다).
+  idx.forEach(function(i,k){
+    var q=qs[i], lbl=q.slice(2,4)+'년 '+q.slice(4)+'분기 · '+won(vals[i])+'원';
+    s.push('<g class="pt"><circle cx="'+X(k).toFixed(1)+'" cy="'+Y(vals[i]).toFixed(1)+
+      '" r="3" fill="var(--ink)" opacity="0"/>'+
+      '<circle cx="'+X(k).toFixed(1)+'" cy="'+Y(vals[i]).toFixed(1)+
+      '" r="14" fill="transparent"><title>'+esc(lbl)+'</title></circle></g>');
+  });
+  if(fc!=null){
+    s.push('<g class="pt"><circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(fc).toFixed(1)+
+      '" r="14" fill="transparent"><title>'+esc((fq?fq.slice(2,4)+'년 '+fq.slice(4)+'분기':'다음 분기')+' 전망 · '+won(fc)+'원')+'</title></circle></g>');
+  }
   s.push('</svg>');
   return s.join('');
 }
