@@ -9,122 +9,114 @@
 <script src="command.js" defer></script>
 <script src="gu_rent_zone.js"></script>
 <style>
-/* ── 공통 메뉴/푸터 (모든 페이지 동일) ── */
-.navlink{font-size:14px;color:var(--ink3);text-decoration:none;white-space:nowrap;
-  letter-spacing:-.01em;transition:color .2s;font-weight:400}
-.navlink:hover{color:var(--ink)}
-.navlink.on{color:var(--ink);font-weight:600}
-.sitefoot{border-top:1px solid var(--line);margin-top:40px}
-.sitefoot .footwrap{max-width:1120px;margin:0 auto;padding:26px 20px 48px;
-  display:flex;gap:22px;flex-wrap:wrap;align-items:center}
-.sitefoot a{font-size:13px;color:var(--ink2);text-decoration:none;white-space:nowrap}
-.sitefoot a:hover{color:var(--ink)}
-.sitefoot a[aria-current]{color:var(--ink);font-weight:600}
-.sitefoot .footsrc{margin-left:auto;font-size:12px;color:var(--ink3)}
-@media print{.sitefoot{display:none}}
+/* 색·타이포·버튼·칩·입력·표는 theme.css(디자인 시스템). 여기는 이 화면 고유 배치만 둔다.
+   예전엔 이 파일이 메뉴·푸터·버튼·입력칸을 자기 식으로 다시 정의하고 있었다.
+   theme.css 를 고쳐도 이 화면만 안 따라오는 종류의 어긋남이 거기서 났다. */
 
-  header.top{position:sticky;top:0;z-index:5;background:var(--bg-blur);backdrop-filter:blur(8px);
-    border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:12px 20px}
-  header.top .brand{font-size:14px;font-weight:700}
-  header.top .brand span{color:var(--mut);font-weight:400;font-size:12px}
-  header.top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-  .wrap{max-width:1040px;margin:0 auto;padding:22px 20px 90px}
-  h1{font-size:22px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
-  .sub{color:var(--mut);font-size:13.5px;margin:0 0 18px}
+/* 표가 넓어서 본문 폭(980)만으로는 가로로 밀린다. 이 화면만 넓게 쓴다. */
+.wrap{max-width:1120px}
 
-  .controls{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}
-  .controls .lbl{font-size:11.5px;color:var(--mut);font-weight:700;letter-spacing:.03em;margin-bottom:6px}
-  .controls .grp{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
-  .controls .col{flex:1 1 180px;min-width:150px}
-  select,input[list],input[type=number]{width:100%;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:14px}
-  input[list]::placeholder,input[type=number]::placeholder{color:var(--ink3)}
-  .modes{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4);flex-wrap:wrap}
-  /* 조건 요약 줄 — 지금 무엇을 보고 있는지 한눈에 */
-  .condbar{display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;
-    margin:var(--sp-3) 0 var(--sp-4);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line)}
-  .condbar .chips{flex:1;display:flex;gap:var(--sp-2);flex-wrap:wrap;justify-content:flex-start}
-  .condbar .chip{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-full);
-    padding:0 var(--sp-2) 0 var(--sp-3);height:32px;display:inline-flex;align-items:center;
-    font-size:var(--f-cap);color:var(--ink2)}
-  .condbar .chip b{color:var(--ink);font-weight:600;margin-left:4px}
-  .mode{background:var(--bg);border:1px solid var(--line-strong);color:var(--ink2);font-weight:500;
-    padding:0 var(--sp-3);height:34px;border-radius:var(--r-full);font-size:var(--f-sub)}
-  .mode:hover{border-color:var(--ink);color:var(--ink)}
-  .mode.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-  .chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
-  .chip{background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:2px 9px;font-size:11.5px;color:var(--mut)}
-  .gurow{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
-  .gucol{flex:1 1 150px;min-width:130px}
-  button{cursor:pointer;background:var(--accent);color:var(--on-accent);border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600}
-  button.sec{background:var(--soft);border:1px solid var(--line);color:var(--ink);font-weight:500}
-  .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+/* ── 모드 — '조건'이 아니라 '무엇을 보는가'. 접히는 필터 밖에 둔다 ── */
+.modes{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4);flex-wrap:wrap}
+.mode{background:var(--bg);border:1px solid var(--line);color:var(--ink2);font-weight:500;
+  padding:0 var(--sp-4);height:36px;border-radius:var(--r-full);font-size:var(--f-sub);
+  cursor:pointer;white-space:nowrap;
+  transition:border-color var(--t-fast) var(--ease),color var(--t-fast) var(--ease)}
+.mode:hover{border-color:var(--ink);color:var(--ink)}
+.mode.on{background:var(--ink);color:var(--on-ink);border-color:var(--ink);font-weight:600}
 
-  table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  table.cmp th,table.cmp td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:right}
-  table.cmp thead th{background:var(--soft);text-align:center;font-size:13px}
-  table.cmp th.metric,table.cmp td.metric{text-align:left;color:var(--ink);font-weight:600;white-space:nowrap}
-  table.cmp td.metric small{display:block;color:var(--mut);font-weight:400;font-size:11px}
-  table.cmp tbody tr:last-child td{border-bottom:none}
-  table.cmp td.num{font-variant-numeric:tabular-nums}
-  table.cmp td .win{color:var(--green);font-weight:700}
-  table.cmp td.na{color:var(--ink3)}
-  .scroll{overflow-x:auto;border-radius:12px}
-  table.cmp th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
-  table.cmp th.sortable:hover{color:var(--ink)}
-  table.cmp th.sortable.on{color:var(--ink)}
-  table.cmp th .arw{font-size:9px;margin-left:3px}
-  /* x 는 손가락으로 눌러야 한다. 글자 크기만 키우지 말고 히트 영역을 확보한다.
-     (처음엔 padding 6px 짜리라 자동 테스트도 빗맞았다 — 사람은 더 못 누른다) */
-  .chipx{background:none;border:0;margin:0 -4px 0 2px;padding:0;color:var(--mut);
-    font-size:15px;line-height:1;cursor:pointer;
-    width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;
-    border-radius:50%;flex:none}
-  .chipx:hover{color:var(--ink);background:var(--surface-2)}
-  table.cmp tr.rkrow{cursor:pointer}
-  table.cmp tr.rkrow:hover td,table.cmp tr.rkrow:hover th{background:var(--soft)}
-  .sec-h{font-size:15px;font-weight:700;margin:26px 0 12px}
+/* ── 지금 무엇으로 보고 있는지 — 조건 요약 줄 ── */
+.condbar{display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;
+  margin:var(--sp-3) 0 var(--sp-5);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line-soft)}
+.condbar .chips{flex:1;display:flex;gap:var(--sp-2);flex-wrap:wrap}
+.cond{display:inline-flex;align-items:center;height:32px;padding:0 var(--sp-2) 0 var(--sp-3);
+  border:1px solid var(--line);border-radius:var(--r-full);background:var(--bg);
+  font-size:var(--f-cap);color:var(--ink2)}
+.cond b{color:var(--ink);font-weight:600;margin-left:4px}
+/* x 는 손가락으로 눌러야 한다. 글자만 키우지 말고 히트 영역을 확보한다
+   (처음엔 padding 6px 짜리라 자동 테스트도 빗맞았다 — 사람은 더 못 누른다). */
+.chipx{background:none;border:0;margin:0 -4px 0 2px;padding:0;color:var(--ink3);
+  font-size:15px;line-height:1;cursor:pointer;
+  width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:50%;flex:none}
+.chipx:hover{color:var(--ink);background:var(--surface-2)}
 
-  .dists{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-  .dcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
-  .dcard h4{margin:0 0 12px;font-size:14px;font-weight:700}
-  .dblk{margin:0 0 13px}
-  .dblk .dt{font-size:11px;color:var(--mut);font-weight:700;letter-spacing:.03em;margin-bottom:7px}
-  .bar{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:11.5px}
-  .bar .bl{width:38px;color:var(--mut);flex:0 0 auto;text-align:right}
-  .bar .bt{flex:1 1 auto;background:var(--soft);border-radius:4px;height:14px;overflow:hidden}
-  .bar .bf{display:block;height:100%;background:var(--accent);border-radius:4px}
-  .bar .bf.g{background:var(--green)}
-  .bar .bv{width:40px;flex:0 0 auto;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
-  .gender{display:flex;height:20px;border-radius:6px;overflow:hidden;font-size:11px;font-weight:700}
-  .gender .m{background:var(--male);color:var(--on-accent);display:flex;align-items:center;justify-content:center}
-  .gender .f{background:var(--female);color:var(--on-accent);display:flex;align-items:center;justify-content:center}
+/* ── 접히는 조건판 ── */
+.controls{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:var(--sp-5);margin-bottom:var(--sp-5)}
+.controls .lbl{font-size:var(--f-cap);color:var(--ink2);margin-bottom:var(--sp-2)}
+.controls .grp{display:flex;gap:var(--sp-4);flex-wrap:wrap;align-items:flex-end}
+.controls .col{flex:1 1 180px;min-width:150px}
+.gurow{display:flex;gap:var(--sp-3);flex-wrap:wrap;margin-top:var(--sp-1)}
+.gucol{flex:1 1 150px;min-width:130px}
+.actions{display:flex;gap:var(--sp-2);margin-top:var(--sp-4);flex-wrap:wrap}
+/* 입력도 흰 바탕 + 실선 한 겹(theme.css 의 .input 과 같은 규칙, 높이만 낮춘다) */
+.controls select,.controls input[list],.controls input[type=number]{
+  width:100%;height:42px;padding:0 var(--sp-3);background:var(--neutral);color:var(--ink);
+  border:1px solid var(--line);border-radius:var(--r-sm);font-size:var(--f-sub);outline:none;
+  transition:border-color var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease)}
+.controls select:hover,.controls input:hover{border-color:var(--line-strong)}
+.controls select:focus,.controls input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-weak)}
+.controls input::placeholder{color:var(--ink3)}
 
-  .note{background:var(--soft);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:13px 15px;font-size:12.5px;color:var(--mut);margin-top:22px}
-  .note b{color:var(--ink)}
-  .empty{color:var(--mut);font-size:14px;padding:40px 10px;text-align:center}
-  .asof{color:var(--ink3);font-size:11px;margin-left:6px}
+/* ── 비교 표 — 선은 행 사이 한 겹만. 격자를 다 그으면 숫자보다 선이 먼저 보인다 ── */
+table.cmp{width:100%;border-collapse:collapse;font-size:var(--f-sub)}
+table.cmp th,table.cmp td{padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--line-soft);text-align:right}
+table.cmp thead th{text-align:center;font-size:var(--f-cap);color:var(--ink3);font-weight:500;
+  border-bottom:1px solid var(--line)}
+table.cmp th.metric,table.cmp td.metric{text-align:left;color:var(--ink);font-weight:600;white-space:nowrap}
+table.cmp td.metric small{display:block;color:var(--ink3);font-weight:400;font-size:var(--f-cap)}
+table.cmp td.num{font-variant-numeric:tabular-nums}
+table.cmp td .win{color:var(--up);font-weight:700}
+table.cmp td.na{color:var(--ink3)}
+table.cmp th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+table.cmp th.sortable:hover,table.cmp th.sortable.on{color:var(--ink)}
+table.cmp th .arw{font-size:9px;margin-left:3px}
+table.cmp tr.rkrow{cursor:pointer}
+table.cmp tr.rkrow:hover td,table.cmp tr.rkrow:hover th{background:var(--surface)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sec-h{font-size:var(--f-head);font-weight:600;letter-spacing:var(--ls-head);margin:var(--sp-7) 0 var(--sp-4)}
 
-  @media print{
-    header.top,.controls,.actions{display:none!important}
-    body{background:#fff;color:#111}
-    .dcard,.controls,table.cmp{border-color:#ccc}
-    table.cmp thead th,.dcard{background:#f3f6fa}
-    .wrap{max-width:none;padding:0}
-    .bar .bt{background:#eef2f7}
-  }
+/* ── 구성비 카드 ── */
+.dists{display:grid;gap:var(--sp-4);grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.dcard{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-5)}
+.dcard h4{margin:0 0 var(--sp-3);font-size:var(--f-sub);font-weight:600}
+.dblk{margin:0 0 var(--sp-3)}
+.dblk .dt{font-size:var(--f-cap);color:var(--ink3);margin-bottom:var(--sp-2)}
+.bar{display:flex;align-items:center;gap:var(--sp-2);margin:3px 0;font-size:var(--f-cap)}
+.bar .bl{width:38px;color:var(--ink3);flex:0 0 auto;text-align:right}
+.bar .bt{flex:1 1 auto;background:var(--surface-2);border-radius:4px;height:14px;overflow:hidden}
+.bar .bf{display:block;height:100%;background:var(--ink);border-radius:4px}
+.bar .bf.g{background:var(--up)}
+.bar .bv{width:44px;flex:0 0 auto;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.gender{display:flex;height:20px;border-radius:6px;overflow:hidden;font-size:11px;font-weight:700}
+.gender .m{background:var(--male);color:#fff;display:flex;align-items:center;justify-content:center}
+.gender .f{background:var(--female);color:#fff;display:flex;align-items:center;justify-content:center}
+
+.note{background:var(--surface);border-left:2px solid var(--warn);border-radius:var(--r-sm);
+  padding:var(--sp-4) var(--sp-5);font-size:var(--f-cap);color:var(--ink2);margin-top:var(--sp-6)}
+.note b{color:var(--ink)}
+.empty{color:var(--ink2);font-size:var(--f-sub);padding:var(--sp-8) var(--sp-4);text-align:center}
+
+@media print{
+  .controls,.actions,.modes,.condbar{display:none!important}
+  .wrap{max-width:none;padding:0}
+}
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="brand">서울 상권 인텔리전스 <span>· 업종·자치구 세부 비교</span></div>
-  <button class="cmdk-btn" data-cmdk-open type="button" aria-label="검색"><span>검색</span><kbd>⌘K</kbd></button>
-  <nav>
+<header class="sitehead">
+  <div class="headwrap">
+    <a class="brand" href="/">사장님인사이트 <span>· 업종·자치구 비교</span></a>
+    <button class="cmdk-btn" data-cmdk-open type="button" aria-label="검색"><span>검색</span><kbd>⌘K</kbd></button>
+    <nav>
     <a href="zone.html" class="navlink">인텔리전스</a>
     <a href="mvp.html" class="navlink">진단</a>
     <a href="compare.html" aria-current="page" class="navlink on">비교</a>
     <a href="building.html" class="navlink">건물 지도</a>
     <a href="index.html#chat" class="navlink">상담</a>
-  </nav>
+    </nav>
+  </div>
 </header>
 
 <div class="wrap">
@@ -184,7 +176,7 @@
       <div style="margin-top:14px">
         <div class="lbl">비교할 자치구 <span style="font-weight:400;color:var(--mut)">· + 로 추가, − 로 제거</span></div>
         <div id="guwrap" class="gurow"></div>
-        <button id="addgu" class="sec" type="button" style="margin-top:10px">+ 자치구 추가</button>
+        <button id="addgu" class="btn btn-secondary btn-sm" type="button" style="margin-top:10px">+ 자치구 추가</button>
       </div>
     </div>
 
@@ -379,9 +371,12 @@ function addGuCol(def){
   const sel=document.createElement('select'); sel.className='gu'; sel.style.flex='1';
   (window.__GU_SORTED||[]).forEach(g=>opt(sel,g,g,g===def));
   sel.onchange=render;
-  const rm=document.createElement('button'); rm.type='button'; rm.className='sec';
-  rm.textContent='−'; rm.title='이 자치구 제거';
-  rm.style.flex='0 0 auto'; rm.style.padding='9px 13px'; rm.style.fontWeight='700';
+  // 공통 버튼(theme.css)을 쓴다. 예전엔 이 파일이 전역 button{} 을 갖고 있어서
+  // class 없이도 모양이 잡혔는데, 그 규칙을 걷어내면서 여기만 민짜로 남아 있었다.
+  const rm=document.createElement('button'); rm.type='button';
+  rm.className='btn btn-secondary btn-sm';
+  rm.textContent='−'; rm.title='이 자치구 제거'; rm.setAttribute('aria-label','이 자치구 제거');
+  rm.style.flex='0 0 auto'; rm.style.padding='0 var(--sp-4)'; rm.style.height='42px';
   rm.onclick=()=>{ if(guCount()<=1) return; col.remove(); render(); };
   col.appendChild(sel); col.appendChild(rm);
   wrap.appendChild(col);
@@ -644,7 +639,7 @@ function renderZones(){
   // 대표 업종(점포수 기준 top)
   const topCells=cols.map(c=>{
     if(!c.z)return '<td class="na">—</td>';
-    const chips=(c.z.top||[]).slice(0,4).map(t=>`<span class="chip">${t.ind} ${num(t.stores)}</span>`).join('');
+    const chips=(c.z.top||[]).slice(0,4).map(t=>`<span class="cond">${t.ind} ${num(t.stores)}</span>`).join('');
     return `<td><div class="chips">${chips||'—'}</div></td>`;
   }).join('');
   body+=`<tr><td class="metric">대표 업종<small>점포 수 상위</small></td>${topCells}</tr>`;
@@ -660,7 +655,7 @@ function renderZones(){
   if(ZF){
     const fcells=cols.map(c=>{const f=(c.z&&ZF.zones)?ZF.zones[c.z.cd]:null;
       if(!f)return '<td class="na">—</td>';
-      const top=Object.entries(f.fac||{}).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>`<span class="chip">${k} ${v}</span>`).join('');
+      const top=Object.entries(f.fac||{}).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>`<span class="cond">${k} ${v}</span>`).join('');
       return `<td><div class="chips">${top||'—'}</div></td>`;}).join('');
     body+=`<tr><td class="metric">배후 시설<small>집객 앵커 · 수요</small></td>${fcells}</tr>`;
   }
@@ -788,7 +783,7 @@ function chipsHTML(){
   return c.filter(function(x){return x[1];}).map(function(x){
     // 지울 수 있는 조건에만 x 를 붙인다. '보기'(모드)는 지울 수 있는 게 아니다.
     var rm = x[2] ? '<button class="chipx" data-clear="'+x[2]+'" aria-label="'+x[0]+' 조건 지우기">×</button>' : '';
-    return '<span class="chip">'+x[0]+'<b>'+x[1]+'</b>'+rm+'</span>';
+    return '<span class="cond">'+x[0]+'<b>'+x[1]+'</b>'+rm+'</span>';
   }).join('');
 }
 // 칩을 매 이벤트마다 통째로 다시 그리면, 버튼을 누르는 사이(mousedown~mouseup)에
