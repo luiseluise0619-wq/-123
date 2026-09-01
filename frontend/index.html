@@ -221,7 +221,7 @@ window.__resources = {
 
   <header style="position:sticky;top:0;z-index:20;background:var(--bg-blur);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)">
     <div style="max-width:1120px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;gap:32px">
-      <div onClick="{{ goHome }}" style="font-size:15px;font-weight:600;letter-spacing:-0.02em;cursor:pointer;flex:none">사장님인사이트</div>
+      <a href="/" style="font-size:15px;font-weight:600;letter-spacing:-0.02em;flex:none;color:var(--ink);text-decoration:none">사장님인사이트</a>
       <nav style="display:flex;gap:28px;align-items:center;flex:1;overflow-x:auto">
         <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
           <div onClick="{{ n.go }}" style="{{ n.style }}">{{ n.label }}</div>
@@ -240,54 +240,20 @@ window.__resources = {
 
   <main style="flex:1">
 
-    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
-      <section style="max-width:1120px;margin:0 auto;padding:0 24px">
-        <div style="min-height:64vh;display:flex;flex-direction:column;justify-content:center;padding:96px 0 64px;max-width:720px">
-          <h1 style="font-size:clamp(30px,4.6vw,48px);font-weight:600;line-height:1.25;letter-spacing:-0.03em;margin:0;text-wrap:pretty">어디에서 어떤 장사를<br>시작하시나요?</h1>
-          <p style="font-size:17px;color:var(--ink2);margin:20px 0 0;max-width:520px">서울 25개 자치구의 공개 통계로 폐업 추세, 유동인구, 임대료, 경쟁 밀도를 확인하고 손익분기를 계산합니다.</p>
-
-          <div style="display:flex;flex-wrap:wrap;gap:24px;margin-top:56px;align-items:flex-end">
-            <label style="display:flex;flex-direction:column;gap:8px;min-width:200px">
-              <span style="font-size:13px;color:var(--ink2)">업종</span>
-              <select value="{{ ind }}" onChange="{{ onInd }}" style="appearance:none;font-size:17px;font-weight:500;color:var(--ink);background:transparent;border:none;border-bottom:1px solid var(--line-strong);padding:8px 24px 10px 0;min-height:44px;outline:none;cursor:pointer">
-                <sc-for list="{{ indList }}" as="o" hint-placeholder-count="6"><option value="{{ o }}">{{ o }}</option></sc-for>
-              </select>
-            </label>
-            <label style="display:flex;flex-direction:column;gap:8px;min-width:200px">
-              <span style="font-size:13px;color:var(--ink2)">지역</span>
-              <select value="{{ gu }}" onChange="{{ onGu }}" style="appearance:none;font-size:17px;font-weight:500;color:var(--ink);background:transparent;border:none;border-bottom:1px solid var(--line-strong);padding:8px 24px 10px 0;min-height:44px;outline:none;cursor:pointer">
-                <sc-for list="{{ guList }}" as="o" hint-placeholder-count="6"><option value="{{ o }}">{{ o }}</option></sc-for>
-              </select>
-            </label>
-            <button onClick="{{ goDetail }}" style="font-size:15px;font-weight:500;color:var(--bg);background:var(--ink);border:none;border-radius:10px;padding:0 28px;height:48px;min-height:44px;cursor:pointer;letter-spacing:-0.01em" style-hover="opacity:.88">분석하기</button>
-          </div>
-
-          <!-- 이 화면은 '지역을 이미 정한 사람'을 위한 입구다.
-               아직 어디에 차릴지 모르는 사람이 훨씬 많다 — 그 사람에게는
-               업종만 고르면 상권을 찾아주는 인텔리전스가 맞는 입구다. -->
-          <div style="margin-top:48px;padding-top:28px;border-top:1px solid var(--line);max-width:520px">
-            <div style="font-size:15px;color:var(--ink)">아직 어디에 차릴지 못 정하셨나요?</div>
-            <div style="font-size:14px;color:var(--ink2);margin-top:6px">업종만 고르면 수요는 있는데 그 업종 점포가 적은 상권을 찾아드립니다.</div>
-            <div style="margin-top:14px"><span onClick="{{ goIntel }}" style="color:var(--accent);cursor:pointer;font-size:15px;font-weight:600">기회 상권 찾기 →</span></div>
-          </div>
-
-          <div style="margin-top:32px;font-size:14px;display:flex;gap:20px;flex-wrap:wrap">
-            <span onClick="{{ goMap }}" style="color:var(--ink2);cursor:pointer">지도에서 둘러보기</span>
-            <span onClick="{{ regionReset }}" style="color:var(--ink2);cursor:pointer">지역 다시 선택</span>
-          </div>
-        </div>
-
-        <div style="border-top:1px solid var(--line);padding:28px 0 96px;font-size:12px;color:var(--ink3);line-height:1.7">
-          {{ quarter }} · 국세청 폐업통계 · 한국부동산원 상업용부동산 임대동향 · 서울 열린데이터광장(생활인구·상권분석) · 전국주차장정보표준데이터 · 통계청 소상공인실태조사 · 카카오 로컬(실시간)<br>
-          이 서비스의 매출·임대료 값은 개별 점포 실적이 아닌 상권 단위 추정값입니다.
-        </div>
-      </section>
-    </sc-if>
+    <!-- 예전엔 여기 진입 히어로("어디에서 어떤 장사를 시작하시나요?")가 있었다.
+         지역 게이트 → 히어로 → 지도로 들어오는 문이 겹쳐 있었는데, 사이트 첫 화면이
+         인텔리전스(zone.html)로 옮겨가면서 지웠다. 이 페이지는 바로 지도로 연다.
+         업종·자치구를 골라 진단하는 입구는 지도 화면과 진단(mvp.html)에 있고,
+         지역(서울·충북·충남) 바꾸기는 지도 화면 안에 뒀다. -->
 
     <sc-if value="{{ isMap }}">
       <section style="max-width:1120px;margin:0 auto;padding:64px 24px 96px">
         <h1 style="font-size:clamp(26px,3.2vw,34px);font-weight:600;letter-spacing:-0.025em;margin:0">지역별로 비교합니다</h1>
         <p style="font-size:16px;color:var(--ink2);margin:12px 0 0;max-width:560px">{{ metricNote }}</p>
+        <!-- 진입 히어로를 없애면서 여기 있던 '지역 다시 선택'이 갈 곳이 없어졌다.
+             충북·충남으로 가는 유일한 문이라 지도 화면 안으로 옮겼다. -->
+        <div style="margin-top:10px;font-size:13px;color:var(--ink3)">서울특별시 ·
+          <span onClick="{{ regionReset }}" style="color:var(--accent);cursor:pointer">다른 지역 보기</span></div>
 
         <div style="display:flex;gap:2px;margin-top:36px;background:var(--line-soft);border-radius:10px;padding:2px;width:fit-content;max-width:100%;overflow-x:auto">
           <sc-for list="{{ metricTabs }}" as="m" hint-placeholder-count="5">
@@ -800,14 +766,17 @@ window.__resources = {
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    ready: false, screen: 'home', gu: '강남구', ind: '커피-음료', metric: 'trend',
+    ready: false, screen: 'map', gu: '강남구', ind: '커피-음료', metric: 'trend',
     // 진단 입력 기본값. area/staff/wage 는 [가정] 초기값(평수 15평·직원 2명·급여 250만) — 사용자가 바꾸는 출발점일 뿐 실측 아님.
     // rent/rev/inv/cogs/etc 는 null = "아직 안 침" → calc()가 업종별 기본값(실측 매출·표준 가정)으로 대신 계산한다.
     topic: null, hover: null, area: 15, staff: 2, wage: 250, rent: null, rev: null, inv: null, cogs: null, etc: null,
     cmpA: '강남구', cmpB: '마포구', chat: [], draft: '',
     dark: false,
-    // 지역 선택(첫 화면). region=null 이면 인트로 오버레이를 띄운다. rprev=미리보기 중인 지역, rshapes=그 지역 지도 경로.
-    region: null, rprev: null, rshapes: [], rsiguns: [], rdata: null
+    // 지역. 예전엔 null 로 두고 "어디에서 장사를 시작하시나요?" 오버레이를 먼저 띄웠는데,
+    // 사이트 첫 화면이 인텔리전스(zone.html)로 옮겨간 뒤로는 이 페이지에 들어오는 사람은
+    // 이미 상담·데이터를 보러 온 사람이다. 문을 하나 더 세울 이유가 없어 서울을 기본으로 연다.
+    // 충북·충남은 지도 화면의 지역 바꾸기(regionReset)로 계속 갈 수 있다.
+    region: '서울특별시', rprev: null, rshapes: [], rsiguns: [], rdata: null
   };
 
   // 지역 정의 — 서울은 전체 앱, 충북·충남은 지도+시군(상세 준비 중).
@@ -1200,28 +1169,26 @@ class Component extends DCLogic {
     // 나머지(건물 지도·추이·데이터·상담·소개)는 아래 푸터로 내린다.
     const navStyle = (on) => 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:'
       + (on ? 'var(--ink)' : 'var(--ink3)') + ';font-weight:' + (on ? '600' : '400');
-    const onMap = S.screen === 'map' || S.screen === 'detail' || S.screen === 'home';
+    // 다른 페이지와 같은 메뉴를 쓴다. 상권 지도는 뺐고(이 페이지의 지도 화면은
+    // 인텔리전스에서 상권을 열면 닿는다), 하단에 있던 건물 지도·상담을 위로 올렸다.
     const navItems = [
-      { label: '상권 지도', go: nav('map'), style: navStyle(onMap) },
       { label: '인텔리전스', go: () => { location.href = 'zone.html'; }, style: navStyle(false) },
       { label: '진단', go: () => { location.href = 'mvp.html'; }, style: navStyle(false) },
       { label: '비교', go: () => { location.href = 'compare.html'; }, style: navStyle(false) },
+      { label: '건물 지도', go: () => { location.href = 'building.html'; }, style: navStyle(false) },
+      { label: '상담', go: () => { location.hash = 'chat'; }, style: navStyle(S.screen === 'chat') },
     ];
-    // 푸터(보조 메뉴) — 데이터·상담은 이 페이지 안의 화면이라 해시로 열고,
-    // 다른 페이지에서도 index.html#data 처럼 바로 들어올 수 있다.
+    // 푸터는 두 개만 남긴다. 데이터·개인정보 링크는 뺐다.
+    // 처리방침은 이메일 수집 동의 문구에서 계속 열 수 있다(수집 시점에 닿는 게 법적으로 중요한 부분).
     const footStyle = (on) => 'font-size:13px;cursor:pointer;white-space:nowrap;transition:color .2s;color:' + (on ? 'var(--ink)' : 'var(--ink2)');
     const footItems = [
-      { label: '건물 지도', go: () => { location.href = 'building.html'; }, style: footStyle(false) },
       { label: '연도별 추이', go: () => { location.href = 'trends.html'; }, style: footStyle(false) },
-      { label: '데이터', go: () => { location.hash = 'data'; }, style: footStyle(S.screen === 'data') },
-      { label: '상담', go: () => { location.hash = 'chat'; }, style: footStyle(S.screen === 'chat') },
       { label: '소개', go: () => { location.href = 'about.html'; }, style: footStyle(false) },
-      { label: '개인정보', go: () => { location.href = 'privacy.html'; }, style: footStyle(false) },
     ];
 
     const base = {
       navItems, footItems, quarter: this.salesQuarter() || (core && core.quarter) || '',
-      isHome: S.screen === 'home', isMap: S.screen === 'map', isDetail: S.screen === 'detail',
+      isMap: S.screen === 'map', isDetail: S.screen === 'detail',
       isData: S.screen === 'data', isReport: S.screen === 'report', isCompare: S.screen === 'compare', isChat: S.screen === 'chat', isMethod: S.screen === 'method',
       // ── 지역 선택(첫 화면) ──
       isIntro: !S.region,                                         // region 미선택 → 인트로 오버레이
@@ -1262,7 +1229,7 @@ class Component extends DCLogic {
       gu: S.gu, ind: S.ind,
       guList: core ? Object.keys(core.gu) : [], indList: core ? Object.keys(core.ind) : [],
       goIntel: () => { location.href = 'zone.html'; },
-      goHome: nav('home'), goMap: nav('map'), goDetail: nav('detail'), goData: nav('data'), goReport: nav('report'), goCompare: nav('compare'), goChat: nav('chat'),
+      goMap: nav('map'), goDetail: nav('detail'), goData: nav('data'), goReport: nav('report'), goCompare: nav('compare'), goChat: nav('chat'),
       toggleTheme: () => { const d = !S.dark; this.applyTheme(d); this.setState({ dark: d }); },
       themeLabel: S.dark ? '밝게 보기' : '어둡게 보기',
       themeIcon: S.dark

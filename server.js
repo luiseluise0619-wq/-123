@@ -52,7 +52,12 @@ function readBody(req) {
 
 async function serveStatic(pathname, nodeRes) {
   let rel = decodeURIComponent(pathname.split("?")[0]);
-  if (rel.endsWith("/")) rel += "index.html";
+  // 첫 화면은 인텔리전스(zone.html)다. 들어오는 문이 여러 개면 사용자는 매번 고르게 되는데,
+  // 이 서비스가 답하는 질문은 "내 업종으로 어디서 시작하면 기회가 있나" 하나다.
+  // index.html 은 상담·데이터·방법 화면을 담은 채 그대로 남아 있다(주소로 직접 닿는다).
+  // ※ Vercel 배포에도 같은 규칙이 있어야 한다 — frontend/vercel.json 의 rewrites.
+  if (rel === "/") rel = "/zone.html";
+  else if (rel.endsWith("/")) rel += "index.html";
   let file = path.normalize(path.join(ROOT, rel));
   // 접두사만 비교하면 "frontendX" 같은 형제 경로가 통과한다. 구분자까지 포함해 검사.
   if (file !== ROOT && !file.startsWith(ROOT + path.sep)) { nodeRes.writeHead(403); return nodeRes.end("Forbidden"); }
