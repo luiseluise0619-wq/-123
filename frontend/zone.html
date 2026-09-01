@@ -439,7 +439,8 @@ function evidenceRows(z,o,oppRow,q){
   if(oppRow){
     rows.push(['이 업종 점포 수', oppRow.stores+'곳', '실측', SRC_TRDAR, q]);
     if(oppRow.psales!=null)
-      rows.push(['이 업종 점포당 매출', won(oppRow.psales)+'원/분기',
+      rows.push(['이 업종 점포당 매출',
+        won(oppRow.psales)+'원/분기'+(oppRow.perf_raw!=null?' · 서울 상위 '+Math.max(1,100-oppRow.perf_raw)+'%':''),
         oppRow.stores>=10?'실측':'실측 · 표본 '+oppRow.stores+'곳', SRC_TRDAR, q]);
     if(oppRow.score!=null)
       rows.push(['기회점수', Math.round(oppRow.score)+'점', '추정 · 가중합',
@@ -542,8 +543,14 @@ function render(z){
   // ═══ ② 핵심 변화 — 2~3개만. 카드가 아니라 얇은 목록 ═══
   var ch=[];
   if(oppRow && oppRow.score!=null)
+    // perf 는 표본이 적으면 중간으로 끌어당긴 '점수 계산용' 값이다.
+    // 화면에 "서울 상위 N%"로 쓸 때는 실제 측정 순위(perf_raw)를 써야 한다.
     ch.push([esc(curInd),'수요 <b>'+oppRow.dem+'</b> · 이 업종 점포 <b>'+oppRow.stores+'곳</b>'+
-      ' · 희소성 <b>'+oppRow.scarce+'</b> · 점포당 매출 서울 <b>상위 '+(100-oppRow.perf)+'%</b>']);
+      ' · 희소성 <b>'+oppRow.scarce+'</b>'+
+      (oppRow.perf_raw!=null
+        ? ' · 점포당 매출 서울 <b>상위 '+Math.max(1,100-oppRow.perf_raw)+'%</b>'
+          +(oppRow.stores<5?' <span class="t-cap">(점포 '+oppRow.stores+'곳 기준이라 흔들릴 수 있음)</span>':'')
+        : '')]);
   if(g) ch.push(['국면', '<b>'+esc(g[0])+'</b> — '+esc(g[1])]);
   if(gap!=null && !z.weak)
     ch.push(['수요·공급', '수요 '+Math.round(o.dem)+' · 공급 '+Math.round(o.sup)+
