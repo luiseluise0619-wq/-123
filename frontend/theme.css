@@ -26,19 +26,19 @@
   --on-brand:#FFFFFF;
 
   --bg:#FFFFFF;
-  --bg-blur:rgba(255,255,255,.86);
-  --surface:#FAFAF8;          /* 섹션 구분용 아주 옅은 면 */
-  --surface-2:#F0F0EC;        /* 트랙·눌림 */
-  --neutral:#F5F5F1;          /* 입력칸 */
+  --bg-blur:rgba(255,255,255,.72);   /* 헤더는 더 투명하게 — 아래 내용이 비쳐 지나간다 */
+  --surface:#F5F5F7;          /* 섹션을 '선'이 아니라 '면'으로 나눈다 */
+  --surface-2:#E8E8ED;        /* 트랙·눌림 */
+  --neutral:#F5F5F7;          /* 입력칸 */
 
-  --ink:#0F0F10;              /* 본문·제목 */
-  --ink2:#5F6066;             /* 보조 설명 */
-  --ink3:#96979D;             /* 캡션·비활성 */
-  --on-ink:#FFFFFF;           /* 먹색 버튼 위 글자 */
+  --ink:#1D1D1F;              /* 완전한 검정보다 살짝 눌러야 종이처럼 읽힌다 */
+  --ink2:#6E6E73;             /* 보조 설명 */
+  --ink3:#86868B;             /* 캡션·비활성 */
+  --on-ink:#FFFFFF;
 
-  --line:#EBEBE7;
-  --line-soft:#F4F4F1;
-  --line-strong:#C7C7C1;
+  --line:#E5E5E7;
+  --line-soft:#F0F0F2;
+  --line-strong:#C6C6C8;
 
   --selection:#E3EAF7;
 
@@ -56,30 +56,35 @@
 
   /* ── 2. 타이포 ──────────────────────────────────────────
      6단계 고정. 한 화면에 이보다 많은 크기를 쓰지 않는다. */
-  --f-display:clamp(28px,4.2vw,38px);  --lh-display:1.2;  --ls-display:-.032em;
-  --f-title:clamp(21px,2.6vw,26px);    --lh-title:1.3;    --ls-title:-.026em;
-  --f-head:17px;                       --lh-head:1.4;     --ls-head:-.018em;
-  --f-body:15px;                       --lh-body:1.62;    --ls-body:-.008em;
-  --f-sub:13.5px;                      --lh-sub:1.55;
-  --f-cap:12px;                        --lh-cap:1.45;
+  /* 큰 글자일수록 자간을 더 조인다 — 애플 타이포의 핵심이다.
+     작은 글자에 같은 자간을 주면 뭉개지므로 단계마다 다르게 준다. */
+  --f-display:clamp(36px,5.6vw,64px);  --lh-display:1.06; --ls-display:-.035em;
+  --f-title:clamp(24px,3.2vw,34px);    --lh-title:1.12;   --ls-title:-.028em;
+  --f-head:19px;                       --lh-head:1.35;    --ls-head:-.02em;
+  --f-body:16px;                       --lh-body:1.6;     --ls-body:-.01em;
+  --f-sub:14px;                        --lh-sub:1.55;
+  --f-cap:12.5px;                      --lh-cap:1.45;
   /* 수치 하나만 크게 보여줄 때 */
-  --f-metric:clamp(34px,5.4vw,52px);
+  --f-metric:clamp(48px,8vw,84px);
 
   /* ── 3. 여백 — 4pt 배수. 여백은 장식이 아니라 정보 구조다 ── */
   --sp-1:4px;  --sp-2:8px;  --sp-3:12px; --sp-4:16px;
-  --sp-5:24px; --sp-6:32px; --sp-7:48px; --sp-8:64px; --sp-9:96px;
-  --gutter:20px;              /* 좌우 여백(모바일) */
-  --maxw:960px;               /* 본문 최대폭 — 넓으면 읽기 힘들다 */
+  --sp-5:24px; --sp-6:32px; --sp-7:48px; --sp-8:72px; --sp-9:112px;
+  --gutter:22px;
+  --maxw:980px;               /* 애플 본문 폭. 넓으면 읽기 힘들다 */
 
   /* ── 4. 모서리·그림자 ── */
-  --r-sm:8px; --r-md:12px; --r-lg:18px; --r-full:999px;
+  --r-sm:10px; --r-md:14px; --r-lg:22px; --r-xl:28px; --r-full:999px;
   /* 그림자는 '떠 있는 것'에만. 카드마다 그림자를 주면 화면이 지저분해진다. */
-  --shadow-pop:0 6px 24px rgba(15,15,16,.10), 0 1px 3px rgba(15,15,16,.06);
-  --shadow-sheet:0 -8px 32px rgba(15,15,16,.14);
+  --shadow-pop:0 12px 40px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06);
+  --shadow-sheet:0 -12px 44px rgba(0,0,0,.16);
 
   /* ── 5. 모션 — 상태 변화를 이해시킬 때만 ── */
   --ease:cubic-bezier(.32,.72,0,1);
   --t-fast:140ms; --t-base:200ms; --t-sheet:280ms;
+
+  /* 아이콘 — 마스크로 쓰므로 색은 currentColor 를 따른다 */
+  --ico-search:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E");
 
   color-scheme:light;
 }
@@ -87,10 +92,10 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --brand:#8FAEF0; --brand-hover:#B0C6F5; --brand-weak:#16233F; --on-brand:#0B0C0D;
-    --bg:#0B0C0D; --bg-blur:rgba(11,12,13,.86);
-    --surface:#131416; --surface-2:#232529; --neutral:#17191C;
-    --ink:#EDEDEB; --ink2:#9B9DA3; --ink3:#6C6F75; --on-ink:#0B0C0D;
-    --line:#212328; --line-soft:#17191D; --line-strong:#383B41;
+    --bg:#000000; --bg-blur:rgba(0,0,0,.72);
+    --surface:#1D1D1F; --surface-2:#2C2C2E; --neutral:#1C1C1E;
+    --ink:#F5F5F7; --ink2:#A1A1A6; --ink3:#86868B; --on-ink:#000000;
+    --line:#2C2C2E; --line-soft:#1F1F21; --line-strong:#48484A;
     --selection:#1B2C4D;
     --up:#5BA87A; --down:#CE6C5C; --warn:#C08A3E;
     --up-weak:#13251C; --down-weak:#2A1916; --warn-weak:#271E10;
@@ -105,10 +110,10 @@
 }
 :root[data-theme="dark"]{
   --brand:#8FAEF0; --brand-hover:#B0C6F5; --brand-weak:#16233F; --on-brand:#0B0C0D;
-  --bg:#0B0C0D; --bg-blur:rgba(11,12,13,.86);
-  --surface:#131416; --surface-2:#232529; --neutral:#17191C;
-  --ink:#EDEDEB; --ink2:#9B9DA3; --ink3:#6C6F75; --on-ink:#0B0C0D;
-  --line:#212328; --line-soft:#17191D; --line-strong:#383B41;
+  --bg:#000000; --bg-blur:rgba(0,0,0,.72);
+  --surface:#1D1D1F; --surface-2:#2C2C2E; --neutral:#1C1C1E;
+  --ink:#F5F5F7; --ink2:#A1A1A6; --ink3:#86868B; --on-ink:#000000;
+  --line:#2C2C2E; --line-soft:#1F1F21; --line-strong:#48484A;
   --selection:#1B2C4D;
   --up:#5BA87A; --down:#CE6C5C; --warn:#C08A3E;
   --up-weak:#13251C; --down-weak:#2A1916; --warn-weak:#271E10;
@@ -177,41 +182,60 @@ select option{background:var(--surface);color:var(--ink)}
 /* ═══ 레이아웃 ═══ */
 .wrap{max-width:var(--maxw);margin:0 auto;padding-left:var(--gutter);padding-right:var(--gutter)}
 /* 섹션 사이 여백이 곧 정보 구조다. 카드 대신 이걸 쓴다. */
-.sec{padding:var(--sp-7) 0}
-.sec + .sec{border-top:1px solid var(--line)}
+.sec{padding:var(--sp-8) 0}
+/* 섹션 사이에 선을 긋지 않는다. 여백이 이미 구획이다.
+   선이 필요할 만큼 붙어 있다면 그건 여백이 모자란 것이다. */
+.sec-line + .sec-line{border-top:1px solid var(--line)}
+/* 면으로 나누는 방법 — 흰 바탕과 아주 옅은 회색을 번갈아 쓴다(애플의 기본 리듬) */
+.band{background:var(--surface)}
+.band .wrap{padding-top:var(--sp-8);padding-bottom:var(--sp-8)}
 .stack>*+*{margin-top:var(--sp-3)}
 .stack-lg>*+*{margin-top:var(--sp-5)}
 
 /* ═══ 버튼 — 계층 3단계. 한 화면에 Primary 는 하나만 ═══ */
+/* 알약 버튼 — 애플이 마케팅·제품 화면에서 쓰는 형태.
+   모서리를 완전히 굴리면 '누르는 것'이라는 신호가 더 분명해진다. */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
-  height:48px;padding:0 var(--sp-5);border-radius:var(--r-md);border:1px solid transparent;
-  font-size:var(--f-body);font-weight:600;letter-spacing:-.01em;cursor:pointer;
-  background:none;color:var(--ink);transition:background var(--t-fast) var(--ease),
-  border-color var(--t-fast) var(--ease),opacity var(--t-fast) var(--ease)}
-.btn:active{transform:translateY(.5px)}
+  height:48px;padding:0 var(--sp-6);border-radius:var(--r-full);border:1px solid transparent;
+  font-size:var(--f-body);font-weight:500;letter-spacing:-.01em;cursor:pointer;
+  background:none;color:var(--ink);
+  transition:background var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease),
+             transform var(--t-fast) var(--ease),opacity var(--t-fast) var(--ease)}
+.btn:active{transform:scale(.97)}
 .btn-primary{background:var(--ink);color:var(--on-ink)}
-.btn-primary:hover{opacity:.86}
-.btn-secondary{background:var(--bg);border-color:var(--line-strong)}
-.btn-secondary:hover{border-color:var(--ink);background:var(--surface)}
-.btn-tertiary{height:auto;padding:var(--sp-1) 0;color:var(--brand);font-weight:500}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{background:var(--surface);border-color:transparent;color:var(--ink)}
+.btn-secondary:hover{background:var(--surface-2)}
+/* 텍스트 링크 — 애플은 여기에 항상 갈매기(›)를 붙여 '더 있다'를 알린다 */
+.btn-tertiary{height:auto;padding:0;color:var(--brand);font-weight:400;border-radius:0}
+.btn-tertiary::after{content:"›";margin-left:5px;font-weight:400;
+  transition:transform var(--t-fast) var(--ease);display:inline-block}
+/* 뒤로 가는 링크에 앞쪽 갈매기를 붙이면 방향이 반대로 읽힌다 */
+.btn-tertiary.back::after{content:none}
+.btn-tertiary.back:hover{transform:translateX(-2px)}
 .btn-tertiary:hover{color:var(--brand-hover)}
-.btn-sm{height:36px;padding:0 var(--sp-4);font-size:var(--f-sub)}
+.btn-tertiary:hover::after{transform:translateX(3px)}
+.btn-tertiary:active{transform:none}
+.btn-sm{height:38px;padding:0 var(--sp-5);font-size:var(--f-sub)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn-block{width:100%}
 
 /* ═══ 입력 ═══ */
-.input{width:100%;height:52px;padding:0 var(--sp-4);border:1px solid var(--line-strong);
-  border-radius:var(--r-md);background:var(--bg);outline:none;
-  transition:border-color var(--t-fast) var(--ease)}
-.input:focus{border-color:var(--ink)}
+.input{width:100%;height:56px;padding:0 var(--sp-5);border:1px solid transparent;
+  border-radius:var(--r-full);background:var(--surface);outline:none;
+  font-size:var(--f-body);
+  transition:background var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease)}
+.input:focus{border-color:var(--brand);background:var(--bg)}
 .input::placeholder{color:var(--ink3)}
 
 /* ═══ 칩 — 선택한 조건 표시 / 토글 ═══ */
-.chip{display:inline-flex;align-items:center;gap:var(--sp-1);height:34px;padding:0 var(--sp-3);
-  border-radius:var(--r-full);border:1px solid var(--line-strong);background:var(--bg);
+.chip{display:inline-flex;align-items:center;gap:var(--sp-1);height:36px;padding:0 var(--sp-4);
+  border-radius:var(--r-full);border:1px solid transparent;background:var(--surface);
   font-size:var(--f-sub);color:var(--ink2);cursor:pointer;white-space:nowrap;
-  transition:all var(--t-fast) var(--ease)}
-.chip:hover{border-color:var(--ink);color:var(--ink)}
+  transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease),
+             transform var(--t-fast) var(--ease)}
+.chip:hover{background:var(--surface-2);color:var(--ink)}
+.chip:active{transform:scale(.97)}
 .chip[aria-pressed="true"],.chip.on{background:var(--ink);border-color:var(--ink);color:var(--on-ink);font-weight:600}
 
 /* ═══ 배지 — 상태 한 단어 ═══ */
@@ -227,7 +251,8 @@ select option{background:var(--surface);color:var(--ink)}
 .delta.up{color:var(--up)} .delta.down{color:var(--down)} .delta.flat{color:var(--ink3)}
 
 /* ═══ 카드 — 정말 독립적으로 떼어내야 할 때만 ═══ */
-.card{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-5)}
+/* 카드는 테두리가 아니라 '면'으로 존재한다 — 선을 겹겹이 쓰면 화면이 시끄럽다 */
+.card{background:var(--surface);border:0;border-radius:var(--r-xl);padding:var(--sp-6)}
 
 /* ═══ 접기/펼치기 — 상세는 기본으로 감춘다 ═══ */
 .disclose{border-top:1px solid var(--line)}
@@ -331,16 +356,18 @@ select option{background:var(--surface);color:var(--ink)}
 .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 /* ═══ 공통 헤더/푸터 ═══ */
+/* 애플 내비게이션 — 아주 얇고, 뒤가 비쳐 지나간다 */
 .sitehead{position:sticky;top:0;z-index:30;background:var(--bg-blur);
-  backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid var(--line)}
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--line-soft)}
 .sitehead .headwrap{max-width:var(--maxw);margin:0 auto;
   padding:var(--sp-3) var(--gutter);display:flex;align-items:center;gap:var(--sp-5)}
 .sitehead .brand{font-size:var(--f-body);font-weight:700;letter-spacing:-.02em;
   color:var(--ink);text-decoration:none;flex:none}
 .sitehead .brand span{color:var(--ink3);font-weight:500}
 .sitehead nav{margin-left:auto;display:flex;gap:var(--sp-5);align-items:center}
-.navlink{font-size:var(--f-sub);color:var(--ink3);text-decoration:none;white-space:nowrap;
-  font-weight:500;transition:color var(--t-fast) var(--ease)}
+.navlink{font-size:var(--f-cap);color:var(--ink2);text-decoration:none;white-space:nowrap;
+  font-weight:400;letter-spacing:-.01em;transition:color var(--t-fast) var(--ease)}
 .navlink:hover{color:var(--ink)}
 .navlink.on{color:var(--ink);font-weight:600}
 
@@ -356,7 +383,17 @@ select option{background:var(--surface);color:var(--ink)}
 @media (max-width:640px){
   :root{--gutter:16px}
   .sitehead .brand span{display:none}
-  .sitehead nav{gap:var(--sp-4)}
+  /* 좁은 화면에서 브랜드+검색+메뉴 4개는 한 줄에 안 들어간다(390px 에서 427px 필요).
+     메뉴만 가로로 밀리게 두고, 검색 단추는 돋보기 하나로 줄인다. */
+  .sitehead .headwrap{gap:var(--sp-3)}
+  .sitehead nav{gap:var(--sp-4);overflow-x:auto;min-width:0;
+    scrollbar-width:none;-ms-overflow-style:none}
+  .sitehead nav::-webkit-scrollbar{display:none}
+  .cmdk-btn{width:34px;padding:0;justify-content:center;flex:none}
+  .cmdk-btn kbd{display:none}
+  .cmdk-btn::before{content:"";width:15px;height:15px;flex:none;
+    background:currentColor;-webkit-mask:var(--ico-search) center/contain no-repeat;
+    mask:var(--ico-search) center/contain no-repeat}
   .sec{padding:var(--sp-6) 0}
 }
 @media print{.sitehead,.sitefoot,.btn,.chip{display:none!important}}
