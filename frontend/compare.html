@@ -130,7 +130,7 @@
 <div class="wrap">
   <div class="pagehead">
     <h1 class="t-display">나란히 놓고<br>비교</h1>
-    <p class="pagesub">객단가·점포당 매출·손님 구성·붐비는 시간·폐업률을<br class="br-m">한 표로 봅니다.</p>
+    <p class="pagesub">객단가·점포당 매출·손님 구성·붐비는 시간·폐업률을 <br class="br-m">한 표로 봅니다.</p>
     <p class="t-cap" id="asof" style="margin-top:var(--sp-3)"></p>
   </div>
 
@@ -342,7 +342,10 @@ Promise.all([
     const next=window.__GU_SORTED.find(g=>!used.includes(g))||window.__GU_SORTED[0];
     addGuCol(next); render();
   };
-  document.getElementById('asof').textContent='기준 '+(sa.quarter||'')+' · 매출/점포 상권분석';
+  // "20261" 을 그대로 쓰면 사용자는 이게 분기인지 뭔지 모른다. "2026 1분기"로 푼다.
+  var q=String(sa.quarter||'');
+  document.getElementById('asof').textContent =
+    '기준 '+(/^\d{5}$/.test(q) ? q.slice(0,4)+' '+q.slice(4)+'분기' : q)+' · 매출/점포 상권분석';
   render();
 }).catch(e=>{document.getElementById('out').innerHTML='<div class="empty">데이터를 불러오지 못했습니다(배포 사이트에서 동작). '+String(e)+'</div>';});
 

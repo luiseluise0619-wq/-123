@@ -27,9 +27,12 @@
 
   --bg:#FFFFFF;
   --bg-blur:rgba(255,255,255,.72);   /* 헤더는 더 투명하게 — 아래 내용이 비쳐 지나간다 */
-  --surface:#F5F5F7;          /* 섹션을 '선'이 아니라 '면'으로 나눈다 */
-  --surface-2:#E8E8ED;        /* 트랙·눌림 */
-  --neutral:#F5F5F7;          /* 입력칸 */
+  /* 흰색이 기본이다. 회색 면은 '구역을 나눌 때'만 쓰고, 그때도 아주 옅게 쓴다.
+     버튼·칩·입력칸까지 회색으로 채우면 화면이 회색 덩어리로 보인다 —
+     그것들은 흰 바탕 + 실선 한 겹으로 세운다(아래 컴포넌트 참고). */
+  --surface:#F7F7F9;          /* 섹션을 '선'이 아니라 '면'으로 나눌 때 */
+  --surface-2:#EDEDF0;        /* 트랙·눌림 */
+  --neutral:#FFFFFF;          /* 입력칸 바탕 — 흰색 */
 
   --ink:#1D1D1F;              /* 완전한 검정보다 살짝 눌러야 종이처럼 읽힌다 */
   --ink2:#6E6E73;             /* 보조 설명 */
@@ -93,7 +96,7 @@
   :root:not([data-theme="light"]){
     --brand:#8FAEF0; --brand-hover:#B0C6F5; --brand-weak:#16233F; --on-brand:#0B0C0D;
     --bg:#000000; --bg-blur:rgba(0,0,0,.72);
-    --surface:#1D1D1F; --surface-2:#2C2C2E; --neutral:#1C1C1E;
+    --surface:#141416; --surface-2:#2C2C2E; --neutral:#0A0A0B;
     --ink:#F5F5F7; --ink2:#A1A1A6; --ink3:#86868B; --on-ink:#000000;
     --line:#2C2C2E; --line-soft:#1F1F21; --line-strong:#48484A;
     --selection:#1B2C4D;
@@ -111,7 +114,7 @@
 :root[data-theme="dark"]{
   --brand:#8FAEF0; --brand-hover:#B0C6F5; --brand-weak:#16233F; --on-brand:#0B0C0D;
   --bg:#000000; --bg-blur:rgba(0,0,0,.72);
-  --surface:#1D1D1F; --surface-2:#2C2C2E; --neutral:#1C1C1E;
+  --surface:#141416; --surface-2:#2C2C2E; --neutral:#0A0A0B;
   --ink:#F5F5F7; --ink2:#A1A1A6; --ink3:#86868B; --on-ink:#000000;
   --line:#2C2C2E; --line-soft:#1F1F21; --line-strong:#48484A;
   --selection:#1B2C4D;
@@ -212,8 +215,10 @@ select option{background:var(--surface);color:var(--ink)}
 .btn:active{transform:scale(.97)}
 .btn-primary{background:var(--ink);color:var(--on-ink)}
 .btn-primary:hover{opacity:.85}
-.btn-secondary{background:var(--surface);border-color:transparent;color:var(--ink)}
-.btn-secondary:hover{background:var(--surface-2)}
+/* Secondary 는 회색으로 채우지 않고 흰 바탕에 실선 한 겹으로 세운다.
+   회색 알약이 화면에 서너 개 뜨면 흰 바탕이라는 인상이 사라진다. */
+.btn-secondary{background:var(--bg);border-color:var(--line);color:var(--ink)}
+.btn-secondary:hover{border-color:var(--ink);background:var(--bg)}
 /* 텍스트 링크 — 애플은 여기에 항상 갈매기(›)를 붙여 '더 있다'를 알린다 */
 .btn-tertiary{height:auto;padding:0;color:var(--brand);font-weight:400;border-radius:0}
 .btn-tertiary::after{content:"›";margin-left:5px;font-weight:400;
@@ -229,20 +234,25 @@ select option{background:var(--surface);color:var(--ink)}
 .btn-block{width:100%}
 
 /* ═══ 입력 ═══ */
-.input{width:100%;height:56px;padding:0 var(--sp-5);border:1px solid transparent;
-  border-radius:var(--r-full);background:var(--surface);outline:none;
+/* 입력칸도 흰 바탕 + 실선. 포커스가 오면 선이 브랜드색으로 바뀌고 살짝 두꺼워진다
+   (회색 채움을 흰색으로 바꾸는 방식은 '눌렀는데 밝아지는' 반대 신호가 된다). */
+.input{width:100%;height:56px;padding:0 var(--sp-5);border:1px solid var(--line);
+  border-radius:var(--r-full);background:var(--neutral);outline:none;
   font-size:var(--f-body);
-  transition:background var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease)}
-.input:focus{border-color:var(--brand);background:var(--bg)}
+  transition:border-color var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease)}
+.input:hover{border-color:var(--line-strong)}
+.input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-weak)}
 .input::placeholder{color:var(--ink3)}
 
 /* ═══ 칩 — 선택한 조건 표시 / 토글 ═══ */
+/* 안 고른 칩은 흰 바탕 + 실선, 고른 칩만 먹색으로 꽉 찬다.
+   회색 칩이 스무 개 깔리면 무엇을 골랐는지가 흐려진다 — 선택만 진하게. */
 .chip{display:inline-flex;align-items:center;gap:var(--sp-1);height:36px;padding:0 var(--sp-4);
-  border-radius:var(--r-full);border:1px solid transparent;background:var(--surface);
+  border-radius:var(--r-full);border:1px solid var(--line);background:var(--bg);
   font-size:var(--f-sub);color:var(--ink2);cursor:pointer;white-space:nowrap;
   transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease),
-             transform var(--t-fast) var(--ease)}
-.chip:hover{background:var(--surface-2);color:var(--ink)}
+             border-color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease)}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
 .chip:active{transform:scale(.97)}
 .chip[aria-pressed="true"],.chip.on{background:var(--ink);border-color:var(--ink);color:var(--on-ink);font-weight:600}
 
@@ -259,8 +269,9 @@ select option{background:var(--surface);color:var(--ink)}
 .delta.up{color:var(--up)} .delta.down{color:var(--down)} .delta.flat{color:var(--ink3)}
 
 /* ═══ 카드 — 정말 독립적으로 떼어내야 할 때만 ═══ */
-/* 카드는 테두리가 아니라 '면'으로 존재한다 — 선을 겹겹이 쓰면 화면이 시끄럽다 */
-.card{background:var(--surface);border:0;border-radius:var(--r-xl);padding:var(--sp-6)}
+/* 흰 바탕에 실선 한 겹. 회색으로 채우면 카드가 서너 장만 있어도 화면이 회색이 된다.
+   그림자는 주지 않는다 — 떠 있는 건 시트와 팔레트뿐이다. */
+.card{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-xl);padding:var(--sp-6)}
 
 /* ═══ 접기/펼치기 — 상세는 기본으로 감춘다 ═══ */
 .disclose{border-top:1px solid var(--line)}

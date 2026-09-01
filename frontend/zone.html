@@ -171,7 +171,8 @@ th{font-size:var(--f-cap);color:var(--ink3);font-weight:500;border-bottom:1px so
   <div id="browse">
     <section class="hero-c">
       <h1 class="t-display">어디서 시작하면<br>기회가 있을까요</h1>
-      <p class="hero-sub">업종을 고르면 수요는 있는데<br class="br-m">그 업종 점포가 적은 상권을 찾아드립니다.</p>
+      <!-- br-m 은 모바일에서 숨는다. 앞뒤에 공백이 없으면 "있는데그"로 붙어버린다. -->
+      <p class="hero-sub">업종을 고르면 수요는 있는데 <br class="br-m">그 업종 점포가 적은 상권을 찾아드립니다.</p>
 
       <div class="tabs" id="indchips"></div>
 
@@ -335,7 +336,7 @@ ensureIndex().then(route).catch(function(){});
 
 // ═══ 첫 화면 — "이 상권 어때?"가 아니라 "어디서 이 업종을 하면 기회가 있나?" ═══
 // 사용자가 먼저 고르는 건 상권이 아니라 '무슨 장사를 할지'다. 그 순서를 화면에 그대로 옮겼다.
-var OPP=null, curOppInd='';
+var OPP=null, curOppInd='', oppShowThin=false;
 // 자주 찾는 업종을 앞에 둔다. 나머지는 '전체 업종'에서 고른다(선택지를 처음부터 62개 늘어놓지 않는다).
 var TOP_INDS=['커피-음료','한식음식점','미용실','편의점','치킨전문점','분식전문점','제과점','일반의원'];
 
@@ -378,23 +379,34 @@ function drawOpp(){
       '<p class="d">이 업종의 점포가 있는 상권이 너무 적어 신뢰할 수 있는 비교를 하기 어렵습니다.</p></div>';
     return;
   }
-  // 결론 문장은 '신뢰도 낮음'이 아닌 곳 중 최고를 고른다.
-  // 점포 3곳으로 낸 점수를 대표 추천으로 내세우면 안 된다(목록에는 그대로 남긴다).
-  var best=null;
-  for(var bi=0;bi<d.top.length;bi++){ if(d.top[bi].conf!=='낮음'){ best=d.top[bi]; break; } }
-  var thin=!best; if(!best) best=d.top[0];
+  // 희소성에 점수가 실리는 구조라, 점포가 가장 적은 곳 — 즉 근거가 가장 얇은 곳 — 이 위로 온다.
+  // 예전엔 결론 문장만 '신뢰도 낮음'을 건너뛰고 목록은 그대로 뒀는데,
+  // 그러면 "방이시장이 가장 기회가 큽니다" 밑에 강일동주민센터가 1등으로 앉아 있다.
+  // 사용자는 둘 중 뭘 믿어야 할지 알 수 없다 — 목록도 같은 기준으로 거른다.
+  // 감추는 게 아니라 나눈다(버튼으로 펼친다). 맞춤 탐색과 같은 규칙이다.
+  var thinN=0; d.top.forEach(function(r){ if(r.conf==='낮음') thinN++; });
+  var thinAll=(thinN===d.top.length);
+  var list=(oppShowThin||thinAll) ? d.top : d.top.filter(function(r){ return r.conf!=='낮음'; });
+  var best=list[0], thin=thinAll;
   var H=[];
   H.push('<p class="t-body" style="margin:0 0 var(--sp-5)"><b>'+esc(best.gu||'')+' '+esc(best.nm||'')+
     '</b>'+josa(best.nm||'','이','가')+' 가장 기회가 큽니다. 수요가 상위 '+best.dem+
     '%인데 '+esc(curOppInd)+' 점포는 '+best.stores+'곳뿐입니다.'+
     (thin?' <span class="t-cap">— 다만 이 업종은 점포가 5곳 이상인 상권이 없어 근거가 얇습니다.</span>':'')+'</p>');
-  H.push(d.top.slice(0,10).map(function(r,i){
+  H.push(list.slice(0,10).map(function(r,i){
     var conf=r.conf==='높음'?'':' · 신뢰도 '+r.conf;
     return '<div class="row" data-cd="'+r.cd+'">'+
       '<div><div class="nm">'+esc(r.nm||r.cd)+'</div>'+
       '<div class="sub">'+esc(r.gu||'')+' · 수요 '+r.dem+' · 이 업종 점포 '+r.stores+'곳'+esc(conf)+'</div></div>'+
       '<div class="val">'+Math.round(r.score)+'<small>기회점수</small></div></div>';
   }).join(''));
+  if(thinN && !thinAll){
+    H.push('<p style="margin-top:var(--sp-4)"><button class="btn btn-tertiary btn-sm" data-othin>'+
+      (oppShowThin?'근거가 얇은 '+thinN+'곳 빼기':'점포 5곳 미만인 '+thinN+'곳도 보기')+'</button></p>');
+    if(!oppShowThin)
+      H.push('<p class="t-cap" style="margin-top:var(--sp-2)">이 업종 점포가 5곳 미만인 상권 '+thinN+
+        '곳은 목록에서 뺐습니다 — 점포당 매출이 한두 곳에 흔들려 순위를 믿기 어렵습니다.</p>');
+  }
 
   // 미개척 — 점수를 매길 수 없는 곳. 기회일 수도, 안 되는 동네일 수도 있다고 정직하게 쓴다.
   if(d.unproven&&d.unproven.length){
@@ -757,6 +769,7 @@ function wire(){
     var r=e.target.closest('[data-cd]'); if(r) location.hash='z='+r.dataset.cd;
   });
   $('#rank').addEventListener('click',function(e){
+    if(e.target.closest('[data-othin]')){ oppShowThin=!oppShowThin; drawOpp(); return; }
     var r=e.target.closest('[data-cd]'); if(!r) return;
     curInd=curOppInd||curInd;
     ensureIndex().then(function(){ open(r.dataset.cd); });
