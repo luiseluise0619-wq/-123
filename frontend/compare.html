@@ -28,8 +28,6 @@
   header.top .brand{font-size:14px;font-weight:700}
   header.top .brand span{color:var(--mut);font-weight:400;font-size:12px}
   header.top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-  header.top nav a{font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 11px;border-radius:8px;background:var(--soft)}
-  header.top nav a:hover{border-color:var(--accent)}
   .wrap{max-width:1040px;margin:0 auto;padding:22px 20px 90px}
   h1{font-size:22px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
   .sub{color:var(--mut);font-size:13.5px;margin:0 0 18px}
@@ -129,8 +127,11 @@
 </header>
 
 <div class="wrap">
-  <h1 class="t-display" style="margin-top:var(--sp-7)">나란히 놓고 비교</h1>
-  <p class="t-sub" style="margin-top:var(--sp-3)">객단가·점포당 매출·손님 구성·붐비는 시간·폐업률을 한 표로 봅니다. <span id="asof" class="t-cap"></span></p>
+  <div class="pagehead">
+    <h1 class="t-display">나란히 놓고<br>비교</h1>
+    <p class="pagesub">객단가·점포당 매출·손님 구성·붐비는 시간·폐업률을<br class="br-m">한 표로 봅니다.</p>
+    <p class="t-cap" id="asof" style="margin-top:var(--sp-3)"></p>
+  </div>
 
   <!-- 조건은 접어 둔다. 지금 무엇으로 보고 있는지는 위의 칩으로 알 수 있다. -->
   <!-- 모드는 '조건'이 아니라 '무엇을 보는가'다. 접히는 필터 안에 두면 못 찾는다. -->

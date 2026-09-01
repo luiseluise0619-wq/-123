@@ -28,9 +28,6 @@
   header.top .brand{font-size:14px;font-weight:700}
   header.top .brand span{color:var(--mut);font-weight:400;font-size:12px}
   header.top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-  header.top nav a{font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 11px;border-radius:8px;background:var(--soft)}
-  header.top nav a:hover{border-color:var(--accent)}
-  header.top nav a.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
   .wrap{max-width:1040px;margin:0 auto;padding:22px 20px 90px}
   h1{font-size:22px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
   .sub{color:var(--mut);font-size:13.5px;margin:0 0 22px}
@@ -75,8 +72,10 @@
   </nav>
 </header>
 <div class="wrap">
-  <h1>연도별 추이</h1>
-  <p class="sub">업종 매출·자치구 폐업·상권 임대료가 해마다 어떻게 달라졌는지. 서울시 상권분석·국세청·한국부동산원 실데이터.</p>
+  <div class="pagehead">
+    <h1 class="t-display">해마다<br>어떻게 달라졌나</h1>
+    <p class="pagesub">업종 매출·자치구 폐업·상권 임대료의 변화.<br class="br-m">서울시 상권분석·국세청·한국부동산원 실데이터.</p>
+  </div>
 
   <div class="card" id="c-sales">
     <h2>업종별 추정매출 추이</h2>
