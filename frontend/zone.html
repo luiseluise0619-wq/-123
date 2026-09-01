@@ -128,6 +128,7 @@ th{font-size:var(--f-cap);color:var(--ink3);font-weight:500;border-bottom:1px so
       </div>
 
       <div class="list" id="rank"></div>
+      <section class="sec" id="watchbox" hidden></section>
       <p class="t-cap" id="src" style="margin-top:var(--sp-6)"></p>
     </section>
   </div>
@@ -344,6 +345,10 @@ function wire(){
     open(cur[+d.dataset.i].cd); close(); q.value='';
   });
   document.addEventListener('click',function(e){ if(!e.target.closest('.searchbox')) close(); });
+  var wb=document.getElementById('watchbox');
+  if(wb) wb.addEventListener('click',function(e){
+    var r=e.target.closest('[data-cd]'); if(r) location.hash='z='+r.dataset.cd;
+  });
   $('#rank').addEventListener('click',function(e){
     var r=e.target.closest('[data-cd]'); if(!r) return;
     curInd=curOppInd||curInd;
@@ -354,7 +359,11 @@ function wire(){
 function route(){
   var m=(location.hash||'').match(/^#z=([0-9]+)(?:&ind=(.*))?$/);
   if(m&&byCd[m[1]]){ curInd=m[2]?decodeURIComponent(m[2]):''; open(m[1],true); }
-  else { $('#profile').hidden=true; $('#browse').hidden=false; if(OPP) drawOpp(); }
+  else {
+    $('#profile').hidden=true; $('#browse').hidden=false;
+    if(OPP) drawOpp();
+    ensureIndex().then(drawWatch).catch(function(){});
+  }
 }
 
 // ── 상권 프로파일 ──
@@ -385,6 +394,38 @@ function open(cd, fromHash){
   });
 }
 
+
+
+// ═══ 관심 상권 저장 (SiteVelocity·RealHQ 의 Watchlist) ═══
+// 상권을 훑다 보면 "아까 그 괜찮았던 곳"을 다시 못 찾는다.
+// 서버 없이 이 브라우저에만 저장한다(로그인 없음, 개인정보 수집 없음).
+// localStorage 는 사생활 보호 모드·저장 차단 설정에서 예외를 던지므로 전부 감싼다.
+var WKEY='si.watch.v1';
+function watchGet(){
+  try{ return JSON.parse(localStorage.getItem(WKEY)||'[]'); }catch(e){ return []; }
+}
+function watchSet(a){
+  try{ localStorage.setItem(WKEY, JSON.stringify(a.slice(0,30))); return true; }
+  catch(e){ return false; }   // 저장이 막혀 있어도 화면은 계속 동작해야 한다
+}
+function watchHas(cd){ return watchGet().indexOf(cd)>=0; }
+function watchToggle(cd){
+  var a=watchGet(), i=a.indexOf(cd);
+  if(i>=0) a.splice(i,1); else a.unshift(cd);
+  return watchSet(a) ? (i<0) : null;   // null = 저장 실패
+}
+function drawWatch(){
+  var box=$('#watchbox'); if(!box) return;
+  var list=watchGet().map(function(cd){return byCd[cd];}).filter(Boolean);
+  if(!list.length){ box.hidden=true; return; }
+  box.hidden=false;
+  box.innerHTML='<h2 class="t-head">저장한 상권 '+list.length+'곳</h2>'+
+    '<div class="list">'+list.map(function(z){
+      return '<div class="row" data-cd="'+z.cd+'"><div><div class="nm">'+esc(z.nm)+'</div>'+
+        '<div class="sub">'+esc(z.gu||'')+' · 점포 '+z.stores.toLocaleString()+'</div></div>'+
+        '<div class="val delta '+(z.gap>0?'up':'down')+'">'+(z.gap>0?'+':'')+z.gap.toFixed(0)+'<small>기회지수</small></div></div>';
+    }).join('')+'</div>';
+}
 
 // ═══ 근거(Evidence) — 숫자마다 어디서 왔고 언제 기준인지 밝힌다 ═══
 // TomTom Site Selection 의 Data Provenance 패널, SiteVelocity 의 근거 등급 개념을 가져왔다.
@@ -606,6 +647,7 @@ function render(z){
   // ═══ ⑨ 리포트 — 화면에서 가장 중요한 행동 하나 ═══
   H.push('<div class="stickycta"><div class="in">'+
     '<span class="lbl">이 분석을 리포트로 받아보세요</span>'+
+    '<button class="btn btn-secondary btn-sm" id="wat">'+(watchHas(z.cd)?'저장됨':'저장')+'</button>'+
     '<button class="btn btn-secondary btn-sm" id="cmp">비교에 담기</button>'+
     '<button class="btn btn-primary btn-sm" id="rep">진단 리포트 받기</button>'+
     '</div></div>');
@@ -616,6 +658,11 @@ function render(z){
     var c=e.target.closest('[data-go]'); if(c) location.hash='z='+c.dataset.go;
   });
   $('#rep').addEventListener('click',function(){ openModal(z); });
+  $('#wat').addEventListener('click',function(){
+    var r=watchToggle(z.cd);
+    if(r===null){ this.textContent='저장 불가'; this.title='브라우저가 저장을 막고 있습니다(사생활 보호 모드 등)'; return; }
+    this.textContent=r?'저장됨':'저장';
+  });
   $('#cmp').addEventListener('click',function(){
     location.href='compare.html?gu='+encodeURIComponent(z.gu||'');
   });
