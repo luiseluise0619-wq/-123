@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>서울 상권 인텔리전스</title>
-<meta name="description" content="예비 창업자를 위한 서울 상권 분석. 자치구·업종별 매출·객단가·폐업률·손익분기·소비 성향을 공공데이터로 확인하고 AI 상담을 받아보세요.">
+<meta name="description" content="예비 창업자를 위한 서울 상권 분석. 자치구·업종별 매출·객단가·폐업률·손익분기·소비 성향을 공공데이터로 확인하고 상담으로 물어보세요.">
 <meta name="theme-color" content="#1F6FEB">
 <meta property="og:type" content="website">
 <meta property="og:title" content="서울 상권 인텔리전스">
@@ -1874,7 +1874,7 @@ class Component extends DCLogic {
       const ctx = this.chatContext();               // 현재 선택의 실제 수치
       const baseMeta = local.meta.slice(-2);         // 출처·기준시점
       // 사용자 메시지 + 'AI가 정리 중…' 임시 답변 즉시 표시
-      this.setState({ chat: S.chat.concat([{ role: 'u', text: q }, { role: 'a', text: 'AI가 데이터로 정리 중…', meta: [], pending: true }]), draft: '' });
+      this.setState({ chat: S.chat.concat([{ role: 'u', text: q }, { role: 'a', text: '데이터로 정리하는 중…', meta: [], pending: true }]), draft: '' });
       const replacePending = (text, meta) => {
         const cur = this.state.chat.slice();
         for (let i = cur.length - 1; i >= 0; i--) { if (cur[i].role === 'a' && cur[i].pending) { cur[i] = { role: 'a', text: text, meta: meta }; break; } }
@@ -1884,7 +1884,7 @@ class Component extends DCLogic {
         .then(r => r.json()).then(d => {
           if (d && d.reply && !d.error) {
             const meta = baseMeta.slice();
-            if (d.provider) meta.unshift({ k: 'AI', v: d.provider + (d.model ? ' · ' + d.model : '') });
+            if (d.provider) meta.unshift({ k: '작성', v: d.provider + (d.model ? ' · ' + d.model : '') });
             replacePending(d.reply, meta);
           } else {
             // AI 실패/미설정 → 규칙기반 답변으로 폴백

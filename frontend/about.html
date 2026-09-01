@@ -186,7 +186,7 @@
         </ul>
       </div>
       <div class="card">
-        <h3>AI 인사이트</h3>
+        <h3>지점 요약</h3>
         <p>위에 모인 실제 수치만 넣어, 사람이 메모하듯 짧게 요약합니다. 없는 숫자는 지어내지 않고, 기준시점이 다른 값은 합치지 않습니다.</p>
         <ul>
           <li>Gemini · OpenAI · Anthropic 중 선택</li>
@@ -207,7 +207,7 @@
 
   <section>
     <h2>데이터는 어떻게 들어오나</h2>
-    <p class="sub">세 가지 방식으로 데이터가 화면에 도달합니다. 무거운 통계는 미리 파일로, 클릭 즉시 필요한 것은 실시간으로, 요약은 AI가 맡습니다.</p>
+    <p class="sub">세 가지 방식으로 데이터가 화면에 도달합니다. 무거운 통계는 미리 파일로, 클릭 즉시 필요한 것은 실시간으로, 요약은 언어모델이 문장으로 옮깁니다.</p>
     <div class="flow">
       <div class="flow-row">
         <div class="flow-src"><span class="badge batch">배치</span><br><br>공공 통계<small>매출·점포·임대료·유동인구·폐업</small></div>
@@ -234,7 +234,7 @@
         </div>
       </div>
       <div class="flow-row">
-        <div class="flow-src"><span class="badge ai">AI</span><br><br>요약<small>선택한 모델</small></div>
+        <div class="flow-src"><span class="badge ai">요약</span><br><br>문장화<small>선택한 모델</small></div>
         <div class="pipe">
           <div class="node"><b>모인 수치</b><small>지점 데이터</small></div>
           <span class="arrow">→</span>
@@ -249,7 +249,7 @@
     <div class="note" style="margin-top:16px">
       <b>왜 나눴나</b> · 유동인구 같은 큰 통계는 매번 부르면 느려서 미리 파일로 내려받아 둡니다.
       반대로 "이 반경 안의 가게"는 자리마다 달라서 클릭할 때 실시간으로 부릅니다.
-      REST·AI 키는 모두 서버 함수 안에만 두고 화면에 노출하지 않습니다.
+      REST·모델 API 키는 모두 서버 함수 안에만 두고 화면에 노출하지 않습니다.
     </div>
   </section>
 
@@ -296,7 +296,7 @@
   </section>
 
   <section>
-    <h2>AI 설정 (운영자용)</h2>
+    <h2>요약 기능 설정 (운영자용)</h2>
     <p class="sub">아래 키 중 <b>하나 이상</b>을 서버 환경변수에 넣으면 그 제공자가 모델 선택에 나타납니다. 아무것도 안 고르면 자동으로 붙습니다.</p>
     <div class="kv">
       <code>GEMINI_API_KEY</code><span class="d">Google Gemini · aistudio.google.com/apikey</span>
