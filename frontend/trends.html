@@ -5,23 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>연도별 추이 · 서울 상권 인텔리전스</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F6FEB'/%3E%3Crect x='8' y='16' width='4' height='9' rx='1.2' fill='white'/%3E%3Crect x='14' y='11' width='4' height='14' rx='1.2' fill='white'/%3E%3Crect x='20' y='7' width='4' height='18' rx='1.2' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="theme.css">
 <style>
-  :root{ --bg:#0F1826; --panel:#132033; --line:#22334d; --ink:#eaf1fb; --mut:#93a7c4; --accent:#2A78D6; --soft:#0b1420;
-         --grid:#1c2b42; --axis:#3a4d6b; }
   /* 검증된 카테고리 팔레트(dataviz 스킬 기본, dark 컬럼 — 인접 CVD ΔE≥8) */
-  :root{ --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#4a9e4a; --s7:#9085e9; --s8:#e66767; }
-  *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.55}
-  a{color:#7db4f2}
-  header.top{position:sticky;top:0;z-index:5;background:rgba(15,24,38,.92);backdrop-filter:blur(8px);
+  header.top{position:sticky;top:0;z-index:5;background:var(--bg-blur);backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:12px 20px}
   header.top .brand{font-size:14px;font-weight:700}
   header.top .brand span{color:var(--mut);font-weight:400;font-size:12px}
   header.top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
   header.top nav a{font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 11px;border-radius:8px;background:var(--soft)}
   header.top nav a:hover{border-color:var(--accent)}
-  header.top nav a.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  header.top nav a.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
   .wrap{max-width:1040px;margin:0 auto;padding:22px 20px 90px}
   h1{font-size:22px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
   .sub{color:var(--mut);font-size:13.5px;margin:0 0 22px}
@@ -41,7 +35,7 @@
   svg text{fill:var(--mut);font-size:11px}
   svg text.dlabel{fill:var(--ink);font-size:11px;font-weight:600}
   svg text.ytitle{fill:var(--mut);font-size:11px}
-  .tip{position:absolute;pointer-events:none;background:#0a1220;border:1px solid var(--axis);border-radius:8px;
+  .tip{position:absolute;pointer-events:none;background:var(--neutral);border:1px solid var(--axis);border-radius:8px;
     padding:8px 10px;font-size:12px;color:var(--ink);opacity:0;transition:opacity .08s;z-index:3;min-width:120px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
   .tip .th{color:var(--mut);font-size:11px;margin-bottom:5px}
   .tip .row{display:flex;align-items:center;gap:6px;justify-content:space-between;white-space:nowrap}
@@ -206,7 +200,7 @@ function barChart(mount, tipEl, rows, valFmt, onClick){
     const g=el('g',{cursor:'pointer'});
     const x0=Math.min(zero,bx), w=Math.abs(bx-zero);
     g.appendChild(el('rect',{x:x0,y:y+3,width:Math.max(w,1),height:rowH-8,rx:3,
-      fill:r.color||(r.on?'var(--accent)':'#2b466a'),opacity:r.on?1:.85}));
+      fill:r.color||(r.on?'var(--accent)':'var(--line)'),opacity:r.on?1:.85}));
     const nm=el('text',{x:m.l-8,y:y+rowH/2+3,'text-anchor':'end'});nm.textContent=r.name;
     if(r.on)nm.setAttribute('fill','var(--ink)');svg.appendChild(nm);
     const vt=el('text',{x:bx+6,y:y+rowH/2+3});vt.textContent=valFmt(r.val);vt.setAttribute('fill','var(--ink)');

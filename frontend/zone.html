@@ -1,43 +1,15 @@
 <!doctype html>
-<html lang="ko" data-theme="light">
+<html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>상권 인텔리전스 — 사장님인사이트</title>
 <meta name="description" content="서울 상권 1,564곳의 수요·공급·변화·전망을 실측 데이터로 판독합니다.">
+<link rel="stylesheet" href="theme.css">
 <style>
-/* 디자인 토큰은 index.html 과 동일하게 맞춘다. 새 페이지가 '따로 노는' 느낌을 없애기 위함. */
-:root{
-  --bg:#FFFFFF; --ink:#111112; --ink2:#6E6E73; --ink3:#A1A1A6;
-  --line:#EAEAE5; --line-soft:#F2F2EE; --line-strong:#C9C9C2;
-  --surface:#F5F4F0; --surface-2:#DCDCD6; --neutral:#EFEFEA;
-  --accent:#1F6FEB; --accent-hover:#1552B8; --selection:#DDE7F8;
-  --good:#1F7A4D; --warn:#A8620F; --bad:#B3503C;
-}
-html[data-theme="dark"]{
-  --bg:#0E0F10; --ink:#ECECEA; --ink2:#9A9DA2; --ink3:#6E7278;
-  --line:#22252A; --line-soft:#191C20; --line-strong:#3A3E44;
-  --surface:#16181B; --surface-2:#282C31; --neutral:#23262A;
-  --accent:#6AA5F5; --accent-hover:#8FBEFA; --selection:#1E3352;
-  --good:#4E9E6A; --warn:#C88A3A; --bad:#C4604E; color-scheme:dark;
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;background:var(--bg)}
-body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;
-  color:var(--ink);word-break:keep-all;-webkit-font-smoothing:antialiased;line-height:1.55}
-/* 숫자는 고정폭(tabular)으로. 표에서 자릿수가 흔들리면 싸구려로 보인다. */
-.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
-a{color:var(--accent);text-decoration:none}
-a:hover{color:var(--accent-hover)}
-*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px;border:2px solid transparent;background-clip:content-box}
-::selection{background:var(--selection)}
-input,select,button{font-family:inherit;font-size:14px;color:var(--ink)}
-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A8F' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
-select option{background:var(--surface);color:var(--ink)}
+/* 색·폰트·스크롤바·select 는 theme.css(공용). 여기는 이 페이지 레이아웃만. */
+input,select,button{font-size:14px;color:var(--ink)}
+select{appearance:none;padding-right:28px}
 
 header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
 .hwrap{max-width:1120px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:18px}

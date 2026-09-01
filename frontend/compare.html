@@ -5,14 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>업종·자치구 세부 비교 · 서울 상권 인텔리전스</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F6FEB'/%3E%3Crect x='8' y='16' width='4' height='9' rx='1.2' fill='white'/%3E%3Crect x='14' y='11' width='4' height='14' rx='1.2' fill='white'/%3E%3Crect x='20' y='7' width='4' height='18' rx='1.2' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="theme.css">
 <script src="gu_rent_zone.js"></script>
 <style>
-  :root{ --bg:#0F1826; --panel:#132033; --line:#22334d; --ink:#eaf1fb; --mut:#93a7c4; --accent:#2A78D6; --amber:#E0973A; --green:#2FB27A; --soft:#0b1420; }
-  *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.55}
-  a{color:#7db4f2}
-  header.top{position:sticky;top:0;z-index:5;background:rgba(15,24,38,.92);backdrop-filter:blur(8px);
+  header.top{position:sticky;top:0;z-index:5;background:var(--bg-blur);backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:12px 20px}
   header.top .brand{font-size:14px;font-weight:700}
   header.top .brand span{color:var(--mut);font-weight:400;font-size:12px}
@@ -28,15 +24,15 @@
   .controls .grp{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
   .controls .col{flex:1 1 180px;min-width:150px}
   select,input[list],input[type=number]{width:100%;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:14px}
-  input[list]::placeholder,input[type=number]::placeholder{color:#5c6f8c}
+  input[list]::placeholder,input[type=number]::placeholder{color:var(--ink3)}
   .modes{display:flex;gap:8px;margin-bottom:16px}
   .mode{background:var(--soft);border:1px solid var(--line);color:var(--mut);font-weight:600;padding:8px 16px}
-  .mode.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .mode.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
   .chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
   .chip{background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:2px 9px;font-size:11.5px;color:var(--mut)}
   .gurow{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
   .gucol{flex:1 1 150px;min-width:130px}
-  button{cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600}
+  button{cursor:pointer;background:var(--accent);color:var(--on-accent);border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600}
   button.sec{background:var(--soft);border:1px solid var(--line);color:var(--ink);font-weight:500}
   .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 
@@ -48,7 +44,7 @@
   table.cmp tbody tr:last-child td{border-bottom:none}
   table.cmp td.num{font-variant-numeric:tabular-nums}
   table.cmp td .win{color:var(--green);font-weight:700}
-  table.cmp td.na{color:#5c6f8c}
+  table.cmp td.na{color:var(--ink3)}
   .scroll{overflow-x:auto;border-radius:12px}
   table.cmp tr.rkrow{cursor:pointer}
   table.cmp tr.rkrow:hover td,table.cmp tr.rkrow:hover th{background:var(--soft)}
@@ -66,13 +62,13 @@
   .bar .bf.g{background:var(--green)}
   .bar .bv{width:40px;flex:0 0 auto;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
   .gender{display:flex;height:20px;border-radius:6px;overflow:hidden;font-size:11px;font-weight:700}
-  .gender .m{background:#2A78D6;color:#fff;display:flex;align-items:center;justify-content:center}
-  .gender .f{background:#C65B87;color:#fff;display:flex;align-items:center;justify-content:center}
+  .gender .m{background:var(--male);color:var(--on-accent);display:flex;align-items:center;justify-content:center}
+  .gender .f{background:var(--female);color:var(--on-accent);display:flex;align-items:center;justify-content:center}
 
   .note{background:var(--soft);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:13px 15px;font-size:12.5px;color:var(--mut);margin-top:22px}
   .note b{color:var(--ink)}
   .empty{color:var(--mut);font-size:14px;padding:40px 10px;text-align:center}
-  .asof{color:#6f83a0;font-size:11px;margin-left:6px}
+  .asof{color:var(--ink3);font-size:11px;margin-left:6px}
 
   @media print{
     header.top,.controls,.actions{display:none!important}
@@ -319,7 +315,7 @@ function spark(vals,color){
     return `${x.toFixed(1)},${yy.toFixed(1)}`;
   }).filter(Boolean).join(' ');
   const up=v[v.length-1]>=v[0];
-  const c=color||(up?'#3E9E6E':'#C65B87');
+  const c=color||(up?'var(--good)':'var(--bad)');
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="vertical-align:middle"><polyline fill="none" stroke="${c}" stroke-width="1.6" points="${pts}"/></svg>`;
 }
 
@@ -610,14 +606,14 @@ function renderZones(){
   const miss=cols.filter(c=>!c.z).map(c=>c.nm);
   out.innerHTML=
     `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">상권</th>${th}</tr></thead><tbody>${body}</tbody></table></div>`+
-    (miss.length?`<div class="note" style="border-left-color:#C65B87;margin-top:14px">찾지 못한 이름: <b>${miss.join(', ')}</b> — 칸을 눌러 후보 목록에서 고르세요.</div>`:'')+
+    (miss.length?`<div class="note" style="border-left-color:var(--female);margin-top:14px">찾지 못한 이름: <b>${miss.join(', ')}</b> — 칸을 눌러 후보 목록에서 고르세요.</div>`:'')+
     `<div class="note" style="margin-top:14px">상권 요약은 <b>업종을 구분하지 않은 상권 전체 합계</b>입니다. 특정 업종만 상권끼리 비교하려면 위에서 <b>업종을 선택</b>하세요.</div>`;
 }
 
 // ── 상권 × 특정 업종 비교(zone_industry.json: 점포·매출·객단가) ──
 function renderZoneInd(cols, ind){
   const out=document.getElementById('out');
-  if(!ZI){out.innerHTML='<div class="note" style="border-left-color:#C65B87">상권×업종 세부 데이터(zone_industry.json)가 아직 없습니다. 다음 상권 갱신(heavy) 실행 후 채워집니다. 그전까지는 업종을 비우면 상권 전체 요약이 보입니다.</div>';return;}
+  if(!ZI){out.innerHTML='<div class="note" style="border-left-color:var(--female)">상권×업종 세부 데이터(zone_industry.json)가 아직 없습니다. 다음 상권 갱신(heavy) 실행 후 채워집니다. 그전까지는 업종을 비우면 상권 전체 요약이 보입니다.</div>';return;}
   const th=cols.map(c=>`<th>${c.z?c.z.nm:c.nm}</th>`).join('');
   // 각 상권에서 이 업종 행 찾기(zone_industry 는 cd 로 키, 매출 상위 TOP_N 만 담김)
   const find=c=>{
@@ -647,7 +643,7 @@ function renderZoneInd(cols, ind){
   out.innerHTML=
     `<div class="sub" style="margin-bottom:10px">업종: <b>${ind}</b> · 상권별 비교</div>`+
     `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">${ind}</th>${th}</tr></thead><tbody>${body}</tbody></table></div>`+
-    (miss.length?`<div class="note" style="border-left-color:#C65B87;margin-top:14px">이 업종이 상위 목록에 없는 상권: <b>${miss.join(', ')}</b> — 해당 상권에선 <b>${ind}</b>가 매출 상위권 밖이라 세부가 생략됐습니다(점포·매출이 작다는 뜻).</div>`:'')+
+    (miss.length?`<div class="note" style="border-left-color:var(--female);margin-top:14px">이 업종이 상위 목록에 없는 상권: <b>${miss.join(', ')}</b> — 해당 상권에선 <b>${ind}</b>가 매출 상위권 밖이라 세부가 생략됐습니다(점포·매출이 작다는 뜻).</div>`:'')+
     `<div class="note" style="margin-top:14px">객단가는 매출÷결제건수 실측입니다. 시간대·요일·성별·연령 세분은 상권별로는 제공하지 않고(용량), <b>서울 전체 업종 평균</b>으로 대시보드에 있습니다.</div>`;
 }
 
@@ -686,14 +682,14 @@ function renderRent(){
   // 임대료: 낮을수록 '유리'로 강조(비용) — dir='low'. 만원/㎡라 소수1자리로.
   body+=rowNum('임대료','만원/㎡·월 · 낮을수록 강조', z=>z.rent, v=>v.toFixed(1), 'low');
   body+=rowNum('공실률','% · 낮을수록 강조', z=>z.vacancy, v=>((Math.round(v*10)/10)+'%'), 'low');
-  body+=rowSpark('임대료 추이','rent_trend','#C6803E');
-  body+=rowSpark('공실률 추이','vacancy_trend','#5B84C6');
+  body+=rowSpark('임대료 추이','rent_trend','var(--warn)');
+  body+=rowSpark('공실률 추이','vacancy_trend','var(--accent)');
 
   const miss=cols.filter(c=>!c.z).map(c=>c.nm);
   out.innerHTML=
     `<div class="sub" style="margin-bottom:10px">서울 평균 임대료 <b>${S.rent}</b>만원/㎡ · 공실률 <b>${S.vacancy}%</b> (${(RENT.quarters||[]).slice(-1)[0]||''})</div>`+
     `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">임대 지표</th>${th}</tr></thead><tbody>${body}</tbody></table></div>`+
-    (miss.length?`<div class="note" style="border-left-color:#C65B87;margin-top:14px">찾지 못한 이름: <b>${miss.join(', ')}</b> — 칸을 눌러 후보 목록에서 고르세요.</div>`:'')+
+    (miss.length?`<div class="note" style="border-left-color:var(--female);margin-top:14px">찾지 못한 이름: <b>${miss.join(', ')}</b> — 칸을 눌러 후보 목록에서 고르세요.</div>`:'')+
     `<div class="note" style="margin-top:14px">${RENT.source}. 임대료는 <b>중대형 상가 ㎡당 월 임대료(만원)</b>, 공실률은 %. 이 상권 구분은 <b>한국부동산원 30여개 권역</b>이라 서울시 상권분석(강남역·홍대 등 1564개)과는 다른 지리입니다. 임대료가 낮고 공실률이 높으면 <b>비용은 싸지만 수요가 약할 수</b> 있어 매출 지표와 함께 보세요.</div>`;
 }
 </script>

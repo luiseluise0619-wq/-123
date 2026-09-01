@@ -1,0 +1,135 @@
+/* ─────────────────────────────────────────────────────────────
+   사장님인사이트 — 공용 디자인 토큰 (색/타이포 한 곳)
+
+   왜 파일 하나로 뺐나
+     index·zone·mvp 는 흰색, compare·building·about·trends 는 남색이었다.
+     같은 서비스인데 페이지를 넘길 때마다 다른 사이트처럼 보였다.
+     각 페이지가 자기 :root 를 따로 갖고 있으면 앞으로도 계속 어긋난다.
+     (자치구→임대료상권 매핑표가 두 곳에 복붙돼 있던 것과 같은 종류의 문제다.)
+
+   쓰는 법 — 페이지의 <style> **앞에** 놓는다. 뒤에 두면 페이지 규칙을 덮어쓴다.
+     <link rel="stylesheet" href="theme.css">
+     <style> ...이 페이지만의 레이아웃... </style>
+
+   테마 3상태
+     ① 아무 표시 없음  → 사용자 OS 설정을 따름(prefers-color-scheme)
+     ② data-theme="light" → 강제 라이트
+     ③ data-theme="dark"  → 강제 다크
+   ───────────────────────────────────────────────────────────── */
+
+:root{
+  /* 바탕·표면 */
+  --bg:#FFFFFF;            /* 페이지 바탕 */
+  --bg-blur:rgba(255,255,255,.92);  /* 고정 헤더 반투명 */
+  --surface:#F5F4F0;       /* 카드·패널 */
+  --surface-2:#DCDCD6;     /* 눌린 상태·트랙 */
+  --neutral:#EFEFEA;       /* 입력칸처럼 살짝 들어간 면 */
+
+  /* 글자 — 숫자가 클수록 흐리다 */
+  --ink:#111112;           /* 본문 */
+  --ink2:#6E6E73;          /* 보조 설명 */
+  --ink3:#A1A1A6;          /* 캡션·비활성 */
+
+  /* 선 */
+  --line:#EAEAE5;
+  --line-soft:#F2F2EE;
+  --line-strong:#C9C9C2;
+
+  /* 강조·판정 */
+  --accent:#1F6FEB;
+  --accent-hover:#1552B8;
+  --on-accent:#FFFFFF;     /* accent 배경 위 글자색 */
+  --selection:#DDE7F8;
+  --good:#1F7A4D;
+  --warn:#A8620F;
+  --bad:#B3503C;
+  /* 판정 카드 배경 — 글자색과 같은 계열의 아주 옅은 면 */
+  --good-bg:#E7F3EC; --warn-bg:#F7EEE0; --bad-bg:#F7E8E4;
+
+  /* 데이터 표기용 — 성별은 관례색을 쓰되 명도를 맞춰 라이트에서도 읽히게 */
+  --male:#2A6FC4;
+  --female:#B4527A;
+  /* 계열 색(연도별 추이 등 여러 선을 겹칠 때). 인접한 색끼리 색상차를 벌려 둠 */
+  --s1:#1F6FEB; --s2:#1F7A4D; --s3:#A8620F; --s4:#8A4FBF;
+  --s5:#B3503C; --s6:#0F7B8A; --s7:#8A6D1F; --s8:#6E6E73;
+  --axis:var(--line-strong);   /* 차트 축선 */
+  --grid:var(--line);          /* 차트 격자 — 축보다 흐려야 데이터가 앞에 온다 */
+
+  /* 예전 페이지들이 쓰던 이름 → 새 토큰 별칭.
+     기존 CSS 규칙을 한 줄씩 고치지 않아도 색만 갈아끼워진다. */
+  --panel:var(--surface);
+  --mut:var(--ink2);
+  --soft:var(--neutral);
+  --amber:var(--warn);
+  --green:var(--good);
+
+  color-scheme:light;
+}
+
+/* OS 가 다크인데 사용자가 라이트를 명시하지 않은 경우 */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E0F10; --bg-blur:rgba(14,15,16,.9);
+    --surface:#16181B; --surface-2:#282C31; --neutral:#23262A;
+    --ink:#ECECEA; --ink2:#9A9DA2; --ink3:#6E7278;
+    --line:#22252A; --line-soft:#191C20; --line-strong:#3A3E44;
+    --accent:#6AA5F5; --accent-hover:#8FBEFA; --on-accent:#0E0F10;
+    --selection:#1E3352;
+    --good:#4E9E6A; --warn:#C88A3A; --bad:#C4604E;
+    --good-bg:#16261D; --warn-bg:#2A2113; --bad-bg:#2C1B17;
+    --male:#6AA5F5; --female:#D883A6;
+    --s1:#6AA5F5; --s2:#4E9E6A; --s3:#C88A3A; --s4:#B18CE0;
+    --s5:#C4604E; --s6:#4FB3C1; --s7:#C0A653; --s8:#9A9DA2;
+    color-scheme:dark;
+  }
+}
+/* 사용자가 직접 다크를 고른 경우 — OS 설정보다 우선 */
+:root[data-theme="dark"]{
+  --bg:#0E0F10; --bg-blur:rgba(14,15,16,.9);
+  --surface:#16181B; --surface-2:#282C31; --neutral:#23262A;
+  --ink:#ECECEA; --ink2:#9A9DA2; --ink3:#6E7278;
+  --line:#22252A; --line-soft:#191C20; --line-strong:#3A3E44;
+  --accent:#6AA5F5; --accent-hover:#8FBEFA; --on-accent:#0E0F10;
+  --selection:#1E3352;
+  --good:#4E9E6A; --warn:#C88A3A; --bad:#C4604E;
+  --good-bg:#16261D; --warn-bg:#2A2113; --bad-bg:#2C1B17;
+  --male:#6AA5F5; --female:#D883A6;
+  --s1:#6AA5F5; --s2:#4E9E6A; --s3:#C88A3A; --s4:#B18CE0;
+  --s5:#C4604E; --s6:#4FB3C1; --s7:#C0A653; --s8:#9A9DA2;
+  color-scheme:dark;
+}
+
+/* ── 공통 기본값 ── */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{
+  color:var(--ink);
+  font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,"Malgun Gothic",sans-serif;
+  line-height:1.55;
+  word-break:keep-all;              /* 한글이 단어 중간에서 잘리지 않게 */
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover)}
+::selection{background:var(--selection)}
+input,select,button,textarea{font-family:inherit}
+
+/* 숫자는 고정폭으로 — 표에서 자릿수가 흔들리면 싸구려로 보인다 */
+.num,td.num,.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+/* OS 기본 스크롤바(두껍고 회색) 대신 얇고 테마에 맞는 것 */
+*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--ink3);background-clip:content-box}
+
+/* select 은 appearance:none 을 주면 화살표가 사라진다. 직접 그려 넣는다. */
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A8F' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+}
+/* 열린 드롭다운 목록도 테마를 따르게(다크에서 흰 목록이 뜨는 것 방지) */
+select option{background:var(--surface);color:var(--ink)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
