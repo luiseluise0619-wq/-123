@@ -154,6 +154,7 @@ def main():
     geo = load("seoul_dong.geojson")
 
     # 1) 상권 → 행정동/자치구 매핑 (좌표 → 폴리곤)
+    zmap = {z["cd"]: z for z in zones}
     print("1) 상권 위치 → 자치구/행정동 매핑")
     gu_of, dong_of, adm_of = {}, {}, {}
     if geo:
@@ -249,7 +250,6 @@ def main():
     #   업종 구성 = 코사인 유사도(비중 벡터라 규모 영향 없음)
     #   규모/수요/생존 = z-score 유클리드 → 1/(1+d) 로 유사도화
     print("4) 유사 상권 계산 (업종 구성 60% + 규모·수요 40%)")
-    zmap = {z["cd"]: z for z in zones}
     keys, feats, mixes = [], [], []
     for cd, o in out.items():
         z = zmap.get(cd)
@@ -343,6 +343,106 @@ def main():
     size = os.path.getsize(OUT) / 1024
     nweak = sum(1 for o in out.values() if o.get("weak"))
     print(f"저장: {OUT} · 상권 {len(out)} (비교불가 {nweak}) · {size:.0f}KB")
+
+
+    # ── 7) 업종별 기회 (Retail Gap / 시장 공백) ─────────────────────────
+    #
+    # 지금까지의 gap 은 '상권 전체' 기준이라 "여기 괜찮아?"에만 답한다.
+    # 사용자가 진짜 묻는 건 "어디서 '카페'를 하면 기회가 있나?" 이다.
+    # 같은 상권도 업종에 따라 답이 완전히 달라진다.
+    #
+    # 기회의 정의 — 세 가지가 동시에 맞아야 한다:
+    #   ① 수요가 있다            → 상권 수요 백분위(dem)
+    #   ② 그 업종 점포가 적다    → 같은 업종 점포수 백분위의 반대
+    #   ③ 있는 점포는 잘 번다    → 점포당 매출이 서울 중위 대비 높음
+    #
+    # ③이 중요한 이유: 점포가 없는 게 '기회'가 아니라 '그 업종이 여기서 안 되는 것'일 수 있다.
+    # 그래서 점포가 거의 없어 ③을 확인할 수 없는 곳은 점수를 매기지 않고
+    # 'unproven'(미개척·확인 필요)으로 따로 표시한다. 지어내지 않는다.
+    print("5) 업종별 기회(시장 공백) 계산")
+    OPP_W = {"dem": 0.45, "scarce": 0.35, "perf": 0.20}   # 가정 — 결과 파일에 그대로 기록
+    SHRINK_K = 5              # 축소추정 강도(점포 수가 이만큼일 때 절반 반영)
+    MIN_VERIFY = 3            # 이 미만이면 '그 업종이 되는 동네인지' 검증 불가
+
+    # 업종별로 (상권 점포수) / (점포당 매출) 백분위를 따로 낸다.
+    ind_store, ind_perf = {}, {}
+    for cd, o in out.items():
+        if o.get("weak"):
+            continue
+        for row in (zi.get(cd) or {}).get("rows", []):
+            ii, st, sl = row[0], row[1], row[2]
+            ind_store.setdefault(ii, {})[cd] = float(st or 0)
+            if st and st > 0 and sl:
+                ind_perf.setdefault(ii, {})[cd] = sl / st
+
+    store_rank = {ii: pct_ranks(v) for ii, v in ind_store.items() if len(v) >= 8}
+    perf_rank  = {ii: pct_ranks(v) for ii, v in ind_perf.items() if len(v) >= 8}
+
+    opp = {}
+    for ii, sr in store_rank.items():
+        name = inds[ii] if ii < len(inds) else str(ii)
+        pr = perf_rank.get(ii, {})
+        ranked, unproven = [], []
+        for cd, s_pct in sr.items():
+            o = out.get(cd)
+            if not o:
+                continue
+            n_st = ind_store[ii].get(cd, 0)
+            row = {"cd": cd, "nm": (zmap.get(cd) or {}).get("nm"),
+                   "gu": o.get("gu"), "dem": round(o["dem"]), "stores": int(n_st)}
+            if n_st < MIN_VERIFY:
+                # 수요는 있는데 그 업종이 거의 없다 → 공백일 수도, 안 되는 동네일 수도.
+                if o["dem"] >= 70:
+                    row["why"] = f"수요 상위인데 이 업종 점포가 {int(n_st)}개뿐"
+                    unproven.append(row)
+                continue
+            p_pct = pr.get(cd)
+            if p_pct is None:
+                continue
+            # 점포 3곳의 '점포당 매출'과 30곳의 그것을 같은 무게로 믿으면 안 된다.
+            # 표본이 적을수록 서울 중간(50) 쪽으로 끌어당긴다(축소추정).
+            #   n=3  → 3/(3+5)=0.38 만큼만 반영   n=30 → 0.86 만큼 반영
+            # 이렇게 하면 "점포 3곳인데 매출 99등" 같은 우연이 1위를 먹지 못한다.
+            shrink = n_st / (n_st + SHRINK_K)
+            p_adj = 50.0 + (p_pct - 50.0) * shrink
+            score = (OPP_W["dem"] * o["dem"]
+                     + OPP_W["scarce"] * (100.0 - s_pct)
+                     + OPP_W["perf"] * p_adj)
+            # 점포 3~4개로 낸 '점포당 매출'은 한두 곳에 크게 흔들린다.
+            # 점수를 감추지는 않되 신뢰도를 함께 내보내 화면에서 구분해 쓴다.
+            conf = "높음" if n_st >= 10 else ("보통" if n_st >= 5 else "낮음")
+            row.update({"score": round(score, 1), "scarce": round(100.0 - s_pct),
+                        "perf": round(p_adj), "perf_raw": round(p_pct), "psales": round(ind_perf[ii][cd]),
+                        "conf": conf})
+            ranked.append(row)
+        ranked.sort(key=lambda r: -r["score"])
+        unproven.sort(key=lambda r: -r["dem"])
+        if ranked:
+            opp[name] = {"top": ranked[:20], "unproven": unproven[:8],
+                         "n_zones": len(ranked),
+                         "seoul_med": seoul_med.get(name)}
+    print(f"   업종 {len(opp)}개 · 상권 랭킹 생성")
+
+    OPPOUT = os.path.join(FE, "zone_opportunity.json")
+    with open(OPPOUT, "w", encoding="utf-8") as f:
+        json.dump({"updated": res["updated"], "quarter": res["quarter"],
+                   "weights": OPP_W, "min_verify": MIN_VERIFY, "shrink_k": SHRINK_K,
+                   "note": ("업종별 시장 공백(Retail Gap). score = 수요 45% + 희소성 35% + 점포당매출 20%. "
+                            "가중치는 가정이며 백분위는 상업 규모가 있는 상권(weak=0) 안에서만 계산했다. "
+                            f"unproven 은 수요 상위(70+)인데 그 업종 점포가 {MIN_VERIFY}개 미만이라 "
+                            "'되는 동네인지' 검증할 수 없는 곳 — 점수를 매기지 않는다."),
+                   "ind": opp}, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"저장: {OPPOUT} · {os.path.getsize(OPPOUT)/1024:.0f}KB")
+
+    for probe in ("커피-음료", "한식음식점", "치킨전문점"):
+        d = opp.get(probe)
+        if not d:
+            continue
+        print(f"   [{probe}] 기회 상권 TOP3:")
+        for r in d["top"][:3]:
+            nm = (zmap.get(r["cd"]) or {}).get("nm", r["cd"])
+            print(f"      {r['gu'] or '?'} {nm} · {r['score']}점 "
+                  f"(수요 {r['dem']} / 희소 {r['scarce']} / 매출 {r['perf']}) · 점포 {r['stores']}")
 
     real = {cd: o for cd, o in out.items() if not o.get("weak")}
     print(f"기회(수요>공급) 상위 5 — 점포 {MIN_STORES}개 이상 상권만:")

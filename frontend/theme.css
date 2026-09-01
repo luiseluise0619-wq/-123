@@ -1,135 +1,311 @@
 /* ─────────────────────────────────────────────────────────────
-   사장님인사이트 — 공용 디자인 토큰 (색/타이포 한 곳)
+   사장님인사이트 — 디자인 시스템 (토큰 + 최소 컴포넌트)
 
-   왜 파일 하나로 뺐나
-     index·zone·mvp 는 흰색, compare·building·about·trends 는 남색이었다.
-     같은 서비스인데 페이지를 넘길 때마다 다른 사이트처럼 보였다.
-     각 페이지가 자기 :root 를 따로 갖고 있으면 앞으로도 계속 어긋난다.
-     (자치구→임대료상권 매핑표가 두 곳에 복붙돼 있던 것과 같은 종류의 문제다.)
+   왜 파일 하나인가
+     페이지마다 :root 를 따로 갖고 있으면 색이 계속 어긋난다.
+     여기 한 곳만 고치면 전 페이지가 따라온다.
 
-   쓰는 법 — 페이지의 <style> **앞에** 놓는다. 뒤에 두면 페이지 규칙을 덮어쓴다.
+   쓰는 법 — 페이지의 <style> **앞에** 둔다(뒤에 두면 페이지 규칙을 덮어씀).
      <link rel="stylesheet" href="theme.css">
      <style> ...이 페이지만의 레이아웃... </style>
 
    테마 3상태
-     ① 아무 표시 없음  → 사용자 OS 설정을 따름(prefers-color-scheme)
-     ② data-theme="light" → 강제 라이트
-     ③ data-theme="dark"  → 강제 다크
+     ① 표시 없음 → OS 설정을 따름  ② data-theme="light"  ③ data-theme="dark"
    ───────────────────────────────────────────────────────────── */
 
 :root{
-  /* 바탕·표면 */
-  --bg:#FFFFFF;            /* 페이지 바탕 */
-  --bg-blur:rgba(255,255,255,.92);  /* 고정 헤더 반투명 */
-  --surface:#F5F4F0;       /* 카드·패널 */
-  --surface-2:#DCDCD6;     /* 눌린 상태·트랙 */
-  --neutral:#EFEFEA;       /* 입력칸처럼 살짝 들어간 면 */
+  /* ── 1. 색 ────────────────────────────────────────────────
+     원칙: 흰/검/회색이 기본. 브랜드색 1개. 의미색은 상태에만.
+     브랜드는 딥 네이비다. 토스(밝은 파랑)·당근(주황)과 겹치지 않고,
+     증가(초록)/감소(빨강) 의미색과도 색상이 충돌하지 않는다.
+     ※ Primary 버튼은 브랜드색이 아니라 '먹색'을 쓴다.
+       색 버튼이 화면에 여러 개 뜨면 무엇이 중요한지 사라진다. */
+  --brand:#173A8A;
+  --brand-hover:#102A66;
+  --brand-weak:#EAEFF9;       /* 브랜드색의 아주 옅은 면(선택 상태 등) */
+  --on-brand:#FFFFFF;
 
-  /* 글자 — 숫자가 클수록 흐리다 */
-  --ink:#111112;           /* 본문 */
-  --ink2:#6E6E73;          /* 보조 설명 */
-  --ink3:#A1A1A6;          /* 캡션·비활성 */
+  --bg:#FFFFFF;
+  --bg-blur:rgba(255,255,255,.86);
+  --surface:#FAFAF8;          /* 섹션 구분용 아주 옅은 면 */
+  --surface-2:#F0F0EC;        /* 트랙·눌림 */
+  --neutral:#F5F5F1;          /* 입력칸 */
 
-  /* 선 */
-  --line:#EAEAE5;
-  --line-soft:#F2F2EE;
-  --line-strong:#C9C9C2;
+  --ink:#0F0F10;              /* 본문·제목 */
+  --ink2:#5F6066;             /* 보조 설명 */
+  --ink3:#96979D;             /* 캡션·비활성 */
+  --on-ink:#FFFFFF;           /* 먹색 버튼 위 글자 */
 
-  /* 강조·판정 */
-  --accent:#1F6FEB;
-  --accent-hover:#1552B8;
-  --on-accent:#FFFFFF;     /* accent 배경 위 글자색 */
-  --selection:#DDE7F8;
-  --good:#1F7A4D;
-  --warn:#A8620F;
-  --bad:#B3503C;
-  /* 판정 카드 배경 — 글자색과 같은 계열의 아주 옅은 면 */
-  --good-bg:#E7F3EC; --warn-bg:#F7EEE0; --bad-bg:#F7E8E4;
+  --line:#EBEBE7;
+  --line-soft:#F4F4F1;
+  --line-strong:#C7C7C1;
 
-  /* 데이터 표기용 — 성별은 관례색을 쓰되 명도를 맞춰 라이트에서도 읽히게 */
-  --male:#2A6FC4;
-  --female:#B4527A;
-  /* 계열 색(연도별 추이 등 여러 선을 겹칠 때). 인접한 색끼리 색상차를 벌려 둠 */
-  --s1:#1F6FEB; --s2:#1F7A4D; --s3:#A8620F; --s4:#8A4FBF;
-  --s5:#B3503C; --s6:#0F7B8A; --s7:#8A6D1F; --s8:#6E6E73;
-  --axis:var(--line-strong);   /* 차트 축선 */
-  --grid:var(--line);          /* 차트 격자 — 축보다 흐려야 데이터가 앞에 온다 */
+  --selection:#E3EAF7;
 
-  /* 예전 페이지들이 쓰던 이름 → 새 토큰 별칭.
-     기존 CSS 규칙을 한 줄씩 고치지 않아도 색만 갈아끼워진다. */
-  --panel:var(--surface);
-  --mut:var(--ink2);
-  --soft:var(--neutral);
-  --amber:var(--warn);
-  --green:var(--good);
+  /* 의미색 — 상태 표현에만. 숫자마다 색을 다르게 주지 않는다. */
+  --up:#136B45;               /* 증가·긍정 */
+  --down:#A8453A;             /* 감소·부정 */
+  --warn:#94590E;             /* 주의 */
+  --up-weak:#E9F3ED; --down-weak:#F8EAE7; --warn-weak:#F7EFE1;
+
+  /* 차트 — 실측은 먹색, 전망은 브랜드색(점선). 계열이 여럿일 때만 s1~s6 */
+  --axis:#C7C7C1; --grid:#F0F0EC;
+  --s1:#173A8A; --s2:#136B45; --s3:#94590E;
+  --s4:#6B4E9E; --s5:#A8453A; --s6:#0F6B77;
+  --male:#2A6FC4; --female:#B4527A;
+
+  /* ── 2. 타이포 ──────────────────────────────────────────
+     6단계 고정. 한 화면에 이보다 많은 크기를 쓰지 않는다. */
+  --f-display:clamp(28px,4.2vw,38px);  --lh-display:1.2;  --ls-display:-.032em;
+  --f-title:clamp(21px,2.6vw,26px);    --lh-title:1.3;    --ls-title:-.026em;
+  --f-head:17px;                       --lh-head:1.4;     --ls-head:-.018em;
+  --f-body:15px;                       --lh-body:1.62;    --ls-body:-.008em;
+  --f-sub:13.5px;                      --lh-sub:1.55;
+  --f-cap:12px;                        --lh-cap:1.45;
+  /* 수치 하나만 크게 보여줄 때 */
+  --f-metric:clamp(34px,5.4vw,52px);
+
+  /* ── 3. 여백 — 4pt 배수. 여백은 장식이 아니라 정보 구조다 ── */
+  --sp-1:4px;  --sp-2:8px;  --sp-3:12px; --sp-4:16px;
+  --sp-5:24px; --sp-6:32px; --sp-7:48px; --sp-8:64px; --sp-9:96px;
+  --gutter:20px;              /* 좌우 여백(모바일) */
+  --maxw:960px;               /* 본문 최대폭 — 넓으면 읽기 힘들다 */
+
+  /* ── 4. 모서리·그림자 ── */
+  --r-sm:8px; --r-md:12px; --r-lg:18px; --r-full:999px;
+  /* 그림자는 '떠 있는 것'에만. 카드마다 그림자를 주면 화면이 지저분해진다. */
+  --shadow-pop:0 6px 24px rgba(15,15,16,.10), 0 1px 3px rgba(15,15,16,.06);
+  --shadow-sheet:0 -8px 32px rgba(15,15,16,.14);
+
+  /* ── 5. 모션 — 상태 변화를 이해시킬 때만 ── */
+  --ease:cubic-bezier(.32,.72,0,1);
+  --t-fast:140ms; --t-base:200ms; --t-sheet:280ms;
 
   color-scheme:light;
 }
 
-/* OS 가 다크인데 사용자가 라이트를 명시하지 않은 경우 */
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#0E0F10; --bg-blur:rgba(14,15,16,.9);
-    --surface:#16181B; --surface-2:#282C31; --neutral:#23262A;
-    --ink:#ECECEA; --ink2:#9A9DA2; --ink3:#6E7278;
-    --line:#22252A; --line-soft:#191C20; --line-strong:#3A3E44;
-    --accent:#6AA5F5; --accent-hover:#8FBEFA; --on-accent:#0E0F10;
-    --selection:#1E3352;
-    --good:#4E9E6A; --warn:#C88A3A; --bad:#C4604E;
-    --good-bg:#16261D; --warn-bg:#2A2113; --bad-bg:#2C1B17;
-    --male:#6AA5F5; --female:#D883A6;
-    --s1:#6AA5F5; --s2:#4E9E6A; --s3:#C88A3A; --s4:#B18CE0;
-    --s5:#C4604E; --s6:#4FB3C1; --s7:#C0A653; --s8:#9A9DA2;
+    --brand:#8FAEF0; --brand-hover:#B0C6F5; --brand-weak:#16233F; --on-brand:#0B0C0D;
+    --bg:#0B0C0D; --bg-blur:rgba(11,12,13,.86);
+    --surface:#131416; --surface-2:#232529; --neutral:#17191C;
+    --ink:#EDEDEB; --ink2:#9B9DA3; --ink3:#6C6F75; --on-ink:#0B0C0D;
+    --line:#212328; --line-soft:#17191D; --line-strong:#383B41;
+    --selection:#1B2C4D;
+    --up:#5BA87A; --down:#CE6C5C; --warn:#C08A3E;
+    --up-weak:#13251C; --down-weak:#2A1916; --warn-weak:#271E10;
+    --axis:#383B41; --grid:#1D1F23;
+    --s1:#8FAEF0; --s2:#5BA87A; --s3:#C08A3E;
+    --s4:#A98FD6; --s5:#CE6C5C; --s6:#4FA8B5;
+    --male:#8FAEF0; --female:#D883A6;
+    --shadow-pop:0 6px 24px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.4);
+    --shadow-sheet:0 -8px 32px rgba(0,0,0,.55);
     color-scheme:dark;
   }
 }
-/* 사용자가 직접 다크를 고른 경우 — OS 설정보다 우선 */
 :root[data-theme="dark"]{
-  --bg:#0E0F10; --bg-blur:rgba(14,15,16,.9);
-  --surface:#16181B; --surface-2:#282C31; --neutral:#23262A;
-  --ink:#ECECEA; --ink2:#9A9DA2; --ink3:#6E7278;
-  --line:#22252A; --line-soft:#191C20; --line-strong:#3A3E44;
-  --accent:#6AA5F5; --accent-hover:#8FBEFA; --on-accent:#0E0F10;
-  --selection:#1E3352;
-  --good:#4E9E6A; --warn:#C88A3A; --bad:#C4604E;
-  --good-bg:#16261D; --warn-bg:#2A2113; --bad-bg:#2C1B17;
-  --male:#6AA5F5; --female:#D883A6;
-  --s1:#6AA5F5; --s2:#4E9E6A; --s3:#C88A3A; --s4:#B18CE0;
-  --s5:#C4604E; --s6:#4FB3C1; --s7:#C0A653; --s8:#9A9DA2;
+  --brand:#8FAEF0; --brand-hover:#B0C6F5; --brand-weak:#16233F; --on-brand:#0B0C0D;
+  --bg:#0B0C0D; --bg-blur:rgba(11,12,13,.86);
+  --surface:#131416; --surface-2:#232529; --neutral:#17191C;
+  --ink:#EDEDEB; --ink2:#9B9DA3; --ink3:#6C6F75; --on-ink:#0B0C0D;
+  --line:#212328; --line-soft:#17191D; --line-strong:#383B41;
+  --selection:#1B2C4D;
+  --up:#5BA87A; --down:#CE6C5C; --warn:#C08A3E;
+  --up-weak:#13251C; --down-weak:#2A1916; --warn-weak:#271E10;
+  --axis:#383B41; --grid:#1D1F23;
+  --s1:#8FAEF0; --s2:#5BA87A; --s3:#C08A3E;
+  --s4:#A98FD6; --s5:#CE6C5C; --s6:#4FA8B5;
+  --male:#8FAEF0; --female:#D883A6;
+  --shadow-pop:0 6px 24px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.4);
+  --shadow-sheet:0 -8px 32px rgba(0,0,0,.55);
   color-scheme:dark;
 }
 
-/* ── 공통 기본값 ── */
+/* 예전 이름 → 새 토큰 별칭. 아직 안 고친 페이지가 조용히 깨지지 않게 남겨 둔다.
+   새 화면에서는 쓰지 말 것. */
+:root{
+  --accent:var(--brand); --accent-hover:var(--brand-hover); --on-accent:var(--on-brand);
+  --good:var(--up); --bad:var(--down);
+  --good-bg:var(--up-weak); --bad-bg:var(--down-weak); --warn-bg:var(--warn-weak);
+  --panel:var(--surface); --mut:var(--ink2); --soft:var(--neutral);
+  --amber:var(--warn); --green:var(--up);
+  --s7:var(--ink2); --s8:var(--ink3);
+}
+
+/* ═══ 기본 ═══ */
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg)}
 body{
   color:var(--ink);
   font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,"Malgun Gothic",sans-serif;
-  line-height:1.55;
-  word-break:keep-all;              /* 한글이 단어 중간에서 잘리지 않게 */
-  -webkit-font-smoothing:antialiased;
+  font-size:var(--f-body); line-height:var(--lh-body); letter-spacing:var(--ls-body);
+  word-break:keep-all;                 /* 한글이 단어 중간에서 잘리지 않게 */
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
 }
-a{color:var(--accent);text-decoration:none}
-a:hover{color:var(--accent-hover)}
+a{color:var(--brand);text-decoration:none}
+a:hover{color:var(--brand-hover)}
 ::selection{background:var(--selection)}
-input,select,button,textarea{font-family:inherit}
+input,select,button,textarea{font-family:inherit;font-size:inherit;color:var(--ink)}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:var(--r-sm)}
 
-/* 숫자는 고정폭으로 — 표에서 자릿수가 흔들리면 싸구려로 보인다 */
+/* 숫자는 고정폭 — 표에서 자릿수가 흔들리면 싸구려로 보인다 */
 .num,td.num,.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 
-/* OS 기본 스크롤바(두껍고 회색) 대신 얇고 테마에 맞는 것 */
 *{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px;border:2px solid transparent;background-clip:content-box}
 ::-webkit-scrollbar-thumb:hover{background:var(--ink3);background-clip:content-box}
 
-/* select 은 appearance:none 을 주면 화살표가 사라진다. 직접 그려 넣는다. */
 select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A8F' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 10px center;
 }
-/* 열린 드롭다운 목록도 테마를 따르게(다크에서 흰 목록이 뜨는 것 방지) */
 select option{background:var(--surface);color:var(--ink)}
 
+/* ═══ 타이포 유틸 — 이 6개 밖의 크기를 쓰지 않는다 ═══ */
+.t-display{font-size:var(--f-display);line-height:var(--lh-display);letter-spacing:var(--ls-display);font-weight:700;margin:0}
+.t-title{font-size:var(--f-title);line-height:var(--lh-title);letter-spacing:var(--ls-title);font-weight:700;margin:0}
+.t-head{font-size:var(--f-head);line-height:var(--lh-head);letter-spacing:var(--ls-head);font-weight:600;margin:0}
+.t-body{font-size:var(--f-body);line-height:var(--lh-body);margin:0}
+.t-sub{font-size:var(--f-sub);line-height:var(--lh-sub);color:var(--ink2);margin:0}
+.t-cap{font-size:var(--f-cap);line-height:var(--lh-cap);color:var(--ink3);margin:0}
+/* 화면에서 '가장 중요한 숫자 하나'에만 */
+.t-metric{font-size:var(--f-metric);line-height:1.02;letter-spacing:-.04em;font-weight:700;
+  font-variant-numeric:tabular-nums;margin:0}
+
+/* ═══ 레이아웃 ═══ */
+.wrap{max-width:var(--maxw);margin:0 auto;padding-left:var(--gutter);padding-right:var(--gutter)}
+/* 섹션 사이 여백이 곧 정보 구조다. 카드 대신 이걸 쓴다. */
+.sec{padding:var(--sp-7) 0}
+.sec + .sec{border-top:1px solid var(--line)}
+.stack>*+*{margin-top:var(--sp-3)}
+.stack-lg>*+*{margin-top:var(--sp-5)}
+
+/* ═══ 버튼 — 계층 3단계. 한 화면에 Primary 는 하나만 ═══ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  height:48px;padding:0 var(--sp-5);border-radius:var(--r-md);border:1px solid transparent;
+  font-size:var(--f-body);font-weight:600;letter-spacing:-.01em;cursor:pointer;
+  background:none;color:var(--ink);transition:background var(--t-fast) var(--ease),
+  border-color var(--t-fast) var(--ease),opacity var(--t-fast) var(--ease)}
+.btn:active{transform:translateY(.5px)}
+.btn-primary{background:var(--ink);color:var(--on-ink)}
+.btn-primary:hover{opacity:.86}
+.btn-secondary{background:var(--bg);border-color:var(--line-strong)}
+.btn-secondary:hover{border-color:var(--ink);background:var(--surface)}
+.btn-tertiary{height:auto;padding:var(--sp-1) 0;color:var(--brand);font-weight:500}
+.btn-tertiary:hover{color:var(--brand-hover)}
+.btn-sm{height:36px;padding:0 var(--sp-4);font-size:var(--f-sub)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-block{width:100%}
+
+/* ═══ 입력 ═══ */
+.input{width:100%;height:52px;padding:0 var(--sp-4);border:1px solid var(--line-strong);
+  border-radius:var(--r-md);background:var(--bg);outline:none;
+  transition:border-color var(--t-fast) var(--ease)}
+.input:focus{border-color:var(--ink)}
+.input::placeholder{color:var(--ink3)}
+
+/* ═══ 칩 — 선택한 조건 표시 / 토글 ═══ */
+.chip{display:inline-flex;align-items:center;gap:var(--sp-1);height:34px;padding:0 var(--sp-3);
+  border-radius:var(--r-full);border:1px solid var(--line-strong);background:var(--bg);
+  font-size:var(--f-sub);color:var(--ink2);cursor:pointer;white-space:nowrap;
+  transition:all var(--t-fast) var(--ease)}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip[aria-pressed="true"],.chip.on{background:var(--ink);border-color:var(--ink);color:var(--on-ink);font-weight:600}
+
+/* ═══ 배지 — 상태 한 단어 ═══ */
+.badge{display:inline-flex;align-items:center;height:24px;padding:0 var(--sp-2);
+  border-radius:var(--r-sm);font-size:var(--f-cap);font-weight:600;letter-spacing:-.01em;
+  background:var(--surface-2);color:var(--ink2)}
+.badge-up{background:var(--up-weak);color:var(--up)}
+.badge-down{background:var(--down-weak);color:var(--down)}
+.badge-warn{background:var(--warn-weak);color:var(--warn)}
+
+/* ═══ 델타(증감) — 숫자 옆 변화량 ═══ */
+.delta{font-variant-numeric:tabular-nums;font-weight:600}
+.delta.up{color:var(--up)} .delta.down{color:var(--down)} .delta.flat{color:var(--ink3)}
+
+/* ═══ 카드 — 정말 독립적으로 떼어내야 할 때만 ═══ */
+.card{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-5)}
+
+/* ═══ 접기/펼치기 — 상세는 기본으로 감춘다 ═══ */
+.disclose{border-top:1px solid var(--line)}
+.disclose>summary{list-style:none;cursor:pointer;padding:var(--sp-4) 0;
+  font-size:var(--f-sub);color:var(--ink2);display:flex;align-items:center;gap:var(--sp-2)}
+.disclose>summary::-webkit-details-marker{display:none}
+.disclose>summary::after{content:"";width:7px;height:7px;border-right:1.5px solid currentColor;
+  border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);
+  transition:transform var(--t-base) var(--ease)}
+.disclose[open]>summary::after{transform:rotate(225deg) translateY(-2px)}
+.disclose>summary:hover{color:var(--ink)}
+
+/* ═══ Bottom Sheet / Side Panel ═══
+   지도에서 상권을 눌렀을 때 페이지를 갈아치우지 않고 여기에 요약을 띄운다. */
+.sheet-scrim{position:fixed;inset:0;background:rgba(15,15,16,.32);opacity:0;pointer-events:none;
+  transition:opacity var(--t-base) var(--ease);z-index:60}
+.sheet-scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--bg);
+  border-radius:var(--r-lg) var(--r-lg) 0 0;box-shadow:var(--shadow-sheet);
+  padding:var(--sp-3) var(--gutter) var(--sp-6);max-height:82vh;overflow-y:auto;
+  transform:translateY(101%);transition:transform var(--t-sheet) var(--ease)}
+.sheet.on{transform:none}
+.sheet-grip{width:36px;height:4px;border-radius:2px;background:var(--surface-2);
+  margin:0 auto var(--sp-4)}
+@media (min-width:768px){
+  /* 넓은 화면에서는 아래가 아니라 오른쪽에서 나오는 패널이 자연스럽다 */
+  .sheet{left:auto;top:0;bottom:0;width:400px;max-height:none;border-radius:0;
+    box-shadow:var(--shadow-pop);transform:translateX(101%);padding-top:var(--sp-5)}
+  .sheet-grip{display:none}
+}
+
+/* ═══ 빈 상태 / 오류 상태 — 빈 화면을 보여주지 않는다 ═══ */
+.state{padding:var(--sp-7) var(--sp-4);text-align:center}
+.state .t{font-size:var(--f-head);font-weight:600;margin:0 0 var(--sp-2)}
+.state .d{font-size:var(--f-sub);color:var(--ink2);margin:0 0 var(--sp-4);
+  max-width:34ch;margin-left:auto;margin-right:auto}
+
+/* ═══ 로딩 — 'Loading...' 대신 자리 모양을 먼저 보여준다 ═══ */
+.skel{background:var(--surface-2);border-radius:var(--r-sm);animation:skel 1.4s ease-in-out infinite}
+@keyframes skel{0%,100%{opacity:.5}50%{opacity:1}}
+.steps{display:flex;flex-direction:column;gap:var(--sp-2);font-size:var(--f-sub);color:var(--ink2)}
+.steps li{list-style:none;display:flex;align-items:center;gap:var(--sp-2)}
+.steps .dot{width:6px;height:6px;border-radius:50%;background:var(--line-strong);flex:none}
+.steps .now .dot{background:var(--ink);animation:pulse 1s ease-in-out infinite}
+.steps .done{color:var(--ink3)} .steps .done .dot{background:var(--up)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+
+/* ═══ 가로 스크롤 컨테이너 — 표·차트가 페이지를 밀지 않게 ═══ */
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ═══ 공통 헤더/푸터 ═══ */
+.sitehead{position:sticky;top:0;z-index:30;background:var(--bg-blur);
+  backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid var(--line)}
+.sitehead .headwrap{max-width:var(--maxw);margin:0 auto;
+  padding:var(--sp-3) var(--gutter);display:flex;align-items:center;gap:var(--sp-5)}
+.sitehead .brand{font-size:var(--f-body);font-weight:700;letter-spacing:-.02em;
+  color:var(--ink);text-decoration:none;flex:none}
+.sitehead .brand span{color:var(--ink3);font-weight:500}
+.sitehead nav{margin-left:auto;display:flex;gap:var(--sp-5);align-items:center}
+.navlink{font-size:var(--f-sub);color:var(--ink3);text-decoration:none;white-space:nowrap;
+  font-weight:500;transition:color var(--t-fast) var(--ease)}
+.navlink:hover{color:var(--ink)}
+.navlink.on{color:var(--ink);font-weight:600}
+
+.sitefoot{border-top:1px solid var(--line);margin-top:var(--sp-8)}
+.sitefoot .footwrap{max-width:var(--maxw);margin:0 auto;
+  padding:var(--sp-5) var(--gutter) var(--sp-8);
+  display:flex;gap:var(--sp-5);flex-wrap:wrap;align-items:center}
+.sitefoot a{font-size:var(--f-sub);color:var(--ink2);text-decoration:none;white-space:nowrap}
+.sitefoot a:hover{color:var(--ink)}
+.sitefoot a[aria-current]{color:var(--ink);font-weight:600}
+.sitefoot .footsrc{margin-left:auto;font-size:var(--f-cap);color:var(--ink3)}
+
+@media (max-width:640px){
+  :root{--gutter:16px}
+  .sitehead .brand span{display:none}
+  .sitehead nav{gap:var(--sp-4)}
+  .sec{padding:var(--sp-6) 0}
+}
+@media print{.sitehead,.sitefoot,.btn,.chip{display:none!important}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
