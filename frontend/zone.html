@@ -16,6 +16,15 @@
 .metric{display:flex;align-items:baseline;gap:var(--sp-3);flex-wrap:wrap}
 .metric .unit{font-size:var(--f-sub);color:var(--ink2);font-weight:500}
 
+/* ── What-if — 큰 숫자를 직접 만져보게 ── */
+.whatif{margin-top:var(--sp-6);padding-top:var(--sp-5);border-top:1px dashed var(--line)}
+.whatif label{display:flex;justify-content:space-between;font-size:var(--f-sub);
+  color:var(--ink2);margin-bottom:var(--sp-2)}
+.whatif label b{color:var(--ink);font-variant-numeric:tabular-nums}
+.whatif input[type=range]{width:100%;accent-color:var(--ink);height:28px}
+.whatif .t-cap{margin-top:var(--sp-1)}
+.whatif .t-cap b{color:var(--ink);font-weight:600}
+
 /* ── 핵심 변화: 카드 대신 얇은 구분선 목록 ── */
 .changes{list-style:none;margin:0;padding:0}
 .changes li{display:flex;gap:var(--sp-3);padding:var(--sp-4) 0;border-top:1px solid var(--line-soft);
@@ -403,6 +412,37 @@ function open(cd, fromHash){
 
 
 
+
+// ═══ What-if — 조건을 바꾸면 점수가 즉시 다시 계산된다 ═══
+// (Dubai Transactions Atlas 의 "필터가 바뀌면 분석값이 바로 바뀐다" 패턴)
+// 기회점수가 가산식이라 근사치가 아니라 '정확히 다시 계산'된다.
+//   점수 = 수요 45% + 희소성 35% + 점포당매출(축소추정) 20%
+// 경쟁 점포가 늘면 그 업종 점포수 백분위가 올라가고 → 희소성이 내려간다.
+// 백분위는 서버가 보낸 분포 구간점(store_brk)으로 되짚는다(임의 가정 없음).
+function pctOfStores(brk, n){
+  if(!brk||!brk.length) return null;
+  for(var t=0;t<brk.length;t++) if(n<=brk[t]) return t;   // 처음으로 n 이하가 되는 구간
+  return 100;
+}
+function whatIf(oppRow, addStores){
+  var d=(OPP.ind||{})[curInd]; if(!d||!d.store_brk||oppRow.score==null) return null;
+  // 안 바꿨으면 서버가 낸 정확한 값을 그대로 쓴다.
+  // 구간점(101단계)으로 되짚으면 원래 점수와 1점쯤 어긋나는데,
+  // "아무것도 안 만졌는데 숫자가 달라지는" 건 그 자체로 신뢰를 깎는다.
+  if(!addStores) return { n:oppRow.stores, scarce:oppRow.scarce, score:Math.round(oppRow.score) };
+  var w=OPP.weights||{dem:0.45,scarce:0.35,perf:0.20};
+  var k=(OPP.shrink_k==null?5:OPP.shrink_k);
+  var n=Math.max(0,(oppRow.stores||0)+addStores);
+  var pct=pctOfStores(d.store_brk,n); if(pct==null) return null;
+  var scarce=100-pct;
+  // 점포가 늘어도 '있는 점포가 얼마나 버는지'(perf_raw)는 그대로 두되,
+  // 표본이 늘면 그만큼 덜 끌어당긴다 — 실제 계산과 같은 규칙을 유지한다.
+  var shrink=n/(n+k);
+  var pAdj=50+((oppRow.perf_raw==null?50:oppRow.perf_raw)-50)*shrink;
+  return { n:n, scarce:Math.round(scarce),
+           score:Math.round(w.dem*oppRow.dem + w.scarce*scarce + w.perf*pAdj) };
+}
+
 // ═══ 관심 상권 저장 (SiteVelocity·RealHQ 의 Watchlist) ═══
 // 상권을 훑다 보면 "아까 그 괜찮았던 곳"을 다시 못 찾는다.
 // 서버 없이 이 브라우저에만 저장한다(로그인 없음, 개인정보 수집 없음).
@@ -547,6 +587,15 @@ function render(z){
   }
   H.push('</section>');
 
+  // What-if — 큰 숫자 바로 아래. 숫자를 '만져볼 수 있게' 한다.
+  if(oppRow && oppRow.score!=null && (OPP.ind[curInd]||{}).store_brk){
+    H.push('<div class="whatif noprint">'+
+      '<label for="wi">경쟁 점포가 늘어난다면 <b id="wi_lbl">+0곳</b></label>'+
+      '<input type="range" id="wi" min="0" max="20" step="1" value="0">'+
+      '<p class="t-cap" id="wi_out">지금 '+oppRow.stores+'곳 기준입니다. 밀어보면 점수가 바로 바뀝니다.</p>'+
+      '</div>');
+  }
+
   // ═══ ② 핵심 변화 — 2~3개만. 카드가 아니라 얇은 목록 ═══
   var ch=[];
   if(oppRow && oppRow.score!=null)
@@ -681,6 +730,28 @@ function render(z){
     location.href='compare.html?gu='+encodeURIComponent(z.gu||'');
   });
   var fs=$('#fsel'); if(fs) fs.addEventListener('change',function(){ curInd=fs.value; render(z); });
+  var wi=$('#wi');
+  if(wi){
+    var big=p.querySelector('.t-metric'), base=Math.round(oppRow.score);
+    var raf=0;
+    wi.addEventListener('input',function(){
+      if(raf) return;                       // 드래그 중 초당 수십 번 도는 것을 프레임당 1회로
+      raf=requestAnimationFrame(function(){
+        raf=0;
+        var add=+wi.value, r=whatIf(oppRow,add);
+        $('#wi_lbl').textContent='+'+add+'곳';
+        if(!r){ return; }
+        big.textContent=r.score;
+        big.className='t-metric big delta '+(r.score>=70?'up':(r.score>=50?'flat':'down'));
+        var diff=r.score-base;
+        $('#wi_out').innerHTML = add===0
+          ? '지금 '+oppRow.stores+'곳 기준입니다. 밀어보면 점수가 바로 바뀝니다.'
+          : '점포 '+oppRow.stores+'곳 → <b>'+r.n+'곳</b>이면 희소성 '+oppRow.scarce+' → <b>'+r.scarce+'</b>, '+
+            '기회점수 '+base+' → <b>'+r.score+'</b> ('+(diff>0?'+':'')+diff+')'+
+            ' <span class="t-cap">· 서울 전체 이 업종 점포수 분포로 다시 계산</span>';
+      });
+    });
+  }
 }
 
 function forecastBlock(z,o){

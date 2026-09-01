@@ -418,8 +418,15 @@ def main():
         ranked.sort(key=lambda r: -r["score"])
         unproven.sort(key=lambda r: -r["dem"])
         if ranked:
+            # What-if 용 분포 — "경쟁 점포가 N개 늘면 희소성이 얼마가 되나"를
+            # 화면에서 정확히 다시 계산하려면 이 업종의 점포수 분포가 필요하다.
+            # 전 상권 값을 다 보내면 무거우니 백분위 구간점 101개만 보낸다(0~100%).
+            arr = sorted(ind_store[ii].values())
+            m = len(arr)
+            brk = [round(arr[min(m - 1, int(round(t / 100.0 * (m - 1))))]) for t in range(101)]
             opp[name] = {"top": ranked[:20], "unproven": unproven[:8],
                          "n_zones": len(ranked),
+                         "store_brk": brk,
                          "seoul_med": seoul_med.get(name)}
     print(f"   업종 {len(opp)}개 · 상권 랭킹 생성")
 

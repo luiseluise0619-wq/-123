@@ -43,10 +43,10 @@
   .modes{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4);flex-wrap:wrap}
   /* 조건 요약 줄 — 지금 무엇을 보고 있는지 한눈에 */
   .condbar{display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;
-    margin:var(--sp-5) 0 var(--sp-4);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line)}
+    margin:var(--sp-3) 0 var(--sp-4);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line)}
   .condbar .chips{flex:1;display:flex;gap:var(--sp-2);flex-wrap:wrap;justify-content:flex-start}
   .condbar .chip{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-full);
-    padding:0 var(--sp-3);height:30px;display:inline-flex;align-items:center;
+    padding:0 var(--sp-2) 0 var(--sp-3);height:32px;display:inline-flex;align-items:center;
     font-size:var(--f-cap);color:var(--ink2)}
   .condbar .chip b{color:var(--ink);font-weight:600;margin-left:4px}
   .mode{background:var(--bg);border:1px solid var(--line-strong);color:var(--ink2);font-weight:500;
@@ -71,6 +71,17 @@
   table.cmp td .win{color:var(--green);font-weight:700}
   table.cmp td.na{color:var(--ink3)}
   .scroll{overflow-x:auto;border-radius:12px}
+  table.cmp th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+  table.cmp th.sortable:hover{color:var(--ink)}
+  table.cmp th.sortable.on{color:var(--ink)}
+  table.cmp th .arw{font-size:9px;margin-left:3px}
+  /* x 는 손가락으로 눌러야 한다. 글자 크기만 키우지 말고 히트 영역을 확보한다.
+     (처음엔 padding 6px 짜리라 자동 테스트도 빗맞았다 — 사람은 더 못 누른다) */
+  .chipx{background:none;border:0;margin:0 -4px 0 2px;padding:0;color:var(--mut);
+    font-size:15px;line-height:1;cursor:pointer;
+    width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;
+    border-radius:50%;flex:none}
+  .chipx:hover{color:var(--ink);background:var(--surface-2)}
   table.cmp tr.rkrow{cursor:pointer}
   table.cmp tr.rkrow:hover td,table.cmp tr.rkrow:hover th{background:var(--soft)}
   .sec-h{font-size:15px;font-weight:700;margin:26px 0 12px}
@@ -122,18 +133,20 @@
   <p class="t-sub" style="margin-top:var(--sp-3)">객단가·점포당 매출·손님 구성·붐비는 시간·폐업률을 한 표로 봅니다. <span id="asof" class="t-cap"></span></p>
 
   <!-- 조건은 접어 둔다. 지금 무엇으로 보고 있는지는 위의 칩으로 알 수 있다. -->
+  <!-- 모드는 '조건'이 아니라 '무엇을 보는가'다. 접히는 필터 안에 두면 못 찾는다. -->
+  <div class="modes" style="margin-top:var(--sp-5)">
+    <button id="m-rank" class="mode">자치구 랭킹</button>
+    <button id="m-gu" class="mode on">자치구 비교</button>
+    <button id="m-zone" class="mode">상권 비교</button>
+    <button id="m-rent" class="mode">임대료 비교</button>
+  </div>
+
   <div class="condbar">
     <div class="chips" id="condchips"></div>
     <button class="btn btn-secondary btn-sm" id="togglefilter" aria-expanded="false">조건 바꾸기</button>
   </div>
 
   <div class="controls" id="controls" hidden>
-    <div class="modes">
-      <button id="m-rank" class="mode">자치구 랭킹</button>
-      <button id="m-gu" class="mode on">자치구 비교</button>
-      <button id="m-zone" class="mode">상권 비교</button>
-      <button id="m-rent" class="mode">임대료 비교</button>
-    </div>
 
     <!-- 자치구 랭킹 — 예전 앱 안의 '후보지' 화면을 여기로 합쳤다.
          '후보 찾기'와 '나란히 비교'가 서로 다른 메뉴에 흩어져 있을 이유가 없다.
@@ -471,7 +484,16 @@ function renderRank(){
   rows.sort((a,b)=>d.desc?b.v[RK_SORT]-a.v[RK_SORT]:a.v[RK_SORT]-b.v[RK_SORT]);
 
   const keys=Object.keys(RK_DEFS);
-  const head=keys.map(k=>`<th>${RK_DEFS[k].label.replace(/ (많은|낮은|안정한|높은|적은) 순$/,'')}<small style="display:block;color:var(--mut);font-size:10.5px;font-weight:400">${RK_DEFS[k].unit}</small></th>`).join('');
+  // 헤더를 눌러 정렬한다. 정렬 버튼 줄과 헤더가 따로 노는 것보다,
+  // 보고 있는 열을 바로 누르는 쪽이 자연스럽다(정렬 버튼 줄도 그대로 둔다).
+  const head=keys.map(k=>{
+    const on = k===RK_SORT;
+    const nm = RK_DEFS[k].label.replace(/ (많은|낮은|안정한|높은|적은) 순$/,'');
+    return `<th class="sortable${on?' on':''}" data-sort="${k}" role="button" tabindex="0"
+      aria-sort="${on?(RK_DEFS[k].desc?'descending':'ascending'):'none'}"
+      title="${RK_DEFS[k].label}으로 정렬">${nm}<span class="arw">${on?(RK_DEFS[k].desc?'▼':'▲'):''}</span>
+      <small style="display:block;color:var(--mut);font-size:10.5px;font-weight:400">${RK_DEFS[k].unit}</small></th>`;
+  }).join('');
   const body=rows.map(r=>{
     const tds=keys.map(k=>{
       const rk=ranks[k][r.g];
@@ -488,6 +510,14 @@ function renderRank(){
                 : `<div class="empty">월 임대료 ${num(budget)}만원 이하인 자치구가 없습니다. 예산을 올리거나 평수를 줄여보세요.</div>`)+
     `<div class="note" style="margin-top:10px">행을 누르면 그 자치구가 <b>자치구 비교</b>에 담깁니다.</div>`;
 
+  out.querySelectorAll('th.sortable').forEach(th=>{
+    const go=()=>{ RK_SORT=th.dataset.sort;
+      document.querySelectorAll('#rksorts .mode').forEach(bn=>
+        bn.classList.toggle('on', bn.textContent===RK_DEFS[RK_SORT].label));
+      render(); };
+    th.onclick=go;
+    th.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } };
+  });
   out.querySelectorAll('.rkrow').forEach(tr=>{
     tr.onclick=()=>{                       // 발견 → 비교로 바로 이어지게 (합친 이유)
       const g=tr.dataset.gu;
@@ -731,29 +761,51 @@ function renderRent(){
 // 평소엔 "지금 이렇게 보고 있다"만 칩으로 보여주고, 바꿀 때만 펼친다.
 var MODE_KO={rank:'자치구 랭킹',gu:'자치구 비교',zone:'상권 비교',rent:'임대료 비교'};
 function chipsHTML(){
-  var c=[['보기',MODE_KO[MODE]||MODE]];
+  var c=[];   // '보기'는 위 모드 버튼이 이미 보여준다
   if(MODE==='rank'){
     var a=document.getElementById('rkarea'), bud=document.getElementById('rkbudget');
     c.push(['업종',rkInd()]);
     if(a&&a.value) c.push(['평수',a.value+'평']);
-    if(bud&&bud.value) c.push(['월세 예산',num(+bud.value)+'만원 이하']);
+    if(bud&&bud.value) c.push(['월세 예산',num(+bud.value)+'만원 이하','rkbudget']);
     c.push(['정렬',(RK_DEFS[RK_SORT]||{}).label||'']);
   } else if(MODE==='gu'){
     c.push(['업종',document.getElementById('ind').value]);
-    var g=guVals(); if(g.length) c.push(['자치구',g.join(' · ')]);
+    var g=guVals(); if(g.length) c.push(['자치구',g.join(' · '),'guwrap']);
   } else if(MODE==='zone'){
     var zi=document.getElementById('zind').value;
     c.push(['업종',zi||'상권 전체']);
     var zs=['z0','z1','z2'].map(function(i){return document.getElementById(i).value.trim();}).filter(Boolean);
-    if(zs.length) c.push(['상권',zs.join(' · ')]);
+    if(zs.length) c.push(['상권',zs.join(' · '),'zones']);
   } else if(MODE==='rent'){
     var rs=['r0','r1','r2'].map(function(i){return document.getElementById(i).value.trim();}).filter(Boolean);
-    if(rs.length) c.push(['상권',rs.join(' · ')]);
+    if(rs.length) c.push(['상권',rs.join(' · '),'rents']);
   }
-  return c.filter(function(x){return x[1];})
-          .map(function(x){return '<span class="chip">'+x[0]+'<b>'+x[1]+'</b></span>';}).join('');
+  return c.filter(function(x){return x[1];}).map(function(x){
+    // 지울 수 있는 조건에만 x 를 붙인다. '보기'(모드)는 지울 수 있는 게 아니다.
+    var rm = x[2] ? '<button class="chipx" data-clear="'+x[2]+'" aria-label="'+x[0]+' 조건 지우기">×</button>' : '';
+    return '<span class="chip">'+x[0]+'<b>'+x[1]+'</b>'+rm+'</span>';
+  }).join('');
 }
-function syncChips(){ var el=document.getElementById('condchips'); if(el) el.innerHTML=chipsHTML(); }
+// 칩을 매 이벤트마다 통째로 다시 그리면, 버튼을 누르는 사이(mousedown~mouseup)에
+// 노드가 교체돼 click 이 아예 발생하지 않는다 — "x 를 눌러도 안 지워지는" 버그가 된다.
+// 내용이 실제로 달라졌을 때만 다시 그린다.
+var _chipCache='';
+function syncChips(){
+  var el=document.getElementById('condchips'); if(!el) return;
+  var h=chipsHTML();
+  if(h===_chipCache) return;
+  _chipCache=h; el.innerHTML=h;
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-clear]'); if(!b) return;
+  var k=b.dataset.clear;
+  if(k==='rkbudget'){ document.getElementById('rkbudget').value=''; }
+  else if(k==='guwrap'){ var w=document.getElementById('guwrap');
+    while(w.children.length>1) w.removeChild(w.lastChild); }
+  else if(k==='zones'){ ['z0','z1','z2'].forEach(function(i){document.getElementById(i).value='';}); }
+  else if(k==='rents'){ ['r0','r1','r2'].forEach(function(i){document.getElementById(i).value='';}); }
+  render();
+});
 (function(){
   var btn=document.getElementById('togglefilter'), box=document.getElementById('controls');
   btn.addEventListener('click',function(){
