@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>업종·자치구 세부 비교 · 서울 상권 인텔리전스</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F6FEB'/%3E%3Crect x='8' y='16' width='4' height='9' rx='1.2' fill='white'/%3E%3Crect x='14' y='11' width='4' height='14' rx='1.2' fill='white'/%3E%3Crect x='20' y='7' width='4' height='18' rx='1.2' fill='white'/%3E%3C/svg%3E">
+<script src="gu_rent_zone.js"></script>
 <style>
   :root{ --bg:#0F1826; --panel:#132033; --line:#22334d; --ink:#eaf1fb; --mut:#93a7c4; --accent:#2A78D6; --amber:#E0973A; --green:#2FB27A; --soft:#0b1420; }
   *{box-sizing:border-box}
@@ -26,8 +27,8 @@
   .controls .lbl{font-size:11.5px;color:var(--mut);font-weight:700;letter-spacing:.03em;margin-bottom:6px}
   .controls .grp{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
   .controls .col{flex:1 1 180px;min-width:150px}
-  select,input[list]{width:100%;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:14px}
-  input[list]::placeholder{color:#5c6f8c}
+  select,input[list],input[type=number]{width:100%;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:14px}
+  input[list]::placeholder,input[type=number]::placeholder{color:#5c6f8c}
   .modes{display:flex;gap:8px;margin-bottom:16px}
   .mode{background:var(--soft);border:1px solid var(--line);color:var(--mut);font-weight:600;padding:8px 16px}
   .mode.on{background:var(--accent);color:#fff;border-color:var(--accent)}
@@ -49,6 +50,8 @@
   table.cmp td .win{color:var(--green);font-weight:700}
   table.cmp td.na{color:#5c6f8c}
   .scroll{overflow-x:auto;border-radius:12px}
+  table.cmp tr.rkrow{cursor:pointer}
+  table.cmp tr.rkrow:hover td,table.cmp tr.rkrow:hover th{background:var(--soft)}
   .sec-h{font-size:15px;font-weight:700;margin:26px 0 12px}
 
   .dists{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
@@ -98,9 +101,34 @@
 
   <div class="controls">
     <div class="modes">
+      <button id="m-rank" class="mode">자치구 랭킹</button>
       <button id="m-gu" class="mode on">자치구 비교</button>
       <button id="m-zone" class="mode">상권 비교</button>
       <button id="m-rent" class="mode">임대료 비교</button>
+    </div>
+
+    <!-- 자치구 랭킹 — 예전 앱 안의 '후보지' 화면을 여기로 합쳤다.
+         '후보 찾기'와 '나란히 비교'가 서로 다른 메뉴에 흩어져 있을 이유가 없다.
+         랭킹에서 구를 누르면 그대로 '자치구 비교'로 넘어간다. -->
+    <div id="ctl-rank" style="display:none">
+      <div class="grp">
+        <div class="col">
+          <div class="lbl">업종 (동일업종 점포 수 비교용)</div>
+          <select id="rkind"></select>
+        </div>
+        <div class="col">
+          <div class="lbl">매장 평수 (평)</div>
+          <input id="rkarea" type="number" inputmode="numeric" value="15" min="1" max="200">
+        </div>
+        <div class="col">
+          <div class="lbl">월 임대료 예산 (만원) <span style="font-weight:400;color:var(--mut)">· 비우면 전체</span></div>
+          <input id="rkbudget" type="number" inputmode="numeric" placeholder="예: 300">
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="lbl">정렬 기준</div>
+        <div id="rksorts" class="modes" style="flex-wrap:wrap"></div>
+      </div>
     </div>
 
     <div id="ctl-gu">
@@ -225,14 +253,16 @@ function loadZCF(cb){
 // 모드 전환
 function setMode(m){
   MODE=m;
-  ['gu','zone','rent'].forEach(x=>{
+  ['rank','gu','zone','rent'].forEach(x=>{
     document.getElementById('m-'+x).classList.toggle('on',m===x);
     document.getElementById('ctl-'+x).style.display=m===x?'':'none';
   });
   if(m==='zone') loadZI(()=>loadZCF(render));
   else if(m==='rent') loadRent(render);
+  else if(m==='rank') loadBundle(render);
   else render();
 }
+document.getElementById('m-rank').onclick=()=>setMode('rank');
 document.getElementById('m-gu').onclick=()=>setMode('gu');
 document.getElementById('m-zone').onclick=()=>setMode('zone');
 document.getElementById('m-rent').onclick=()=>setMode('rent');
@@ -249,6 +279,18 @@ Promise.all([
   INDS=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
   const indSel=document.getElementById('ind');
   INDS.forEach((v,i)=>opt(indSel,v,v,i===0));
+  // 자치구 랭킹 모드 컨트롤
+  const rkSel=document.getElementById('rkind');
+  INDS.forEach((v,i)=>opt(rkSel,v,v,i===0));
+  rkSel.onchange=()=>{ if(MODE==='rank') render(); };
+  ['rkarea','rkbudget'].forEach(id=>{ document.getElementById(id).oninput=()=>{ if(MODE==='rank') render(); }; });
+  const sw=document.getElementById('rksorts');
+  Object.entries(RK_DEFS).forEach(([k,d])=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='mode'+(k===RK_SORT?' on':''); b.textContent=d.label;
+    b.onclick=()=>{ RK_SORT=k; [...sw.children].forEach(c=>c.classList.toggle('on',c===b)); render(); };
+    sw.appendChild(b);
+  });
   window.__GU_SORTED=[...GUS].sort();
   addGuCol('강남구');   // 처음엔 자치구 1개만. + 로 계속 추가, − 로 제거.
   document.getElementById('addgu').onclick=()=>{
@@ -330,7 +372,106 @@ function winners(cols,key,dir){
   return dir==='low'?Math.min(...vals):Math.max(...vals);
 }
 
+// ── 자치구 랭킹 (구 '후보지' 화면을 합친 것) ──────────────────────────────
+// data-bundle.js 한 파일에 core.gu(폐업추세·버스정류장) · geo.paths(면적) · pop(생활인구) · park(주차)
+// 가 전부 들어 있다. 랭킹 모드를 처음 누를 때만 받는다(첫 화면은 그대로 가볍게).
+let BUNDLE=null, BUNDLE_TRIED=false, AREA_KM2=null, RK_SORT='pop';
+function loadBundle(cb){
+  if(BUNDLE||BUNDLE_TRIED) return cb();
+  BUNDLE_TRIED=true;
+  if(window.__SANGGWON){ BUNDLE=window.__SANGGWON; prepArea(); return cb(); }
+  const s=document.createElement('script');
+  s.src='data-bundle.js';
+  s.onload=()=>{ BUNDLE=window.__SANGGWON||null; prepArea(); cb(); };
+  s.onerror=()=>{ cb(); };
+  document.head.appendChild(s);
+}
+// 자치구 면적(㎢) — SVG path 를 다각형으로 보고 신발끈 공식으로 넓이를 낸 뒤,
+// 서울 전체 면적 605.21㎢ 로 비례 배분한다. (index.html 과 같은 계산식)
+// 버스정류장/주차장은 '개수'보다 '밀도(개/㎢)'가 의미 있어서 면적이 필요하다.
+function prepArea(){
+  const geo=BUNDLE&&BUNDLE.geo; if(!geo||!geo.paths) return;
+  // index.html computeAreas() 와 **같은 식**이어야 두 화면의 밀도 값이 어긋나지 않는다.
+  // 'Z' 로 조각을 나눠 각 폐곡선마다 신발끈 공식을 따로 돌린다.
+  // (한 구가 섬처럼 여러 조각인 경우가 있어 전부 이어 붙이면 넓이가 틀린다)
+  const areaOf=d=>{
+    let sum=0;
+    d.split('Z').forEach(seg=>{
+      const pts=seg.trim().replace(/^M/,'').split('L').filter(Boolean)
+        .map(p=>p.trim().split(/\s+/).map(Number)).filter(p=>p.length===2&&!isNaN(p[0]));
+      let s=0;
+      for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];s+=a[0]*b[1]-b[0]*a[1];}
+      sum+=Math.abs(s)/2;
+    });
+    return sum;
+  };
+  const raw={}; let tot=0;
+  Object.entries(geo.paths).forEach(([n,d])=>{ raw[n]=areaOf(d); tot+=raw[n]; });
+  AREA_KM2={}; Object.keys(raw).forEach(n=>{ AREA_KM2[n]=raw[n]/tot*605.21; });
+}
+const RK_DEFS={
+  pop:  {label:'유동인구 많은 순',    unit:'천명',    desc:true,  get:g=>(BUNDLE.pop&&BUNDLE.pop.gu[g]?BUNDLE.pop.gu[g].tot:0), fmt:v=>num(v/1000)+'천명'},
+  rent: {label:'임대료 낮은 순',      unit:'만원/월', desc:false, get:g=>rentEst(g), fmt:v=>num(v)+'만원'},
+  trend:{label:'폐업 추세 안정한 순', unit:'%',       desc:false, get:g=>BUNDLE.core.gu[g].trend, fmt:v=>(v>=0?'+':'')+v+'%'},
+  bus:  {label:'교통 밀도 높은 순',   unit:'개/㎢',   desc:true,  get:g=>BUNDLE.core.gu[g].bus/((AREA_KM2||{})[g]||1), fmt:v=>v.toFixed(1)},
+  park: {label:'주차 밀도 높은 순',   unit:'곳/㎢',   desc:true,  get:g=>(BUNDLE.park&&BUNDLE.park.gu[g]?BUNDLE.park.gu[g].lots:0)/((AREA_KM2||{})[g]||1), fmt:v=>v.toFixed(1)},
+  comp: {label:'동일업종 점포 적은 순',unit:'개',      desc:false, get:g=>{const r=STORE&&STORE.gu&&STORE.gu[g]&&STORE.gu[g].ind&&STORE.gu[g].ind[rkInd()]; return r?r.stores:0;}, fmt:v=>v?num(v)+'개':'—'}
+};
+function rkInd(){ const s=document.getElementById('rkind'); return s?s.value:(INDS[0]||''); }
+function rentEst(g){
+  const z=window.guRentZone(g, BUNDLE.core); if(!z) return 0;
+  const area=+document.getElementById('rkarea').value||15;
+  return Math.round(z.rent*area*3.3);      // 만원/㎡ × 평 × 3.3㎡
+}
+function renderRank(){
+  const out=document.getElementById('out');
+  if(!BUNDLE||!BUNDLE.core||!BUNDLE.core.gu){
+    out.innerHTML='<div class="empty">자치구 데이터를 불러오지 못했습니다(배포 사이트에서 동작).</div>'; return;
+  }
+  const gus=Object.keys(BUNDLE.core.gu);
+  // 지표별 순위표 — "몇 위인지"를 같이 보여야 숫자의 크고작음을 판단할 수 있다.
+  const ranks={};
+  Object.entries(RK_DEFS).forEach(([k,d])=>{
+    const sorted=gus.map(g=>[g,d.get(g)]).sort((a,b)=>d.desc?b[1]-a[1]:a[1]-b[1]);
+    ranks[k]={}; sorted.forEach(([g],i)=>{ranks[k][g]=i+1;});
+  });
+  const budget=+document.getElementById('rkbudget').value||0;
+  let rows=gus.map(g=>({g, v:Object.fromEntries(Object.entries(RK_DEFS).map(([k,d])=>[k,d.get(g)]))}));
+  const total=rows.length;
+  if(budget) rows=rows.filter(r=>r.v.rent<=budget);
+  const d=RK_DEFS[RK_SORT];
+  rows.sort((a,b)=>d.desc?b.v[RK_SORT]-a.v[RK_SORT]:a.v[RK_SORT]-b.v[RK_SORT]);
+
+  const keys=Object.keys(RK_DEFS);
+  const head=keys.map(k=>`<th>${RK_DEFS[k].label.replace(/ (많은|낮은|안정한|높은|적은) 순$/,'')}<small style="display:block;color:var(--mut);font-size:10.5px;font-weight:400">${RK_DEFS[k].unit}</small></th>`).join('');
+  const body=rows.map(r=>{
+    const tds=keys.map(k=>{
+      const rk=ranks[k][r.g];
+      return `<td class="num">${RK_DEFS[k].fmt(r.v[k])}<small style="display:block;color:var(--mut);font-size:10.5px;font-weight:400">${rk}위</small></td>`;
+    }).join('');
+    return `<tr class="rkrow" data-gu="${r.g}"><th class="metric">${r.g}</th>${tds}</tr>`;
+  }).join('');
+
+  out.innerHTML=
+    `<div class="note" style="margin:0 0 12px">종합 점수는 만들지 않습니다. 지표마다 유리한 곳이 다르기 때문에, 하나로 합치면 그 판단 근거가 사라집니다. 대신 <b>지표별 순위</b>를 나란히 보여드립니다.`+
+    (budget?` 월 임대료 <b>${num(budget)}만원</b> 이하만 남겼습니다 — <b>${rows.length}/${total}곳</b>.`:'')+
+    ` 임대료는 자치구가 아니라 부동산원 조사 상권 단위로만 공표되어, 각 구의 대표 상권 값 × 평수로 <b>추정</b>한 값입니다.</div>`+
+    (rows.length? `<div class="scroll"><table class="cmp"><thead><tr><th class="metric">자치구</th>${head}</tr></thead><tbody>${body}</tbody></table></div>`
+                : `<div class="empty">월 임대료 ${num(budget)}만원 이하인 자치구가 없습니다. 예산을 올리거나 평수를 줄여보세요.</div>`)+
+    `<div class="note" style="margin-top:10px">행을 누르면 그 자치구가 <b>자치구 비교</b>에 담깁니다.</div>`;
+
+  out.querySelectorAll('.rkrow').forEach(tr=>{
+    tr.onclick=()=>{                       // 발견 → 비교로 바로 이어지게 (합친 이유)
+      const g=tr.dataset.gu;
+      if(!guVals().includes(g)) addGuCol(g);
+      setMode('gu');
+      document.getElementById('out').scrollIntoView({behavior:'smooth',block:'start'});
+    };
+  });
+}
+
 function render(){
+  if(MODE==='rank') return renderRank();
   if(MODE==='zone') return renderZones();
   if(MODE==='rent') return renderRent();
   if(!SALES)return;

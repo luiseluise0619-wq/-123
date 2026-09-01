@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>3초 창업 진단 · 사장님인사이트</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="gu_rent_zone.js"></script>
 <script src="data-bundle.js"></script>
 <style>
   :root{
@@ -149,9 +150,8 @@
 (function(){
   var D=window.__SANGGWON, C=D&&D.core;
   if(!C){document.body.innerHTML='<p style="padding:40px">데이터를 불러오지 못했습니다.</p>';return;}
-  // 앱 rentZoneOf() 와 동일한 자치구→상권 매핑 (구별 임대료)
-  var ZMAP={'종로구':'서울·종로','중구':'서울·명동','용산구':'서울·이태원','성동구':'서울·왕십리','광진구':'서울·건대입구','동대문구':'서울·청량리','중랑구':'서울·상봉역','성북구':'서울·성신여대','강북구':'서울·수유','노원구':'서울·상계역','은평구':'서울·연신내','서대문구':'서울·신촌/이대','마포구':'서울·홍대/합정','양천구':'서울·목동','강서구':'서울·화곡','구로구':'서울·오류동역','금천구':'서울·독산/시흥','영등포구':'서울·영등포역','동작구':'서울·노량진','관악구':'서울·신림역','서초구':'서울·교대역','강남구':'서울·강남대로','송파구':'서울·잠실/송파','강동구':'서울·천호'};
-  function rentOf(gu){var z=C.rentZones[ZMAP[gu]];return z?{rent:z.rent,vacancy:z.vacancy}:{rent:C.rentSeoul.rent,vacancy:C.rentSeoul.vacancy};} // 만원/㎡, 공실률%
+  // 자치구→임대료 조사상권 매핑은 gu_rent_zone.js 한 곳에만 둔다(index.html 과 표가 어긋나지 않도록).
+  function rentOf(gu){var z=window.guRentZone(gu,C);return z?{rent:z.rent,vacancy:z.vacancy}:{rent:C.rentSeoul.rent,vacancy:C.rentSeoul.vacancy};} // 만원/㎡, 공실률%
   // 서울 25개 자치구 폐업 추세 평균(비교 기준선)
   var AVGTREND=(function(){var a=Object.keys(C.gu).map(function(k){return C.gu[k].trend;});return a.reduce(function(x,y){return x+(y||0);},0)/a.length;})();
 
