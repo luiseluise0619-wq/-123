@@ -44,7 +44,17 @@
   vertical-align:middle;margin-right:6px}
 .legend i.fc{border-top-style:dashed;border-color:var(--brand)}
 
-/* ── 표 (상세 안에서만) ── */
+/* ── 다음 할 일 — 카드가 아니라 왼쪽 라벨 + 본문 ── */
+.nba{margin-top:var(--sp-4)}
+.nba .q{display:grid;grid-template-columns:120px 1fr;gap:var(--sp-4);
+  padding:var(--sp-4) 0;border-top:1px solid var(--line-soft)}
+.nba .q:first-child{border-top:0}
+.nba .k{color:var(--ink3);font-size:var(--f-cap);padding-top:2px}
+.nba .q p{margin:0;font-size:var(--f-sub);color:var(--ink)}
+.acts{display:flex;gap:var(--sp-2);flex-wrap:wrap}
+@media(max-width:640px){.nba .q{grid-template-columns:1fr;gap:var(--sp-1)}}
+
+/* ── 표 ── */
 table{width:100%;border-collapse:collapse;font-size:var(--f-sub)}
 th,td{text-align:right;padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--line-soft)}
 th:first-child,td:first-child{text-align:left}
@@ -375,6 +385,62 @@ function open(cd, fromHash){
   });
 }
 
+
+// ═══ 근거(Evidence) — 숫자마다 어디서 왔고 언제 기준인지 밝힌다 ═══
+// TomTom Site Selection 의 Data Provenance 패널, SiteVelocity 의 근거 등급 개념을 가져왔다.
+// 우리 원칙(실측·가정·추정 구분)과 같은 방향이라, 흩어져 있던 것을 한 표로 모은다.
+//   실측  = 공공데이터에 그 값이 그대로 있다
+//   추정  = 실측값을 가공했다(백분위·가중합 등). 가중치는 우리가 정한 가정이다
+//   미확인 = 데이터로 답할 수 없다. 지어내지 않고 비워 둔다
+function evidenceRows(z,o,oppRow,q){
+  var SRC_TRDAR='서울시 상권분석서비스', SRC_OPEN='서울 열린데이터광장';
+  var rows=[];
+  if(oppRow){
+    rows.push(['이 업종 점포 수', oppRow.stores+'곳', '실측', SRC_TRDAR, q]);
+    if(oppRow.psales!=null)
+      rows.push(['이 업종 점포당 매출', won(oppRow.psales)+'원/분기',
+        oppRow.stores>=10?'실측':'실측 · 표본 '+oppRow.stores+'곳', SRC_TRDAR, q]);
+    if(oppRow.score!=null)
+      rows.push(['기회점수', Math.round(oppRow.score)+'점', '추정 · 가중합',
+        '수요 45% + 희소성 35% + 점포당매출 20%', q]);
+    else
+      rows.push(['기회점수', '—', '미확인',
+        '점포가 '+oppRow.stores+'곳뿐이라 이 업종이 되는 동네인지 판단 불가', q]);
+  }
+  if(o.dem!=null) rows.push(['수요 점수', Math.round(o.dem)+'', '추정 · 백분위',
+    SRC_OPEN+' 생활인구 · 배후 아파트 · 집객시설', q]);
+  if(o.opr) rows.push(['점포 평균 운영기간', (o.opr/12).toFixed(1)+'년', '실측',
+    SRC_TRDAR+' 상권변화지표', q]);
+  rows.push(['상권 분기 매출', won(z.sales)+'원', '추정 · 카드매출 귀속',
+    SRC_TRDAR+' — 절대 금액보다 지역 간 상대 비교로 보세요', q]);
+  return rows;
+}
+
+// ═══ 다음 할 일 — "가장 중요한 미해결 질문"과 그걸 푸는 방법 ═══
+// SiteVelocity 의 Next Best Action. 분석을 보여주고 끝내지 않고,
+// 데이터로 답할 수 없는 것 중 가장 결정적인 하나를 짚어 다음 행동으로 넘긴다.
+// 지어낸 조언이 아니라 '우리 데이터의 실제 한계'에서 나온다.
+function nextAction(z,o,oppRow){
+  var q=null;
+  if(oppRow && oppRow.score==null)
+    q={ ask:'이 상권에 '+curInd+' 점포가 '+oppRow.stores+'곳뿐입니다. 기회가 있는 건지, 그 업종이 안 되는 동네인지 데이터로는 구분할 수 없습니다.',
+        how:'현장에서 반경 500m 안의 '+curInd+' 수를 직접 세고, 예전에 있다가 없어진 가게가 있는지 인근 상인에게 물어보세요.',
+        who:'현장 방문 · 인근 상인' };
+  else if(oppRow && oppRow.conf==='낮음')
+    q={ ask:curInd+' 점포가 '+oppRow.stores+'곳이라 "점포당 매출"이 한두 곳에 크게 흔들립니다. 점수의 근거가 얇습니다.',
+        how:'같은 조건의 다른 상권 두세 곳과 나란히 비교해 이 숫자가 튀는 값인지 확인하세요.',
+        who:'비교 화면' };
+  else if(z.weak)
+    q={ ask:'이 구역은 점포 '+z.stores+'곳 규모라 상권 간 비교 지표 자체를 믿기 어렵습니다.',
+        how:'인접한 더 큰 상권을 기준으로 보거나, 업종을 바꿔 다시 확인하세요.',
+        who:'상권 목록' };
+  else
+    q={ ask:'임대료는 자치구 대표 상권 값으로 추정한 것이라, 이 자리의 실제 월세와 다를 수 있습니다. 손익 계산이 통째로 흔들리는 지점입니다.',
+        how:'실제 매물 두세 개의 보증금·월세·관리비를 확인한 뒤 손익을 다시 계산하세요.',
+        who:'공인중개사 · 손익 진단' };
+  return q;
+}
+
 function render(z){
   var o=(INTEL.zones||{})[z.cd]||{};
   var zi=(ZIND.zones||{})[z.cd]||{}, inds=ZIND.inds||[];
@@ -509,7 +575,35 @@ function render(z){
   }
   if(det.length) H.push('<section class="sec"><h2 class="t-head" style="margin-bottom:var(--sp-2)">상세 분석</h2>'+det.join('')+'</section>');
 
-  // ═══ ⑦ 리포트 — 화면에서 가장 중요한 행동 하나 ═══
+  // ═══ ⑦ 다음 할 일 — 분석을 보여주고 끝내지 않는다 ═══
+  var na=nextAction(z,o,oppRow);
+  H.push('<section class="sec"><h2 class="t-head">다음 할 일</h2>'+
+    '<div class="nba">'+
+      '<div class="q"><span class="k">가장 큰 미해결 질문</span><p>'+esc(na.ask)+'</p></div>'+
+      '<div class="q"><span class="k">확인하는 방법</span><p>'+esc(na.how)+'</p></div>'+
+      '<div class="q"><span class="k">어디서</span><p>'+esc(na.who)+'</p></div>'+
+    '</div>'+
+    '<div class="acts" style="margin-top:var(--sp-4)">'+
+      (z.lat&&z.lon?'<a class="btn btn-secondary btn-sm" href="building.html?lat='+z.lat+'&lon='+z.lon+'">이 지점 지도에서 보기</a>':'')+
+      '<a class="btn btn-secondary btn-sm" href="mvp.html?gu='+encodeURIComponent(z.gu||'')+'&ind='+encodeURIComponent(curInd||'')+'">손익 다시 계산</a>'+
+    '</div></section>');
+
+  // ═══ ⑧ 근거 — 숫자마다 출처와 기준 시점 ═══
+  var ev=evidenceRows(z,o,oppRow,qLabel(IDX.quarter));
+  H.push('<section class="sec"><h2 class="t-head">근거</h2>'+
+    '<p class="t-sub" style="margin-top:var(--sp-2)">화면의 숫자가 각각 어디서 왔는지입니다.</p>'+
+    '<div class="scroll-x" style="margin-top:var(--sp-4)"><table><thead><tr>'+
+    '<th>항목</th><th style="text-align:left">값</th><th style="text-align:left">등급</th>'+
+    '<th style="text-align:left">출처</th><th style="text-align:left">기준</th></tr></thead><tbody>'+
+    ev.map(function(r){
+      var cls=r[2].indexOf('실측')===0?'badge-up':(r[2]==='미확인'?'badge-warn':'');
+      return '<tr><td>'+esc(r[0])+'</td><td style="text-align:left" class="num">'+esc(r[1])+'</td>'+
+        '<td style="text-align:left"><span class="badge '+cls+'">'+esc(r[2])+'</span></td>'+
+        '<td style="text-align:left" class="t-cap">'+esc(r[3])+'</td>'+
+        '<td style="text-align:left" class="t-cap">'+esc(r[4])+'</td></tr>';
+    }).join('')+'</tbody></table></div></section>');
+
+  // ═══ ⑨ 리포트 — 화면에서 가장 중요한 행동 하나 ═══
   H.push('<div class="stickycta"><div class="in">'+
     '<span class="lbl">이 분석을 리포트로 받아보세요</span>'+
     '<button class="btn btn-secondary btn-sm" id="cmp">비교에 담기</button>'+
