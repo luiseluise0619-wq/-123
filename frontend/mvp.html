@@ -9,68 +9,59 @@
 <script src="gu_rent_zone.js"></script>
 <script src="data-bundle.js"></script>
 <style>
-/* ── 공통 헤더 (모든 페이지 동일) ── */
-.sitehead{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
-.sitehead .headwrap{max-width:660px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:18px}
-.sitehead .brand{font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
-.sitehead .brand span{color:var(--ink3);font-weight:500}
-.sitehead nav{margin-left:auto;display:flex;gap:16px;align-items:center}
-@media(max-width:640px){.sitehead .brand span{display:none}.sitehead nav{gap:12px}.navlink{font-size:13px}}
-@media print{.sitehead{display:none}}
+/* 색·타이포·버튼·시트·상태는 theme.css. 여기는 이 화면 배치만. */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);margin-top:var(--sp-5)}
+.form label{display:flex;flex-direction:column;gap:var(--sp-2)}
+.form label span{font-size:var(--f-cap);color:var(--ink2)}
+.form select,.form input{height:52px;padding:0 var(--sp-4);border:1px solid var(--line-strong);
+  border-radius:var(--r-md);background:var(--bg);outline:none}
+.form select{appearance:none;padding-right:32px}
+.form input:focus,.form select:focus{border-color:var(--ink)}
 
-/* ── 공통 메뉴/푸터 (모든 페이지 동일) ── */
-.navlink{font-size:14px;color:var(--ink3);text-decoration:none;white-space:nowrap;
-  letter-spacing:-.01em;transition:color .2s;font-weight:400}
-.navlink:hover{color:var(--ink)}
-.navlink.on{color:var(--ink);font-weight:600}
-.sitefoot{border-top:1px solid var(--line);margin-top:40px}
-.sitefoot .footwrap{max-width:1120px;margin:0 auto;padding:26px 20px 48px;
-  display:flex;gap:22px;flex-wrap:wrap;align-items:center}
-.sitefoot a{font-size:13px;color:var(--ink2);text-decoration:none;white-space:nowrap}
-.sitefoot a:hover{color:var(--ink)}
-.sitefoot a[aria-current]{color:var(--ink);font-weight:600}
-.sitefoot .footsrc{margin-left:auto;font-size:12px;color:var(--ink3)}
-@media print{.sitefoot{display:none}}
+.metric{display:flex;align-items:baseline;gap:var(--sp-3);flex-wrap:wrap}
+.metric .unit{font-size:var(--f-sub);color:var(--ink2)}
 
-  .wrap{max-width:660px;margin:0 auto;padding:28px 20px 72px}
-  h1{font-size:clamp(24px,5vw,32px);font-weight:600;letter-spacing:-.03em;margin:0 0 6px}
-  .sub{color:var(--ink2);font-size:15px;margin:0 0 24px}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
-  label{display:block;font-size:13px;color:var(--ink2);margin:0 0 6px;font-weight:500}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  select,input[type=number]{width:100%;font-family:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line-strong);border-radius:10px;padding:11px 12px;min-height:46px;outline:none}
-  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A8F' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
-  select option{background:var(--surface);color:var(--ink)}
-  .field{margin-bottom:14px}
-  button.go{width:100%;font-family:inherit;font-size:17px;font-weight:600;color:#fff;background:var(--accent);border:none;border-radius:12px;padding:15px;min-height:52px;cursor:pointer;margin-top:4px}
-  #verdict{display:none;border-radius:18px;padding:24px;margin-bottom:16px;border:1px solid}
-  #verdict.good{background:var(--good-bg);border-color:var(--good)}#verdict.warn{background:var(--warn-bg);border-color:var(--warn)}#verdict.bad{background:var(--bad-bg);border-color:var(--bad)}
-  #verdict .tag{font-size:13px;font-weight:700;letter-spacing:.04em}
-  #verdict.good .tag{color:var(--good)}#verdict.warn .tag{color:var(--warn)}#verdict.bad .tag{color:var(--bad)}
-  #verdict .head{font-size:clamp(21px,5vw,27px);font-weight:700;letter-spacing:-.03em;margin:8px 0 6px;line-height:1.25}
-  #verdict .why{font-size:15px;color:var(--ink);opacity:.92}
-  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px}
-  .kpi{background:var(--bg);padding:16px}.kpi .k{font-size:12px;color:var(--ink3)}.kpi .v{font-size:20px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
-  .kpi .v.neg{color:var(--bad)}.kpi .v.pos{color:var(--good)}
-  .whatif label{display:flex;justify-content:space-between;font-size:14px;color:var(--ink);font-weight:500;margin-bottom:8px}
-  .whatif label b{font-variant-numeric:tabular-nums}
-  .whatif .sl{margin-bottom:18px}
-  input[type=range]{width:100%;accent-color:var(--accent);height:28px}
-  .peak{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
-  .peak .p{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-  .peak .p .k{font-size:12px;color:var(--ink3)}.peak .p .v{font-size:16px;font-weight:600;margin-top:2px}
-  .note{font-size:12px;color:var(--ink3);line-height:1.7}
-  .badge{display:inline-block;font-size:11px;color:var(--ink3);border:1px solid var(--line);border-radius:20px;padding:2px 8px;margin-right:4px}
-  .actions{display:flex;gap:10px;margin-bottom:16px}
-  .actions button{flex:1;font-family:inherit;font-size:15px;font-weight:600;padding:13px;border-radius:12px;cursor:pointer;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink)}
-  #result{display:none}
-  h3{font-size:15px;margin:0 0 14px}
-  @media print{
-    .noprint{display:none!important}
-    body{background:#fff;color:#000}
-    .card,#verdict,.kpi{border-color:#ccc!important}
-    .wrap{max-width:100%}
-  }
+/* 근거 목록 — 카드 대신 얇은 구분선 */
+.changes{list-style:none;margin:0;padding:0}
+.changes li{padding:var(--sp-3) 0;border-top:1px solid var(--line-soft);font-size:var(--f-sub)}
+.changes li:first-child{border-top:0}
+
+/* 지표 — 상자 4개가 아니라 한 줄 나열 */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--sp-4);
+  margin-top:var(--sp-5);padding-top:var(--sp-5);border-top:1px solid var(--line)}
+.kpis .k{font-size:var(--f-cap);color:var(--ink2)}
+.kpis .v{font-size:var(--f-head);font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpis .v.neg{color:var(--down)} .kpis .v.pos{color:var(--up)}
+
+.scen{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--sp-4);
+  margin-top:var(--sp-4)}
+.scen .k{font-size:var(--f-cap);color:var(--ink2)}
+.scen .v{font-size:var(--f-head);font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+
+.bullets{margin:var(--sp-2) 0 0;padding-left:18px;font-size:var(--f-sub);line-height:1.9}
+.bullets li{margin-bottom:2px}
+
+.whatif .sl{margin-bottom:var(--sp-5)}
+.whatif label{display:flex;justify-content:space-between;font-size:var(--f-sub);
+  font-weight:500;margin-bottom:var(--sp-2)}
+.whatif label b{font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--ink);height:28px}
+
+.stickycta{position:sticky;bottom:0;background:var(--bg-blur);backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);padding:var(--sp-3) 0;z-index:20}
+.stickycta .in{display:flex;gap:var(--sp-2);align-items:center}
+.stickycta .lbl{flex:1;font-size:var(--f-cap);color:var(--ink2)}
+
+.agree{display:flex;gap:var(--sp-2);align-items:flex-start;font-size:var(--f-sub);
+  color:var(--ink2);margin-top:var(--sp-4);line-height:1.5}
+.agree input{margin-top:3px;width:auto;height:auto;flex:none}
+
+@media(max-width:640px){
+  .form{grid-template-columns:1fr}
+  .stickycta .lbl{display:none}
+  .stickycta .btn{flex:1}
+}
+@media print{.stickycta,.form,.noprint{display:none!important}}
 </style>
 </head>
 <body>
@@ -86,84 +77,108 @@
   </div>
 </header>
 <div class="wrap">
-  <h1>3초 창업 진단</h1>
-  <p class="sub">조건만 넣으면 이 자리에서 <b>버틸 수 있을지</b> 바로 보여드립니다.</p>
+  <section class="sec" style="padding-bottom:var(--sp-5)">
+    <h1 class="t-display">이 자리에서<br>버틸 수 있을까요</h1>
+    <p class="t-sub" style="margin-top:var(--sp-3)">조건 네 가지만 넣으면 손익분기와 예상 순이익을 계산합니다.</p>
 
-  <div class="card noprint">
-    <div class="row">
-      <div class="field"><label>지역 (자치구)</label><select id="gu"></select></div>
-      <div class="field"><label>업종</label><select id="ind"></select></div>
+    <div class="form noprint">
+      <label><span>지역</span><select id="gu"></select></label>
+      <label><span>업종</span><select id="ind"></select></label>
+      <label><span>창업 자금 (만원)</span><input id="budget" type="number" inputmode="numeric" placeholder="예: 5000"></label>
+      <label><span>매장 평수</span><input id="area" type="number" inputmode="numeric" placeholder="예: 15"></label>
     </div>
-    <div class="row">
-      <div class="field"><label>가진 창업 자금 (만원)</label><input id="budget" type="number" inputmode="numeric" placeholder="예: 5000"></div>
-      <div class="field"><label>매장 평수 (평)</label><input id="area" type="number" inputmode="numeric" placeholder="예: 15"></div>
-    </div>
-    <button class="go" id="run">진단하기</button>
-  </div>
+    <button class="btn btn-primary btn-block" id="run" style="margin-top:var(--sp-4)">진단하기</button>
+  </section>
 
-  <div id="verdict"><div class="tag"></div><div class="head"></div><div class="why"></div></div>
+  <!-- 결론 — 판정 한 문장 + 가장 중요한 숫자 하나(예상 월 순이익) -->
+  <section class="sec" id="verdict" hidden>
+    <span class="badge tag"></span>
+    <p class="t-display head" style="margin:var(--sp-3) 0 var(--sp-5);max-width:22ch"></p>
+    <div class="metric"><span class="t-metric big"></span><span class="unit"></span></div>
+    <p class="t-sub why" style="margin-top:var(--sp-4)"></p>
+  </section>
 
-  <div id="result">
-    <div class="card"><h3>한 줄 판단</h3><ul id="intel" style="margin:0;padding-left:18px;font-size:15px;color:var(--ink);line-height:1.9"></ul></div>
-    <div class="actions noprint">
-      <button id="csv">엑셀 다운로드</button>
-      <button id="pdf">리포트 저장 (PDF)</button>
-      <button id="share">링크 복사</button>
-    </div>
-    <div class="kpis" id="kpis"></div>
+  <div id="result" hidden>
+    <!-- 근거 -->
+    <section class="sec">
+      <h2 class="t-head">이렇게 봤습니다</h2>
+      <ul class="changes" id="intel" style="margin-top:var(--sp-4)"></ul>
+      <div class="kpis" id="kpis"></div>
+    </section>
 
-    <div class="card">
-      <h3>매출 시나리오 · 예상 월 순이익</h3>
-      <div class="peak" id="scen"></div>
-      <div class="note" style="margin-top:8px">하위25%(비관) · 중위 · 상위25%(낙관) 매출일 때의 순이익입니다.</div>
-    </div>
+    <!-- 매출이 흔들릴 때 -->
+    <section class="sec">
+      <h2 class="t-head">매출이 흔들리면</h2>
+      <p class="t-sub" style="margin-top:var(--sp-2)">하위 25%(비관) · 중위 · 상위 25%(낙관) 매출일 때의 월 순이익입니다.</p>
+      <div class="scen" id="scen"></div>
+    </section>
 
-    <div class="card noprint whatif">
-      <h3>이것저것 바꿔보기 (What-If)</h3>
-      <div class="sl"><label>월세 <b id="v_rent"></b></label><input type="range" id="s_rent" min="0"></div>
-      <div class="sl"><label>직원 수 <b id="v_staff"></b></label><input type="range" id="s_staff" min="0" max="10" step="1"></div>
-      <div class="sl"><label>객단가(결제 단가) <b id="v_unit"></b></label><input type="range" id="s_unit" min="0"></div>
-      <div class="note">슬라이더를 움직이면 위 판정·손익이 실시간으로 바뀝니다.</div>
-    </div>
+    <!-- 조건 바꿔보기 — 기본은 접어 둔다 -->
+    <section class="sec">
+      <h2 class="t-head" style="margin-bottom:var(--sp-2)">더 살펴보기</h2>
 
-    <div class="card">
-      <h3>언제 손님이 몰리나 (피크)</h3>
-      <div class="peak" id="peak"></div>
-    </div>
+      <details class="disclose noprint">
+        <summary>조건 바꿔보기 — 월세·직원·객단가</summary>
+        <div class="whatif" style="padding-bottom:var(--sp-5)">
+          <div class="sl"><label>월세 <b id="v_rent"></b></label><input type="range" id="s_rent" min="0"></div>
+          <div class="sl"><label>직원 수 <b id="v_staff"></b></label><input type="range" id="s_staff" min="0" max="10" step="1"></div>
+          <div class="sl"><label>객단가 <b id="v_unit"></b></label><input type="range" id="s_unit" min="0"></div>
+          <p class="t-cap">움직이면 위 판정과 순이익이 바로 바뀝니다.</p>
+        </div>
+      </details>
 
-    <div class="card">
-      <h3>계약 전 · 현장(임장) 체크리스트</h3>
-      <ul id="checklist" style="margin:0;padding-left:18px;font-size:14px;color:var(--ink);line-height:1.9"></ul>
-    </div>
-    <div class="card">
-      <h3>오픈 첫 달 · 마케팅 플레이북</h3>
-      <ul id="playbook" style="margin:0;padding-left:18px;font-size:14px;color:var(--ink);line-height:1.9"></ul>
-      <div class="note" style="margin-top:10px">일반 실행 가이드입니다 — 데이터 분석이 아니라 창업 실무 팁이며, 지역·업종·피크에 맞춰 문구만 조정됩니다.</div>
-    </div>
+      <details class="disclose">
+        <summary>손님이 몰리는 때</summary>
+        <div class="scen" id="peak" style="padding-bottom:var(--sp-5)"></div>
+      </details>
 
-    <div class="card">
-      <div class="note" id="detail"></div>
-      <div class="note" style="margin-top:10px">
-        <span class="badge">실측</span> 구별 점포당 매출·시간대·폐업추세는 공공데이터 실측.
-        <span class="badge">가정</span> 인건비·원가율은 업종 표준 가정.
-        <span class="badge">추정</span> 개별 점포 실적을 보장하지 않는 추정치입니다.
-      </div>
-    </div>
+      <details class="disclose">
+        <summary>계약 전 현장에서 확인할 것</summary>
+        <ul class="bullets" id="checklist" style="padding-bottom:var(--sp-5)"></ul>
+      </details>
+
+      <details class="disclose">
+        <summary>오픈 첫 달에 할 일</summary>
+        <ul class="bullets" id="playbook"></ul>
+        <p class="t-cap" style="padding-bottom:var(--sp-5)">데이터 분석이 아니라 창업 실무 가이드입니다. 지역·업종·피크에 맞춰 문구만 조정됩니다.</p>
+      </details>
+
+      <details class="disclose">
+        <summary>계산 근거와 데이터 출처</summary>
+        <div style="padding-bottom:var(--sp-5)">
+          <p class="t-sub" id="detail"></p>
+          <p class="t-cap" style="margin-top:var(--sp-3)">
+            <span class="badge">실측</span> 구별 점포당 매출·시간대·폐업추세는 공공데이터 실측.
+            <span class="badge">가정</span> 인건비·원가율은 업종 표준 가정.
+            <span class="badge">추정</span> 개별 점포 실적을 보장하지 않는 추정치입니다.
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- 다음 행동 — Primary 는 하나 -->
+    <div class="stickycta noprint"><div class="in">
+      <span class="lbl">이 진단을 파일로 받아보세요</span>
+      <button class="btn btn-secondary btn-sm" id="share">링크 복사</button>
+      <button class="btn btn-secondary btn-sm" id="pdf">PDF</button>
+      <button class="btn btn-primary btn-sm" id="csv">엑셀로 받기</button>
+    </div></div>
   </div>
 </div>
 
-<div id="modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--bg);border:1px solid var(--line);border-radius:18px;max-width:420px;width:100%;padding:24px">
-    <h3 style="font-size:18px;margin:0 0 6px">진단 결과 엑셀 받기</h3>
-    <p class="note" style="margin:0 0 16px">이메일을 남기면 이 진단을 엑셀(CSV)로 내려받을 수 있어요.</p>
-    <input id="m_email" type="email" placeholder="이메일 주소" style="width:100%;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line-strong);border-radius:10px;padding:11px 12px;min-height:46px;outline:none;margin-bottom:12px">
-    <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink2);margin-bottom:8px;font-weight:400"><input id="m_agree" type="checkbox" style="margin-top:3px;width:auto;min-height:0"> <span>(필수) 자료 제공·서비스 안내 목적의 <b>개인정보 수집·이용</b>에 동의합니다.</span></label>
-    <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink2);margin-bottom:16px;font-weight:400"><input id="m_mkt" type="checkbox" style="margin-top:3px;width:auto;min-height:0"> <span>(선택) 창업 정보·마케팅 수신에 동의합니다.</span></label>
-    <div id="m_err" style="color:var(--bad);font-size:13px;margin-bottom:10px;display:none"></div>
-    <div style="display:flex;gap:10px">
-      <button id="m_cancel" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink);font-family:inherit;font-weight:600;cursor:pointer">취소</button>
-      <button id="m_submit" style="flex:2;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-weight:600;cursor:pointer">동의하고 받기</button>
-    </div>
+<!-- 이메일 수집 -->
+<div class="sheet-scrim" id="modal_scrim"></div>
+<div class="sheet" id="modal">
+  <div class="sheet-grip"></div>
+  <h3 class="t-head">진단 결과 엑셀 받기</h3>
+  <p class="t-sub" style="margin:var(--sp-2) 0 var(--sp-5)">이메일을 남기면 이 진단을 엑셀(CSV)로 내려받을 수 있어요.</p>
+  <input class="input" id="m_email" type="email" placeholder="이메일 주소">
+  <label class="agree"><input id="m_agree" type="checkbox"><span>(필수) 자료 제공·서비스 안내 목적의 <b>개인정보 수집·이용</b>에 동의합니다.</span></label>
+  <label class="agree"><input id="m_mkt" type="checkbox"><span>(선택) 창업 정보·마케팅 수신에 동의합니다.</span></label>
+  <p id="m_err" class="t-sub" style="color:var(--down);display:none"></p>
+  <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-5)">
+    <button class="btn btn-secondary" id="m_cancel" style="flex:1">취소</button>
+    <button class="btn btn-primary" id="m_submit" style="flex:2">동의하고 받기</button>
   </div>
 </div>
 
@@ -254,18 +269,28 @@
     if(shortFund)reasons.push('업종 표준 창업비('+fmt(s.i.invest)+'원)보다 자금 <b>부족</b>');
     if(r.profit>0&&r.payback)reasons.push('흑자 시 회수 <b>약 '+r.payback+'개월</b>');
     if(!reasons.length)reasons.push('예상 순이익 흑자, 폐업 추세도 안정적');
-    var v=document.getElementById('verdict');v.className=level;v.style.display='block';
-    v.querySelector('.tag').textContent='3초 진단 결과'+(s.guData?'':' · (서울 업종 기준)');
-    v.querySelector('.head').textContent=fmt(s.budget||s.i.invest)+'원으로 '+s.g+' '+s.k+' → '+tag;
+    // 결론 — 화면에서 큰 숫자는 '예상 월 순이익' 하나뿐이다.
+    var v=document.getElementById('verdict'); v.hidden=false;
+    var badge=v.querySelector('.tag');
+    badge.textContent=tag;
+    badge.className='badge tag '+(level==='good'?'badge-up':level==='warn'?'badge-warn':'badge-down');
+    v.querySelector('.head').textContent=s.g+'에서 '+s.k+', '+fmt(s.budget||s.i.invest)+'원으로 시작하면';
+    v.querySelector('.big').textContent=fmt(r.profit)+'원';
+    v.querySelector('.big').className='t-metric big delta '+(r.profit<0?'down':'up');
+    v.querySelector('.unit').textContent='예상 월 순이익 · '+C.quarter+' 기준'+(s.guData?'':' · 서울 업종 평균 적용');
     v.querySelector('.why').innerHTML=reasons.slice(0,2).join(' · ');
-    // KPI
-    var kpis=[['예상 월매출(구 실측 범위)',fmt(s.p25)+'~'+fmt(s.p75)+'원',''],['손익분기 매출',fmt(r.bep)+'원/월',''],['예상 월 순이익',fmt(r.profit)+'원',r.profit<0?'neg':'pos'],['투자 회수',r.payback?'약 '+r.payback+'개월':'흑자 전환 안 됨',r.payback?'':'neg']];
-    document.getElementById('kpis').innerHTML=kpis.map(function(x){return '<div class="kpi"><div class="k">'+x[0]+'</div><div class="v '+x[2]+'">'+x[1]+'</div></div>';}).join('');
+    // 나머지 지표는 계층을 낮춘다(큰 숫자를 여러 개 두면 무엇이 중요한지 사라진다)
+    var kpis=[['예상 월매출',fmt(s.p25)+'~'+fmt(s.p75)+'원',''],
+              ['손익분기 매출',fmt(r.bep)+'원/월',''],
+              ['투자 회수',r.payback?'약 '+r.payback+'개월':'흑자 전환 안 됨',r.payback?'':'neg']];
+    document.getElementById('kpis').innerHTML=kpis.map(function(x){
+      return '<div><div class="k">'+x[0]+'</div><div class="v '+x[2]+'">'+x[1]+'</div></div>';}).join('');
     // 매출 시나리오(비관/중위/낙관) — 슬라이더 객단가 비율 반영
     var ratio=r.unit/s.unit;
     function pAt(base){var rv=Math.round(base*ratio);return rv-Math.round(rv*r.cogs)-r.fixed;}
     var sc=[['비관(하위25%)',pAt(s.p25)],['중위',r.profit],['낙관(상위25%)',pAt(s.p75)]];
-    document.getElementById('scen').innerHTML=sc.map(function(x){return '<div class="p"><div class="k">'+x[0]+'</div><div class="v" style="color:'+(x[1]<0?'var(--bad)':'var(--good)')+'">'+fmt(x[1])+'원</div></div>';}).join('');
+    document.getElementById('scen').innerHTML=sc.map(function(x){
+      return '<div><div class="k">'+x[0]+'</div><div class="v delta '+(x[1]<0?'down':'up')+'">'+fmt(x[1])+'원</div></div>';}).join('');
     // 피크(시간대·요일)
     var pk=document.getElementById('peak'), rec=s.rec;
     if(rec&&rec.tmz&&rec.dow){pk.innerHTML='<div class="p"><div class="k">피크 시간대</div><div class="v">'+TMZ[maxIdx(rec.tmz)]+'</div></div><div class="p"><div class="k">피크 요일</div><div class="v">'+DOW[maxIdx(rec.dow)]+'요일</div></div>';}
@@ -282,7 +307,12 @@
     document.getElementById('intel').innerHTML=intel.map(function(x){return '<li>'+x+'</li>';}).join('');
     // 체크리스트·플레이북은 구/업종(st)만 보고 만든다. 슬라이더와 무관하므로 여기서 다시 그리지 않는다(run()에서 1회).
     lastCalc={s:s,r:r,tag:tag};   // 다운로드/저장용 최신 결과
-    document.getElementById('result').style.display='block';
+    document.getElementById('result').hidden=false;
+    // 결과가 나온 뒤에는 '엑셀로 받기'가 지금 할 행동이다.
+    // 진단 버튼까지 Primary 로 두면 화면에 강조 버튼이 둘이 되어 우선순위가 흐려진다.
+    var runBtn=document.getElementById('run');
+    runBtn.className='btn btn-secondary btn-block';
+    runBtn.textContent='조건 바꿔서 다시 진단';
   }
 
   function run(){
@@ -336,9 +366,12 @@
     a.href=url; a.download='창업진단_'+lastCalc.s.g+'_'+lastCalc.s.k+'.csv';
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   }
-  var modal=document.getElementById('modal');
-  document.getElementById('csv').addEventListener('click',function(){ if(lastCalc) modal.style.display='flex'; });
-  document.getElementById('m_cancel').addEventListener('click',function(){ modal.style.display='none'; });
+  var modal=document.getElementById('modal'), scrim=document.getElementById('modal_scrim');
+  function openSheet(){ modal.classList.add('on'); scrim.classList.add('on'); document.getElementById('m_email').focus(); }
+  function closeSheet(){ modal.classList.remove('on'); scrim.classList.remove('on'); }
+  scrim.addEventListener('click',closeSheet);
+  document.getElementById('csv').addEventListener('click',function(){ if(lastCalc) openSheet(); });
+  document.getElementById('m_cancel').addEventListener('click',closeSheet);
   document.getElementById('m_submit').addEventListener('click',function(){
     var email=document.getElementById('m_email').value.trim(), agree=document.getElementById('m_agree').checked;
     var err=document.getElementById('m_err');
@@ -351,7 +384,7 @@
       email:email, agreed:true, marketing_opt_in:document.getElementById('m_mkt').checked,
       item:s.g+' '+s.k+' 창업진단', item_type:'진단CSV', region:s.g, industry:s.k, format:'csv', referrer:location.href
     })}).catch(function(){});
-    modal.style.display='none'; download();
+    closeSheet(); download();
   });
 })();
 </script>

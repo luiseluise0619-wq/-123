@@ -248,8 +248,13 @@ select option{background:var(--surface);color:var(--ink)}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--bg);
   border-radius:var(--r-lg) var(--r-lg) 0 0;box-shadow:var(--shadow-sheet);
   padding:var(--sp-3) var(--gutter) var(--sp-6);max-height:82vh;overflow-y:auto;
-  transform:translateY(101%);transition:transform var(--t-sheet) var(--ease)}
-.sheet.on{transform:none}
+  transform:translateY(101%);
+  /* transform 만 주면 화면 밖으로 밀렸을 뿐 '숨겨진' 게 아니다.
+     닫힌 시트의 버튼이 탭 순서에 남아 키보드로 잡힌다. visibility 로 확실히 뺀다.
+     (닫힐 때는 미끄러져 나가는 게 보이도록 transition 끝난 뒤에 숨긴다) */
+  visibility:hidden;
+  transition:transform var(--t-sheet) var(--ease), visibility 0s linear var(--t-sheet)}
+.sheet.on{transform:none;visibility:visible;transition-delay:0s}
 .sheet-grip{width:36px;height:4px;border-radius:2px;background:var(--surface-2);
   margin:0 auto var(--sp-4)}
 @media (min-width:768px){

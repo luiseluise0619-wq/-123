@@ -39,8 +39,18 @@
   .controls .col{flex:1 1 180px;min-width:150px}
   select,input[list],input[type=number]{width:100%;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:14px}
   input[list]::placeholder,input[type=number]::placeholder{color:var(--ink3)}
-  .modes{display:flex;gap:8px;margin-bottom:16px}
-  .mode{background:var(--soft);border:1px solid var(--line);color:var(--mut);font-weight:600;padding:8px 16px}
+  .modes{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4);flex-wrap:wrap}
+  /* 조건 요약 줄 — 지금 무엇을 보고 있는지 한눈에 */
+  .condbar{display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;
+    margin:var(--sp-5) 0 var(--sp-4);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line)}
+  .condbar .chips{flex:1;display:flex;gap:var(--sp-2);flex-wrap:wrap;justify-content:flex-start}
+  .condbar .chip{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-full);
+    padding:0 var(--sp-3);height:30px;display:inline-flex;align-items:center;
+    font-size:var(--f-cap);color:var(--ink2)}
+  .condbar .chip b{color:var(--ink);font-weight:600;margin-left:4px}
+  .mode{background:var(--bg);border:1px solid var(--line-strong);color:var(--ink2);font-weight:500;
+    padding:0 var(--sp-3);height:34px;border-radius:var(--r-full);font-size:var(--f-sub)}
+  .mode:hover{border-color:var(--ink);color:var(--ink)}
   .mode.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
   .chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
   .chip{background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:2px 9px;font-size:11.5px;color:var(--mut)}
@@ -106,10 +116,16 @@
 </header>
 
 <div class="wrap">
-  <h1>업종 하나를 골라, 자치구를 나란히 비교</h1>
-  <p class="sub">객단가·점포당 월매출·손님 구성·붐비는 요일과 시간대·폐업률까지 소상공인이 실제로 궁금한 항목을 한 표로 봅니다. <span id="asof" class="asof"></span></p>
+  <h1 class="t-display" style="margin-top:var(--sp-7)">나란히 놓고 비교</h1>
+  <p class="t-sub" style="margin-top:var(--sp-3)">객단가·점포당 매출·손님 구성·붐비는 시간·폐업률을 한 표로 봅니다. <span id="asof" class="t-cap"></span></p>
 
-  <div class="controls">
+  <!-- 조건은 접어 둔다. 지금 무엇으로 보고 있는지는 위의 칩으로 알 수 있다. -->
+  <div class="condbar">
+    <div class="chips" id="condchips"></div>
+    <button class="btn btn-secondary btn-sm" id="togglefilter" aria-expanded="false">조건 바꾸기</button>
+  </div>
+
+  <div class="controls" id="controls" hidden>
     <div class="modes">
       <button id="m-rank" class="mode">자치구 랭킹</button>
       <button id="m-gu" class="mode on">자치구 비교</button>
@@ -182,8 +198,8 @@
     </div>
 
     <div class="actions">
-      <button id="run">비교하기</button>
-      <button id="pdf" class="sec">PDF로 저장</button>
+      <button class="btn btn-primary btn-sm" id="run">비교하기</button>
+      <button class="btn btn-secondary btn-sm" id="pdf">PDF로 저장</button>
     </div>
   </div>
 
@@ -481,6 +497,7 @@ function renderRank(){
 }
 
 function render(){
+  syncChips();
   if(MODE==='rank') return renderRank();
   if(MODE==='zone') return renderZones();
   if(MODE==='rent') return renderRent();
@@ -706,6 +723,48 @@ function renderRent(){
     (miss.length?`<div class="note" style="border-left-color:var(--female);margin-top:14px">찾지 못한 이름: <b>${miss.join(', ')}</b> — 칸을 눌러 후보 목록에서 고르세요.</div>`:'')+
     `<div class="note" style="margin-top:14px">${RENT.source}. 임대료는 <b>중대형 상가 ㎡당 월 임대료(만원)</b>, 공실률은 %. 이 상권 구분은 <b>한국부동산원 30여개 권역</b>이라 서울시 상권분석(강남역·홍대 등 1564개)과는 다른 지리입니다. 임대료가 낮고 공실률이 높으면 <b>비용은 싸지만 수요가 약할 수</b> 있어 매출 지표와 함께 보세요.</div>`;
 }
+
+// ── 조건 요약 칩 + 필터 접기 ──────────────────────────────
+// 필터를 화면에 다 펼쳐 두면 무엇을 고른 상태인지 오히려 안 보인다.
+// 평소엔 "지금 이렇게 보고 있다"만 칩으로 보여주고, 바꿀 때만 펼친다.
+var MODE_KO={rank:'자치구 랭킹',gu:'자치구 비교',zone:'상권 비교',rent:'임대료 비교'};
+function chipsHTML(){
+  var c=[['보기',MODE_KO[MODE]||MODE]];
+  if(MODE==='rank'){
+    var a=document.getElementById('rkarea'), bud=document.getElementById('rkbudget');
+    c.push(['업종',rkInd()]);
+    if(a&&a.value) c.push(['평수',a.value+'평']);
+    if(bud&&bud.value) c.push(['월세 예산',num(+bud.value)+'만원 이하']);
+    c.push(['정렬',(RK_DEFS[RK_SORT]||{}).label||'']);
+  } else if(MODE==='gu'){
+    c.push(['업종',document.getElementById('ind').value]);
+    var g=guVals(); if(g.length) c.push(['자치구',g.join(' · ')]);
+  } else if(MODE==='zone'){
+    var zi=document.getElementById('zind').value;
+    c.push(['업종',zi||'상권 전체']);
+    var zs=['z0','z1','z2'].map(function(i){return document.getElementById(i).value.trim();}).filter(Boolean);
+    if(zs.length) c.push(['상권',zs.join(' · ')]);
+  } else if(MODE==='rent'){
+    var rs=['r0','r1','r2'].map(function(i){return document.getElementById(i).value.trim();}).filter(Boolean);
+    if(rs.length) c.push(['상권',rs.join(' · ')]);
+  }
+  return c.filter(function(x){return x[1];})
+          .map(function(x){return '<span class="chip">'+x[0]+'<b>'+x[1]+'</b></span>';}).join('');
+}
+function syncChips(){ var el=document.getElementById('condchips'); if(el) el.innerHTML=chipsHTML(); }
+(function(){
+  var btn=document.getElementById('togglefilter'), box=document.getElementById('controls');
+  btn.addEventListener('click',function(){
+    var open=box.hidden;
+    box.hidden=!open; btn.setAttribute('aria-expanded',String(open));
+    btn.textContent=open?'조건 닫기':'조건 바꾸기';
+  });
+  // 조건이 바뀔 때마다 칩을 다시 그린다
+  document.addEventListener('change',syncChips);
+  document.addEventListener('input',syncChips);
+  document.addEventListener('click',function(e){ if(e.target.closest('.mode')) setTimeout(syncChips,0); });
+})();
+
 </script>
 
 <footer class="sitefoot">
