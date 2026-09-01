@@ -9,6 +9,29 @@
 <script src="gu_rent_zone.js"></script>
 <script src="data-bundle.js"></script>
 <style>
+/* ── 공통 헤더 (모든 페이지 동일) ── */
+.sitehead{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.sitehead .headwrap{max-width:660px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:18px}
+.sitehead .brand{font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+.sitehead .brand span{color:var(--ink3);font-weight:500}
+.sitehead nav{margin-left:auto;display:flex;gap:16px;align-items:center}
+@media(max-width:640px){.sitehead .brand span{display:none}.sitehead nav{gap:12px}.navlink{font-size:13px}}
+@media print{.sitehead{display:none}}
+
+/* ── 공통 메뉴/푸터 (모든 페이지 동일) ── */
+.navlink{font-size:14px;color:var(--ink3);text-decoration:none;white-space:nowrap;
+  letter-spacing:-.01em;transition:color .2s;font-weight:400}
+.navlink:hover{color:var(--ink)}
+.navlink.on{color:var(--ink);font-weight:600}
+.sitefoot{border-top:1px solid var(--line);margin-top:40px}
+.sitefoot .footwrap{max-width:1120px;margin:0 auto;padding:26px 20px 48px;
+  display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+.sitefoot a{font-size:13px;color:var(--ink2);text-decoration:none;white-space:nowrap}
+.sitefoot a:hover{color:var(--ink)}
+.sitefoot a[aria-current]{color:var(--ink);font-weight:600}
+.sitefoot .footsrc{margin-left:auto;font-size:12px;color:var(--ink3)}
+@media print{.sitefoot{display:none}}
+
   .wrap{max-width:660px;margin:0 auto;padding:28px 20px 72px}
   h1{font-size:clamp(24px,5vw,32px);font-weight:600;letter-spacing:-.03em;margin:0 0 6px}
   .sub{color:var(--ink2);font-size:15px;margin:0 0 24px}
@@ -51,6 +74,17 @@
 </style>
 </head>
 <body>
+<header class="sitehead">
+  <div class="headwrap">
+    <a class="brand" href="index.html">사장님인사이트 <span>· 3초 진단</span></a>
+    <nav>
+    <a href="index.html" class="navlink">상권 지도</a>
+    <a href="zone.html" class="navlink">인텔리전스</a>
+    <a href="mvp.html" aria-current="page" class="navlink on">진단</a>
+    <a href="compare.html" class="navlink">비교</a>
+  </nav>
+  </div>
+</header>
 <div class="wrap">
   <h1>3초 창업 진단</h1>
   <p class="sub">조건만 넣으면 이 자리에서 <b>버틸 수 있을지</b> 바로 보여드립니다.</p>
@@ -321,5 +355,16 @@
   });
 })();
 </script>
+
+<footer class="sitefoot">
+  <div class="footwrap">
+    <a href="building.html">건물 지도</a>
+    <a href="trends.html">연도별 추이</a>
+    <a href="index.html#data">데이터</a>
+    <a href="index.html#chat">상담</a>
+    <a href="about.html">소개</a>
+    <span class="footsrc">출처 서울시 상권분석서비스 · 서울 열린데이터광장 · 국세청 · 한국부동산원</span>
+  </div>
+</footer>
 </body>
 </html>

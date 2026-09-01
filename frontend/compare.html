@@ -8,6 +8,20 @@
 <link rel="stylesheet" href="theme.css">
 <script src="gu_rent_zone.js"></script>
 <style>
+/* ── 공통 메뉴/푸터 (모든 페이지 동일) ── */
+.navlink{font-size:14px;color:var(--ink3);text-decoration:none;white-space:nowrap;
+  letter-spacing:-.01em;transition:color .2s;font-weight:400}
+.navlink:hover{color:var(--ink)}
+.navlink.on{color:var(--ink);font-weight:600}
+.sitefoot{border-top:1px solid var(--line);margin-top:40px}
+.sitefoot .footwrap{max-width:1120px;margin:0 auto;padding:26px 20px 48px;
+  display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+.sitefoot a{font-size:13px;color:var(--ink2);text-decoration:none;white-space:nowrap}
+.sitefoot a:hover{color:var(--ink)}
+.sitefoot a[aria-current]{color:var(--ink);font-weight:600}
+.sitefoot .footsrc{margin-left:auto;font-size:12px;color:var(--ink3)}
+@media print{.sitefoot{display:none}}
+
   header.top{position:sticky;top:0;z-index:5;background:var(--bg-blur);backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:12px 20px}
   header.top .brand{font-size:14px;font-weight:700}
@@ -84,10 +98,10 @@
 <header class="top">
   <div class="brand">서울 상권 인텔리전스 <span>· 업종·자치구 세부 비교</span></div>
   <nav>
-    <a href="index.html">개요 지도</a>
-    <a href="building.html">건물 지도</a>
-    <a href="trends.html">연도별 추이</a>
-    <a href="about.html">소개</a>
+    <a href="index.html" class="navlink">상권 지도</a>
+    <a href="zone.html" class="navlink">인텔리전스</a>
+    <a href="mvp.html" class="navlink">진단</a>
+    <a href="compare.html" aria-current="page" class="navlink on">비교</a>
   </nav>
 </header>
 
@@ -693,5 +707,16 @@ function renderRent(){
     `<div class="note" style="margin-top:14px">${RENT.source}. 임대료는 <b>중대형 상가 ㎡당 월 임대료(만원)</b>, 공실률은 %. 이 상권 구분은 <b>한국부동산원 30여개 권역</b>이라 서울시 상권분석(강남역·홍대 등 1564개)과는 다른 지리입니다. 임대료가 낮고 공실률이 높으면 <b>비용은 싸지만 수요가 약할 수</b> 있어 매출 지표와 함께 보세요.</div>`;
 }
 </script>
+
+<footer class="sitefoot">
+  <div class="footwrap">
+    <a href="building.html">건물 지도</a>
+    <a href="trends.html">연도별 추이</a>
+    <a href="index.html#data">데이터</a>
+    <a href="index.html#chat">상담</a>
+    <a href="about.html">소개</a>
+    <span class="footsrc">출처 서울시 상권분석서비스 · 서울 열린데이터광장 · 국세청 · 한국부동산원</span>
+  </div>
+</footer>
 </body>
 </html>

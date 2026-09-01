@@ -7,6 +7,20 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F6FEB'/%3E%3Crect x='8' y='16' width='4' height='9' rx='1.2' fill='white'/%3E%3Crect x='14' y='11' width='4' height='14' rx='1.2' fill='white'/%3E%3Crect x='20' y='7' width='4' height='18' rx='1.2' fill='white'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="theme.css">
 <style>
+/* ── 공통 메뉴/푸터 (모든 페이지 동일) ── */
+.navlink{font-size:14px;color:var(--ink3);text-decoration:none;white-space:nowrap;
+  letter-spacing:-.01em;transition:color .2s;font-weight:400}
+.navlink:hover{color:var(--ink)}
+.navlink.on{color:var(--ink);font-weight:600}
+.sitefoot{border-top:1px solid var(--line);margin-top:40px}
+.sitefoot .footwrap{max-width:1120px;margin:0 auto;padding:26px 20px 48px;
+  display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+.sitefoot a{font-size:13px;color:var(--ink2);text-decoration:none;white-space:nowrap}
+.sitefoot a:hover{color:var(--ink)}
+.sitefoot a[aria-current]{color:var(--ink);font-weight:600}
+.sitefoot .footsrc{margin-left:auto;font-size:12px;color:var(--ink3)}
+@media print{.sitefoot{display:none}}
+
   .btnlink{display:block;text-align:center;text-decoration:none;background:var(--accent);color:var(--on-accent);border-radius:8px;padding:9px;font-size:13px;font-weight:600;margin-top:6px;box-sizing:border-box}
   #cmp-inline .cmpnames{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--mut);margin-bottom:6px}
   #cmp-inline .cmpname b{color:var(--ink)}
@@ -21,6 +35,7 @@
   header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto}
   header h1{font-size:15px;font-weight:700;margin:0}
   header .sub{font-size:11px;color:var(--mut);font-weight:400}
+  header nav{display:flex;gap:16px;align-items:center}
   header a.back{margin-left:auto;font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 10px;border-radius:8px;background:var(--neutral)}
   header a.back:hover{border-color:var(--accent)}
   #wrap{position:relative;flex:1 1 auto}
@@ -111,9 +126,13 @@
 <div id="app">
   <header>
     <h1>건물 단위 지도 <span class="sub">· 핀 찍으면 그 지점 브리핑</span></h1>
-    <a class="back" href="compare.html" style="margin-left:auto">세부 비교</a>
-    <a class="back" href="about.html" style="margin-left:8px">소개</a>
-    <a class="back" href="index.html" style="margin-left:8px">← 개요 지도</a>
+<div style="margin-left:auto">    <nav>
+    <a href="index.html" class="navlink">상권 지도</a>
+    <a href="zone.html" class="navlink">인텔리전스</a>
+    <a href="mvp.html" class="navlink">진단</a>
+    <a href="compare.html" class="navlink">비교</a>
+  </nav>
+</div>
   </header>
   <div id="wrap">
     <div id="map"></div>
@@ -689,7 +708,10 @@ function reportPrint(){
     `</table>`+
     (insight?`<h2>AI 요약</h2><pre>${esc(insight)}</pre>`:'')+
     `<div class="note">※ 유동인구=행정동 생활인구. 경쟁=반경 내 카카오 등록 가게 수. 폐업=자치구 2년 증감률. 참고 지표이며 예상 매출이 아닙니다.</div>`+
-    `</body></html>`;
+    `
+<!-- 이 페이지는 #app{position:fixed;inset:0} 로 화면을 꽉 채우는 지도 도구라
+     푸터를 붙여도 지도 뒤에 가려 보이지 않는다(죽은 마크업). 상단 메뉴 4개로 이동한다. -->
+</body></html>`;
   const w=window.open('','_blank');
   if(!w){alert('팝업이 차단됐습니다. 팝업 허용 후 다시 시도하세요.');return;}
   w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>{try{w.print();}catch(e){}},500);

@@ -7,6 +7,20 @@
 <meta name="description" content="서울 상권 1,564곳의 수요·공급·변화·전망을 실측 데이터로 판독합니다.">
 <link rel="stylesheet" href="theme.css">
 <style>
+/* ── 공통 메뉴/푸터 (모든 페이지 동일) ── */
+.navlink{font-size:14px;color:var(--ink3);text-decoration:none;white-space:nowrap;
+  letter-spacing:-.01em;transition:color .2s;font-weight:400}
+.navlink:hover{color:var(--ink)}
+.navlink.on{color:var(--ink);font-weight:600}
+.sitefoot{border-top:1px solid var(--line);margin-top:40px}
+.sitefoot .footwrap{max-width:1120px;margin:0 auto;padding:26px 20px 48px;
+  display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+.sitefoot a{font-size:13px;color:var(--ink2);text-decoration:none;white-space:nowrap}
+.sitefoot a:hover{color:var(--ink)}
+.sitefoot a[aria-current]{color:var(--ink);font-weight:600}
+.sitefoot .footsrc{margin-left:auto;font-size:12px;color:var(--ink3)}
+@media print{.sitefoot{display:none}}
+
 /* 색·폰트·스크롤바·select 는 theme.css(공용). 여기는 이 페이지 레이아웃만. */
 input,select,button{font-size:14px;color:var(--ink)}
 select{appearance:none;padding-right:28px}
@@ -157,10 +171,11 @@ th{font-size:11.5px;color:var(--ink2);font-weight:600;border-bottom:1px solid va
   <div class="hwrap">
     <div class="brand">사장님인사이트 <span>· 상권 인텔리전스</span></div>
     <nav>
-      <a href="index.html">상권지도</a>
-      <a href="mvp.html">3초 진단</a>
-      <a href="compare.html">비교</a>
-    </nav>
+    <a href="index.html" class="navlink">상권 지도</a>
+    <a href="zone.html" aria-current="page" class="navlink on">인텔리전스</a>
+    <a href="mvp.html" class="navlink">진단</a>
+    <a href="compare.html" class="navlink">비교</a>
+  </nav>
   </div>
 </header>
 
@@ -655,5 +670,16 @@ $('#msend').addEventListener('click',function(){
 });
 })();
 </script>
+
+<footer class="sitefoot">
+  <div class="footwrap">
+    <a href="building.html">건물 지도</a>
+    <a href="trends.html">연도별 추이</a>
+    <a href="index.html#data">데이터</a>
+    <a href="index.html#chat">상담</a>
+    <a href="about.html">소개</a>
+    <span class="footsrc">출처 서울시 상권분석서비스 · 서울 열린데이터광장 · 국세청 · 한국부동산원</span>
+  </div>
+</footer>
 </body>
 </html>

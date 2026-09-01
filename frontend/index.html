@@ -769,6 +769,16 @@ window.__resources = {
     </sc-if>
 
   </main>
+
+  <!-- 보조 메뉴 — 주 메뉴 4개에 넣지 않은 나머지. 자주 안 쓰지만 없으면 곤란한 것들. -->
+  <footer style="border-top:1px solid var(--line);margin-top:40px">
+    <div style="max-width:1120px;margin:0 auto;padding:26px 24px 48px;display:flex;gap:22px;flex-wrap:wrap;align-items:center">
+      <sc-for list="{{ footItems }}" as="f" hint-placeholder-count="5">
+        <div onClick="{{ f.go }}" style="{{ f.style }}">{{ f.label }}</div>
+      </sc-for>
+      <div style="margin-left:auto;font-size:12px;color:var(--ink3)">출처 서울시 상권분석서비스 · 서울 열린데이터광장 · 국세청 · 한국부동산원</div>
+    </div>
+  </footer>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:900}}">
@@ -876,7 +886,8 @@ class Component extends DCLogic {
       if (D.geo) this.computeAreas(D.geo);
       const h0 = (location.hash || '').replace('#', '');
       const p0 = { ready: true, dark };
-      if (h0 && this.topicDefs().find(t => t.id === h0)) { p0.screen = 'data'; p0.topic = h0; }
+      if (h0 === 'data' || h0 === 'chat') { p0.screen = h0; p0.region = '서울특별시'; }
+      else if (h0 && this.topicDefs().find(t => t.id === h0)) { p0.screen = 'data'; p0.topic = h0; }
       this.setState(p0);
     }
     const j = (f) => (D ? Promise.resolve(null) : fetch(f).then(r => r.ok ? r.json() : null).catch(() => null));
@@ -892,7 +903,8 @@ class Component extends DCLogic {
       if (geo) this.computeAreas(geo);
       const h = (location.hash || '').replace('#', '');
       const patch = { ready: true, dark };
-      if (h && this.topicDefs().find(t => t.id === h)) { patch.screen = 'data'; patch.topic = h; }
+      if (h === 'data' || h === 'chat') { patch.screen = h; patch.region = '서울특별시'; }
+      else if (h && this.topicDefs().find(t => t.id === h)) { patch.screen = 'data'; patch.topic = h; }
       this.setState(patch);
     });
     // 부팅 최적화: 아래 두 파일(지하철·구별매출)은 첫 화면엔 불필요한데, 로드 후 setState 가
@@ -910,7 +922,8 @@ class Component extends DCLogic {
     else setTimeout(deferLoads, 1200);
     this._hash = () => {
       const h = (location.hash || '').replace('#', '');
-      if (h && this.topicDefs().find(t => t.id === h)) this.setState({ screen: 'data', topic: h });
+      if (h === 'data' || h === 'chat') this.setState({ screen: h, topic: null, region: this.state.region || '서울특별시' });
+      else if (h && this.topicDefs().find(t => t.id === h)) this.setState({ screen: 'data', topic: h });
       else if (!h && this.state.screen === 'data') this.setState({ topic: null });
     };
     window.addEventListener('hashchange', this._hash);
@@ -1550,23 +1563,31 @@ class Component extends DCLogic {
     // 인앱 화면 메뉴(중복이던 report=진단, compare=비교 는 아래 mvp.html·compare.html 로 통합)
     // '후보지'(자치구 랭킹+예산 필터)도 compare.html 의 '자치구 랭킹' 모드로 합쳤다.
     // 후보를 찾는 화면과 나란히 비교하는 화면이 서로 다른 메뉴에 있을 이유가 없었다.
-    const navItems = [['map', '상권'], ['data', '데이터'], ['chat', '상담']].map(([k, l]) => ({
-      label: l, go: nav(k),
-      style: 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:' + (S.screen === k ? 'var(--ink)' : 'var(--ink3)') + ';font-weight:' + (S.screen === k ? '500' : '400')
-    }));
-    const extStyle = (accent) => 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:' + (accent ? 'var(--accent)' : 'var(--ink3)') + ';font-weight:' + (accent ? '600' : '400');
-    // 상권 인텔리전스(zone.html) — 상권 1,564곳의 수요·공급·변화·전망. 가장 앞에 둔다.
-    navItems.splice(1, 0, { label: '인텔리전스', go: () => { location.href = 'zone.html'; }, style: extStyle(true) });
-    // 진단: 3초 판정 페이지(mvp.html) — 기존 인앱 '진단'과 통합. 데이터 뒤에 배치.
-    navItems.splice(3, 0, { label: '진단', go: () => { location.href = 'mvp.html'; }, style: extStyle(true) });
-    // 비교: 자치구 랭킹·비교·상권·임대료 4개 모드(compare.html) — 인앱 '후보지'와 '비교'를 흡수.
-    navItems.splice(4, 0, { label: '비교', go: () => { location.href = 'compare.html'; }, style: extStyle(false) });
-    // 건물 지도(카카오 실지도)·소개는 별도 페이지
-    navItems.push({ label: '건물지도', go: () => { location.href = 'building.html'; }, style: extStyle(false) });
-    navItems.push({ label: '소개', go: () => { location.href = 'about.html'; }, style: extStyle(false) });
+    // ── 주 메뉴는 4개로 고정한다(모든 페이지 동일).
+    // 메뉴가 많을수록 고르기 어려워진다. 자주 쓰는 4개만 위에 두고
+    // 나머지(건물 지도·추이·데이터·상담·소개)는 아래 푸터로 내린다.
+    const navStyle = (on) => 'font-size:14px;cursor:pointer;white-space:nowrap;letter-spacing:-0.01em;transition:color .2s;color:'
+      + (on ? 'var(--ink)' : 'var(--ink3)') + ';font-weight:' + (on ? '600' : '400');
+    const onMap = S.screen === 'map' || S.screen === 'detail' || S.screen === 'home';
+    const navItems = [
+      { label: '상권 지도', go: nav('map'), style: navStyle(onMap) },
+      { label: '인텔리전스', go: () => { location.href = 'zone.html'; }, style: navStyle(false) },
+      { label: '진단', go: () => { location.href = 'mvp.html'; }, style: navStyle(false) },
+      { label: '비교', go: () => { location.href = 'compare.html'; }, style: navStyle(false) },
+    ];
+    // 푸터(보조 메뉴) — 데이터·상담은 이 페이지 안의 화면이라 해시로 열고,
+    // 다른 페이지에서도 index.html#data 처럼 바로 들어올 수 있다.
+    const footStyle = (on) => 'font-size:13px;cursor:pointer;white-space:nowrap;transition:color .2s;color:' + (on ? 'var(--ink)' : 'var(--ink2)');
+    const footItems = [
+      { label: '건물 지도', go: () => { location.href = 'building.html'; }, style: footStyle(false) },
+      { label: '연도별 추이', go: () => { location.href = 'trends.html'; }, style: footStyle(false) },
+      { label: '데이터', go: () => { location.hash = 'data'; }, style: footStyle(S.screen === 'data') },
+      { label: '상담', go: () => { location.hash = 'chat'; }, style: footStyle(S.screen === 'chat') },
+      { label: '소개', go: () => { location.href = 'about.html'; }, style: footStyle(false) },
+    ];
 
     const base = {
-      navItems, quarter: this.salesQuarter() || (core && core.quarter) || '',
+      navItems, footItems, quarter: this.salesQuarter() || (core && core.quarter) || '',
       isHome: S.screen === 'home', isMap: S.screen === 'map', isDetail: S.screen === 'detail',
       isData: S.screen === 'data', isReport: S.screen === 'report', isCompare: S.screen === 'compare', isChat: S.screen === 'chat', isMethod: S.screen === 'method',
       // ── 지역 선택(첫 화면) ──
