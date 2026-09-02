@@ -8,117 +8,120 @@
 <link rel="stylesheet" href="theme.css">
 <script src="command.js" defer></script>
 <style>
-/* ── 공통 메뉴/푸터 (모든 페이지 동일) ── */
-.navlink{font-size:14px;color:var(--ink3);text-decoration:none;white-space:nowrap;
-  letter-spacing:-.01em;transition:color .2s;font-weight:400}
-.navlink:hover{color:var(--ink)}
-.navlink.on{color:var(--ink);font-weight:600}
-.sitefoot{border-top:1px solid var(--line);margin-top:40px}
-.sitefoot .footwrap{max-width:1120px;margin:0 auto;padding:26px 20px 48px;
-  display:flex;gap:22px;flex-wrap:wrap;align-items:center}
-.sitefoot a{font-size:13px;color:var(--ink2);text-decoration:none;white-space:nowrap}
-.sitefoot a:hover{color:var(--ink)}
-.sitefoot a[aria-current]{color:var(--ink);font-weight:600}
-.sitefoot .footsrc{margin-left:auto;font-size:12px;color:var(--ink3)}
-@media print{.sitefoot{display:none}}
+/* 메뉴(.navlink)는 theme.css 것을 그대로 쓴다 — 여기 복사본이 있었는데,
+   theme.css 를 고쳐도 이 화면만 안 따라오는 원인이었다.
+   푸터 CSS 도 있었지만 이 화면은 전체화면 지도라 푸터 자체가 없다 — 지웠다. */
 
-  .btnlink{display:block;text-align:center;text-decoration:none;background:var(--accent);color:var(--on-accent);border-radius:8px;padding:9px;font-size:13px;font-weight:600;margin-top:6px;box-sizing:border-box}
-  #cmp-inline .cmpnames{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--mut);margin-bottom:6px}
+  .btnlink{display:block;text-align:center;text-decoration:none;background:var(--brand);color:var(--on-brand);border-radius:8px;padding:9px;font-size:13px;font-weight:600;margin-top:6px;box-sizing:border-box}
+  #cmp-inline .cmpnames{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--ink2);margin-bottom:6px}
   #cmp-inline .cmpname b{color:var(--ink)}
   table.cmpt{width:100%;border-collapse:collapse;font-size:11.5px}
   table.cmpt td{border:1px solid var(--line);padding:5px 6px;text-align:right;font-variant-numeric:tabular-nums}
-  table.cmpt td.mh{text-align:left;color:var(--mut);white-space:nowrap}
-  table.cmpt td.win{color:var(--good);font-weight:700;background:color-mix(in srgb, var(--good) 14%, transparent)}
+  table.cmpt td.mh{text-align:left;color:var(--ink2);white-space:nowrap}
+  table.cmpt td.win{color:var(--up);font-weight:700;background:color-mix(in srgb, var(--up) 14%, transparent)}
   table.cmpt td.na{color:var(--ink3)}
-  #cmp-inline .cmpnote{font-size:10px;color:var(--mut);margin-top:5px;line-height:1.5}
+  #cmp-inline .cmpnote{font-size:10px;color:var(--ink2);margin-top:5px;line-height:1.5}
   html,body{height:100%}   /* 지도 전체화면 — 색·폰트는 theme.css */
   #app{position:fixed;inset:0;display:flex;flex-direction:column}
-  header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto}
+  header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg-blur);
+    backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid var(--line-soft);flex:0 0 auto}
   header h1{font-size:15px;font-weight:700;margin:0}
-  header .sub{font-size:11px;color:var(--mut);font-weight:400}
+  header .sub{font-size:11px;color:var(--ink2);font-weight:400}
   header nav{display:flex;gap:16px;align-items:center}
   header a.back{margin-left:auto;font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 10px;border-radius:8px;background:var(--neutral)}
-  header a.back:hover{border-color:var(--accent)}
+  header a.back:hover{border-color:var(--brand)}
   #wrap{position:relative;flex:1 1 auto}
   #map{position:absolute;inset:0;background:var(--surface);cursor:crosshair}
   #mapfail{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;
     /* 반투명이면 아래 정보판이 유령처럼 비쳐 '고장난 화면'으로 보인다. 불투명하게 덮는다. */
     background:var(--bg);z-index:30}
   #mapfail.on{display:flex}
-  #mapfail .card{max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;line-height:1.6}
+  #mapfail .card{max-width:520px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px;line-height:1.6}
   #mapfail h2{margin:0 0 8px;font-size:16px}
-  #mapfail p{margin:6px 0;font-size:13px;color:var(--mut)}
+  #mapfail p{margin:6px 0;font-size:13px;color:var(--ink2)}
   #mapfail code{background:var(--neutral);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px;color:var(--ink)}
-  #mapfail ol{margin:10px 0 0;padding-left:18px;font-size:13px;color:var(--mut)}
-  #mapfail a{color:var(--accent)}
+  #mapfail ol{margin:10px 0 0;padding-left:18px;font-size:13px;color:var(--ink2)}
+  #mapfail a{color:var(--brand)}
   .panel{position:absolute;top:12px;left:12px;z-index:10;width:288px;max-height:calc(100% - 24px);overflow-y:auto;
     background:var(--bg);border:1px solid var(--line-strong);border-radius:12px;padding:12px 14px;
     box-shadow:0 4px 16px rgba(0,0,0,.12)}
   .panel section{padding:10px 0;border-top:1px solid var(--line)}
   .panel section:first-child{padding-top:0;border-top:none}
   .panel h3{margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
-  .panel h3 .sw{font-size:10.5px;color:var(--mut);font-weight:400}
+  .panel h3 .sw{font-size:10.5px;color:var(--ink2);font-weight:400}
   .panel select,.panel input{width:100%;background:var(--neutral);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px}
   .row{display:flex;gap:6px}.row>*{min-width:0}
-  button{cursor:pointer;background:var(--accent);color:var(--on-accent);border:none;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:600;white-space:nowrap}
-  .hint{font-size:11px;color:var(--mut);margin-top:7px;line-height:1.5}
-  .stat{font-size:11.5px;color:var(--mut);margin-top:7px;line-height:1.55}.stat b{color:var(--ink)}
+  /* 전역 button{} 이었다. 선택자가 너무 넓어서 나중에 넣는 버튼까지 전부 파란 버튼이 된다.
+     이 화면의 정보판 안으로만 좁힌다. */
+  .panel button{cursor:pointer;background:var(--ink);color:var(--on-ink);border:1px solid var(--ink);
+    border-radius:var(--r-sm);padding:8px 12px;font-size:13px;font-weight:600;white-space:nowrap;
+    transition:opacity var(--t-fast) var(--ease)}
+  .panel button:hover{opacity:.85}
+  .hint{font-size:11px;color:var(--ink2);margin-top:7px;line-height:1.5}
+  .stat{font-size:11.5px;color:var(--ink2);margin-top:7px;line-height:1.55}.stat b{color:var(--ink)}
   label.chk{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink);margin:5px 0;cursor:pointer}
-  label.chk input{width:auto}label.chk .sw{font-size:11px;color:var(--mut)}
+  label.chk input{width:auto}label.chk .sw{font-size:11px;color:var(--ink2)}
   #results{margin-top:8px;max-height:170px;overflow-y:auto}
   #results .r{padding:6px 7px;border:1px solid var(--line);border-radius:7px;margin:5px 0;cursor:pointer;font-size:12px;background:var(--neutral)}
-  #results .r:hover{border-color:var(--accent)}#results .r .c{color:var(--mut);font-size:11px}
+  #results .r:hover{border-color:var(--brand)}#results .r .c{color:var(--ink2);font-size:11px}
   /* 핀 분석 브리핑 */
   #pin{font-size:12.5px;line-height:1.5}
   #pin .blk{padding:8px 0;border-top:1px dashed var(--line)}
   #pin .blk:first-child{border-top:none}
-  #pin .lb{color:var(--mut);font-size:11px;letter-spacing:.02em}
+  #pin .lb{color:var(--ink2);font-size:11px;letter-spacing:.02em}
   #pin .asof{color:var(--ink3);font-size:10px}
   #pin .big{font-size:15px;font-weight:700}
   #pin .v{color:var(--ink)}
   #pin .li{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
-  #pin .li .d{color:var(--mut);font-size:11px;white-space:nowrap}
+  #pin .li .d{color:var(--ink2);font-size:11px;white-space:nowrap}
   #pin .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
-  #pin .chip{background:var(--neutral);border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-size:11.5px}
-  #pin .chip b{color:var(--green)}
-  #pin .chip.sel{background:color-mix(in srgb, var(--good) 14%, transparent);border-color:var(--good);color:var(--good)}
-  #pin .chip.more{cursor:pointer;border-style:dashed;color:var(--mut)}
-  #pin .chip.more:hover{border-color:var(--accent);color:var(--ink)}
-  #pin .chip.more b{color:var(--mut)}
+  #pin .tag{background:var(--neutral);border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-size:11.5px}
+  #pin .tag b{color:var(--up)}
+  #pin .tag.sel{background:color-mix(in srgb, var(--up) 14%, transparent);border-color:var(--up);color:var(--up)}
+  #pin .tag.more{cursor:pointer;border-style:dashed;color:var(--ink2)}
+  #pin .tag.more:hover{border-color:var(--brand);color:var(--ink)}
+  #pin .tag.more b{color:var(--ink2)}
   #pin .pick{font-size:13px;margin-bottom:6px;width:100%}
-  #pin .pick b{font-size:15px;color:var(--green)}
-  #pin .muted{color:var(--mut)}
+  #pin .pick b{font-size:15px;color:var(--up)}
+  #pin .muted{color:var(--ink2)}
   #pin .sig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0 4px}
   #pin .sig .t{background:var(--neutral);border:1px solid var(--line);border-radius:10px;padding:9px 6px;text-align:center}
-  #pin .sig .tl{font-size:10px;color:var(--mut);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pin .sig .tl{font-size:10px;color:var(--ink2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #pin .sig .tv{font-size:16px;font-weight:700;line-height:1.1}
-  #pin .sig .tv small{font-size:10px;font-weight:400;color:var(--mut)}
+  #pin .sig .tv small{font-size:10px;font-weight:400;color:var(--ink2)}
   #pin details.more{margin-top:6px;border-top:1px dashed var(--line);padding-top:4px}
-  #pin details.more>summary{cursor:pointer;font-size:12px;color:var(--accent);padding:5px 0;list-style:none}
+  #pin details.more>summary{cursor:pointer;font-size:12px;color:var(--brand);padding:5px 0;list-style:none}
   #pin details.more>summary::-webkit-details-marker{display:none}
   #pin-insight{white-space:pre-wrap;font-size:12.5px;line-height:1.6;margin-top:8px;color:var(--ink)}
   #pin-insight:empty{margin:0}
   #pin-opp{font-size:12px;margin-top:6px}#pin-opp:empty{margin:0}
   #pin-opp .li{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px dashed var(--line)}
   #pin-opp .li:first-child{border-top:none}
-  #pin-opp .d{color:var(--mut);font-size:11px;white-space:nowrap}
-  button.sec{background:var(--neutral);border:1px solid var(--line);color:var(--ink);font-weight:500}
+  #pin-opp .d{color:var(--ink2);font-size:11px;white-space:nowrap}
+  .panel button.sec{background:var(--bg);border:1px solid var(--line);color:var(--ink);font-weight:500}
+  .panel button.sec:hover{border-color:var(--ink);opacity:1}
   #saved-list .r{padding:6px 7px;border:1px solid var(--line);border-radius:7px;margin:5px 0;cursor:pointer;font-size:12px;background:var(--neutral)}
-  #saved-list .r:hover{border-color:var(--accent)}#saved-list .r .c{color:var(--mut);font-size:11px}
-  #saved-list .del{float:right;cursor:pointer;color:var(--mut);padding:0 2px}#saved-list .del:hover{color:var(--bad)}
-  .numpin{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--on-accent);font:700 14px -apple-system;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);box-shadow:0 1px 5px rgba(0,0,0,.45);cursor:pointer}
-  .numpin.sel{background:var(--amber);box-shadow:0 0 0 3px rgba(224,151,58,.55),0 1px 5px rgba(0,0,0,.45)}
-  .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--mut);background:var(--bg-blur);padding:7px 10px;border-radius:8px}
+  #saved-list .r:hover{border-color:var(--brand)}#saved-list .r .c{color:var(--ink2);font-size:11px}
+  #saved-list .del{float:right;cursor:pointer;color:var(--ink2);padding:0 2px}#saved-list .del:hover{color:var(--down)}
+  .numpin{width:26px;height:26px;border-radius:50%;background:var(--brand);color:var(--on-brand);font:700 14px -apple-system;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);box-shadow:0 1px 5px rgba(0,0,0,.45);cursor:pointer}
+  .numpin.sel{background:var(--warn);box-shadow:0 0 0 3px rgba(224,151,58,.55),0 1px 5px rgba(0,0,0,.45)}
+  .legend{position:absolute;bottom:16px;right:12px;z-index:10;font-size:10px;color:var(--ink2);background:var(--bg-blur);padding:7px 10px;border-radius:8px}
   .legend .k{display:inline-flex;align-items:center;gap:4px;margin-left:8px}
   .legend .d{width:9px;height:9px;border-radius:50%;display:inline-block}
   /* 모바일: 좁은 화면에서 패널을 하단 시트로 + 접기 토글 */
-  .pan-handle{display:none;width:100%;background:var(--accent);color:var(--on-accent);border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;margin-bottom:8px;cursor:pointer}
+  .pan-handle{display:none;width:100%;background:var(--ink);color:var(--on-ink);border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;margin-bottom:8px;cursor:pointer}
   @media (max-width:640px){
     .panel{top:auto;bottom:0;left:0;right:0;width:auto;max-height:58vh;border-radius:14px 14px 0 0;padding:10px 12px}
     .pan-handle{display:block}
     .panel.collapsed{max-height:48px;overflow:hidden}
-    header h1{font-size:13px}
+    /* 390px 에서 제목이 "건물 단위 / 지도" 로 접혔다. 제목은 한 줄로 두고
+       메뉴를 가로로 밀리게 한다(다른 페이지 헤더와 같은 처리). */
+    header h1{font-size:13px;white-space:nowrap;flex:none}
     header .sub{display:none}
+    header nav{gap:14px;overflow-x:auto;min-width:0;
+      scrollbar-width:none;-ms-overflow-style:none}
+    header nav::-webkit-scrollbar{display:none}
     .legend{bottom:auto;top:54px;right:8px}
   }
 </style>
@@ -176,7 +179,9 @@
         <select id="ai-model" style="width:100%;margin-top:8px;background:var(--neutral);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:12px">
           <option value="">요약 방식: 자동</option>
         </select>
-        <button id="pin-insight-btn" style="width:100%;margin-top:6px">이 지점 요약</button>
+        <!-- 한 화면에 꽉 찬 버튼은 하나만 둔다. 이 화면에서 가장 중요한 행동은
+             '이 동네 기회 업종'(시장 공백)이라 그것만 남기고 나머지는 한 단계 낮춘다. -->
+        <button id="pin-insight-btn" class="sec" style="width:100%;margin-top:6px">이 지점 요약</button>
         <div id="pin-insight"></div>
         <button id="pin-report-btn" class="sec" style="width:100%;margin-top:8px">이 지점 리포트 PDF</button>
         <button id="pin-save-btn" class="sec" style="width:100%;margin-top:8px">이 지점 저장(비교용)</button>
@@ -200,9 +205,9 @@
     </div>
 
     <div class="legend">
-      <span class="k"><span class="d" style="background:var(--accent)"></span>역</span>
+      <span class="k"><span class="d" style="background:var(--brand)"></span>역</span>
       <span class="k"><span class="d" style="background:var(--warn)"></span>상권</span>
-      <span class="k"><span class="d" style="background:var(--good)"></span>핀/경쟁</span>
+      <span class="k"><span class="d" style="background:var(--up)"></span>핀/경쟁</span>
     </div>
 
     <div id="mapfail">
@@ -444,7 +449,7 @@ function analyzePin(latlng){
       if(cg&&cg.trend!=null){ gv.push(`<div class="li"><span class="v">가게 폐업<span class="muted"> 건수 2년증감</span></span><span class="d">${cg.trend>=0?'+':''}${cg.trend}% · '24년 ${num(cg.y2024)}곳</span></div>`); if(pinData){pinData.trend=cg.trend;pinData.y2024=cg.y2024;} }
       document.getElementById('pin-gu').innerHTML=gv.length?gv.join(''):`<span class="muted">자치구 지표 없음</span>`;
       const scl=document.getElementById('sig-close');
-      if(scl){ if(cg&&cg.trend!=null){const up=cg.trend>=0;scl.innerHTML=`<span style="color:${up?'var(--bad)':'var(--good)'}">${up?'▲':'▼'}${Math.abs(cg.trend)}<small>%</small></span>`;} else scl.innerHTML='<small class="muted">—</small>'; }
+      if(scl){ if(cg&&cg.trend!=null){const up=cg.trend>=0;scl.innerHTML=`<span style="color:${up?'var(--down)':'var(--up)'}">${up?'▲':'▼'}${Math.abs(cg.trend)}<small>%</small></span>`;} else scl.innerHTML='<small class="muted">—</small>'; }
     }else{
       document.getElementById('pin-addr').textContent='주소 변환 실패';
       document.getElementById('pin-region').innerHTML=`<span class="muted">${esc((d&&d.error)||'')}</span>`;
@@ -469,16 +474,16 @@ function analyzePin(latlng){
     const pick=catState[chosenCode];
     const pickH=pick?`<div class="pick">선택 업종 <b>${esc(pick.nm)} ${pick.n==null?'—':num(pick.n)}</b>곳 <span class="muted">반경 내</span></div>`:'';
     const nowH=nowCats.map(([code,nm])=>{const c=catState[code];
-      return `<span class="chip${code===chosenCode?' sel':''}">${esc(nm)} <b>${c&&c.n!=null?num(c.n):'—'}</b></span>`;}).join('');
+      return `<span class="tag${code===chosenCode?' sel':''}">${esc(nm)} <b>${c&&c.n!=null?num(c.n):'—'}</b></span>`;}).join('');
     const laterH=laterCats.map(([code,nm])=>{const c=catState[code];
       return (c&&c.n!=null)
-        ? `<span class="chip${code===chosenCode?' sel':''}">${esc(nm)} <b>${num(c.n)}</b></span>`
-        : `<span class="chip more" data-code="${code}" data-nm="${esc(nm)}">${esc(nm)} <b>+</b></span>`;}).join('');
+        ? `<span class="tag${code===chosenCode?' sel':''}">${esc(nm)} <b>${num(c.n)}</b></span>`
+        : `<span class="tag more" data-code="${code}" data-nm="${esc(nm)}">${esc(nm)} <b>+</b></span>`;}).join('');
     el.innerHTML=pickH+nowH+laterH;
-    [...el.querySelectorAll('.chip.more')].forEach(ch=>ch.onclick=()=>loadCat(ch.dataset.code,ch.dataset.nm));
+    [...el.querySelectorAll('.tag.more')].forEach(ch=>ch.onclick=()=>loadCat(ch.dataset.code,ch.dataset.nm));
   }
   function loadCat(code,nm){
-    const chip=[...el.querySelectorAll('.chip.more')].find(c=>c.dataset.code===code);
+    const chip=[...el.querySelectorAll('.tag.more')].find(c=>c.dataset.code===code);
     if(chip) chip.innerHTML=`${esc(nm)} …`;
     kakao({mode:'category',code,x:lng,y:lat,radius,size:1}).then(r=>{
       catState[code]={nm,n:r&&r.ok?r.total:null};
@@ -536,7 +541,7 @@ function runInsight(){
   out.innerHTML='<span class="muted">데이터로 정리하는 중…</span>';
   fetch('/api/insight',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:ctx,model})})
     .then(r=>r.json()).then(d=>{
-      if(d&&d.insight){const tag=[d.provider,d.model].filter(Boolean).join(' · ');out.innerHTML=esc(d.insight)+(tag?`<div style="color:var(--mut);font-size:10.5px;margin-top:6px">· ${esc(tag)}</div>`:'');}
+      if(d&&d.insight){const tag=[d.provider,d.model].filter(Boolean).join(' · ');out.innerHTML=esc(d.insight)+(tag?`<div style="color:var(--ink2);font-size:10.5px;margin-top:6px">· ${esc(tag)}</div>`:'');}
       else out.innerHTML=`<span class="muted">${esc((d&&d.error)||'인사이트 생성 실패')}</span>`;
     }).catch(e=>{out.innerHTML=`<span class="muted">연결 실패(배포 사이트에서만 동작): ${esc(String(e))}</span>`;});
 }
@@ -788,7 +793,7 @@ function runSearch(){
   const c=MAP.getCenter();
   kakao({mode:'keyword',query:q,x:c.getLng(),y:c.getLat()}).then(d=>{
     clearMk(searchMk);
-    if(!d.ok){box.innerHTML=`<div class="r c" style="color:var(--bad)">${esc(d.error||'검색 실패')}</div>`;return;}
+    if(!d.ok){box.innerHTML=`<div class="r c" style="color:var(--down)">${esc(d.error||'검색 실패')}</div>`;return;}
     if(!d.items.length){box.innerHTML='<div class="r c">결과 없음</div>';return;}
     d.items.forEach(it=>searchMk.push(poiMarker(MAP,it)));
     const f=d.items[0]; MAP.panTo(new kakao.maps.LatLng(f.y,f.x)); MAP.setLevel(4);
