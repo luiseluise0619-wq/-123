@@ -203,6 +203,15 @@ def main():
             seoul_med[inds[ii] if ii < len(inds) else str(ii)] = round(m)
     print(f"2) 서울 업종별 점포당매출 기준선 {len(seoul_med)}개 업종")
 
+    # 생활인구는 행정동 단위다. 상권 1,564곳이 행정동 398곳의 값을 나눠 쓴다 —
+    # 같은 동 안의 상권들은 이 지표에서 완전히 같은 값을 받는다는 뜻이다.
+    # 몇 곳이 같이 쓰는지를 상권마다 적어 둔다. 화면 근거 표가 이걸 그대로 보여준다.
+    # (측정: 동당 상권 수 중위 4곳·최대 17곳. 동 안 백분위가 ±15만 흩어져도
+    #  수요 상위 25곳 중 8~9곳이 바뀐다 — 즉 이 뭉개짐은 순위를 실제로 흔든다.)
+    adm_share = {}
+    for cd in adm_of.values():
+        adm_share[cd] = adm_share.get(cd, 0) + 1
+
     # 5) 상권별 지표 조립
     print("3) 수요·공급·기회 점수 계산")
     out = {}
@@ -237,6 +246,8 @@ def main():
             # 기여도 분해 — 가산식이라 정확히 떨어진다. 50(서울 중간)을 기준으로 얼마나 밀어올렸나.
             "why": {k: round(WEIGHTS[k] / wsum * (v - 50), 1) for k, v in parts.items()},
             "raw": {k: round(raw[k][cd]) for k in parts if cd in raw[k]},
+            # 생활인구를 이 동에서 몇 상권이 나눠 쓰는지(1이면 이 상권 전용).
+            "lp_n": adm_share.get(adm_of.get(cd), 1),
             "grade": ch.get("ix"), "grade_nm": ch.get("ix_nm"),
             "opr": ch.get("opr"), "cls": ch.get("cls"),   # 평균 운영개월 / 폐업개월(실측)
         }

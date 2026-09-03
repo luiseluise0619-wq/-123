@@ -904,8 +904,18 @@ function evidenceRows(z,o,oppRow,q){
       rows.push(['기회점수', '—', '미확인',
         '점포가 '+oppRow.stores+'곳뿐이라 이 업종이 되는 동네인지 판단 불가', q]);
   }
-  if(o.dem!=null) rows.push(['수요 점수', Math.round(o.dem)+'', '추정 · 백분위',
-    SRC_OPEN+' 생활인구 · 배후 아파트 · 집객시설', q]);
+  if(o.dem!=null){
+    rows.push(['수요 점수', Math.round(o.dem)+'', '추정 · 백분위',
+      SRC_OPEN+' 생활인구 · 배후 아파트 · 집객시설', q]);
+    // 생활인구는 행정동 단위다. 상권 단위로 갈리지 않는다는 사실을 숨기지 않는다 —
+    // 수요의 35%가 이 값이고, 같은 동을 쓰는 상권들은 여기서 완전히 같은 점수를 받는다.
+    var lpWhen=INTEL.livepop_basis||'', lpDate=INTEL.livepop_date||'';
+    if(lpDate) lpWhen=lpDate.slice(0,4)+'-'+lpDate.slice(4,6)+'-'+lpDate.slice(6)+(lpWhen?' '+lpWhen:'');
+    rows.push(['└ 생활인구 해상도',
+      (o.lp_n>1 ? esc(z.dong||'이 동')+' 값을 상권 '+o.lp_n+'곳이 공유' : esc(z.dong||'이 동')+' 전용'),
+      o.lp_n>1?'추정 · 행정동 단위':'실측 · 행정동 단위',
+      SRC_OPEN+' 생활인구 — 상권이 아니라 행정동 단위로만 공표됩니다', lpWhen||q]);
+  }
   if(o.opr) rows.push(['점포 평균 운영기간', (o.opr/12).toFixed(1)+'년', '실측',
     SRC_TRDAR+' 상권변화지표', q]);
   rows.push(['상권 분기 매출', won(z.sales)+'원', '추정 · 카드매출 귀속',
