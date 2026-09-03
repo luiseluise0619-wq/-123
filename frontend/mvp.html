@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="theme.css">
 <script src="command.js" defer></script>
+<!-- 화면끼리 공유하는 '내 조건'(업종·평수·자금…). 로그인 없이 이 브라우저에만 저장. -->
+<script src="si-context.js"></script>
 <script src="gu_rent_zone.js"></script>
 <script src="data-bundle.js"></script>
 <style>
@@ -613,6 +615,7 @@ input[type=range]{width:100%;accent-color:var(--ink);height:28px}
 
   function run(){
     st=baseInputs();
+    saveCtx();
     fillGuides(st);   // 구/업종이 바뀔 때만 필요 → 진단 1회당 1회
     render();
     history.replaceState(null,'','?mode='+MODE+'&gu='+encodeURIComponent(st.g)+'&ind='+encodeURIComponent(st.k)+
@@ -621,16 +624,36 @@ input[type=range]{width:100%;accent-color:var(--ink);height:28px}
   }
   document.getElementById('run').addEventListener('click',run);
   // 공유 링크: URL 파라미터로 조건 복원 + 복사
+  // 다른 화면에서 넣은 조건을 이어받는다(SI). 주소에 값이 있으면 그게 이긴다 —
+  // 공유 링크로 들어온 사람에게 내 저장값을 덮어씌우면 보내준 화면이 안 나온다.
   (function(){var p=new URLSearchParams(location.search);
-    if(p.get('gu')&&C.gu[p.get('gu')]) guSel.value=p.get('gu');
-    if(p.get('ind')&&C.ind[p.get('ind')]) indSel.value=p.get('ind');
-    if(p.get('mode')==='run'){ var mb=document.querySelector('[data-mode="run"]'); if(mb) mb.click(); }
-    setDial('area', +p.get('area')||15, false);
-    if(p.get('budget')) setDial('budget', +p.get('budget'), true);
-    if(p.get('sales'))  setDial('sales',  +p.get('sales'),  true);
+    var gu=SI.pick('gu', p.get('gu')), ind=SI.pick('ind', p.get('ind'));
+    if(gu&&C.gu[gu]) guSel.value=gu;
+    if(ind&&C.ind[ind]) indSel.value=ind;
+    var mode=SI.pick('mode', p.get('mode'), 'new');
+    if(mode==='run'){ var mb=document.querySelector('[data-mode="run"]'); if(mb) mb.click(); }
+    setDial('area', SI.pickNum('area', p.get('area'), 15), false);
+    var bd=SI.pickNum('budget', p.get('budget'), 0); if(bd) setDial('budget', bd, true);
+    var sl=SI.pickNum('sales',  p.get('sales'),  0); if(sl) setDial('sales',  sl,  true);
+    var rt=SI.pickNum('rent',   null, 0);            if(rt) setDial('rent',   rt,  true);
+    var stf=SI.pickNum('staff', null, null);         if(stf!=null) setDial('staff', stf, true);
     drawDials();
-    if(p.get('gu')&&p.get('ind')) run();
+    // 이어받은 조건이 있으면 알린다 — 왜 이미 채워져 있는지 모르면 그게 더 불안하다.
+    var lbl=SI.label();
+    if(lbl && !p.get('gu')){
+      var n=document.createElement('p'); n.className='t-cap'; n.style.marginTop='var(--sp-3)';
+      n.innerHTML='다른 화면에서 보던 조건(<b>'+lbl+'</b>)을 그대로 가져왔습니다.';
+      document.getElementById('lede').after(n);
+    }
+    if((gu&&ind)||p.get('gu')) run();
   })();
+
+  // 이 화면에서 정한 조건을 다른 화면도 쓴다.
+  function saveCtx(){
+    SI.set({ gu:guSel.value, ind:indSel.value, mode:MODE,
+             area:V.area, budget:V.budget||null, sales:V.sales||null,
+             rent:MAN.rent?V.rent:null, staff:MAN.staff?V.staff:null });
+  }
   document.getElementById('share').addEventListener('click',function(){
     var u=location.origin+location.pathname+location.search;
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){alert('링크가 복사됐습니다.');},function(){prompt('링크 복사:',u);});}

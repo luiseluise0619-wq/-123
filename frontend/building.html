@@ -7,6 +7,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F6FEB'/%3E%3Crect x='8' y='16' width='4' height='9' rx='1.2' fill='white'/%3E%3Crect x='14' y='11' width='4' height='14' rx='1.2' fill='white'/%3E%3Crect x='20' y='7' width='4' height='18' rx='1.2' fill='white'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="theme.css">
 <script src="command.js" defer></script>
+<!-- 화면끼리 공유하는 '내 조건'(업종·평수·자금…). 로그인 없이 이 브라우저에만 저장. -->
+<script src="si-context.js"></script>
 <style>
 /* 메뉴(.navlink)는 theme.css 것을 그대로 쓴다 — 여기 복사본이 있었는데,
    theme.css 를 고쳐도 이 화면만 안 따라오는 원인이었다.
@@ -815,10 +817,29 @@ function runSearch(){
   });
 }
 
+// 서울시 업종명 → 카카오 카테고리 코드.
+// 두 분류 체계가 달라서 1:1 로 안 붙는다. 확실한 것만 매핑하고 나머지는 건드리지 않는다
+// (억지로 붙이면 '한식음식점'을 고른 사람에게 엉뚱한 반경 경쟁 수를 보여주게 된다).
+const IND2CAT=[[/커피|음료|카페|제과|베이커리/, 'CE7'],
+               [/음식|한식|중식|일식|양식|분식|치킨|호프|주점|패스트|피자|고기|족발/, 'FD6'],
+               [/편의점/, 'CS2'], [/의원|병원|치과|한의원|피부/, 'HP8'], [/의약품|약국/, 'PM9'],
+               [/학원|교습|강습/, 'AC5'], [/슈퍼|마트/, 'MT1']];
+function catOf(ind){
+  if(!ind) return null;
+  for(const [re,code] of IND2CAT) if(re.test(ind)) return code;
+  return null;
+}
+
 function fillGuSelect(){
   const sel=document.getElementById('gu-sel');
   Object.keys(guCenters).sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
-  sel.onchange=()=>{const v=sel.value;if(!MAP)return;
+  // 다른 화면에서 보던 자치구가 있으면 거기서 시작한다.
+  const c=SI.get();
+  if(c.gu&&guCenters[c.gu]){
+    sel.value=c.gu;
+    if(MAP){ MAP.panTo(new kakao.maps.LatLng(guCenters[c.gu].lat,guCenters[c.gu].lng)); MAP.setLevel(5); }
+  }
+  sel.onchange=()=>{const v=sel.value; SI.set({gu:v||null}); if(!MAP)return;
     if(v&&guCenters[v]){MAP.panTo(new kakao.maps.LatLng(guCenters[v].lat,guCenters[v].lng));MAP.setLevel(5);}
     else{MAP.panTo(new kakao.maps.LatLng(37.5636,126.9976));MAP.setLevel(8);}};
 }
@@ -843,6 +864,9 @@ function initMap(){
   document.getElementById('ly-zone').onchange=e=>zoneMk.forEach(m=>m.setMap(e.target.checked?MAP:null));
   // 반경·관심업종을 바꾸면 마지막 핀에 대해 즉시 다시 그림(원·집계 갱신)
   document.getElementById('pin-r').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
+  // 다른 화면에서 고른 업종을 관심 업종으로 옮겨 준다(맞는 카테고리가 있을 때만).
+  (function(){ const c=catOf((SI.get()||{}).ind);
+    if(c) document.getElementById('pin-cat').value=c; })();
   document.getElementById('pin-cat').onchange=()=>{ if(lastPin) analyzePin(lastPin); };
   document.getElementById('pin-insight-btn').onclick=runInsight;
   loadModels();

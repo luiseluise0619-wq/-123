@@ -7,6 +7,8 @@
 <meta name="description" content="서울 상권 1,564곳의 수요·공급·변화·전망을 실측 데이터로 판독합니다.">
 <link rel="stylesheet" href="theme.css">
 <script src="command.js" defer></script>
+<!-- 화면끼리 공유하는 '내 조건'(업종·평수·자금…). 로그인 없이 이 브라우저에만 저장. -->
+<script src="si-context.js"></script>
 <!-- 자치구→부동산원 조사상권 매핑 1벌. 맞춤 탐색의 임대료 축이 이 표를 쓴다.
      index.html·mvp.html 과 같은 파일이라 세 화면의 임대료가 어긋날 일이 없다. -->
 <script src="gu_rent_zone.js"></script>
@@ -352,7 +354,10 @@ function bootHome(){
       return '<button class="chip'+(i===0?' on':'')+'" data-ind="'+esc(k)+'">'+esc(k)+'</button>';
     }).join('')+'<select class="chip chip-sel" id="indmore"><option value="">전체 업종…</option>'+
       etc.map(function(k){return '<option>'+esc(k)+'</option>';}).join('')+'</select>';
-    curOppInd=picks[0]||all[0];
+    // 다른 화면에서 고른 업종이 있으면 그걸로 시작한다. 같은 걸 두 번 묻지 않는다.
+    var pi=new URLSearchParams(location.search).get('ind');
+    var want=SI.pick('ind', pi);
+    curOppInd=(want&&OPP.ind[want]) ? want : (picks[0]||all[0]);
     window.__cmdInds=all;            // ⌘K 팔레트가 업종을 찾을 수 있게
     $('#indchips').addEventListener('click',function(e){
       var b=e.target.closest('[data-ind]'); if(!b) return;
@@ -364,7 +369,7 @@ function bootHome(){
   });
 }
 function setInd(k){
-  curOppInd=k;
+  curOppInd=k; SI.set({ind:k});
   Array.prototype.forEach.call(document.querySelectorAll('#indchips .chip[data-ind]'),function(x){
     x.classList.toggle('on', x.dataset.ind===k);
   });
@@ -532,6 +537,10 @@ function openFit(){
     }).join('');
     wireFit();
     // 홈에서 이미 업종을 고르고 들어왔으면 1번 답은 채워 둔다(같은 질문 두 번 묻지 않는다).
+    // 예산·평수도 진단 화면에서 넣었으면 그대로 가져온다.
+    var c=SI.get();
+    if(c.budget){ $('#fbudget').value=c.budget; fitBudget=+c.budget; }
+    if(c.area){ $('#farea').value=c.area; fitArea=+c.area; }
     if(curOppInd && ALL.ind[curOppInd]) setFitInd(curOppInd);
   })
   .catch(function(){
@@ -549,6 +558,7 @@ function wireFit(){
   function readMoney(){
     fitBudget=+$('#fbudget').value||0;
     fitArea=+$('#farea').value||15;
+    SI.set({budget:fitBudget||null, area:fitArea});   // 진단·비교 화면도 이 값을 쓴다
   }
   $('#fq2next').addEventListener('click',function(){
     readMoney();
@@ -579,7 +589,7 @@ function wireFit(){
   });
 }
 function setFitInd(k){
-  fitInd=k;
+  fitInd=k; SI.set({ind:k});
   Array.prototype.forEach.call(document.querySelectorAll('#fitind .chip[data-find]'),function(x){
     x.classList.toggle('on', x.dataset.find===k);
   });
@@ -793,6 +803,7 @@ function route(){
 // ── 상권 프로파일 ──
 function open(cd, fromHash){
   var z=byCd[cd]; if(!z) return;
+  SI.set({zone:cd, zoneNm:z.nm, gu:z.gu||null, ind:curInd||null});
   if(!fromHash){ location.hash='z='+cd+(curInd?'&ind='+encodeURIComponent(curInd):''); return; }
   $('#browse').hidden=true; $('#fit').hidden=true;
   var p=$('#profile'); p.hidden=false;
@@ -1148,7 +1159,11 @@ function render(z){
     this.textContent=r?'저장됨':'저장';
   });
   $('#cmp').addEventListener('click',function(){
-    location.href='compare.html?gu='+encodeURIComponent(z.gu||'');
+    // 예전엔 ?gu= 만 붙여 보냈는데 비교 화면이 주소를 읽지 않아 아무것도 안 담겼다.
+    // 이제 상권·업종·자치구를 넘기고, 비교 화면이 그걸로 열린다.
+    SI.set({zone:z.cd, zoneNm:z.nm, gu:z.gu||null, ind:curInd||null});
+    location.href='compare.html?mode=zone&zone='+encodeURIComponent(z.nm||'')+
+      '&gu='+encodeURIComponent(z.gu||'')+'&ind='+encodeURIComponent(curInd||'');
   });
   var fs=$('#fsel'); if(fs) fs.addEventListener('change',function(){ curInd=fs.value; render(z); });
   var wi=$('#wi');
