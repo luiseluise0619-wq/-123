@@ -57,7 +57,49 @@ input[type=range]{width:100%;accent-color:var(--ink);height:28px}
   color:var(--ink2);margin-top:var(--sp-4);line-height:1.5}
 .agree input{margin-top:3px;width:auto;height:auto;flex:none}
 
+/* ── 두 갈래 — 준비 중인 사람과 이미 하는 사람은 묻는 것도 답도 다르다 ── */
+.modeswitch{display:flex;gap:var(--sp-2);margin-top:var(--sp-5)}
+.modeswitch .chip.two{flex:1;justify-content:center;align-items:flex-start}
+
+/* ── 조건 — 하나를 움직이면 나머지가 따라온다 ── */
+.dial{border-top:1px solid var(--line-soft);padding:var(--sp-5) 0}
+.dial:first-child{border-top:0}
+.dial .top{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-3)}
+.dial .nm{font-size:var(--f-sub);font-weight:600}
+.dial .val{font-size:var(--f-head);font-weight:600;font-variant-numeric:tabular-nums;
+  letter-spacing:-.02em}
+.dial .hint{font-size:var(--f-cap);color:var(--ink3);margin-top:var(--sp-1)}
+.dial .hint b{color:var(--ink2);font-weight:500}
+.dial input[type=range]{width:100%;accent-color:var(--ink);height:28px;margin-top:var(--sp-2)}
+/* 자동으로 따라온 값인지, 사용자가 직접 정한 값인지 구분해 보여준다 */
+.auto{font-size:11px;color:var(--ink3);border:1px solid var(--line);border-radius:var(--r-full);
+  padding:1px 7px;margin-left:6px;vertical-align:2px;white-space:nowrap}
+.auto.man{color:var(--brand);border-color:var(--brand)}
+
+/* ── 시세 막대 — '월세 445만원'이 비싼지 싼지는 숫자만 봐선 모른다 ── */
+.gauge{margin-top:var(--sp-3)}
+.gauge .track{position:relative;height:8px;border-radius:var(--r-full);
+  background:linear-gradient(90deg,var(--up-weak),var(--surface-2),var(--warn-weak))}
+.gauge .me{position:absolute;top:-4px;width:3px;height:16px;border-radius:2px;background:var(--ink);
+  transform:translateX(-1.5px)}
+.gauge .ends{display:flex;justify-content:space-between;font-size:var(--f-cap);
+  color:var(--ink3);margin-top:var(--sp-2)}
+
+/* ── 차트 ── */
+.chart{width:100%;display:block;overflow:visible}
+.legend{display:flex;gap:var(--sp-5);flex-wrap:wrap;font-size:var(--f-cap);color:var(--ink2);
+  margin-top:var(--sp-3)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:3px;margin-right:6px}
+/* 고정비 구성 — 무엇이 돈을 먹는지 한 줄로 */
+.stack{display:flex;height:34px;border-radius:var(--r-sm);overflow:hidden;margin-top:var(--sp-3)}
+.stack i{display:flex;align-items:center;justify-content:center;font-size:var(--f-cap);
+  color:var(--bg);font-weight:600;min-width:0;overflow:hidden;white-space:nowrap}
+.stackkey{display:flex;gap:var(--sp-4);flex-wrap:wrap;font-size:var(--f-cap);
+  color:var(--ink2);margin-top:var(--sp-2)}
+.stackkey s{text-decoration:none;display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+
 @media(max-width:640px){
+  .modeswitch{flex-direction:column}
   .form{grid-template-columns:1fr}
   .stickycta .lbl{display:none}
   .stickycta .btn{flex:1}
@@ -81,16 +123,26 @@ input[type=range]{width:100%;accent-color:var(--ink);height:28px}
 </header>
 <div class="wrap">
   <section class="sec" style="padding-bottom:var(--sp-5)">
-    <h1 class="t-display">이 자리에서<br>버틸 수 있을까요</h1>
-    <p class="t-sub" style="margin-top:var(--sp-3)">조건 네 가지만 넣으면 손익분기와 예상 순이익을 계산합니다.</p>
+    <h1 class="t-display" id="h1">이 자리에서<br>버틸 수 있을까요</h1>
+    <p class="t-sub" id="lede" style="margin-top:var(--sp-3)">지역과 업종만 고르면 나머지는 채워 드립니다. 하나를 움직이면 관련된 값이 같이 따라옵니다.</p>
 
-    <div class="form noprint">
+    <!-- 준비 중인 사람과 이미 하는 사람은 아는 것이 다르다.
+         준비 중이면 월세도 매출도 모른다 — 채워 줘야 한다.
+         이미 하고 있으면 자기 숫자를 안다 — 그걸 받아서 '어디쯤인지'를 답해야 한다. -->
+    <div class="modeswitch noprint">
+      <button class="chip two on" data-mode="new"><b>창업 준비 중</b><span>아직 가게가 없어요</span></button>
+      <button class="chip two" data-mode="run"><b>이미 운영 중</b><span>내 가게가 어디쯤인지 보고 싶어요</span></button>
+    </div>
+
+    <div class="form noprint" style="margin-top:var(--sp-5)">
       <label><span>지역</span><select id="gu"></select></label>
       <label><span>업종</span><select id="ind"></select></label>
-      <label><span>창업 자금 (만원)</span><input id="budget" type="number" inputmode="numeric" placeholder="예: 5000"></label>
-      <label><span>매장 평수</span><input id="area" type="number" inputmode="numeric" placeholder="예: 15"></label>
     </div>
-    <button class="btn btn-primary btn-block" id="run" style="margin-top:var(--sp-4)">진단하기</button>
+
+    <!-- 조건 — 슬라이더 하나를 움직이면 딸린 값이 같이 움직인다 -->
+    <div class="noprint" id="dials" style="margin-top:var(--sp-5)"></div>
+
+    <button class="btn btn-primary btn-block" id="run" style="margin-top:var(--sp-5)">결과 보기</button>
   </section>
 
   <!-- 결론 — 판정 한 문장 + 가장 중요한 숫자 하나(예상 월 순이익) -->
@@ -102,33 +154,39 @@ input[type=range]{width:100%;accent-color:var(--ink);height:28px}
   </section>
 
   <div id="result" hidden>
-    <!-- 근거 -->
+    <!-- ① 매출 분포에서 내 자리 — 이 화면에서 가장 중요한 그림 -->
+    <section class="sec">
+      <h2 class="t-head" id="distTitle">얼마나 팔아야 하는가</h2>
+      <p class="t-sub" id="distNote" style="margin-top:var(--sp-2)"></p>
+      <div id="distChart" style="margin-top:var(--sp-5)"></div>
+      <div class="legend" id="distLegend"></div>
+    </section>
+
+    <!-- ② 매달 나가는 돈 -->
+    <section class="sec">
+      <h2 class="t-head">매달 나가는 돈</h2>
+      <p class="t-sub" style="margin-top:var(--sp-2)">매출이 얼마든 이만큼은 나갑니다. 그래서 손익분기가 여기서 정해집니다.</p>
+      <div class="stack" id="fixStack"></div>
+      <div class="stackkey" id="fixKey"></div>
+    </section>
+
+    <!-- ③ 매출이 흔들리면 -->
+    <section class="sec">
+      <h2 class="t-head">매출이 흔들리면</h2>
+      <p class="t-sub" style="margin-top:var(--sp-2)">잘 안 될 때·보통일 때·잘될 때의 월 순이익입니다.</p>
+      <div id="scenChart" style="margin-top:var(--sp-4)"></div>
+    </section>
+
+    <!-- ④ 근거 -->
     <section class="sec">
       <h2 class="t-head">이렇게 봤습니다</h2>
       <ul class="changes" id="intel" style="margin-top:var(--sp-4)"></ul>
       <div class="kpis" id="kpis"></div>
     </section>
 
-    <!-- 매출이 흔들릴 때 -->
-    <section class="sec">
-      <h2 class="t-head">매출이 흔들리면</h2>
-      <p class="t-sub" style="margin-top:var(--sp-2)">하위 25%(비관) · 중위 · 상위 25%(낙관) 매출일 때의 월 순이익입니다.</p>
-      <div class="scen" id="scen"></div>
-    </section>
-
     <!-- 조건 바꿔보기 — 기본은 접어 둔다 -->
     <section class="sec">
       <h2 class="t-head" style="margin-bottom:var(--sp-2)">더 살펴보기</h2>
-
-      <details class="disclose noprint">
-        <summary>조건 바꿔보기 — 월세·직원·객단가</summary>
-        <div class="whatif" style="padding-bottom:var(--sp-5)">
-          <div class="sl"><label>월세 <b id="v_rent"></b></label><input type="range" id="s_rent" min="0"></div>
-          <div class="sl"><label>직원 수 <b id="v_staff"></b></label><input type="range" id="s_staff" min="0" max="10" step="1"></div>
-          <div class="sl"><label>객단가 <b id="v_unit"></b></label><input type="range" id="s_unit" min="0"></div>
-          <p class="t-cap">움직이면 위 판정과 순이익이 바로 바뀝니다.</p>
-        </div>
-      </details>
 
       <details class="disclose">
         <summary>손님이 몰리는 때</summary>
@@ -231,69 +289,302 @@ input[type=range]{width:100%;accent-color:var(--ink);height:28px}
 
   var st=null, lastCalc=null; // 현재 진단 상태(슬라이더 재계산·다운로드용)
 
+  // ═══════════════════════════════════════════════════════════════
+  // 조건 다이얼 — 하나를 움직이면 딸린 값이 따라온다
+  // ═══════════════════════════════════════════════════════════════
+  //
+  // 왜 필요한가
+  //   평수를 15평에서 30평으로 늘리면 월세도 직원 수도 당연히 늘어난다.
+  //   그런데 예전 화면은 셋을 따로 받았다. 평수만 바꾸면 월세는 15평 값 그대로였고,
+  //   사용자는 그게 틀린 줄도 몰랐다. 창업을 처음 하는 사람일수록 더 그렇다.
+  //
+  // 규칙
+  //   · 평수를 움직이면 월세·직원 수가 자동으로 다시 계산된다.
+  //   · 단, 사용자가 그 값을 직접 만졌으면 건드리지 않는다(직접 정한 걸 덮으면 안 된다).
+  //     대신 '직접 입력' 표시를 달고, 되돌리는 버튼을 준다.
+  //   · 월세 = 자치구 대표 상권 시세 × 평 × 3.3  [추정]
+  //     직원 = 평수 ÷ 13, 최소 1명            [가정]  둘 다 화면에 그대로 적는다.
+  var MODE='new';                       // new=창업 준비 중 · run=이미 운영 중
+  var V={};                             // 현재 값
+  var MAN={};                           // 사용자가 직접 만진 항목
+
+  function areaDeps(area, g){
+    var ro=rentOf(g);
+    return { rent: Math.round(ro.rent*area*3.3), staff: Math.max(1, Math.round(area/13)) };
+  }
+  // 서울 25개 자치구 월세(같은 평수 기준) 분포에서 이 구가 어디쯤인지.
+  // '월세 445만원'은 초보에게 아무 뜻이 없다. '서울에서 비싼 편'이어야 뜻이 생긴다.
+  function rentGauge(g, area){
+    var all=Object.keys(C.gu).map(function(n){ return rentOf(n).rent*area*3.3; }).sort(function(a,b){return a-b;});
+    var me=rentOf(g).rent*area*3.3;
+    var below=0; for(var i=0;i<all.length;i++) if(all[i]<me) below++;
+    return { pct: Math.round(below/(all.length-1)*100), lo: all[0], hi: all[all.length-1], me: me };
+  }
+
+  function dialDefs(){
+    var g=guSel.value, area=V.area||15, dep=areaDeps(area,g);
+    var i=C.ind[indSel.value]||{};
+    var D=[{ k:'area', nm:'매장 평수', unit:'평', min:5, max:100, step:1,
+             hint:'움직이면 월세와 직원 수가 같이 바뀝니다' }];
+    if(MODE==='run'){
+      D.push({ k:'sales', nm:'내 월매출', unit:'만원', min:0, max:Math.max(3000,(i.p90||3000)*1.5), step:10,
+               hint:'통장에 찍히는 월 매출을 넣으세요' });
+    } else {
+      D.push({ k:'budget', nm:'가진 자금', unit:'만원', min:0, max:30000, step:100,
+               hint:'보증금·인테리어·집기까지 합쳐 지금 쓸 수 있는 돈' });
+    }
+    D.push({ k:'rent', nm:'월세', unit:'만원', min:0, max:Math.max(100,dep.rent*2.5), step:5,
+             hint:'따로 안 넣으면 이 지역 시세로 계산합니다', gauge:true });
+    D.push({ k:'staff', nm:'직원 수', unit:'명', min:0, max:15, step:1,
+             hint:'사장님 본인은 빼고 세어 주세요' });
+    return D;
+  }
+
+  function setDial(k, v, byUser){
+    V[k]=v;
+    if(byUser) MAN[k]=true;
+    if(k==='area'){
+      // 평수가 바뀌면 딸린 값을 다시 계산한다 — 단 직접 만진 것은 그대로 둔다.
+      var dep=areaDeps(v, guSel.value);
+      if(!MAN.rent)  V.rent = dep.rent;
+      if(!MAN.staff) V.staff = dep.staff;
+    }
+  }
+  function resetDial(k){ delete MAN[k]; setDial('area', V.area, false); drawDials(); if(lastCalc) render(); }
+
+  function drawDials(){
+    var box=document.getElementById('dials');
+    box.innerHTML=dialDefs().map(function(d){
+      var v=V[d.k]==null?d.min:V[d.k];
+      var man=MAN[d.k];
+      var tag = (d.k==='rent'||d.k==='staff')
+        ? '<span class="auto'+(man?' man':'')+'">'+(man?'직접 입력':'자동')+'</span>' : '';
+      var g='';
+      if(d.gauge && !man){
+        var q=rentGauge(guSel.value, V.area||15);
+        g='<div class="gauge"><div class="track"><i class="me" style="left:'+q.pct+'%"></i></div>'+
+          '<div class="ends"><span>서울에서 가장 싼 구 '+fmt(q.lo)+'원</span>'+
+          '<span>가장 비싼 구 '+fmt(q.hi)+'원</span></div>'+
+          '<p class="hint" style="margin-top:var(--sp-2)">이 평수 기준 <b>'+guSel.value+'</b>는 서울 25개 구 중 '+
+          '<b>'+(q.pct>=50?'비싼 쪽 상위 '+(100-q.pct):'싼 쪽 하위 '+q.pct)+'%</b>입니다</p></div>';
+      }
+      return '<div class="dial"><div class="top"><span class="nm">'+d.nm+tag+
+        (man?' <button class="btn btn-tertiary btn-sm" data-reset="'+d.k+'" style="font-size:12px">자동으로</button>':'')+
+        '</span>'+
+        '<span class="val">'+(d.unit==='만원'?fmt(v)+'원':v.toLocaleString()+d.unit)+'</span></div>'+
+        '<input type="range" data-dial="'+d.k+'" min="'+d.min+'" max="'+d.max+'" step="'+d.step+'" value="'+v+'">'+
+        '<p class="hint">'+d.hint+'</p>'+g+'</div>';
+    }).join('');
+  }
+
+  // 다이얼은 다시 그려지므로 개별 리스너 대신 위임으로 받는다.
+  var dialRaf=0;
+  document.getElementById('dials').addEventListener('input',function(e){
+    var r=e.target.closest('[data-dial]'); if(!r) return;
+    setDial(r.dataset.dial, +r.value, r.dataset.dial!=='area');
+    if(dialRaf) return;
+    dialRaf=requestAnimationFrame(function(){ dialRaf=0; drawDials(); if(lastCalc) render(); });
+  });
+  document.getElementById('dials').addEventListener('click',function(e){
+    var b=e.target.closest('[data-reset]'); if(b) resetDial(b.dataset.reset);
+  });
+  document.querySelector('.modeswitch').addEventListener('click',function(e){
+    var b=e.target.closest('[data-mode]'); if(!b||b.dataset.mode===MODE) return;
+    MODE=b.dataset.mode;
+    Array.prototype.forEach.call(this.querySelectorAll('[data-mode]'),function(x){
+      x.classList.toggle('on', x.dataset.mode===MODE);
+    });
+    document.getElementById('h1').innerHTML = MODE==='run'
+      ? '내 가게는<br>어디쯤일까요' : '이 자리에서<br>버틸 수 있을까요';
+    document.getElementById('lede').textContent = MODE==='run'
+      ? '내 매출과 월세를 넣으면 같은 지역·업종 가게들 사이에서 어디쯤인지 보여드립니다.'
+      : '지역과 업종만 고르면 나머지는 채워 드립니다. 하나를 움직이면 관련된 값이 같이 따라옵니다.';
+    document.getElementById('run').textContent = MODE==='run' ? '내 위치 보기' : '결과 보기';
+    drawDials();
+    if(lastCalc) run();
+  });
+  [guSel,indSel].forEach(function(el){ el.addEventListener('change',function(){
+    setDial('area', V.area||15, false); drawDials(); if(lastCalc) run();
+  });});
+
   function baseInputs(){
     var g=guSel.value,k=indSel.value,i=C.ind[k],gu=C.gu[g];
     var rec=(SGI&&SGI[g]&&SGI[g][k])||null;               // 구×업종 실측
     var q=rec&&rec.perstore_q;                            // [하위25,중위,상위25] 만원
     var p25=q?q[0]:i.p25, p50=q?q[1]:i.p50, p75=q?q[2]:i.p75; // 구 실측 우선, 없으면 서울 업종
     var unit=(rec&&rec.unit)||i.unit;                    // 객단가(원)
-    var area=+document.getElementById('area').value||0;
-    var budget=+document.getElementById('budget').value||0;
-    var ro=rentOf(g);
-    return {g:g,k:k,i:i,gu:gu,rec:rec,guData:!!q,p25:p25,p50:p50,p75:p75,unit:unit,area:area,budget:budget,vacancy:ro.vacancy,
-            rentDefault:Math.round(ro.rent*area*3.3), staffDefault:Math.max(1,Math.round(area/13))};
+    var area=V.area||15, budget=V.budget||0, ro=rentOf(g), dep=areaDeps(area,g);
+    return {g:g,k:k,i:i,gu:gu,rec:rec,guData:!!q,p25:p25,p50:p50,p75:p75,unit:unit,
+            area:area,budget:budget,vacancy:ro.vacancy,mode:MODE,mySales:V.sales||0,
+            rentDefault:dep.rent, staffDefault:dep.staff};
   }
 
   function compute(s, ov){
     var i=s.i, cogs=i.cogs/100, etc=i.etc, wage=250;
     var rentCost=ov.rent, staff=ov.staff, unit=ov.unit;
-    var rev=Math.round(s.p50*(unit/s.unit));             // 객단가 바꾸면 매출도 비례(건수 고정 가정)
+    // 이미 운영 중이면 '이 동네 중위 매출'을 쓸 이유가 없다. 본인이 아는 실제 매출을 쓴다.
+    // (예전엔 모드와 무관하게 s.p50 을 썼다 — 사용자가 넣은 매출이 결과에 반영되지 않았다.)
+    var rev = (s.mode==='run' && s.mySales)
+      ? s.mySales
+      : Math.round(s.p50*(unit/s.unit));   // 준비 중이면 이 구·업종 중위 매출로 추정
     var fixed=rentCost+staff*wage+etc;
     var profit=rev-Math.round(rev*cogs)-fixed;
     var bep=fixed/(1-cogs);
-    var payback=profit>0?Math.ceil(i.invest/profit):null;
+    // 투자 회수는 아직 시작 안 한 사람의 지표다. 이미 운영 중이면 뜻이 없다.
+    var payback=(s.mode!=='run' && profit>0)?Math.ceil(i.invest/profit):null;
     return {rev:rev,cogs:cogs,fixed:fixed,rentCost:rentCost,staff:staff,etc:etc,profit:profit,bep:bep,payback:payback,unit:unit};
   }
 
+
+  // ═══ 차트 — 숫자를 나열하는 대신 자리를 보여준다 ═══
+  // 라이브러리 없이 SVG 로 그린다(용량 0, 인수인계 부담 0).
+  // 색은 theme.css 토큰만 쓴다 — 밝은/어두운 양쪽에서 그대로 읽힌다.
+
+  // ① 매출 분포에서 내 자리.
+  //    "손익분기 1,200만원"은 초보에게 아무 뜻이 없다.
+  //    같은 지역·업종 가게들이 실제로 얼마를 파는지 위에 얹어야 뜻이 생긴다.
+  function drawDist(s, r, myRev, boxW){
+    var pts=[[0,s.p25*0.7],[25,s.p25],[50,s.p50],[75,s.p75],[100,s.p75*1.45]];
+    // viewBox 폭을 실제 컨테이너 폭에 맞춘다. 고정 폭(760)으로 그리면 390px 화면에서
+    // SVG 가 0.46배로 줄면서 글씨도 같이 줄어 읽을 수 없게 된다(실제로 그랬다).
+    var W=Math.max(320, Math.round(boxW||760)), H=214, PL=8, PR=8, PT=32, PB=34;
+    var mn=0, mx=Math.max(pts[pts.length-1][1], r.bep*1.15, myRev*1.15);
+    var X=function(p){return PL+(W-PL-PR)*p/100;};
+    var Y=function(v){return PT+(H-PT-PB)*(1-(v-mn)/((mx-mn)||1));};
+    var line=pts.map(function(p,i){return (i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1);}).join(' ');
+    var area=line+' L'+X(100).toFixed(1)+' '+(H-PB)+' L'+X(0).toFixed(1)+' '+(H-PB)+' Z';
+    var o=['<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="같은 지역·업종 매출 분포에서 내 손익분기 위치">'];
+    o.push('<path d="'+area+'" fill="var(--surface)"/>');
+    o.push('<path d="'+line+'" fill="none" stroke="var(--line-strong)" stroke-width="2" stroke-linejoin="round"/>');
+    // 실측 분위 3점만 점으로 — 나머지는 곡선을 잇기 위한 근사다
+    [[25,s.p25,'하위 25%'],[50,s.p50,'중위'],[75,s.p75,'상위 25%']].forEach(function(q){
+      o.push('<circle cx="'+X(q[0]).toFixed(1)+'" cy="'+Y(q[1]).toFixed(1)+'" r="3.5" fill="var(--ink3)"/>');
+      var fs=W<520?10:11;
+      o.push('<text x="'+X(q[0]).toFixed(1)+'" y="'+(H-15)+'" text-anchor="middle" font-size="'+fs+'" fill="var(--ink3)">'+q[2]+'</text>');
+      o.push('<text x="'+X(q[0]).toFixed(1)+'" y="'+(H-2)+'" text-anchor="middle" font-size="'+fs+'" fill="var(--ink2)">'+fmt(q[1])+'</text>');
+    });
+    // 두 표시선이 가까우면 라벨이 겹친다(손익분기 1,137만 / 내 매출 1,800만 처럼).
+    // 위·아래로 나눠 달고, 그래도 가까우면 한 칸 더 띄운다.
+    var placed=[];
+    function mark(v,color,label,above){
+      if(v==null||v<mn||v>mx) return;
+      // 곡선이 아니라 x축(매출)에 세로선을 세운다. 매출 v 가 몇 % 지점인지 되짚는다.
+      var p=null;
+      for(var i=0;i<pts.length-1;i++){
+        if(v>=pts[i][1]&&v<=pts[i+1][1]){
+          var t=(v-pts[i][1])/((pts[i+1][1]-pts[i][1])||1);
+          p=pts[i][0]+(pts[i+1][0]-pts[i][0])*t; break;
+        }
+      }
+      if(p==null) p=v<pts[0][1]?0:100;
+      var xn=X(p), x=xn.toFixed(1);
+      var y = above ? 13 : PT-3;
+      // 같은 높이에 이미 라벨이 있고 가로로 가까우면 밀어 내린다
+      for(var q=0;q<placed.length;q++)
+        if(Math.abs(placed[q][0]-xn)<W*0.24 && Math.abs(placed[q][1]-y)<10) y = placed[q][1]+14;
+      placed.push([xn,y]);
+      o.push('<line x1="'+x+'" y1="'+PT+'" x2="'+x+'" y2="'+(H-PB)+'" stroke="'+color+'" stroke-width="2" stroke-dasharray="4 3"/>');
+      o.push('<text x="'+x+'" y="'+y+'" text-anchor="'+(p>82?'end':p<18?'start':'middle')+
+             '" font-size="12" font-weight="600" fill="'+color+'">'+label+'</text>');
+    }
+    if(s.mode==='run' && myRev) mark(myRev,'var(--up)','내 매출 '+fmt(myRev)+'원', true);
+    mark(r.bep,'var(--down)','손익분기 '+fmt(r.bep)+'원', true);
+    o.push('</svg>');
+    return o.join('');
+  }
+
+  // ② 매달 나가는 돈 — 무엇이 얼마를 먹는지
+  function drawFixed(r){
+    var parts=[['월세',r.rentCost,'var(--ink)'],['인건비',r.staff*250,'var(--brand)'],['기타 운영비',r.etc,'var(--ink3)']];
+    var tot=parts.reduce(function(a,x){return a+x[1];},0)||1;
+    document.getElementById('fixStack').innerHTML=parts.map(function(p){
+      var w=p[1]/tot*100;
+      return '<i style="flex:0 0 '+w.toFixed(1)+'%;background:'+p[2]+'" title="'+p[0]+' '+fmt(p[1])+'원">'+
+             (w>14?Math.round(w)+'%':'')+'</i>';
+    }).join('');
+    document.getElementById('fixKey').innerHTML=parts.map(function(p){
+      return '<span><s style="background:'+p[2]+'"></s>'+p[0]+' <b>'+fmt(p[1])+'원</b></span>';
+    }).join('')+'<span style="margin-left:auto">합계 <b>'+fmt(tot)+'원/월</b></span>';
+  }
+
+  // ③ 매출이 흔들리면 — 0을 가운데 두고 좌우로 뻗는 막대
+  function drawScen(rows){
+    var mx=Math.max.apply(null,rows.map(function(x){return Math.abs(x[1]);}))||1;
+    return '<div>'+rows.map(function(x){
+      var w=Math.abs(x[1])/mx*46, up=x[1]>=0;
+      return '<div style="display:grid;grid-template-columns:96px 1fr 92px;gap:var(--sp-3);align-items:center;padding:var(--sp-3) 0">'+
+        '<span class="t-sub">'+x[0]+'</span>'+
+        '<span style="position:relative;height:18px">'+
+          '<span style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-strong)"></span>'+
+          '<span style="position:absolute;top:3px;height:12px;border-radius:3px;background:'+(up?'var(--up)':'var(--down)')+';'+
+            (up?'left:50%;':'right:50%;')+'width:'+w+'%"></span></span>'+
+        '<span class="delta '+(up?'up':'down')+'" style="text-align:right;font-variant-numeric:tabular-nums">'+fmt(x[1])+'원</span>'+
+      '</div>';
+    }).join('')+'</div>';
+  }
+
   function render(){
-    var s=st, ov={rent:+document.getElementById('s_rent').value, staff:+document.getElementById('s_staff').value, unit:+document.getElementById('s_unit').value};
+    var s=st, ov={rent:V.rent==null?s.rentDefault:V.rent,
+                  staff:V.staff==null?s.staffDefault:V.staff, unit:s.unit};
     var r=compute(s,ov);
-    // 슬라이더 라벨
-    document.getElementById('v_rent').textContent=fmt(ov.rent)+'원';
-    document.getElementById('v_staff').textContent=ov.staff+'명';
-    document.getElementById('v_unit').textContent=ov.unit.toLocaleString()+'원';
     // 판정
-    var trend=s.gu.trend, shortFund=s.budget>0&&s.budget<s.i.invest;
+    var trend=s.gu.trend, run=(s.mode==='run');
+    var shortFund=!run && s.budget>0 && s.budget<s.i.invest;
     var level,tag,reasons=[];
-    if(r.profit<=0){level='bad';tag='위험';reasons.push('예상 순이익이 <b>적자('+fmt(r.profit)+'원/월)</b> 구조');}
+    if(r.profit<=0){level='bad';tag='위험';reasons.push((run?'순이익이':'예상 순이익이')+' <b>적자('+fmt(r.profit)+'원/월)</b> 구조');}
     else if((r.payback&&r.payback>36)||trend>=18){level='warn';tag='주의';}
-    else{level='good';tag='해볼 만함';}
+    else{level='good';tag=run?'괜찮습니다':'해볼 만함';}
     if(trend>=15)reasons.push('최근 '+s.g+' 폐업 <b>+'+trend+'%</b>');
     if(shortFund)reasons.push('업종 표준 창업비('+fmt(s.i.invest)+'원)보다 자금 <b>부족</b>');
     if(r.profit>0&&r.payback)reasons.push('흑자 시 회수 <b>약 '+r.payback+'개월</b>');
-    if(!reasons.length)reasons.push('예상 순이익 흑자, 폐업 추세도 안정적');
+    // 운영 중이면 '같은 동네에서 몇 등쯤인가'가 가장 쓸모 있는 한 줄이다.
+    if(run&&s.mySales) reasons.push('내 매출은 같은 지역·업종에서 <b>'+
+      (s.mySales>=s.p75?'상위 25% 안':s.mySales>=s.p50?'중위 위':s.mySales>=s.p25?'중위 아래':'하위 25%')+'</b>');
+    if(!reasons.length)reasons.push(run?'순이익 흑자, 폐업 추세도 안정적':'예상 순이익 흑자, 폐업 추세도 안정적');
     // 결론 — 화면에서 큰 숫자는 '예상 월 순이익' 하나뿐이다.
     var v=document.getElementById('verdict'); v.hidden=false;
     var badge=v.querySelector('.tag');
     badge.textContent=tag;
     badge.className='badge tag '+(level==='good'?'badge-up':level==='warn'?'badge-warn':'badge-down');
-    v.querySelector('.head').textContent=s.g+'에서 '+s.k+', '+fmt(s.budget||s.i.invest)+'원으로 시작하면';
+    v.querySelector('.head').textContent = s.mode==='run'
+      ? s.g+' '+s.k+', '+s.area+'평 '+(r.staff)+'명으로 운영하면'
+      : s.g+'에서 '+s.k+', '+fmt(s.budget||s.i.invest)+'원으로 시작하면';
     v.querySelector('.big').textContent=fmt(r.profit)+'원';
     v.querySelector('.big').className='t-metric big delta '+(r.profit<0?'down':'up');
-    v.querySelector('.unit').textContent='예상 월 순이익 · '+C.quarter+' 기준'+(s.guData?'':' · 서울 업종 평균 적용');
+    v.querySelector('.unit').textContent=(s.mode==='run'?'월 순이익 · 넣으신 매출 기준':'예상 월 순이익 · '+C.quarter+' 기준')
+      +(s.guData?'':' · 서울 업종 평균 적용');
     v.querySelector('.why').innerHTML=reasons.slice(0,2).join(' · ');
     // 나머지 지표는 계층을 낮춘다(큰 숫자를 여러 개 두면 무엇이 중요한지 사라진다)
-    var kpis=[['예상 월매출',fmt(s.p25)+'~'+fmt(s.p75)+'원',''],
-              ['손익분기 매출',fmt(r.bep)+'원/월',''],
-              ['투자 회수',r.payback?'약 '+r.payback+'개월':'흑자 전환 안 됨',r.payback?'':'neg']];
+    var kpis=[[s.mode==='run'?'같은 업종 매출 범위':'예상 월매출', fmt(s.p25)+'~'+fmt(s.p75)+'원',''],
+              ['손익분기 매출',fmt(r.bep)+'원/월','']];
+    kpis.push(s.mode==='run'
+      ? ['손익분기까지', r.rev>=r.bep?'+'+fmt(r.rev-r.bep)+'원 여유':fmt(r.bep-r.rev)+'원 모자람', r.rev>=r.bep?'pos':'neg']
+      : ['투자 회수', r.payback?'약 '+r.payback+'개월':'흑자 전환 안 됨', r.payback?'':'neg']);
     document.getElementById('kpis').innerHTML=kpis.map(function(x){
       return '<div><div class="k">'+x[0]+'</div><div class="v '+x[2]+'">'+x[1]+'</div></div>';}).join('');
-    // 매출 시나리오(비관/중위/낙관) — 슬라이더 객단가 비율 반영
+    // 매출 시나리오(비관/중위/낙관)
     var ratio=r.unit/s.unit;
     function pAt(base){var rv=Math.round(base*ratio);return rv-Math.round(rv*r.cogs)-r.fixed;}
-    var sc=[['비관(하위25%)',pAt(s.p25)],['중위',r.profit],['낙관(상위25%)',pAt(s.p75)]];
-    document.getElementById('scen').innerHTML=sc.map(function(x){
-      return '<div><div class="k">'+x[0]+'</div><div class="v delta '+(x[1]<0?'down':'up')+'">'+fmt(x[1])+'원</div></div>';}).join('');
+    var sc=[['잘 안 될 때',pAt(s.p25)],['보통',r.profit],['잘될 때',pAt(s.p75)]];
+    document.getElementById('scenChart').innerHTML=drawScen(sc);
+
+    // 차트 — 매출 분포에서 내 자리 · 매달 나가는 돈
+    var myRev = s.mode==='run' ? s.mySales : 0;
+    var dc=document.getElementById('distChart');
+    dc.innerHTML=drawDist(s,r,myRev, dc.clientWidth);
+    document.getElementById('distTitle').textContent = s.mode==='run' ? '같은 동네 같은 업종 중에서' : '얼마나 팔아야 하는가';
+    document.getElementById('distNote').innerHTML = (s.guData
+        ? '<b>'+s.g+' '+s.k+'</b> 점포들의 월매출 분포입니다(실측).'
+        : '<b>서울 '+s.k+'</b> 점포들의 월매출 분포입니다 — 이 구의 실측이 없어 서울 값을 씁니다.')
+      + (s.mode==='run' && myRev
+          ? ' 내 매출 <b>'+fmt(myRev)+'원</b>은 ' +
+            (myRev>=s.p75?'<b>상위 25% 안</b>':myRev>=s.p50?'<b>중위 위</b>':myRev>=s.p25?'<b>중위 아래</b>':'<b>하위 25%</b>')+'입니다.'
+          : ' 붉은 선(손익분기)보다 오른쪽에서 팔아야 남습니다.');
+    document.getElementById('distLegend').innerHTML=
+      '<span><i style="background:var(--line-strong)"></i>같은 업종 매출 분포</span>'+
+      '<span><i style="background:var(--down)"></i>내 손익분기</span>'+
+      (s.mode==='run'&&myRev?'<span><i style="background:var(--up)"></i>내 매출</span>':'');
+    drawFixed(r);
     // 피크(시간대·요일)
     var pk=document.getElementById('peak'), rec=s.rec;
     if(rec&&rec.tmz&&rec.dow){pk.innerHTML='<div class="p"><div class="k">피크 시간대</div><div class="v">'+TMZ[maxIdx(rec.tmz)]+'</div></div><div class="p"><div class="k">피크 요일</div><div class="v">'+DOW[maxIdx(rec.dow)]+'요일</div></div>';}
@@ -304,7 +595,9 @@ input[type=range]{width:100%;accent-color:var(--ink);height:28px}
     var diff=s.gu.trend-AVGTREND, margin=Math.round((r.rev/r.bep-1)*100);
     var intel=[
       '<b>'+s.g+'</b> 폐업 추세 <b>+'+s.gu.trend+'%</b> — 서울 평균(+'+AVGTREND.toFixed(1)+'%)보다 <b>'+Math.abs(diff).toFixed(1)+'%p '+(diff>0?'높음(불리)':'낮음(유리)')+'</b>',
-      '이 상권 공실률 <b>'+s.vacancy+'%</b>'+(s.vacancy>=9?' — 다소 높아 <b>주의</b>':' — 안정적'),
+      (s.vacancy>0
+        ? '이 상권 공실률 <b>'+s.vacancy+'%</b>'+(s.vacancy>=9?' — 다소 높아 <b>주의</b>':' — 안정적')
+        : '이 상권 공실률은 <b>조사값이 없습니다</b> — 0%가 아니라 미공표입니다'),
       '예상 매출이 손익분기를 <b>'+(margin>=0?'+'+margin+'% 여유로 넘김':margin+'% 못 넘김(적자)')+'</b>'
     ];
     document.getElementById('intel').innerHTML=intel.map(function(x){return '<li>'+x+'</li>';}).join('');
@@ -315,18 +608,15 @@ input[type=range]{width:100%;accent-color:var(--ink);height:28px}
     // 진단 버튼까지 Primary 로 두면 화면에 강조 버튼이 둘이 되어 우선순위가 흐려진다.
     var runBtn=document.getElementById('run');
     runBtn.className='btn btn-secondary btn-block';
-    runBtn.textContent='조건 바꿔서 다시 진단';
+    runBtn.textContent='조건 바꿔서 다시 보기';
   }
 
   function run(){
     st=baseInputs();
-    // 슬라이더 초기값·범위 세팅
-    var sr=document.getElementById('s_rent'); sr.max=Math.max(50,st.rentDefault*2); sr.value=st.rentDefault; sr.step=Math.max(1,Math.round(st.rentDefault/50));
-    var ss=document.getElementById('s_staff'); ss.value=st.staffDefault;
-    var su=document.getElementById('s_unit'); su.max=Math.max(2000,st.unit*2); su.value=st.unit; su.step=Math.max(100,Math.round(st.unit/50));
     fillGuides(st);   // 구/업종이 바뀔 때만 필요 → 진단 1회당 1회
     render();
-    history.replaceState(null,'','?gu='+encodeURIComponent(st.g)+'&ind='+encodeURIComponent(st.k)+'&budget='+(st.budget||'')+'&area='+(st.area||''));
+    history.replaceState(null,'','?mode='+MODE+'&gu='+encodeURIComponent(st.g)+'&ind='+encodeURIComponent(st.k)+
+      '&area='+st.area+(V.budget?'&budget='+V.budget:'')+(V.sales?'&sales='+V.sales:''));
     document.getElementById('verdict').scrollIntoView({behavior:'smooth',block:'start'});
   }
   document.getElementById('run').addEventListener('click',run);
@@ -334,22 +624,28 @@ input[type=range]{width:100%;accent-color:var(--ink);height:28px}
   (function(){var p=new URLSearchParams(location.search);
     if(p.get('gu')&&C.gu[p.get('gu')]) guSel.value=p.get('gu');
     if(p.get('ind')&&C.ind[p.get('ind')]) indSel.value=p.get('ind');
-    if(p.get('budget')) document.getElementById('budget').value=p.get('budget');
-    if(p.get('area')) document.getElementById('area').value=p.get('area');
+    if(p.get('mode')==='run'){ var mb=document.querySelector('[data-mode="run"]'); if(mb) mb.click(); }
+    setDial('area', +p.get('area')||15, false);
+    if(p.get('budget')) setDial('budget', +p.get('budget'), true);
+    if(p.get('sales'))  setDial('sales',  +p.get('sales'),  true);
+    drawDials();
     if(p.get('gu')&&p.get('ind')) run();
   })();
   document.getElementById('share').addEventListener('click',function(){
-    var u=location.origin+location.pathname+'?gu='+encodeURIComponent(guSel.value)+'&ind='+encodeURIComponent(indSel.value)+'&budget='+(document.getElementById('budget').value||'')+'&area='+(document.getElementById('area').value||'');
+    var u=location.origin+location.pathname+location.search;
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){alert('링크가 복사됐습니다.');},function(){prompt('링크 복사:',u);});}
     else prompt('링크 복사:',u);
   });
   // 슬라이더는 드래그 중 'input' 이 초당 수십~수백 번 발생한다. 그때마다 render() 를 돌리면
   // 브라우저 그리기 주기(60fps)보다 많이 계산해 버려 저사양 기기에서 끊긴다.
   // requestAnimationFrame 으로 "화면 한 프레임당 최대 1회"로 묶는다(rAF 스로틀).
-  var rafId=0;
-  function renderThrottled(){ if(rafId) return; rafId=requestAnimationFrame(function(){ rafId=0; render(); }); }
-  ['s_rent','s_staff','s_unit'].forEach(function(id){document.getElementById(id).addEventListener('input',renderThrottled);});
   document.getElementById('pdf').addEventListener('click',function(){window.print();});
+  // 차트 viewBox 가 컨테이너 폭에 묶여 있으므로 창 크기가 바뀌면 다시 그려야 한다.
+  var rsz=0;
+  window.addEventListener('resize',function(){
+    if(!lastCalc) return;
+    clearTimeout(rsz); rsz=setTimeout(render,150);
+  });
 
   // ── 엑셀(CSV) 다운로드 + 이메일 수집(리드) ──
   function esc(x){return '"'+String(x==null?'':x).replace(/"/g,'""')+'"';}
