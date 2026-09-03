@@ -21,7 +21,7 @@
     return [
       { name: '사업자 폐업 통계', source: '국세청 국세통계포털 · 자치구별 폐업 건수와 폐업 사유', period: '2022–2024년', use: '폐업 추세(증감률) 계산, 지도 색칠, 진단 근거' },
       { name: '상업용부동산 임대동향', source: '한국부동산원 · 중대형 상가 ㎡당 임대료와 공실률', period: q, use: '임대료 추정, 고정비 계산. 자치구가 아닌 상권 단위 공표' },
-      { name: '생활인구', source: '서울 열린데이터광장 · 집계구 단위 체류인구', period: on(this.pop, (this.pop && this.pop.stdr_date) + ' ' + (this.pop && this.pop.hour) + '시'), use: '유동인구 지표, 연령·성별 분포' },
+      { name: '생활인구', source: '서울 열린데이터광장 · 집계구 단위 체류인구', period: on(this.pop, this.popBasis()), use: '유동인구 지표, 연령·성별 분포' },
       { name: '상권분석 추정매출', source: '서울 열린데이터광장 · 업종별 카드 매출 추정', period: on(this.sales, this.sales && this.sales.quarter + '분기'), use: '업종 중위 매출, 객단가, 시간대·요일 분포' },
       { name: '상권분석 점포', source: '서울 열린데이터광장 · 업종별 점포 수와 개·폐업', period: on(this.stores, this.stores && this.stores.quarter + '분기'), use: '업종 폐업률, 경쟁 밀도, 프랜차이즈 비중' },
       { name: '상주인구', source: '서울 열린데이터광장 · 상권 단위 거주 인구', period: on(this.repop, this.repop && this.repop.quarter + '분기'), use: '배후 수요 성격 파악' },

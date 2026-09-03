@@ -871,7 +871,8 @@ class Component extends DCLogic {
       if (D.geo) this.computeAreas(D.geo);
       const h0 = (location.hash || '').replace('#', '');
       const p0 = { ready: true, dark };
-      if (h0 === 'data' || h0 === 'chat') { p0.screen = h0; p0.region = '서울특별시'; }
+      // method = 데이터 출처·계산식·우리가 정한 가정. 이 화면은 링크가 없어 도달할 수 없었다.
+      if (h0 === 'data' || h0 === 'chat' || h0 === 'method') { p0.screen = h0; p0.region = '서울특별시'; }
       else if (h0 && this.topicDefs().find(t => t.id === h0)) { p0.screen = 'data'; p0.topic = h0; }
       this.setState(p0);
     }
@@ -888,7 +889,7 @@ class Component extends DCLogic {
       if (geo) this.computeAreas(geo);
       const h = (location.hash || '').replace('#', '');
       const patch = { ready: true, dark };
-      if (h === 'data' || h === 'chat') { patch.screen = h; patch.region = '서울특별시'; }
+      if (h === 'data' || h === 'chat' || h === 'method') { patch.screen = h; patch.region = '서울특별시'; }
       else if (h && this.topicDefs().find(t => t.id === h)) { patch.screen = 'data'; patch.topic = h; }
       this.setState(patch);
     });
@@ -907,9 +908,9 @@ class Component extends DCLogic {
     else setTimeout(deferLoads, 1200);
     this._hash = () => {
       const h = (location.hash || '').replace('#', '');
-      if (h === 'data' || h === 'chat') this.setState({ screen: h, topic: null, region: this.state.region || '서울특별시' });
+      if (h === 'data' || h === 'chat' || h === 'method') this.setState({ screen: h, topic: null, region: this.state.region || '서울특별시' });
       else if (h && this.topicDefs().find(t => t.id === h)) this.setState({ screen: 'data', topic: h });
-      else if (!h && this.state.screen === 'data') this.setState({ topic: null });
+      else if (!h && (this.state.screen === 'data' || this.state.screen === 'method')) this.setState({ screen: 'map', topic: null });
     };
     window.addEventListener('hashchange', this._hash);
   }
@@ -973,9 +974,9 @@ class Component extends DCLogic {
     const P = this.pop, K = this.park, A = this.areaKm2 || {};
     return {
       trend: { label: '폐업 추세', unit: '%', diverging: true, get: (n, g) => g.trend, fmt: v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%', note: '2022년 대비 2024년 폐업 증감률입니다. 늘어난 곳일수록 진하게 표시합니다.', caption: '증가율 높은 순', source: '국세청 자치구별 폐업통계 (2022–2024)' },
-      // '오후 2시' = 데이터의 기준 시각(pop.hour="14")과 일치하는 [실측] 표기. 생활인구는 2026-07-31로 서비스 종료돼 이 시점에 고정.
-      // (수집기가 다른 시각을 넣으면 이 문구는 P.hour 를 따라가도록 고쳐야 함 — 현재 데이터는 14시로 확정.)
-      pop: { label: '유동인구', unit: '명', get: n => (P && P.gu[n] ? P.gu[n].tot : 0), fmt: v => this.num(v) + '명', note: '자치구 체류인구입니다' + (P && P.stdr_date ? ' (' + P.stdr_date.slice(0, 4) + '-' + P.stdr_date.slice(4, 6) + '-' + P.stdr_date.slice(6) + ' ' + (P.hour || '14') + '시 기준 하루 스냅샷)' : ' (오후 2시 기준)') + '.', caption: '체류인구 많은 순', source: '서울 열린데이터광장 생활인구' },
+      // 기준 시각은 데이터에서 읽는다(popBasis). 손으로 '오후 2시'를 박아 두면
+      // 수집기가 시각을 바꿨을 때 숫자만 바뀌고 설명이 남아 조용히 거짓말이 된다.
+      pop: { label: '유동인구', unit: '명', get: n => (P && P.gu[n] ? P.gu[n].tot : 0), fmt: v => this.num(v) + '명', note: '자치구 체류인구입니다' + (this.popBasis() ? ' (' + this.popBasis() + ' 기준)' : '') + '.', caption: '체류인구 많은 순', source: '서울 열린데이터광장 생활인구' },
       bus: { label: '대중교통', unit: '개/㎢', get: (n, g) => g.bus / (A[n] || 1), fmt: v => v.toFixed(1) + '개/㎢', note: '면적당 정류소 수입니다. 자치구 크기가 다르므로 밀도로 비교합니다.', caption: '정류소 밀도 높은 순', source: '서울시 버스·마을버스·선착장 정류소' },
       park: { label: '주차', unit: '곳/㎢', get: n => (K && K.gu[n] ? K.gu[n].lots : 0) / (A[n] || 1), fmt: v => v.toFixed(1) + '곳/㎢', note: '면적당 공영·민영 주차장 수입니다.', caption: '주차장 밀도 높은 순', source: '전국주차장정보표준데이터' },
       subway: { label: '지하철 (역 단위)', station: true, note: '자치구가 아니라 역 단위입니다. 점 하나가 역 하나, 크기는 최근 평일 하루 승하차 인원입니다. 배경 경계는 2013년 단순화 자치구 경계라 정밀하지 않고 도로·건물은 없습니다. 역 단위까지만 실측이며 건물 단위 판단에는 쓸 수 없습니다.', caption: '승하차 많은 역 순', source: '서울 열린데이터광장 지하철 역별 승하차' },
@@ -1018,6 +1019,25 @@ class Component extends DCLogic {
     const q = this.sales && this.sales.quarter && String(this.sales.quarter);
     if (q && /^\d{5}$/.test(q)) return q.slice(0, 4) + ' ' + q.slice(4) + '분기';
     return (this.core && this.core.quarter) || '';
+  }
+
+  // 생활인구가 '언제의 값'인지 한 줄로. 데이터가 말하는 대로만 쓴다.
+  //   예전엔 화면 여러 곳에 '오후 2시'가 손으로 박혀 있었다. 수집기가 시각을 바꾸면
+  //   숫자만 바뀌고 설명은 그대로 남아 조용히 거짓말이 된다.
+  //   이제 수집기가 여러 시각을 받아 평균을 내므로(basis), 그 값을 그대로 읽는다.
+  popBasis(short) {
+    const P = this.pop; if (!P) return '';
+    const when = P.basis || (P.hour != null ? P.hour + '시' : '');
+    if (short) return when;
+    const d = P.stdr_date;
+    // 요일은 기준일에서 바로 나온다. 수집기가 안 넣어준 옛 데이터에서도 보이게 여기서 구한다.
+    // '어느 금요일 오후 2시 한 장면'인지가 이 숫자를 읽는 데 필요한 정보다.
+    const wd = P.weekday || (d && /^\d{8}$/.test(d)
+      ? '월화수목금토일'[(new Date(+d.slice(0,4), +d.slice(4,6)-1, +d.slice(6)).getDay() + 6) % 7]
+      : '');
+    const day = d ? d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6) +
+                    (wd ? '(' + wd + ')' : '') : '';
+    return [day, when].filter(Boolean).join(' ');
   }
   calc() {
     const core = this.core; if (!core) return null;
@@ -1105,7 +1125,7 @@ class Component extends DCLogic {
       const d = P && P.gu[this.state.gu];
       if (d) {
         const ages = [['10대', d.a10], ['20대', d.a20], ['30대', d.a30], ['40대', d.a40], ['50대', d.a50], ['60대 이상', d.a60]].sort((a, b) => b[1] - a[1]);
-        text = this.state.gu + '에 오후 2시 기준 ' + this.num(d.tot) + '명이 머뭅니다. 가장 많은 연령대는 ' + ages[0][0] + '입니다.';
+        text = this.state.gu + '에 ' + (this.popBasis(true) || '조사 시점') + ' 기준 ' + this.num(d.tot) + '명이 머뭅니다. 가장 많은 연령대는 ' + ages[0][0] + '입니다.';
         meta.push({ k: '근거', v: '자치구 내 ' + d.cells + '개 집계구 합산' });
         meta.push({ k: '데이터', v: '남성 ' + this.num(d.m) + '명 · 여성 ' + this.num(d.f) + '명' });
       }
@@ -1141,7 +1161,8 @@ class Component extends DCLogic {
     const st = S && S.ind[this.state.ind];
     if (st) L.push(this.state.ind + ' 분기 폐업률=' + st.close_rate + '%, 점포수=' + this.num(st.stores) + ', 프랜차이즈비중=' + st.fr_share + '%');
     const pd = P && P.gu[this.state.gu];
-    if (pd) L.push('유동인구(오후2시)=' + this.num(pd.tot) + '명 (남 ' + this.num(pd.m) + ' · 여 ' + this.num(pd.f) + ')');
+    if (pd) L.push('유동인구(' + (this.popBasis() || '기준시점 미상') + ')=' + this.num(pd.tot) + '명 (남 ' + this.num(pd.m) + ' · 여 ' + this.num(pd.f) + ')'
+      + (pd.peak_hour != null ? ', 가장 붐비는 시각=' + pd.peak_hour + '시 ' + this.num(pd.peak_tot) + '명' : ''));
     const R = (c && c.R) || (core && core.rentSeoul);
     if (R) L.push('임대료=' + R.rent + '만원/㎡(월), 공실률=' + R.vacancy + '%' + (R.zone ? ' · ' + R.zone : ''));
     // 소비 지출 구성비(실측) — 선택 자치구 우선, 없으면 서울 전체. 깨진 분기(이상치)는 제외.
@@ -1183,6 +1204,8 @@ class Component extends DCLogic {
     const footStyle = (on) => 'font-size:13px;cursor:pointer;white-space:nowrap;transition:color .2s;color:' + (on ? 'var(--ink)' : 'var(--ink2)');
     const footItems = [
       { label: '연도별 추이', go: () => { location.href = 'trends.html'; }, style: footStyle(false) },
+      // 이 화면(출처·계산식·우리가 정한 가정)은 만들어 놓고 링크가 없어 아무도 못 봤다.
+      { label: '계산 방법', go: () => { location.hash = 'method'; }, style: footStyle(S.screen === 'method') },
       { label: '소개', go: () => { location.href = 'about.html'; }, style: footStyle(false) },
     ];
 
@@ -1321,7 +1344,7 @@ class Component extends DCLogic {
     if (popD) {
       const pr = this.rank(S.gu, n => (this.pop.gu[n] ? this.pop.gu[n].tot : 0), true);
       // rank<=8 = 25개 자치구 중 상위 약 1/3을 '상위권'으로 보는 [표시 기준](임의 임계값, 데이터 아님). 순위 자체는 [실측].
-      if (pr.rank <= 8) detailPositives.push('유동인구가 서울 25개 자치구 중 ' + pr.rank + '위입니다. 오후 2시 기준 ' + this.num(popD.tot) + '명이 머뭅니다.');
+      if (pr.rank <= 8) detailPositives.push('유동인구가 서울 25개 자치구 중 ' + pr.rank + '위입니다. ' + (this.popBasis(true) || '조사 시점') + ' 기준 ' + this.num(popD.tot) + '명이 머뭅니다.');
       else detailCautions.push('유동인구는 25개 중 ' + pr.rank + '위로 상위권이 아닙니다. 체류인구 ' + this.num(popD.tot) + '명입니다.');
       const ages = [['10대', popD.a10], ['20대', popD.a20], ['30대', popD.a30], ['40대', popD.a40], ['50대', popD.a50], ['60대 이상', popD.a60]].sort((a, b) => b[1] - a[1]);
       detailPositives.push('가장 많은 연령대는 ' + ages[0][0] + '입니다. 주력 고객층을 여기에 맞출 수 있습니다.');

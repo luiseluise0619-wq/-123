@@ -255,6 +255,18 @@ function fmtM(m){return m<1000?Math.round(m)+'m':(m/1000).toFixed(m<10000?1:0)+'
 function fmtYmd(s){s=String(s||'');return s.length===8?`${+s.slice(4,6)}/${+s.slice(6,8)}`:s;}
 function fmtYmdK(s){s=String(s||'');return s.length===8?`${+s.slice(4,6)}월 ${+s.slice(6,8)}일`:s;}
 function fmtHour(h){h=parseInt(h,10);return isNaN(h)?'':(h<12?`오전 ${h||12}시`:h===12?'낮 12시':`오후 ${h-12}시`);}
+// 생활인구가 '언제의 값'인지. 수집기가 여러 시각을 받으면 basis 에 '5개 시각 평균'처럼 들어온다.
+// 예전엔 '오후 2시'가 화면 여러 곳에 손으로 박혀 있어서, 시각이 바뀌면 설명만 남아 거짓말이 됐다.
+function popWhen(d){ if(!d) return ''; return d.basis || (d.hour!=null?fmtHour(d.hour):''); }
+function popWeekday(d){
+  if(!d) return '';
+  if(d.weekday) return d.weekday;
+  const s=d.stdr_date||''; if(!/^\d{8}$/.test(s)) return '';   // 옛 데이터엔 요일이 없다 — 기준일에서 구한다
+  return '월화수목금토일'[(new Date(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6)).getDay()+6)%7];
+}
+function popAsOf(d){ if(!d||!d.stdr_date) return '';
+  const w=popWeekday(d);
+  return fmtYmdK(d.stdr_date)+(w?`(${w})`:'')+' '+popWhen(d); }
 function fmtQ(s){s=String(s||'');return s.length===5?`${s.slice(0,4)} ${s.slice(4)}분기`:s;}
 
 function kakao(body){
@@ -361,7 +373,7 @@ function analyzePin(latlng){
     addr:null,gu:null,dong:null,popTot:null,popScope:null,mp:null,fp:null,topAge:null,
     store:null,lots:null,slots:null,trend:null,y2024:null,chosenName:null,cats:null,density:null};
 
-  const popAs=(POP&&POP.stdr_date)?` · ${fmtYmd(POP.stdr_date)}${POP.hour?' '+fmtHour(POP.hour):''} 기준`:'';
+  const popAs=(POP&&POP.stdr_date)?` · ${fmtYmd(POP.stdr_date)}${popWhen(POP)?' '+popWhen(POP):''} 기준`:'';
   const stAs=(ST&&ST.date)?` · ${fmtYmd(ST.date)} 기준`:'';
   const znAs=(ZONE&&ZONE.quarter)?` · ${fmtQ(ZONE.quarter)}`:'';
   const sigStationH = (near&&near.length)
@@ -376,7 +388,7 @@ function analyzePin(latlng){
       `<div class="t" title="반경 내 카카오지도에 등록된 그 업종 가게 수(지금 조회)"><div class="tl" id="sig-cat-l">경쟁</div><div class="tv" id="sig-cat">…</div></div>`+
       `<div class="t" title="2022→2024 자치구 폐업 건수 증감률. ▲ 늘어남(주의) ▼ 줄어듦"><div class="tl">폐업 2년</div><div class="tv" id="sig-close">…</div></div>`+
     `</div>`+
-    `<div class="muted" id="sig-pop-note" style="font-size:10.5px;margin:0 0 4px">${(POP&&POP.stdr_date)?`※ 유동인구 = <b>${fmtYmdK(POP.stdr_date)} ${fmtHour(POP.hour)}</b> 그 지역에 머문 사람 수(서울 생활인구)`:'※ 유동인구 데이터 준비 중'}</div>`+
+    `<div class="muted" id="sig-pop-note" style="font-size:10.5px;margin:0 0 4px">${(POP&&POP.stdr_date)?`※ 유동인구 = <b>${popAsOf(POP)}</b> 그 지역에 머문 사람 수(서울 생활인구)`:'※ 유동인구 데이터 준비 중'}</div>`+
     `<div class="blk"><div class="lb">가까운 역<span class="asof">${stAs}</span></div><div class="v">${sigStationH}</div></div>`+
     // ── 자세히(접기): 상세 지표 ──
     `<details class="more"><summary>자세히 보기 ▾</summary>`+
@@ -395,7 +407,8 @@ function analyzePin(latlng){
   if(lp&&lp.tot!=null){
     const sp0=document.getElementById('sig-pop'); if(sp0) sp0.innerHTML=`${num(Math.round(lp.tot))}<small>명</small>`;
     const spl=document.getElementById('sig-pop-l'); if(spl) spl.textContent=dongP.dong||'유동인구';
-    const spn=document.getElementById('sig-pop-note'); if(spn) spn.innerHTML=`※ 유동인구 = <b>${fmtYmdK(DONGPOP.stdr_date)} ${fmtHour(DONGPOP.hour)}</b> <b>${esc(dongP.dong||'')}</b>(동네) 생활인구 · 구 전체 아님`;
+    const spn=document.getElementById('sig-pop-note'); if(spn) spn.innerHTML=`※ 유동인구 = <b>${popAsOf(DONGPOP)}</b> <b>${esc(dongP.dong||'')}</b>(동네) 생활인구 · 구 전체 아님`
+      +(dongP.peak_hour!=null?` · 가장 붐비는 시각 <b>${dongP.peak_hour}시</b>`:'');
     if(pinData){pinData.popTot=Math.round(lp.tot);pinData.popScope=dongP.dong;}
     popFilled=true;
   }
@@ -429,7 +442,7 @@ function analyzePin(latlng){
       if(pinData){pinData.addr=d.address||null;pinData.gu=d.gu||null;pinData.dong=d.dong||null;}
       const pop=POP&&POP.gu&&d.gu&&POP.gu[d.gu];
       document.getElementById('pin-pop').innerHTML=pop
-        ? `${esc(d.gu)} <b>${num(pop.tot)}</b>명 <span class="muted">${POP&&POP.hour?fmtHour(POP.hour)+' 머묾':'체류'}</span>`
+        ? `${esc(d.gu)} <b>${num(pop.tot)}</b>명 <span class="muted">${popWhen(POP)?popWhen(POP)+' 머묾':'체류'}</span>`
         : `<span class="muted">${d.gu?esc(d.gu)+' 유동인구 데이터 없음':'자치구 밖'}</span>`;
       if(!popFilled){const sp=document.getElementById('sig-pop'); if(sp) sp.innerHTML=pop?`${num(pop.tot)}<small>명</small>`:'<small class="muted">—</small>';}
       // 성별·연령 구성(자치구 기준)
@@ -522,7 +535,7 @@ function pinContext(){
   const L=[];
   if(p.addr||p.gu) L.push(`위치: ${p.addr||''}${p.gu?' ('+p.gu+(p.dong?' '+p.dong:'')+')':''}`);
   if(p.popTot!=null){const scope=p.popScope&&p.popScope!=='자치구'?p.popScope+'(동네)':'자치구 전체';
-    L.push(`유동인구(생활인구): ${scope} ${p.popTot.toLocaleString()}명 · 기준 ${p.popAsof||''} ${POP&&POP.hour?fmtHour(POP.hour):''}(그 시각 그 지역에 머문 사람)${p.mp!=null?`, 성별·연령은 자치구 기준 남 ${p.mp}% 여 ${p.fp}% 최다연령 ${p.topAge}`:''}`);}
+    L.push(`유동인구(생활인구): ${scope} ${p.popTot.toLocaleString()}명 · 기준 ${p.popAsof||''} ${popWhen(POP)}(그 지역에 머문 사람)${p.mp!=null?`, 성별·연령은 자치구 기준 남 ${p.mp}% 여 ${p.fp}% 최다연령 ${p.topAge}`:''}`);}
   if(p.store!=null) L.push(`자치구 실측 상가: ${p.store.toLocaleString()}개`);
   if(p.lots!=null) L.push(`자치구 주차장: ${p.lots}곳 ${p.slots}면`);
   if(p.trend!=null) L.push(`자치구 폐업 추세(2년): ${p.trend>=0?'+':''}${p.trend}%, 2024년 폐업 ${(p.y2024||0).toLocaleString()}건`);
@@ -586,7 +599,7 @@ function opportunityAnalysis(){
       out.innerHTML=
         `<div style="font-size:12px;margin:2px 0 5px"><b>${esc(scope)}</b> · 가게 1곳당 사람 수(많을수록 덜 붐빔=기회)</div>`+
         ok.map((r,i)=>`<div class="li"><span class="v">${i===0?'[추천] ':''}${esc(r.nm)}</span><span class="d">${num(r.n)}곳 · 1곳당 <b>${num(r.ratio)}</b>명</span></div>`).join('')+
-        `<div class="muted" style="font-size:10.5px;margin-top:5px">※ 동네 생활인구 ÷ 반경 내 가게 수. 카카오 등록·오후 2시 기준의 <b>참고 지표</b>이지 '예상 매출'이 아님.</div>`;
+        `<div class="muted" style="font-size:10.5px;margin-top:5px">※ 동네 생활인구 ÷ 반경 내 가게 수. 카카오 등록·${popWhen(DONGPOP)||'조사 시점'} 기준의 <b>참고 지표</b>이지 '예상 매출'이 아님.</div>`;
     });
 }
 
@@ -684,7 +697,7 @@ function renderInlineCompare(){
 // 단일 지점 리포트 → 새 창(인쇄로 PDF 저장)
 function reportPrint(){
   if(!pinData){alert('먼저 지도를 클릭해 지점을 분석하세요.');return;}
-  const p=pinData, hour=(DONGPOP&&DONGPOP.hour)?fmtHour(DONGPOP.hour):'';
+  const p=pinData, hour=popWhen(DONGPOP);
   const insight=(document.getElementById('pin-insight').textContent||'').trim();
   const row=(k,v)=>`<tr><td class="h">${k}</td><td>${v}</td></tr>`;
   const near=(p.near||[]).map(n=>`${esc(n.nm)} ${fmtM(n.d)}`).join(', ')||'—';
@@ -728,7 +741,7 @@ function reportPrint(){
 function comparePrint(){
   const a=loadSaved();
   if(!a.length){return;}
-  const hour=(DONGPOP&&DONGPOP.hour)?fmtHour(DONGPOP.hour):'';
+  const hour=popWhen(DONGPOP);
   const th=a.map((s,i)=>`<th>${i+1}. ${esc(s.label)}</th>`).join('');
   const cell=(f)=>a.map(s=>`<td>${f(s)}</td>`).join('');
   const html=`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>상권 후보지 비교</title>
@@ -750,7 +763,7 @@ function comparePrint(){
     `<tr><td class="h">반경 내 경쟁</td>${cell(s=>s.catN!=null?num(s.catN)+'곳':'—')}</tr>`+
     `<tr><td class="h">폐업 2년 추세</td>${cell(s=>s.trend!=null?(s.trend>=0?'+':'')+s.trend+'%':'—')}</tr>`+
     `</table>`+
-    `<div class="note">※ 유동인구=행정동 생활인구(${hour||'오후 2시'}). 경쟁=반경 내 카카오 등록 가게 수. 폐업=자치구 2년 증감률. 참고 지표이며 예상 매출이 아닙니다.</div>`+
+    `<div class="note">※ 유동인구=행정동 생활인구(${hour||'조사 시점'}). 경쟁=반경 내 카카오 등록 가게 수. 폐업=자치구 2년 증감률. 참고 지표이며 예상 매출이 아닙니다.</div>`+
     `</body></html>`;
   const w=window.open('','_blank');
   if(!w){alert('팝업이 차단됐습니다. 팝업 허용 후 다시 시도하세요.');return;}
@@ -814,7 +827,7 @@ function setStat(){
   const p=[];
   p.push(ST&&ST.available&&ST.stations&&ST.stations.length?`역 <b>${num(ST.n_stations)}</b>개`:'역 준비 중');
   p.push(ZONE&&ZONE.available&&ZONE.zones&&ZONE.zones.length?`상권 <b>${num(ZONE.n_zones)}</b>개`:'상권 준비 중');
-  p.push(POP&&POP.gu?`유동인구 ${POP.hour}시`:'유동인구 준비 중');
+  p.push(POP&&POP.gu?`유동인구 ${popWhen(POP)||'수집분'}`:'유동인구 준비 중');
   el.innerHTML=p.join(' · ');
 }
 

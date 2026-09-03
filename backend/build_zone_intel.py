@@ -303,6 +303,10 @@ def main():
         "n_zones": len(out),
         "weights": WEIGHTS,
         "min_stores": MIN_STORES, "min_sales": MIN_SALES,
+        # 수요의 35%가 생활인구다. 그게 '언제의 값'인지 결과 파일에 같이 적어 둔다 —
+        # 화면 근거 표가 이걸 그대로 읽어야 '오후 2시'가 손으로 박히는 일이 다시 생기지 않는다.
+        "livepop_basis": lpw.get("basis") or (str(lpw["hour"]) + "시" if lpw.get("hour") is not None else None),
+        "livepop_date": lpw.get("stdr_date"), "livepop_weekday": lpw.get("weekday"),
         "note": ("상권 인텔리전스. dem/sup/gap 은 서울 전체 상권 중 백분위(0~100). "
                  "gap=dem-sup 이 크면 '수요 대비 점포가 적은 곳'(기회), 작으면 과포화. "
                  "가중치(weights)는 실측이 아니라 가정이며 cov 는 결측 반영률(1.0=지표 4개 모두 사용). "
