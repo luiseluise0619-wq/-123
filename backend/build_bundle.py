@@ -57,7 +57,10 @@ def parse_existing_bundle():
     """기존 data-bundle.js → (main dict, stores.gu dict). 없으면 (None, None)."""
     if not os.path.exists(BUNDLE):
         return None, None
-    raw = open(BUNDLE, encoding="utf-8").read()
+    return parse_bundle_text(open(BUNDLE, encoding="utf-8").read())
+
+
+def parse_bundle_text(raw):
     main, storesgu = None, None
     for stmt in raw.split(";\n"):
         stmt = stmt.strip().rstrip(";").strip()
@@ -135,11 +138,19 @@ def main():
     js = (PREFIX + dump(main_obj) + ";\n"
           + "window.__SANGGWON.stores.gu=" + dump(stores_gu) + ";\n")
 
-    open(BUNDLE, "w", encoding="utf-8").write(js)
-
-    # 검증: 방금 쓴 파일을 되읽어 파싱 성공하는지
-    chk_main, chk_gu = parse_existing_bundle()
+    # 검증에 통과한 것만 실제 파일이 된다.
+    # 예전에는 먼저 덮어쓰고 나서 검증했다 — 검증이 실패해도 깨진 번들이 이미
+    # 디스크에 있고, CI 는 continue-on-error 라 그대로 커밋된다(메인 지도 전체가 깨진다).
+    # 임시 파일에 쓰고, 그 내용을 되읽어 검증한 뒤에만 원자적으로 교체한다.
+    tmp = BUNDLE + ".tmp"
+    open(tmp, "w", encoding="utf-8").write(js)
+    chk_main, chk_gu = parse_bundle_text(open(tmp, encoding="utf-8").read())
     ok = bool(chk_main) and set(chk_main.keys()) == set(ORDER) and isinstance(chk_gu, dict)
+    if ok:
+        os.replace(tmp, BUNDLE)
+    else:
+        os.remove(tmp)
+        print("  ★ 재파싱 검증 실패 — 기존 번들을 그대로 둔다(덮어쓰지 않음).")
     print(f"저장: {BUNDLE}")
     print(f"  최신 교체: {', '.join(fresh) or '없음'}")
     print(f"  기존 보존: {', '.join(kept) or '없음'} + core, geo")

@@ -267,6 +267,12 @@ DB index · query optimization · caching · pagination · rate limit · backgro
       화면은 정직하게 degrade 하지만(값을 지어내지 않음), 충북과 보이는 정보가 다르다.
 
 **운영 — 판단 필요**
+- [ ] 🟡 예측 체계가 둘이다. zone.html 은 `signals.json`(build_signals.py — 학습/검증 구간을
+      엄격히 분리한 홀드아웃), index.html 은 `sales_forecast.json`(forecast_sales.py — 문서에는
+      "홀드아웃"이라 쓰여 있지만 실제로는 **전체 구간 오차로 방법을 고르는 in-sample 선택**)을 쓴다.
+      후자는 기준이 관대해 "관성을 이겼다"가 실제보다 많이 나올 수 있다.
+      → 통합하면 index.html 에 뜨는 예측 개수가 줄어들 수 있어(화면 변화) 코드는 안 건드렸다.
+      둘을 build_signals 기준으로 합칠지 판단할 것.
 - [ ] 🟡 `.github/workflows/refresh-dashboard.yml` 의 **모든 수집 단계가 `continue-on-error: true`** 라
       전부 실패해도 워크플로는 초록색으로 끝난다. "변경 없음 — 커밋 생략"과
       "전부 실패해서 만든 게 없음"이 로그상 구분되지 않는다.
