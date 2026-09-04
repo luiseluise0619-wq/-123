@@ -8,6 +8,7 @@
 import pg from "pg";
 import crypto from "node:crypto";
 import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
+import { safeError } from "./_err.js";
 
 const { Pool } = pg;
 const DB_URL = process.env.DATABASE_URL || "";
@@ -19,9 +20,24 @@ const pool = DB_URL ? new Pool({ connectionString: DB_URL, ssl, max: 3 }) : null
 // 리스너가 없으면 uncaught exception 이 되어 서버 프로세스가 통째로 죽는다. 반드시 흡수한다.
 if (pool) pool.on("error", (e) => { console.error("[lead] pg pool error:", e && e.message); });
 
-let ready = false; // 테이블 자동 생성 1회
-async function ensureTable() {
-  if (ready) return;
+// IP 해시 솔트. 기본값("salt")은 공개된 값이라 해시를 되짚을 수 있다(IP 후보가 43억 개뿐이라
+// 솔트를 알면 전수 대입이 가능하다 → 사실상 IP 원문 보관과 같아진다).
+// 값을 여기서 바꾸면 이미 저장된 해시와 서로 달라져 같은 사람을 못 알아보므로 기본값은 그대로 두고,
+// 미설정이라는 사실만 서버 로그에 남긴다(운영자가 채우면 그때부터 안전해진다).
+if (!process.env.LEAD_SALT) {
+  console.warn("[lead] LEAD_SALT 미설정 — 기본 솔트 사용 중. Vercel 환경변수에 임의 문자열을 넣어 주세요.");
+}
+
+// 테이블 자동 생성 1회.
+// 불리언 플래그는 동시 요청에서 새기 쉽다(둘 다 false 를 보고 둘 다 DDL 을 던진다).
+// '진행 중인 약속' 자체를 캐시하면 뒤에 온 요청은 그 약속을 기다린다.
+// 실패하면 캐시를 비워, 다음 요청이 다시 시도할 수 있게 한다.
+let ready = null;
+function ensureTable() {
+  if (!ready) ready = createTable().catch((e) => { ready = null; throw e; });
+  return ready;
+}
+async function createTable() {
   await pool.query(`CREATE TABLE IF NOT EXISTS leads (
     id BIGSERIAL PRIMARY KEY,
     email TEXT NOT NULL,
@@ -34,7 +50,6 @@ async function ensureTable() {
   )`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at)`);
-  ready = true;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,8 +63,11 @@ export default async function handler(req, res) {
 
   if (!pool) return res.status(200).json({ ok: false, configured: false, error: "DATABASE_URL 미설정 — Neon/카페24 Postgres 연결 문자열을 환경변수에 추가하세요." });
 
+  // body 가 없을 수 있다(Content-Type 누락, 빈 POST). 그대로 두면 b.email 에서 터진다.
+  // building.js·kakao.js 와 같은 방어를 여기에도 둔다.
   let b = req.body;
   if (typeof b === "string") { try { b = JSON.parse(b); } catch { b = {}; } }
+  if (!b || typeof b !== "object") b = {};
 
   const email = String(b.email || "").trim().slice(0, 200);
   const agreed = b.agreed === true || b.agreed === "true";
@@ -74,6 +92,7 @@ export default async function handler(req, res) {
     const r = await pool.query(q, vals);
     return res.status(200).json({ ok: true, id: r.rows[0].id });
   } catch (e) {
-    return res.status(200).json({ ok: false, error: "저장 실패: " + String(e && e.message || e) });
+    // 내부 오류 원문(DB 호스트명·테이블/컬럼 이름)은 화면에 그대로 뜬다 → 로그로만 보낸다.
+    return res.status(200).json({ ok: false, error: safeError("lead", e, "저장 실패") });
   }
 }

@@ -17,6 +17,7 @@ function num(v){ const n=Number(v); return Number.isFinite(n)?n:null; }
 function encKey(k){ return /%[0-9A-Fa-f]{2}/.test(k) ? k : encodeURIComponent(k); }
 
 import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
+import { safeError } from "./_err.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
@@ -78,6 +79,7 @@ export default async function handler(req, res) {
       },
     });
   } catch (e) {
-    return res.status(200).json({ ok:false, error:"조회 실패: " + String(e && e.message || e) });
+    // 건축HUB 호출 URL 에는 serviceKey 가 들어 있다. 오류 원문을 그대로 내보내면 키가 새어 나간다.
+    return res.status(200).json({ ok:false, error: safeError("building", e, "조회 실패") });
   }
 }

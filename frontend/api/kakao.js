@@ -13,6 +13,7 @@
 const GROUP = new Set(["MT1","CS2","PS3","SC4","AC5","PK6","OL7","SW8","BK9","CT1","AG2","PO3","AT4","AD5","FD6","CE7","HP8","PM9"]);
 
 import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
+import { safeError } from "./_err.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
@@ -56,7 +57,7 @@ export default async function handler(req, res) {
         gu: h.region_2depth_name || "", dong: h.region_3depth_name || "", sido: h.region_1depth_name || "",
       });
     } catch (e) {
-      return res.status(200).json({ ok: false, configured: true, error: "좌표 변환 실패: " + String(e) });
+      return res.status(200).json({ ok: false, configured: true, error: safeError("kakao/coord", e, "좌표 변환 실패") });
     }
   }
 
@@ -106,6 +107,7 @@ export default async function handler(req, res) {
       items,
     });
   } catch (e) {
-    return res.status(200).json({ ok: false, configured: true, items: [], error: "카카오 호출 실패: " + String(e) });
+    // 오류 원문에 요청 URL 이 섞이면 쿼리스트링·Authorization 이 같이 나갈 수 있다 → 로그로만.
+    return res.status(200).json({ ok: false, configured: true, items: [], error: safeError("kakao", e, "카카오 호출 실패") });
   }
 }
