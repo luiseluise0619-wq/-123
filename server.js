@@ -6,6 +6,10 @@ import http from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import zlib from "node:zlib";
+import { promisify } from "node:util";
+
+const gzip = promisify(zlib.gzip);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "frontend");   // 정적 루트
@@ -50,8 +54,17 @@ function readBody(req) {
   });
 }
 
-async function serveStatic(pathname, nodeRes) {
-  let rel = decodeURIComponent(pathname.split("?")[0]);
+// 압축해서 보낼 종류 — 텍스트만. 이미 압축된 것(png·woff2)은 다시 압축해도 안 줄고 CPU 만 쓴다.
+const COMPRESSIBLE = new Set([".html", ".js", ".mjs", ".json", ".css", ".svg", ".txt", ".csv", ".map", ".geojson"]);
+// 이보다 작으면 압축 이득보다 헤더·CPU 가 크다.
+const COMPRESS_MIN = 1024;
+
+async function serveStatic(pathname, nodeRes, req) {
+  let rel;
+  // 주소가 깨진 퍼센트 인코딩이면 decodeURIComponent 가 던진다.
+  // 그대로 두면 요청 처리기 밖으로 나가 500 이 된다 — 없는 파일이니 404 가 맞다.
+  try { rel = decodeURIComponent(pathname.split("?")[0]); }
+  catch { nodeRes.writeHead(404, { "Content-Type": "text/html; charset=utf-8" }); return nodeRes.end("<h1>404</h1>"); }
   // 첫 화면은 인텔리전스(zone.html)다. 들어오는 문이 여러 개면 사용자는 매번 고르게 되는데,
   // 이 서비스가 답하는 질문은 "내 업종으로 어디서 시작하면 기회가 있나" 하나다.
   // index.html 은 상담·데이터·방법 화면을 담은 채 그대로 남아 있다(주소로 직접 닿는다).
@@ -71,11 +84,29 @@ async function serveStatic(pathname, nodeRes) {
     return nodeRes.end("<h1>404</h1>");
   }
   const ext = path.extname(found).toLowerCase();
-  const buf = await readFile(found);
-  nodeRes.writeHead(200, {
+  let buf = await readFile(found);
+  const headers = {
     "Content-Type": MIME[ext] || "application/octet-stream",
     "Cache-Control": ext === ".html" ? "no-cache" : "public, max-age=3600",
-  });
+  };
+
+  // gzip 압축 — 이 서버로 배포할 때(Render·카페24) 사용자가 받는 양을 크게 줄인다.
+  // Vercel 은 알아서 압축해 주지만 이 파일은 그 경로가 아니다.
+  // 우리 데이터는 반복이 많은 JSON 이라 잘 줄어든다(측정: 386KB → 93KB, 465KB → 70KB).
+  // 외부 의존성 없이 Node 내장 zlib 만 쓴다.
+  const accepts = String((req && req.headers && req.headers["accept-encoding"]) || "");
+  if (COMPRESSIBLE.has(ext) && buf.length >= COMPRESS_MIN && /\bgzip\b/.test(accepts)) {
+    try {
+      buf = await gzip(buf);
+      headers["Content-Encoding"] = "gzip";
+      // 같은 주소라도 Accept-Encoding 에 따라 응답이 다르다 —
+      // 캐시(프록시·CDN)가 압축본을 비압축 클라이언트에 주지 않도록 알려 준다.
+      headers["Vary"] = "Accept-Encoding";
+    } catch (e) {
+      console.error("[server] gzip 실패 — 원본으로 보냄:", e && e.message);
+    }
+  }
+  nodeRes.writeHead(200, headers);
   nodeRes.end(buf);
 }
 
@@ -115,7 +146,7 @@ const server = http.createServer(async (req, nodeRes) => {
       return;
     }
 
-    await serveStatic(pathname, nodeRes);
+    await serveStatic(pathname, nodeRes, req);
   } catch (e) {
     // 핸들러가 이미 응답을 시작한 뒤 예외가 나면 writeHead 를 다시 부를 수 없다
     // (ERR_HTTP_HEADERS_SENT → 처리되지 않는 예외). 헤더 전송 여부를 보고 안전하게 끝낸다.
