@@ -1206,6 +1206,7 @@ class Component extends DCLogic {
     const footStyle = (on) => 'font-size:13px;cursor:pointer;white-space:nowrap;transition:color .2s;color:' + (on ? 'var(--ink)' : 'var(--ink2)');
     const footItems = [
       { label: '연도별 추이', go: () => { location.href = 'trends.html'; }, style: footStyle(false) },
+      { label: '지원 제도', go: () => { location.href = 'support.html'; }, style: footStyle(false) },
       // 이 화면(출처·계산식·우리가 정한 가정)은 만들어 놓고 링크가 없어 아무도 못 봤다.
       { label: '계산 방법', go: () => { location.hash = 'method'; }, style: footStyle(S.screen === 'method') },
       { label: '소개', go: () => { location.href = 'about.html'; }, style: footStyle(false) },

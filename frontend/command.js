@@ -26,6 +26,7 @@
     { t: "비교", d: "자치구·상권·임대료 나란히", u: "compare.html" },
     { t: "건물 지도", d: "핀 찍어 그 지점 브리핑", u: "building.html" },
     { t: "연도별 추이", d: "업종·자치구 시계열", u: "trends.html" },
+    { t: "지원 제도 찾기", d: "단계·필요한 것으로 정부 지원 공고 추리기", u: "support.html" },
     { t: "데이터", d: "쓰는 자료 열 가지", u: "index.html#data" },
     { t: "상담", d: "데이터 근거로 답하기", u: "index.html#chat" },
     { t: "서비스 소개", d: "무엇을 하는 서비스인가", u: "about.html" },
