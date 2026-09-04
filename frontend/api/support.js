@@ -21,6 +21,8 @@
 //   키를 넣고 한 번 호출해 본 뒤, 실제 필드명을 FIELDS 에 추가하는 것이 정확하다.
 //   확인 전까지는 못 읽은 항목을 버리지 말고 raw 로 남겨 무엇이 왔는지 보이게 한다.
 import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
+import { fetchT, encKey, ymdLocal } from "./_http.js";
+import { redact } from "./_err.js";
 
 // 우리 화면이 쓰는 모양. 여기 없는 건 화면에 안 쓴다.
 //   title 공고명 · org 기관 · deadline 마감(YYYY-MM-DD) · url 원문
@@ -65,8 +67,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const qs = new URLSearchParams({ serviceKey: key, page: "1", perPage: "200", returnType: "JSON" });
-    const r = await fetch(`${base}${base.includes("?") ? "&" : "?"}${qs}`, {
+    // serviceKey 는 URLSearchParams 에 넣지 않는다 — Encoding 형태 키가 이중 인코딩돼 깨진다.
+    const qs = new URLSearchParams({ page: "1", perPage: "200", returnType: "JSON" });
+    const r = await fetchT(`${base}${base.includes("?") ? "&" : "?"}serviceKey=${encKey(key)}&${qs}`, {
       headers: { Accept: "application/json" },
     });
     const j = await r.json().catch(() => null);
@@ -88,7 +91,7 @@ export default async function handler(req, res) {
       items.push({
         title,
         org: pickField(row, FIELDS.org),
-        deadline: deadline ? deadline.toISOString().slice(0, 10) : null,
+        deadline: deadline ? ymdLocal(deadline) : null,
         url: pickField(row, FIELDS.url),
         kind: pickField(row, FIELDS.kind),
         region: pickField(row, FIELDS.region),
@@ -104,6 +107,8 @@ export default async function handler(req, res) {
       note: "자격을 판정하지 않습니다. 조건에 해당할 수 있는 공고 목록이며 최종 확인은 원문에서 하세요.",
     });
   } catch (e) {
+    // 사용자에게는 상황만. 원인은 로그에만(요청 URL 에 serviceKey 가 들어 있다).
+    console.error("[support]", redact((e && e.stack) || e));
     return res.status(200).json({
       ok: false, configured: true, items: [],
       error: "공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",

@@ -87,9 +87,28 @@ const server = http.createServer(async (req, nodeRes) => {
     if (pathname.startsWith("/api/")) {
       const name = pathname.slice(5).replace(/[^a-zA-Z0-9_-]/g, "");
       if (!name || name.startsWith("_")) { nodeRes.writeHead(404); return nodeRes.end("Not found"); }
+
+      // '파일이 없다'와 '파일은 있는데 불러오다 실패했다'를 구분한다.
+      // 예전에는 import 실패를 전부 404 "no such endpoint" 로 뭉갰다. 그러면 문법 오류나
+      // 빠진 의존성(예: pg 미설치)이 '그런 엔드포인트 없음'으로 보여서 원인을 못 찾는다.
+      const file = path.join(API, name + ".js");
+      try { const s = await stat(file); if (!s.isFile()) throw new Error("not a file"); }
+      catch {
+        nodeRes.writeHead(404, { "Content-Type": "application/json" });
+        return nodeRes.end(JSON.stringify({ error: "no such endpoint" }));
+      }
       let mod;
-      try { mod = await import(pathToFileURL(path.join(API, name + ".js")).href); }
-      catch { nodeRes.writeHead(404, { "Content-Type": "application/json" }); return nodeRes.end(JSON.stringify({ error: "no such endpoint" })); }
+      try { mod = await import(pathToFileURL(file).href); }
+      catch (e) {
+        console.error(`[server] /api/${name} 불러오기 실패:`, (e && e.stack) || e);
+        nodeRes.writeHead(500, { "Content-Type": "application/json" });
+        return nodeRes.end(JSON.stringify({ error: "endpoint load failed" }));
+      }
+      if (typeof mod.default !== "function") {
+        console.error(`[server] /api/${name} 에 default export 핸들러가 없습니다.`);
+        nodeRes.writeHead(500, { "Content-Type": "application/json" });
+        return nodeRes.end(JSON.stringify({ error: "endpoint has no handler" }));
+      }
       const raw = req.method === "POST" || req.method === "PUT" ? await readBody(req) : "";
       const vreq = { method: req.method, headers: req.headers, url: req.url, body: raw, query: Object.fromEntries(url.searchParams) };
       await mod.default(vreq, vercelRes(nodeRes));

@@ -14,6 +14,7 @@ const GROUP = new Set(["MT1","CS2","PS3","SC4","AC5","PK6","OL7","SW8","BK9","CT
 
 import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
 import { safeError } from "./_err.js";
+import { fetchT } from "./_http.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
@@ -45,8 +46,8 @@ export default async function handler(req, res) {
     const H = { Authorization: "KakaoAK " + key };
     try {
       const [ar, rr] = await Promise.all([
-        fetch(`https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${x}&y=${y}`, { headers: H }).then((r) => r.json()).catch(() => null),
-        fetch(`https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${x}&y=${y}`, { headers: H }).then((r) => r.json()).catch(() => null),
+        fetchT(`https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${x}&y=${y}`, { headers: H }).then((r) => r.json()).catch(() => null),
+        fetchT(`https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${x}&y=${y}`, { headers: H }).then((r) => r.json()).catch(() => null),
       ]);
       const a = ar && ar.documents && ar.documents[0];
       const regs = (rr && rr.documents) || [];
@@ -83,7 +84,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const r = await fetch(url, { headers: { Authorization: "KakaoAK " + key } });
+    const r = await fetchT(url, { headers: { Authorization: "KakaoAK " + key } });
     const data = await r.json();
     if (!r.ok) {
       return res.status(200).json({

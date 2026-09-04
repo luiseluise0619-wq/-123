@@ -23,6 +23,12 @@ const SECRET_PATTERNS = [
   /(Bearer\s+)[A-Za-z0-9._\-]+/gi,
   /(x-api-key['":\s]+)[A-Za-z0-9._\-]+/gi,
   /(postgres(?:ql)?:\/\/[^:\s]+:)[^@\s]+(@)/gi,
+  // 상류가 오류 문구 안에 키를 되돌려 주는 경우가 있다.
+  //   OpenAI: "Incorrect API key provided: sk-proj-abcd..."
+  //   Google: 응답에 AIza... 가 섞여 나오는 경우
+  // 헤더·쿼리 형태가 아니어서 위 패턴에 안 걸리므로 키 모양 자체를 잡는다.
+  /(sk-)[A-Za-z0-9_\-]{8,}/g,
+  /(AIza)[A-Za-z0-9_\-]{10,}/g,
 ];
 
 /**

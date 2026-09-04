@@ -12,12 +12,10 @@ const BLD_BASE = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleIn
 
 function pad4(v){ const s=String(v==null?0:v).replace(/[^0-9]/g,""); return s.padStart(4,"0").slice(-4); }
 function num(v){ const n=Number(v); return Number.isFinite(n)?n:null; }
-// data.go.kr 인증키는 Encoding(%2B…)·Decoding(원본) 두 형태. 이미 인코딩돼 있으면
-// 그대로, 아니면 encodeURIComponent — 사용자가 어느 걸 넣어도 동작하게.
-function encKey(k){ return /%[0-9A-Fa-f]{2}/.test(k) ? k : encodeURIComponent(k); }
-
 import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
 import { safeError } from "./_err.js";
+// encKey: data.go.kr 인증키 Encoding/Decoding 두 형태 자동 처리. support.js 와 공유(_http.js).
+import { fetchT, encKey } from "./_http.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
@@ -38,7 +36,7 @@ export default async function handler(req, res) {
   try {
     // 1) 좌표 → 법정동코드(b_code) + 지번(본번/부번)
     const geoUrl = `https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${x}&y=${y}`;
-    const gr = await fetch(geoUrl, { headers: { Authorization: `KakaoAK ${kakaoKey}` } });
+    const gr = await fetchT(geoUrl, { headers: { Authorization: `KakaoAK ${kakaoKey}` } });
     const gd = await gr.json().catch(() => ({}));
     const doc = (gd.documents || [])[0];
     const a = doc && doc.address;
@@ -52,7 +50,7 @@ export default async function handler(req, res) {
     // 2) 건축물대장 표제부 (serviceKey는 형태 자동 처리 후 수동 조립, 나머지는 인코딩)
     const rest = new URLSearchParams({ sigunguCd, bjdongCd, platGbCd, bun, ji,
                                        _type:"json", numOfRows:"20", pageNo:"1" });
-    const br = await fetch(`${BLD_BASE}?serviceKey=${encKey(govKey)}&${rest}`);
+    const br = await fetchT(`${BLD_BASE}?serviceKey=${encKey(govKey)}&${rest}`);
     const bd = await br.json().catch(() => ({}));
     const head = bd?.response?.header;
     if (head && head.resultCode && !["00","000","INFO-000"].includes(String(head.resultCode))) {

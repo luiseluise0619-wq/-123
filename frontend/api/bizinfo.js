@@ -21,6 +21,8 @@
 // 프론트 호출: POST /api/bizinfo  { bno: "1234567890" }
 // 응답: { ok, configured, found, status, statusCode, taxType, closedAt, changedAt }
 import { isAllowedOrigin, FORBIDDEN_MSG } from "./_origin.js";
+import { fetchT, encKey } from "./_http.js";
+import { redact } from "./_err.js";
 
 const ENDPOINT = "https://api.odcloud.kr/api/nts-businessman/v1/status";
 
@@ -63,7 +65,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const r = await fetch(`${ENDPOINT}?serviceKey=${encodeURIComponent(key)}`, {
+    const r = await fetchT(`${ENDPOINT}?serviceKey=${encKey(key)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ b_no: [bno] }),
@@ -97,6 +99,8 @@ export default async function handler(req, res) {
       // 사업자번호는 되돌려주지 않는다. 화면이 이미 갖고 있고, 여기서 다시 흘릴 이유가 없다.
     });
   } catch (e) {
+    // 사업자등록번호는 로그에도 남기지 않는다(파일 머리말의 약속). 오류 원인만 남긴다.
+    console.error("[bizinfo]", redact((e && e.stack) || e));
     return res.status(200).json({
       ok: false, configured: true, found: false,
       error: "조회 중 오류가 났습니다. 잠시 후 다시 시도해 주세요.",
