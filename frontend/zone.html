@@ -786,13 +786,19 @@ function wire(){
   });
   window.addEventListener('hashchange',route);
 }
+// 주소에서 읽은 값을 푼다. 못 풀면 원문 그대로(터뜨리지 않는다).
+function safeDecode(s){ try{ return decodeURIComponent(s); }catch(e){ return s; } }
 function route(){
   // 팔레트에서 "업종"을 골라 들어온 경우
   var pi=new URLSearchParams(location.search).get('ind');
   if(pi && OPP && OPP.ind && OPP.ind[pi] && curOppInd!==pi){ setInd(pi); }
   if((location.hash||'')==='#fit'){ openFit(); return; }
   var m=(location.hash||'').match(/^#z=([0-9]+)(?:&ind=(.*))?$/);
-  if(m&&byCd[m[1]]){ curInd=m[2]?decodeURIComponent(m[2]):''; open(m[1],true); }
+  // decodeURIComponent 는 깨진 퍼센트 인코딩(#z=123&ind=%)에 URIError 를 던진다.
+  // 그러면 route() 가 통째로 중단돼, 해시가 바뀌어도 화면이 그대로 멈춘다.
+  // 주소는 사용자가 손으로 고치거나 잘린 채 공유될 수 있다 — 못 읽으면 업종 없이 연다.
+  // (support.js 의 safeDecode 와 같은 방침)
+  if(m&&byCd[m[1]]){ curInd=m[2]?safeDecode(m[2]):''; open(m[1],true); }
   else {
     $('#profile').hidden=true; $('#fit').hidden=true; $('#browse').hidden=false;
     if(OPP) drawOpp();

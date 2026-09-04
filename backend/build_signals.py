@@ -184,8 +184,9 @@ def analyze(series, quarters):
             else:
                 fc["reason"] = "어떤 방법도 기준선(직전 분기 유지)을 유의미하게 못 이김"
             res["forecast"] = fc
-        elif n < MIN_LEN:
-            res["forecast"] = {"show": False, "reason": f"분기 {n}개 — 최소 {MIN_LEN}개 필요"}
+        # (이 자리에 있던 `elif n < MIN_LEN` 은 죽은 가지였다 —
+        #  이미 `if n >= MIN_LEN` 안이라 조건이 성립할 수 없다.
+        #  길이 부족은 아래 else 가 처리한다.)
     else:
         res["forecast"] = {"show": False, "reason": f"분기 {n}개 — 최소 {MIN_LEN}개 필요"}
     return res

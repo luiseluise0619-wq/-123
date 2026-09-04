@@ -143,9 +143,75 @@ def check_livepop():
     else:
         OK("livepop_gu", f"자치구 {len(gu)}개 체류 합 {tot:,.0f} 정상")
 
+# ── 상권 인텔리전스: 백분위 범위·가중치 합·반영률 ──
+# 첫 화면(기회 상권)이 이 파일로 그려진다. 여기가 깨지면 사용자가 보는 순위가 통째로 틀린다.
+def check_zone_intel():
+    d, err = load("zone_intel.json")
+    if d is None: return SKIP("zone_intel", err)
+    z = d.get("zones") or {}
+    if not z: return WARN("zone_intel", "zones 비어있음")
+    w = d.get("weights") or {}
+    if w and abs(sum(w.values()) - 1.0) > 1e-6:
+        FAIL("zone_intel", f"가중치 합={sum(w.values())} (1.0 이어야 함)")
+    bad = []
+    for k, v in z.items():
+        # dem/sup 은 백분위라 0~100 을 벗어날 수 없다. gap 은 그 차이라 -100~100.
+        for f in ("dem", "sup"):
+            x = v.get(f)
+            if x is not None and not (0 <= x <= 100): bad.append(f"{k}.{f}={x}")
+        g = v.get("gap")
+        if g is not None and not (-100 <= g <= 100): bad.append(f"{k}.gap={g}")
+        c = v.get("cov")
+        if c is not None and not (0 < c <= 1): bad.append(f"{k}.cov={c}")
+    if bad: FAIL("zone_intel", f"백분위/반영률 범위 이상 {len(bad)}건 " + str(bad[:5]))
+    else: OK("zone_intel", f"{len(z)}개 상권 백분위·가중치 정상")
+
+# ── 경량 인덱스: 열 개수가 cols 와 맞는지 ──
+# 빌더가 열을 추가하고 cols 를 안 고치면 화면은 조용히 '한 칸씩 밀린 값'을 읽는다.
+# 오류도 안 나고 숫자만 틀리는 종류라 눈으로는 못 잡는다.
+def check_zone_index():
+    d, err = load("zone_index.json")
+    if d is None: return SKIP("zone_index", err)
+    cols, rows = d.get("cols") or [], d.get("rows") or []
+    if not cols or not rows: return WARN("zone_index", "cols/rows 비어있음")
+    badlen = [i for i, r in enumerate(rows) if len(r) != len(cols)]
+    if badlen:
+        return FAIL("zone_index", f"열 개수가 cols({len(cols)})와 다른 행 {len(badlen)}건 (예: {badlen[:3]})")
+    gi = cols.index("gap") if "gap" in cols else None
+    if gi is not None:
+        gaps = [r[gi] for r in rows if isinstance(r[gi], (int, float))]
+        if gaps != sorted(gaps, reverse=True):
+            WARN("zone_index", "gap 내림차순 정렬이 깨졌습니다(첫 화면 순위 영향)")
+            return
+    OK("zone_index", f"{len(rows)}행 · {len(cols)}열 구조 정상")
+
+# ── 신호: '기준선을 이긴 예측만 표시' 규칙이 실제로 지켜졌는지 ──
+# 이 파일의 존재 이유가 그 규칙이다. 규칙이 깨진 채 show=true 가 나가면
+# 관성보다 못한 예측을 사용자가 그대로 믿게 된다.
+def check_signals():
+    d, err = load("signals.json")
+    if d is None: return SKIP("signals", err)
+    axes = [k for k in ("ind", "zone", "gu_ind") if isinstance(d.get(k), dict)]
+    if not axes: return WARN("signals", "계열 축이 하나도 없음")
+    shown, viol = 0, []
+    for ax in axes:
+        for k, v in d[ax].items():
+            fc = v.get("forecast") or {}
+            if not fc.get("show"): continue
+            shown += 1
+            m, b = fc.get("mape"), fc.get("baseline_mape")
+            if m is None or b is None or m >= b:
+                viol.append(f"{ax}/{k}: mape={m} baseline={b}")
+    if viol:
+        FAIL("signals", f"기준선을 못 이겼는데 show=true 인 예측 {len(viol)}건 " + str(viol[:3]))
+    else:
+        OK("signals", f"{len(axes)}개 축 · 표시 예측 {shown}건 모두 기준선 우위 확인")
+
+
 def main():
     for fn in (check_sales, check_stores, check_income, check_zone_change,
-               check_zone_apt, check_pop, check_rent, check_livepop):
+               check_zone_apt, check_pop, check_rent, check_livepop,
+               check_zone_intel, check_zone_index, check_signals):
         try: fn()
         except Exception as e: FAIL(fn.__name__, f"점검 중 예외: {e}")
 
