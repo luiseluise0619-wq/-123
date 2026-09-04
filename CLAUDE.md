@@ -251,6 +251,11 @@ DB index · query optimization · caching · pagination · rate limit · backgro
       기본 솔트는 공개값이라 IP 해시를 되짚을 수 있다.
 
 **배포 — 확인 필요**
+- [ ] 🟢 `index.html`·`mvp.html` 이 Pretendard 폰트 CSS 를 외부 CDN(jsdelivr)에서 받는다.
+      React 는 같은 이유(장애·차단·공급망)로 이미 `./vendor` 로 옮겨 놓고 폰트만 남았다.
+      CDN 이 막혀도 화면은 시스템 폰트로 정상 동작하지만(확인함), 글꼴이 달라진다.
+      → 여유 있을 때 폰트 파일도 `./vendor` 로 옮기거나 `integrity`(SRI) 속성을 붙일 것.
+      (이 작업 환경에서는 jsdelivr 접속이 막혀 있어 파일을 받아올 수 없었다 — 사람이 해야 한다.)
 - [ ] 🟡 `pg` 의존성이 저장소 루트 `package.json` 에만 있는데 Vercel 의 Root Directory 는 `frontend/` 다.
       `frontend/package.json` 이 없어서, Vercel 이 루트 package.json 으로 설치하지 않으면
       `/api/lead` 는 import 단계에서 죽는다(다른 엔드포인트는 영향 없음).
