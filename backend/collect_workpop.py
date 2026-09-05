@@ -17,6 +17,7 @@
 """
 import os, sys, json, time, datetime, urllib.request, urllib.parse
 import xml.etree.ElementTree as ET
+from collect_util import mark_unavailable
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -55,11 +56,9 @@ def latest_quarter():
     return None, 0
 
 def write_unavailable(reason):
-    out={"service":SERVICE,"available":False,"reason":reason,
-         "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d")}
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    json.dump(out, open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
-    print("available=false 저장:", reason)
+    # 일시적 실패(키 만료·API 장애)로 멀쩡한 데이터를 지우지 않는다 — collect_util 참조.
+    mark_unavailable(OUT, reason)
+
 
 def main():
     if not KEY:

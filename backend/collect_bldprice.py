@@ -48,6 +48,7 @@
 """
 import os, sys, json, time, datetime, urllib.request, urllib.parse
 import xml.etree.ElementTree as ET
+from collect_util import mark_unavailable
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -196,10 +197,9 @@ def recent_months(n):
 
 
 def write_unavailable(reason):
-    json.dump({"available": False, "reason": reason,
-               "updated": datetime.datetime.utcnow().strftime("%Y-%m-%d")},
-              open(OUT, "w", encoding="utf-8"), ensure_ascii=False)
-    print("available=false:", reason)
+    # 일시적 실패(키 만료·API 장애)로 멀쩡한 데이터를 지우지 않는다 — collect_util 참조.
+    mark_unavailable(OUT, reason)
+
 
 
 def selftest():

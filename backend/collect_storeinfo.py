@@ -19,6 +19,7 @@ localdata.go.kr 대신 공공데이터포털의 '소상공인 상가정보' API 
 import os, sys, json, time, datetime, urllib.request, urllib.parse
 import concurrent.futures
 import xml.etree.ElementTree as ET
+from collect_util import mark_unavailable
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -50,10 +51,9 @@ def total_for(signgu):
     return int(root.findtext(".//totalCount") or "0"), xml
 
 def write_unavailable(reason):
-    json.dump({"available":False,"reason":reason,
-        "updated":datetime.datetime.utcnow().strftime("%Y-%m-%d")},
-        open(OUT,"w",encoding="utf-8"), ensure_ascii=False)
-    print("available=false:", reason)
+    # 일시적 실패(키 만료·API 장애)로 멀쩡한 데이터를 지우지 않는다 — collect_util 참조.
+    mark_unavailable(OUT, reason)
+
 
 def main():
     if not KEY:
