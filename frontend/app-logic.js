@@ -467,7 +467,8 @@ class Component extends DCLogic {
       return out.sort((a,b)=>b.n-a.n);
     })();
     const fieldBase='flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:'+this.L('14px','16px','16px')+';transition:background .16s;'
-      +'padding:0 '+this.L('14px','18px','18px')+';height:'+this.L('50px','56px','56px')+';';
+      // 라벨 21px + 입력 22px 이 들어간다. 56 이면 위아래 6px 밖에 안 남아 꾸겨 보였다.
+      +'padding:0 '+this.L('14px','18px','18px')+';height:'+this.L('58px','64px','64px')+';';
     const valBase='font-size:15px;font-weight:500;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
 
     // 인기 검색 — 실제 데이터에서 뽑는다. 그 동네에 그 장사 기록이 있는 조합만.
@@ -1935,8 +1936,12 @@ class Component extends DCLogic {
       headerStyle:'position:sticky;top:0;z-index:50;height:'+this.L('56px','60px','64px')+';display:flex;align-items:center;'
         +'background:var(--bg-blur);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);'
         +'border-bottom:1px solid rgba(0,0,0,.05);transition:all .2s ease-in-out',
-      headerInner:'width:100%;max-width:'+this.L('100%','860px','1080px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+';display:flex;align-items:center;gap:'+this.L('12px','20px','28px'),
-      mainStyle:'max-width:'+this.L('100%','860px','1080px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+' '+this.L('80px','110px','130px'),
+      headerInner:'width:100%;max-width:'+this.L('100%','720px','760px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+';display:flex;align-items:center;gap:'+this.L('12px','20px','28px'),
+      // 칸을 1080 으로 잡아 놨는데 안의 내용은 전부 600~660 으로 묶여 있어
+      // 오른쪽 400px 이 늘 비어 있었다("왜 다 왼쪽에 있어"). 칸을 내용에 맞춘다.
+      // 넓히는 쪽이 아니라 좁히는 쪽으로 맞춘 이유: 620px 짜리 본문을 1080 으로 늘리면
+      // 한 줄이 너무 길어져 읽기 어려워진다.
+      mainStyle:'max-width:'+this.L('100%','720px','760px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+' '+this.L('80px','110px','130px'),
       dataError:S.err, retryData:()=>location.reload(),
       ...this.home(),
       ai:this.chat(),
