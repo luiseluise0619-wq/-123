@@ -1197,6 +1197,10 @@ class Component extends DCLogic {
     const key={per:'per',sales:'sales',stores:'stores',unit:'unit'}[sort]||'per';
     list.sort((a,b)=>(b[key]||0)-(a[key]||0));
     const maxV=Math.max(...list.map(o=>o[key]||0),1);
+    // 이 자치구의 중앙값 — 각 줄이 잘하는 쪽인지 못하는 쪽인지 견줄 기준.
+    // 기준선이 없으면 금액만 71줄이라 어느 줄이 좋은 건지 읽히지 않는다.
+    const perSorted=list.map(o=>o.per).sort((a,b)=>a-b);
+    const medPer=perSorted.length?perSorted[Math.floor(perSorted.length/2)]:0;
     return {
       gu:gu, ind:this.indName(S.ind),
       guOptions:GU,
@@ -1204,16 +1208,30 @@ class Component extends DCLogic {
       lead: list.length
         ? gu+' 안의 '+list.length+'곳을 전부 줄 세웠어요'
         : gu+'에는 '+this.indName(S.ind)+' 데이터가 있는 동네가 없어요.',
-      rows:list.map((o,i)=>({
+      // 자치구 중앙값 — 화면 위에 기준선으로 적는다
+      medLabel:list.length? this.fmt(medPer/3)+'원' : '',
+      hasMed:list.length>0,
+      rows:list.map((o,i)=>{
+        // 가게가 2곳 이하면 '가게 한 곳당'이 사실상 그 한 가게의 실적이다.
+        // 숫자를 지우지는 않고(값은 진짜다) 믿을 만한 정도를 함께 적는다.
+        const thin=o.stores<=2;
+        return {
         rank:i+1, name:o.name+(o.gu&&o.gu.indexOf('경계')>=0?' · '+o.gu:''),
         per:this.fmt(o.per/3)+'원',
+        // 가게 수는 두 가지를 한 번에 말해준다 — 이 숫자를 믿어도 되는지, 경쟁이 얼마나 센지
+        storeTag:o.stores.toLocaleString()+'곳'+(thin?' · 표본 적음':''),
+        storeStyle:'flex:none;font-size:11.5px;white-space:nowrap;font-variant-numeric:tabular-nums;'
+          +(thin?'color:var(--warn)':'color:var(--ink3)'),
+        vsMed:medPer? (o.per>=medPer? '중앙값 이상':'중앙값 미만') : '',
+        vsStyle:'flex:none;font-size:11.5px;white-space:nowrap;'
+          +(medPer&&o.per>=medPer?'color:var(--good)':'color:var(--ink3)'),
         sales:this.fmt(o.sales)+'원',
         stores:o.stores.toLocaleString()+'개',
         unit:o.unit? o.unit.toLocaleString()+'원':'데이터 없음',
         bar:'display:block;width:'+Math.max((o[key]||0)/maxV*100,2).toFixed(1)+'%;height:100%;border-radius:3px;background:var(--accent);opacity:'+(0.35+0.65*((o[key]||0)/maxV)).toFixed(2),
         pick:()=>this.setState({sel:o.id,screen:'diag'}),
         row:'display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--line);cursor:pointer'
-      })),
+      };}),
       note:'비교분석은 담아 둔 몇 곳만, 정밀비교는 한 자치구 안을 빠짐없이 봐요. 막대와 금액은 가게 한 곳이 한 달에 파는 돈이에요. 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아니에요. 자치구는 동네 좌표로 계산해 붙였고, 경계에서 250m 안쪽인 곳은 두 구를 함께 적었어요 — 강남역처럼 강남대로를 경계로 서쪽이 서초구인 곳이 그래요. 건물 단위 임대료와 공실은 공개 데이터에 없어요.'
     };
   }

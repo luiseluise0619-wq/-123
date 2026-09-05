@@ -796,14 +796,24 @@
           </select>
         </div>
 
-        <div data-anim="1" style="margin-top:22px;max-width:640px">
+        <sc-if value="{{ fc.hasMed }}">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:22px;flex-wrap:wrap">
+            <span style="font-size:12.5px;color:var(--ink2);white-space:nowrap">이 자치구 중앙값 <b style="font-variant-numeric:tabular-nums">{{ fc.medLabel }}</b></span>
+            <span style="font-size:12px;color:var(--ink3);white-space:nowrap">가게 한 곳이 한 달에 파는 돈</span>
+          </div>
+        </sc-if>
+        <div data-anim="1" style="margin-top:10px">
           <sc-for list="{{ fc.rows }}" as="r">
             <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="{{ r.row }}" style-hover="background:var(--surface)">
               <span style="flex:none;width:20px;font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums">{{ r.rank }}</span>
-              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
                 <span style="font-size:15.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
                 <span style="display:block;height:5px;border-radius:3px;background:var(--surface);overflow:hidden">
                   <span style="{{ r.bar }}"></span>
+                </span>
+                <span style="display:flex;align-items:baseline;gap:10px;min-width:0">
+                  <span style="{{ r.storeStyle }}">가게 {{ r.storeTag }}</span>
+                  <span style="{{ r.vsStyle }}">{{ r.vsMed }}</span>
                 </span>
               </span>
               <span style="flex:none;width:96px;text-align:right;font-size:14.5px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.per }}</span>
