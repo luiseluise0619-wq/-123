@@ -38,7 +38,9 @@
   }
   html[data-theme="dark"]{
     --bg:#000000; --bg-blur:rgba(0,0,0,.72);
-    --ink:#F5F5F7; --ink2:#A8A8AE; --ink3:#8A8A90;
+    /* ink3 는 --surface 위에서는 5.4:1 로 충분했지만 --accent-3(선택된 카드) 위에서
+       3.98:1 로 떨어져 설명 글자가 흐리게 보였다. 두 배경 모두에서 4.5:1 을 넘기게 올린다. */
+    --ink:#F5F5F7; --ink2:#A8A8AE; --ink3:#9A9AA0;
     --line:#1F1F22; --line-strong:#3A3A3E; --surface:#121214;
     --accent:#3FA88F; --accent-hover:#6FC4AE;
     --accent-2:#2E7565; --accent-3:#12332C; --selection:#12332C;

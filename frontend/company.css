@@ -1,4 +1,4 @@
-/* 사장님인사이트: 읽기 쉬운 숫자, 따뜻한 문장, 절제된 여백. */
+/* MYSBIZON: 읽기 쉬운 숫자, 따뜻한 문장, 절제된 여백. */
 html { scroll-behavior:smooth; }
 body { font-feature-settings:"tnum"; }
 button,[role=button],input,select { -webkit-tap-highlight-color:transparent; }

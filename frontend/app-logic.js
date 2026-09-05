@@ -2334,6 +2334,7 @@ class Component extends DCLogic {
     out.riskHint = R? (R.closed>R.opened? '줄고 있음':'늘고 있음') : '—';
 
     // ── 지도분석 — 자치구로 좁혀 볼 수 있다. 지도는 카카오로 붙인다.
+    const seoulOnly=(S.sido||'서울특별시')==='서울특별시';
     const GU_ALL=['서울 전체','종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구','강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구','금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
     const mapGu=S.mapGu||'서울 전체';
     const near=(mapGu==='서울 전체'
@@ -2405,8 +2406,11 @@ class Component extends DCLogic {
     this._mvA=this.mvSections(sel,L);
     out.mv={
       eyebrow:this.indName(S.ind)+' · '+sel.name+(this.guLabel(sel.id)?' · '+this.guLabel(sel.id):''),
-      gu:mapGu, guOptions:GU_ALL,
-      onGu:e=>this.setState({mapGu:e.target.value}),
+      // 시·도를 바꾸면 구 목록도 따라 바뀐다. 서울 밖은 자료가 없으므로
+      // 서울 자치구를 그대로 두지 않는다 — 부산을 골랐는데 '강남구'가 남아 있으면 거짓말이다.
+      gu:seoulOnly?mapGu:'자료 없음',
+      guOptions:seoulOnly?GU_ALL:['자료 없음'],
+      onGu:e=>{ if(seoulOnly) this.setState({mapGu:e.target.value}); },
       // 선택한 대상을 고정해 보여준다 — 여기서 후보를 다시 찾게 하지 않는다
       // 모바일에서는 표가 아니라 두 줄 행으로 접힌다 (가로 스크롤 금지)
       rowStyle:this.L(

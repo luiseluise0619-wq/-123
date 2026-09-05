@@ -74,7 +74,7 @@ async function deliver(req,res) {
   try {
     const response=await fetchT('https://api.brevo.com/v3/smtp/email',{
       method:'POST',headers:{'api-key':process.env.BREVO_API_KEY,'content-type':'application/json',accept:'application/json'},
-      body:JSON.stringify({sender:{email:process.env.REPORT_FROM_EMAIL,name:process.env.REPORT_FROM_NAME||'사장님인사이트'},to:[{email:data.email}],subject:'상권 분석 리포트 · 사장님인사이트',htmlContent:html(data)})
+      body:JSON.stringify({sender:{email:process.env.REPORT_FROM_EMAIL,name:process.env.REPORT_FROM_NAME||'MYSBIZON'},to:[{email:data.email}],subject:'상권 분석 리포트 · MYSBIZON',htmlContent:html(data)})
     },10000);
     if (!response.ok) { console.error('[report] upstream status',response.status); return res.status(502).json({error:'메일 발송을 요청하지 못했습니다. 잠시 후 다시 시도해 주세요.'}); }
     return res.status(200).json({ok:true});
