@@ -2502,6 +2502,28 @@ class Component extends DCLogic {
             +(s.key===cur?'background:var(--ink);color:var(--bg);font-weight:600':'background:var(--surface);color:var(--ink2)')
         }));
       })(),
+      // 한눈 요약 — 7장의 핵심 숫자를 먼저 다 보여준다.
+      // 예전에는 카드가 가로 캐러셀에만 있어서 화면에 들어오면 1장만 보였고,
+      // 나머지 6장에 있는 값이 없는 것처럼 읽혔다. 요약을 먼저, 자세히는 아래에서.
+      summary:(()=>{
+        const A=this._mvA||this.mvSections(sel,L);
+        return A.map((s,i)=>{
+          const has=s.big&&s.big!=='데이터 없음';
+          return {
+            label:s.title.split(' · ')[0],
+            big:s.big||'데이터 없음',
+            bigStyle:'font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1.15;'
+              +'font-variant-numeric:tabular-nums;margin-top:6px;'
+              +(has?'color:var(--ink)':'color:var(--ink3);font-size:15px;font-weight:500'),
+            note:s.bigLabel||'',
+            go:()=>this.goCard(i,A[i].key),
+            style:'display:flex;flex-direction:column;padding:16px 18px;border-radius:14px;'
+              +'background:var(--surface);cursor:pointer;min-width:0;transition:background .14s'
+          };
+        });
+      })(),
+      summaryGrid:'display:grid;gap:10px;margin-top:18px;grid-template-columns:'
+        +this.L('repeat(2,minmax(0,1fr))','repeat(3,minmax(0,1fr))','repeat(4,minmax(0,1fr))'),
       // 가로 카드뉴스 — 5장을 트랙에 놓고 스냅으로 넘긴다.
       // 반복 안에서는 sc-if가 접히지 않으므로 조건부를 display로 처리한다.
       cards:(()=>{

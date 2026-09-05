@@ -991,8 +991,22 @@
       </section>
 
       <sc-if value="{{ sidoReady }}">
+      <!-- 한눈 요약 — 7가지 핵심 숫자를 먼저 다 보여준다 -->
+      <section style="padding:44px 0 0">
+        <div style="font-size:17px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap">한눈에 보기</div>
+        <div style="{{ mv.summaryGrid }}">
+          <sc-for list="{{ mv.summary }}" as="s">
+            <div role="button" tabIndex="0" onClick="{{ s.go }}" style="{{ s.style }}" style-hover="background:var(--line-strong)">
+              <div style="font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.label }}</div>
+              <div style="{{ s.bigStyle }}">{{ s.big }}</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:5px;line-height:1.5;text-wrap:pretty">{{ s.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
       <section style="padding:36px 0 0">
-        <div style="width:100%;aspect-ratio:1;border-radius:20px;background:var(--surface);overflow:hidden"><svg aria-label="서울 상권 중심 좌표 지도" role="img" viewBox="{{ mv.map.vb }}" style="width:100%;height:100%;display:block"><sc-for list="{{ mv.map.gus }}" as="g"><path d="{{ g.d }}" fill="{{ g.fill }}" fill-opacity="{{ g.op }}" stroke="{{ g.sc }}" stroke-width="{{ g.sw }}"></path></sc-for><sc-for list="{{ mv.map.pins }}" as="p"><g><circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="{{ p.fill }}"></circle><text x="{{ p.x }}" y="{{ p.ty }}" text-anchor="middle" font-size="{{ p.fs }}" font-weight="700" fill="white">{{ p.n }}</text></g></sc-for></svg></div><p style="font-size:12px;color:var(--ink3)">상권 중심 위치 · 아래 번호를 선택하면 분석이 바뀝니다.</p><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;max-width:640px">
+        <div style="width:100%;aspect-ratio:16/11;border-radius:20px;background:var(--surface);overflow:hidden"><svg aria-label="서울 상권 중심 좌표 지도" role="img" viewBox="{{ mv.map.vb }}" style="width:100%;height:100%;display:block"><sc-for list="{{ mv.map.gus }}" as="g"><path d="{{ g.d }}" fill="{{ g.fill }}" fill-opacity="{{ g.op }}" stroke="{{ g.sc }}" stroke-width="{{ g.sw }}"></path></sc-for><sc-for list="{{ mv.map.pins }}" as="p"><g><circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="{{ p.fill }}"></circle><text x="{{ p.x }}" y="{{ p.ty }}" text-anchor="middle" font-size="{{ p.fs }}" font-weight="700" fill="white">{{ p.n }}</text></g></sc-for></svg></div><p style="font-size:12px;color:var(--ink3)">상권 중심 위치 · 아래 번호를 선택하면 분석이 바뀝니다.</p><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;max-width:640px">
           <sc-for list="{{ mv.map.pins }}" as="p">
             <span role="button" tabIndex="0" onClick="{{ p.pick }}" style="{{ p.chip }}">{{ p.n }} {{ p.name }}</span>
           </sc-for>
