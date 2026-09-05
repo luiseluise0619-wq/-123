@@ -101,7 +101,23 @@ class Component extends DCLogic {
 
   componentDidUpdate(){
     if(this._screen!==this.state.screen){this._screen=this.state.screen;window.scrollTo({top:0,behavior:'auto'});}
+    if(this.state.screen==='report') this.loadSupport();
     this.placePanel();this.syncTrack();
+  }
+
+  // 지원사업 공고 — 리포트 화면에 처음 들어올 때 한 번만 부른다.
+  // 키가 없으면 서버가 configured:false 로 답하고, 화면은 '아직 연결되지 않았습니다'를 띄운다.
+  // 예시 공고를 지어내지 않는다(CLAUDE.md 데이터 정직성).
+  loadSupport(){
+    if(this._spLoading||this.state.sp) return;
+    this._spLoading=true;
+    fetch('/api/support',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',
+      signal:AbortSignal.timeout(15000)})
+      .then(r=>r.json())
+      .then(j=>this.setState({sp:j}))
+      .catch(()=>this.setState({sp:{ok:false,configured:true,items:[],
+        error:'공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'}}))
+      .finally(()=>{this._spLoading=false;});
   }
 
   componentWillUnmount(){
@@ -1673,6 +1689,11 @@ class Component extends DCLogic {
             {label:'이 장사를 해본 적 있나요?', options:['처음','비슷한 일 해봤음','같은 장사 해봤음'].map(v=>({label:v,pick:pick('exp',v),style:chip('exp',v)}))},
             {label:'언제 열 계획이세요?', options:['3개월 안','6개월 안','1년 안','아직 미정'].map(v=>({label:v,pick:pick('when',v),style:chip('when',v)}))}
           ],
+          // 위 질문은 '선택 설문'이 아니라 아래 지원사업을 고르는 입력이다.
+          // 답을 하나라도 고르면 그 조건에 걸리는 공고가 앞으로 온다.
+          qsLabel:(S.rp_exp||S.rp_loan||S.rp_cash||S.rp_runway||S.rp_when)
+            ? '내 창업 조건 — 아래 지원사업을 이 조건으로 맞춥니다'
+            : '내 창업 조건 남기기 — 받을 수 있는 지원사업을 찾는 데 씁니다',
           email:email,
           onEmail:e=>{this._reportKey=null;this.setState({rp_email:e.target.value,rp_sent:false,rp_error:''});},
           agreed:!!S.rp_agree,
@@ -1687,6 +1708,72 @@ class Component extends DCLogic {
             +((ok&&!sent)?'cursor:pointer;background:var(--accent);color:#FFFFFF'
               :(sent?'cursor:default;background:var(--good);color:#FFFFFF'
                 :'cursor:pointer;background:var(--accent-3);color:var(--accent)')),
+          // ── 정부·지자체 지원사업 ────────────────────────────────────────
+          // 위 '내 창업 조건'의 답으로 해당할 수 있는 공고를 앞으로 끌어온다.
+          // 거르지 않고 순서만 바꾼다 — 우리 분류와 공고의 표현이 달라서
+          // 못 맞춘 것을 버리면 진짜 필요한 제도가 사라진다.
+          // 자격은 판정하지 않는다(CLAUDE.md §17: 법률 판단은 확정적으로 말하지 않는다).
+          sp:(()=>{
+            const d=S.sp;
+            const kw=[];
+            if(S.rp_exp==='처음') kw.push('예비','창업','신규','초기');
+            if(S.rp_loan&&S.rp_loan!=='없음') kw.push('융자','자금','대출','정책자금');
+            const hit=it=>{
+              if(!kw.length) return false;
+              const t=((it.title||'')+' '+(it.target||'')+' '+(it.kind||'')).toLowerCase();
+              return kw.some(k=>t.indexOf(k.toLowerCase())>=0);
+            };
+            const all=(d&&Array.isArray(d.items))?d.items:[];
+            const matched=all.filter(hit), rest=all.filter(it=>!hit(it));
+            const today=new Date(); today.setHours(0,0,0,0);
+            const row=it=>{
+              const dd=it.deadline?Math.round((new Date(it.deadline+'T00:00:00')-today)/86400000):null;
+              return {
+                title:it.title,
+                sub:[it.org,it.kind,it.region].filter(Boolean).join(' · '),
+                hasSub:!![it.org,it.kind,it.region].filter(Boolean).length,
+                dday:dd==null?'상시 · 마감일 확인 필요':(dd===0?'오늘 마감':'D-'+dd),
+                ddayStyle:'flex:none;font-size:12px;font-weight:600;white-space:nowrap;color:'
+                  +(dd==null?'var(--ink3)':(dd<=7?'var(--warn)':'var(--ink2)')),
+                url:it.url||'',
+                hasUrl:!!it.url,
+                style:'display:flex;align-items:flex-start;justify-content:space-between;gap:12px;'
+                  +'padding:14px 16px;border-radius:14px;background:var(--surface)'
+              };
+            };
+            return {
+              loading:!d,
+              notConfigured:!!d&&d.configured===false,
+              failed:!!d&&d.configured!==false&&!d.ok,
+              ready:!!d&&!!d.ok,
+              message:d?(d.error||''):'',
+              retry:()=>{this._spLoading=false;this.setState({sp:null});},
+              // 조건을 아직 안 골랐으면 '추린 목록'이라고 하지 않는다
+              hasFilter:kw.length>0,
+              headline:kw.length
+                ? '고른 조건에 해당할 수 있는 제도 '+matched.length+'건'
+                : '지금 접수 중인 공고 '+all.length+'건',
+              subline:kw.length
+                ? '마감이 지난 공고는 빼고 마감이 가까운 순으로 놓았어요.'
+                : '위에서 조건을 고르면 해당할 수 있는 것부터 보여드려요.',
+              matched:matched.slice(0,20).map(row),
+              hasMatched:kw.length>0&&matched.length>0,
+              noMatch:kw.length>0&&matched.length===0,
+              rest:(kw.length?rest:all).slice(0,50).map(row),
+              hasRest:(kw.length?rest.length:all.length)>0,
+              restLabel:kw.length
+                ? '조건에 안 걸린 나머지 '+rest.length+'건도 보기'
+                : '전체 목록 보기',
+              empty:!!d&&!!d.ok&&all.length===0,
+              // 자격 판정이 아니라는 것을 매번 붙인다. 이 화면은 돈을 다룬다.
+              warn:'자격을 판정한 목록이 아니에요. 실제 신청 자격은 업력·매출·지역·업종·소상공인 여부에 따라 다르고 '
+                +'공고마다 조건이 달라요. 여기 있는 건 조건에 해당할 수 있는 공고이고, '
+                +'신청 가능 여부는 반드시 원문에서 확인해 주세요.'
+                +((d&&d.undated)?' 마감일을 읽지 못한 공고 '+d.undated+'건이 섞여 있어요(상시 모집일 수 있어요).':'')
+                +((d&&d.expired)?' 마감이 지난 '+d.expired+'건은 뺐어요.':'')
+            };
+          })(),
+
           // 엑셀에서 바로 열리는 CSV. 서버 없이 지금 화면의 값만 담는다.
           csv:()=>{
             

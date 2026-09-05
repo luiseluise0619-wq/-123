@@ -8,7 +8,7 @@ import { clientIp, createLimiter, securityHeaders } from './security.js';
 import { isAllowedOrigin } from '../api/_origin.js';
 import { redact } from '../api/_err.js';
 
-const PUBLIC_APIS = new Set(['report','config']);
+const PUBLIC_APIS = new Set(['report','config','support']);
 export function createServer(root) {
   const limit = createLimiter(); let inFlight = 0;
   const server = http.createServer(async (req, res) => {
