@@ -1894,14 +1894,83 @@ class Component extends DCLogic {
           fine:{'정밀분석 소개':'후보지 분석과 무엇이 다른지 알려드려요','지도분석':'고른 후보를 수요·경쟁·매출로 검증해요','정밀비교':'한 자치구 안의 동네를 전부 훑어요'}
         };
         const k = zone?'zone':'fine';
+
+        // ── 지금 무엇을 보고 있는지 ──────────────────────────────
+        // 허브가 어느 상황에서나 똑같은 안내문만 띄우면 '거쳐 가는 화면'이 된다.
+        // 고른 업종·자리를 적어 주면 이 단계가 내 얘기가 된다.
+        const selId = S.sel || S.zoneId;
+        const selNm = (selId && S.zi && S.zi.zones[selId]) ? this.zoneLabelOf(S.zi.zones[selId].nm) : null;
+        const lp = (selId && S.zlp) ? S.zlp[selId] : null;
+        const nPicks = (S.picks||[]).length;
+
+        // 정밀비교가 훑을 자치구와 그 안에서 이 장사 데이터가 있는 동네 수
+        const fcGu = S.fcGu || (selId && S.zgu && S.zgu[selId]) || '강남구';
+        let fcN = 0;
+        if (S.zi && S.zgu) {
+          const ii = S.zi.inds.indexOf(S.ind);
+          if (ii >= 0) for (const kk in S.zi.zones) {
+            if (S.zgu[kk] !== fcGu) continue;
+            if ((S.zi.zones[kk].rows||[]).some(r => r[0]===ii && r[1] && r[2])) fcN++;
+          }
+        }
+        const r = this.rank();
+
+        // 카드마다 '지금 값'을 하나씩. 값이 없으면 지어내지 않고 무엇을 하면 되는지 적는다.
+        const STAT = {
+          '지역비교':  r ? {v:'25개', t:'서울 자치구를 '+this.indName(S.ind)+' 기준으로 견줘요'}
+                         : {v:'—', t:'데이터를 불러오는 중이에요'},
+          '후보지':    r ? {v:r.covered.toLocaleString()+'곳', t:'이 장사 데이터가 있는 동네 (전체 '+r.total.toLocaleString()+'곳 중)'}
+                         : {v:'—', t:'데이터를 불러오는 중이에요'},
+          '비교분석':  nPicks ? {v:nPicks+'곳', t:'담아 둔 자리 · 최대 5곳까지 나란히 놓아요'}
+                             : {v:'0곳', t:'아직 담은 자리가 없어요. 후보지에서 담아 보세요'},
+          '정밀분석 소개': {v:'', t:'후보지 분석과 무엇이 다른지 알려드려요'},
+          '지도분석':  lp ? {v:Math.round(lp.tot).toLocaleString()+'명', t:(selNm||'고른 자리')+' 하루 유동인구 · 여기서 수요·경쟁·매출을 검증해요'}
+                          : {v:selNm?'데이터 없음':'자리 미선택', t:selNm?(selNm+'의 유동인구 자료가 없어요'):'후보지에서 자리를 고르면 그 자리를 검증해요'},
+          '정밀비교':  fcN ? {v:fcN+'곳', t:fcGu+' 안에서 '+this.indName(S.ind)+' 데이터가 있는 동네를 전부 줄 세워요'}
+                          : {v:'0곳', t:fcGu+'에는 '+this.indName(S.ind)+' 데이터가 있는 동네가 없어요'}
+        };
+
+        // 다음에 눌러야 할 카드 하나만 강조한다. 셋 다 강조하면 아무것도 강조되지 않는다.
+        const next = zone ? (nPicks ? '비교분석' : '후보지')
+                          : (selNm ? '지도분석' : '정밀비교');
+
         return {
+          eyebrow: zone ? '1단계 · 넓게 훑기' : '2단계 · 좁혀서 검증',
           title: zone?'상권분석':'정밀분석',
           desc: DESC[k],
-          cards:(g?g.items:[]).map(([key,label])=>({
-            label:label, sub:CARD[k][label]||'',
-            go:()=>this.setState({screen:key,menu:null,hist:[...(S.hist||[]),S.screen].slice(-8)}),
-            style:'display:flex;flex-direction:column;justify-content:space-between;gap:20px;min-height:142px;padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--surface);cursor:pointer;transition:transform .18s cubic-bezier(.2,.7,.3,1),background .18s'
-          }))
+          // 지금 조건 — 없으면 칩을 아예 안 그린다(빈 칩을 남기지 않는다)
+          hasCtx: true,
+          ctx: [
+            {label:'무슨 장사', value:this.indName(S.ind)},
+            ...(selNm ? [{label:'고른 자리', value:selNm}] : []),
+            ...(r ? [{label:'기준', value:this.qtr(S.zi&&S.zi.quarter)}] : [])
+          ].map(c=>({...c,
+            style:'display:inline-flex;align-items:baseline;gap:7px;padding:7px 13px;border-radius:999px;'
+              +'background:var(--bg);white-space:nowrap;min-width:0'})),
+          cards:(g?g.items:[]).map(([key,label])=>{
+            const st=STAT[label]||{v:'',t:''};
+            const on=label===next;
+            // '자리 미선택'·'데이터 없음'은 숫자가 아니다. 숫자 크기로 쓰면 값처럼 읽힌다.
+            const isNum=/\d/.test(st.v);
+            return {
+              label:label, sub:CARD[k][label]||'',
+              stat:st.v, statNote:st.t, hasStat:!!st.v,
+              statStyle:isNum
+                ? 'font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1;'
+                  +'font-variant-numeric:tabular-nums;'+(on?'color:var(--accent)':'color:var(--ink)')
+                : 'font-size:15px;font-weight:500;line-height:1.3;color:var(--ink3)',
+              labelStyle:'font-size:15px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;'
+                +'overflow:hidden;text-overflow:ellipsis;'+(on?'color:var(--accent)':'color:var(--ink)'),
+              badge: on ? '다음 단계' : '',
+              hasBadge: on,
+              go:()=>this.setState({screen:key,menu:null,hist:[...(S.hist||[]),S.screen].slice(-8)}),
+              style:'display:flex;flex-direction:column;gap:10px;min-height:158px;padding:22px;'
+                +'border-radius:18px;cursor:pointer;min-width:0;'
+                +'transition:transform .18s cubic-bezier(.2,.7,.3,1),background .18s;'
+                +(on?'background:var(--accent-3);border:1px solid var(--accent-2)'
+                    :'background:var(--surface);border:1px solid var(--line)')
+            };
+          })
         };
       })(),
       goFind:go('find'), goDiag:go('diag'), goCmp:go('cmp'),
