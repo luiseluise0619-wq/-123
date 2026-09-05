@@ -24,9 +24,10 @@ class Component extends DCLogic {
     const br=base?base.getBoundingClientRect():{top:0,left:0};
     Object.assign(panel.style,{
       left:Math.round(bounds.left-br.left)+'px',
-      top:Math.round(bounds.bottom-br.top+8)+'px',
+      top:Math.round(bounds.bottom-br.top+6)+'px',
       width:Math.round(bounds.width)+'px',
-      maxHeight:Math.max(120,window.innerHeight-bounds.bottom-24)+'px',
+      // 화면 아래 끝까지 쓴다 — 남기는 여백을 줄일수록 목록이 더 많이 보인다
+      maxHeight:Math.max(120,window.innerHeight-bounds.bottom-14)+'px',
       display:'flex',flexDirection:'column',overflow:'hidden'});
   }
 
@@ -139,8 +140,7 @@ class Component extends DCLogic {
     }
     // 두 번째 방문부터는 도입부를 건너뛴다
     import('./command-score.js').then(m=>{ this._score=m.commandScore; this.forceUpdate(); }).catch(()=>{});
-        // 소개는 사용자가 요청할 때만 연다.
-    this.setState({skip:true});
+    // 소개 안내창은 사용자가 요청할 때만 연다. (도입 애니메이션은 아래 seen 여부로 결정한다)
     fetch('/api/config').then(r=>r.json()).then(c=>this.setState({reportEmailEnabled:!!c.reportEmailEnabled})).catch(()=>{});
     let seen=true;
     try{ seen=!!sessionStorage.getItem('mysbizon.seenIntro');
@@ -450,9 +450,9 @@ class Component extends DCLogic {
       }
       return out.sort((a,b)=>b.n-a.n);
     })();
-    const fieldBase='flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:'+this.L('16px','20px','20px')+';transition:background .16s;'
-      +'padding:0 '+this.L('16px','20px','20px')+';height:'+this.L('62px','72px','72px')+';';
-    const valBase='font-size:16.5px;font-weight:500;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    const fieldBase='flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:'+this.L('14px','16px','16px')+';transition:background .16s;'
+      +'padding:0 '+this.L('14px','18px','18px')+';height:'+this.L('50px','56px','56px')+';';
+    const valBase='font-size:15px;font-weight:500;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
 
     // 인기 검색 — 실제 데이터에서 뽑는다. 그 동네에 그 장사 기록이 있는 조합만.
     const tagSrc=['성수','연남','가로수길'];
@@ -484,7 +484,8 @@ class Component extends DCLogic {
       badgeStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);background:var(--surface);border-radius:999px;padding:7px 14px;margin:0 auto 26px;'
         +(S.skip?'opacity:1':'opacity:0;animation:lateIn .7s cubic-bezier(.22,.7,.25,1) .5s forwards'),
       countLabel:(S.count!=null?S.count:1564).toLocaleString(),
-      titleStyle:'font-size:'+this.L('36px','46px','58px')+';font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin:0;white-space:nowrap',
+      // 한 줄로 쓴다 — 줄바꿈 없이 들어가는 크기까지만 키운다(칸 폭 ÷ 글자수 기준)
+      titleStyle:'font-size:'+this.L('23px','44px','52px')+';font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin:0;white-space:nowrap',
       tagRow:'display:flex;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;justify-content:center;'
         +(S.skip?'opacity:1':'opacity:0;animation:lateIn .8s cubic-bezier(.22,.7,.25,1) 2.7s forwards'),
       tags:tags,
@@ -516,13 +517,13 @@ class Component extends DCLogic {
         +(S.picking?'opacity:.45;transform:scale(1.1)':''),
       // 테두리 없이 그림자만. 상자 속 상자를 만들지 않는다.
       // 모바일에서는 가로 3분할이 각 칸을 25px로 만든다 — 세로로 쌓아 전폭을 준다
-      pickerRow:'display:flex;background:var(--bg);border-radius:24px;padding:8px;transition:box-shadow .22s;'
+      pickerRow:'display:flex;background:var(--bg);border-radius:20px;padding:6px;transition:box-shadow .22s;'
         +this.L('flex-direction:column;align-items:stretch;gap:4px;','align-items:center;gap:0;','align-items:center;gap:0;')
         +(open
           ? 'box-shadow:0 16px 40px rgba(0,0,0,.12)'
           : 'box-shadow:0 12px 32px rgba(0,0,0,.08)'),
-      segInput:'width:100%;min-width:0;font-size:16.5px;font-weight:500;letter-spacing:-0.015em;color:var(--ink);'
-        +'background:transparent;border:none;padding:0;height:24px;outline:none',
+      segInput:'width:100%;min-width:0;font-size:15px;font-weight:500;letter-spacing:-0.015em;color:var(--ink);'
+        +'background:transparent;border:none;padding:0;height:22px;outline:none',
       zq:zq, iq:iq,
       onZoneQ:e=>this.setState({zq:e.target.value,pickOpen:'zone',cursor:0}),
       onIndQ:e=>this.setState({iq:e.target.value,pickOpen:'ind',cursor:0}),
@@ -559,7 +560,7 @@ class Component extends DCLogic {
           if(el) el.focus();
         }
       },
-      dividerStyle:this.L('flex:none;height:1px;margin:0 16px;background:var(--line)','flex:none;width:1px;height:34px;background:var(--line)','flex:none;width:1px;height:34px;background:var(--line)'),
+      dividerStyle:this.L('flex:none;height:1px;margin:0 16px;background:var(--line)','flex:none;width:1px;height:26px;background:var(--line)','flex:none;width:1px;height:26px;background:var(--line)'),
       indBtn:fieldBase+(open==='ind'?'background:rgba(0,0,0,.04)':''),
       zoneBtn:fieldBase+(open==='zone'?'background:rgba(0,0,0,.04)':''),
       // 값이 있을 때만 나오는 지우기. 메인 버튼과 12px 이상 떨어져 있고 클릭이 위로 전파되지 않는다.
@@ -681,8 +682,8 @@ class Component extends DCLogic {
       startDisabled:!!S.starting,
       starting:!!S.starting, notStarting:!S.starting,
       startStyle:this.L('flex:none;width:100%;margin-top:4px;','flex:none;','flex:none;')
-        +'font-size:16px;font-weight:600;border:none;border-radius:16px;height:'+this.L('54px','60px','60px')+';'
-        +this.L('','min-width:112px;','min-width:124px;')+'padding:0 '+this.L('20px','26px','30px')+';white-space:nowrap;'
+        +'font-size:15px;font-weight:600;border:none;border-radius:14px;height:'+this.L('46px','48px','48px')+';'
+        +this.L('','min-width:106px;','min-width:116px;')+'padding:0 '+this.L('18px','22px','26px')+';white-space:nowrap;'
         +'display:inline-flex;align-items:center;justify-content:center;'
         +'transition:transform .2s cubic-bezier(.2,0,0,1),background .18s,box-shadow .2s,filter .18s;'
         // 비활성이어도 브랜드 컬러 글자와 옅은 배경을 남겨 누를 수 있는 요소로 읽히게 한다
@@ -748,7 +749,7 @@ class Component extends DCLogic {
     return {d:d, area:area, pts:pts.map((p,i)=>({x:+p[0].toFixed(1),y:+p[1].toFixed(1),last:i===pts.length-1}))};
   }
 
-  // 상권 동향 — 임대료·공실률·업종 매출·소비 구성. 전부 공개 통계.
+  // 시세분석 — 임대료·공실률·업종 매출·소비 구성. 전부 공개 통계.
   priceView(){
     const S=this.state;
     const CATS=[
@@ -995,7 +996,7 @@ class Component extends DCLogic {
         deltaStyle:'font-size:14px;font-weight:700;white-space:nowrap;color:'+(pct==null?'var(--ink3)':(pct>=0?'var(--good)':'var(--warn)')),
         bars:last4.map((q,i)=>({label:this.qtr(q).replace('년 ','.').replace('분기','Q'),
           bar:'display:block;width:100%;height:'+(18+((vals[i]-mn)/sp)*46).toFixed(0)+'px;border-radius:4px 4px 0 0;background:var(--accent);opacity:'+(0.4+0.6*((vals[i]-mn)/sp)).toFixed(2)})),
-        full:'서울 전체 합계라 이 동네만의 흐름은 아니에요. 21분기 전체는 상권 동향에서 볼 수 있어요.'};
+        full:'서울 전체 합계라 이 동네만의 흐름은 아니에요. 21분기 전체는 시세분석에서 볼 수 있어요.'};
     }
     out.push({key:'sales', title:'매출 · 얼마나 버나요',
       q:'가게 한 곳이 한 달에 얼마 파나요?',
@@ -1475,11 +1476,11 @@ class Component extends DCLogic {
       hist:(S.screen&&S.screen!==s)?[...(S.hist||[]),S.screen].slice(-8):(S.hist||[])});
     // 헤더를 누르면 드롭다운이 열리고, 항목을 누르면 바로 그 화면으로 들어간다
     const MENU=[
-      {label:'동네 찾기', keys:['hubZone','zone','find','cmp'], hub:'hubZone',
+      {label:'상권분석', keys:['hubZone','zone','find','cmp'], hub:'hubZone',
        items:[['zone','지역비교'],['find','후보지'],['cmp','비교분석']]},
-      {label:'입지 살펴보기', keys:['hubFine','fineIntro','map','fineCmp','region'], hub:'hubFine',
+      {label:'정밀분석', keys:['hubFine','fineIntro','map','fineCmp','region'], hub:'hubFine',
        items:[['fineIntro','정밀분석 소개'],['map','지도분석'],['fineCmp','정밀비교']]},
-      {label:'상권 동향', keys:['price'], hub:'price', items:[['price','상권 동향']]},
+      {label:'시세분석', keys:['price'], hub:'price', items:[['price','시세분석']]},
       {label:'리포트', keys:['report'], hub:'report', items:[['report','리포트']]},
 
     ];
@@ -1513,7 +1514,10 @@ class Component extends DCLogic {
           style:'padding:11px 13px;border-radius:9px;cursor:pointer;font-size:14.5px;white-space:nowrap;transition:background .12s;'
             +(S.screen===k?'background:var(--surface);font-weight:600':'color:var(--ink)')}))
       })),
-      goHome:go('home'),
+      // 홈으로 돌아올 때마다 도입 애니메이션을 다시 튼다(가운데에서 떠서 위로 올라감).
+      // 화면 아무 곳이나 누르면 skipAnim 이 건너뛴다.
+      goHome:()=>this.setState({screen:'home',menu:null,skip:false,
+        hist:(S.screen&&S.screen!=='home')?[...(S.hist||[]),S.screen].slice(-8):(S.hist||[])}),
       onHome:S.screen==='home',
       // 소개는 별도 화면이 아니라 홈 위에 뜨는 안내창
       noticeOn:!!S.notice,
@@ -1533,7 +1537,7 @@ class Component extends DCLogic {
         {tab:'본전 계산', body:'평수와 임대료를 넣으면 월 얼마를 팔아야 본전인지, 하루 몇 건인지 계산합니다.'},
         {tab:'지도분석', body:'상위 후보를 지도에 놓고 서로의 위치를 봅니다.'},
         {tab:'정밀비교', body:'한 자치구 안의 동네를 전부 표로 펼쳐 훑습니다.'},
-        {tab:'상권 동향', body:'상가 임대료·빈 상가 비율·장사별 매출 추이를 분기별로 봅니다.'},
+        {tab:'시세분석', body:'상가 임대료·빈 상가 비율·장사별 매출 추이를 분기별로 봅니다.'},
         {tab:'데이터 도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
       ],
       aboutRows:[
@@ -1782,7 +1786,7 @@ class Component extends DCLogic {
         };
         const k = zone?'zone':'fine';
         return {
-          title: zone?'동네 찾기':'입지 살펴보기',
+          title: zone?'상권분석':'정밀분석',
           desc: DESC[k],
           cards:(g?g.items:[]).map(([key,label])=>({
             label:label, sub:CARD[k][label]||'',
@@ -1863,10 +1867,11 @@ class Component extends DCLogic {
       ctaText:'font-size:14.5px;color:var(--accent);cursor:pointer;white-space:nowrap',
       prosCols:this.L('1fr','1fr 1fr','1fr 1fr'),
       // 뒤로가기 — 화면 이동 기록을 쌓아 되돌린다
-      canBack:(S.hist||[]).length>0,
+      // 홈에는 뒤로가기를 두지 않는다 — 홈이 시작점이라 '← 상권분석'이 무엇으로 돌아가는지 읽히지 않는다
+      canBack:(S.hist||[]).length>0 && S.screen!=='home',
       backLabel:(()=>{
         const NM={find:'후보지',diag:'본전 계산',cmp:'비교분석',map:'지도분석',fineCmp:'정밀비교',
-          fineIntro:'정밀분석 소개',zone:'지역비교',price:'상권 동향',report:'리포트',region:'동네',home:'처음',hubZone:'상권분석',hubFine:'정밀분석'};
+          fineIntro:'정밀분석 소개',zone:'지역비교',price:'시세분석',report:'리포트',region:'동네',home:'처음',hubZone:'상권분석',hubFine:'정밀분석'};
         const h=S.hist||[];
         return h.length? '← '+(NM[h[h.length-1]]||'이전') : '';
       })(),
