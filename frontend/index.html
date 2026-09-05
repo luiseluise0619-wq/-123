@@ -302,12 +302,12 @@
       </section>
     </sc-if>
 
-    <!-- 데이터 도우미 — 접었다 폈다 하는 챗봇 창 -->
+    <!-- AI 도우미 — 접었다 폈다 하는 챗봇 창 -->
     <sc-if value="{{ botOpen }}">
       <div style="{{ botPanel }}">
         <div role="button" tabIndex="0" onClick="{{ botToggle }}" style="flex:none;display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--line);cursor:pointer">
           <span style="width:7px;height:7px;border-radius:50%;background:var(--good);flex:none"></span>
-          <span style="flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap">데이터 도우미</span>
+          <span style="flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap">AI 도우미</span>
           <span style="flex:none;font-size:11.5px;color:var(--ink3);white-space:nowrap">눌러서 접기</span>
           <span aria-hidden="true" style="{{ botCloseStyle }}" style-hover="background:var(--line-strong)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="width:12px;height:12px;display:block">
@@ -349,7 +349,7 @@
             </sc-for>
           </div>
           <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:14px;padding:0 6px 0 16px">
-            <input maxLength="200" value="{{ ai.draft }}" onChange="{{ ai.onDraft }}" onKeyDown="{{ ai.onKey }}" aria-label="데이터 도우미 질문" placeholder="궁금한 걸 물어보세요" style="flex:1;min-width:0;font-size:14.5px;color:var(--ink);background:transparent;border:none;height:46px;outline:none">
+            <input maxLength="200" value="{{ ai.draft }}" onChange="{{ ai.onDraft }}" onKeyDown="{{ ai.onKey }}" aria-label="AI 도우미 질문" placeholder="궁금한 걸 물어보세요" style="flex:1;min-width:0;font-size:14.5px;color:var(--ink);background:transparent;border:none;height:46px;outline:none">
             <button onClick="{{ ai.send }}" style="{{ ai.sendStyle }}">보내기</button>
           </div>
         </div>
@@ -358,7 +358,7 @@
 
     <sc-if value="{{ botClosed }}">
       <div data-bot-fab="1" role="button" tabIndex="0" onClick="{{ botToggle }}" style="{{ botFab }}" style-hover="filter:brightness(1.06)" style-active="transform:scale(.96)">
-        <span style="font-size:14.5px;font-weight:600;white-space:nowrap">데이터 도우미</span>
+        <span style="font-size:14.5px;font-weight:600;white-space:nowrap">AI 도우미</span>
       </div>
     </sc-if>
 
@@ -1213,7 +1213,7 @@
       </sc-if>
     </sc-if>
 
-    <!-- 데이터 도우미 -->
+    <!-- AI 도우미 -->
     <sc-if value="{{ onAi }}">
       <section style="padding:56px 0 0;display:flex;flex-direction:column;min-height:calc(100vh - 176px)">
         <div style="flex:none">
@@ -1278,8 +1278,8 @@
       <section style="padding:72px 0 0">
         <h1 style="font-size:clamp(26px,4.4vw,46px);font-weight:600;letter-spacing:-0.03em;line-height:1.06;margin:0;white-space:nowrap">{{ findTitle }}</h1>
         <p style="font-size:17px;color:var(--ink2);margin:16px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ findSub }}</p>
-        <input maxLength="200" value="{{ q }}" onChange="{{ onQ }}" aria-label="후보 업종 검색" placeholder="업종 검색 — 예: 커피" style="margin-top:36px;width:100%;max-width:340px;font-size:18px;font-weight:500;color:var(--ink);background:transparent;border:none;border-bottom:1px solid var(--line-strong);padding:10px 0 12px;min-height:48px;outline:none">
-        <div style="position:relative;margin-top:20px;max-width:560px">
+        <input maxLength="200" value="{{ q }}" onChange="{{ onQ }}" aria-label="후보 업종 검색" placeholder="업종 검색 — 예: 커피" style="margin-top:36px;width:100%;max-width:100%;font-size:18px;font-weight:500;color:var(--ink);background:transparent;border:none;border-bottom:1px solid var(--line-strong);padding:10px 0 12px;min-height:48px;outline:none">
+        <div style="position:relative;margin-top:20px">
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <sc-for list="{{ chips }}" as="c">
               <span role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.name }}</span>
@@ -1306,7 +1306,7 @@
         <section style="padding:60px 0 0;animation:riseIn .28s cubic-bezier(.2,.7,.3,1) both">
           <div style="font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.eyebrow }}</div>
           <h2 style="font-size:clamp(24px,3.8vw,38px);font-weight:600;letter-spacing:-0.03em;line-height:1.06;margin:10px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</h2>
-          <div style="margin-top:20px;max-width:620px">
+          <div style="margin-top:20px;max-width:840px">
             <div style="font-size:clamp(22px,3.4vw,30px);font-weight:700;letter-spacing:-0.03em;line-height:1.25;text-wrap:pretty">{{ t.verdict }}</div>
             <sc-if value="{{ t.thin }}">
               <div style="display:flex;align-items:flex-start;gap:9px;margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--surface)">

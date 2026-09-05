@@ -515,7 +515,10 @@ class Component extends DCLogic {
       // 아무 곳이나 누르면 도입부를 건너뛴다. 재방문·급한 사용자가 기다리지 않게.
       skipAnim:()=>{ if(!S.skip) this.setState({skip:true}); },
       // z-index:2면 스태킹 컨텍스트가 되어 드롭다운이 헤더(50) 아래로 갇힌다
-      heroInner:'position:relative;z-index:60;width:100%;max-width:'+this.L('100%','620px','740px')+';text-align:center;'
+      // 헤더(50)보다 낮아야 한다. 60이면 스크롤할 때 제목이 헤더 위로 지나간다.
+      // 드롭다운은 이 안에서만 위로 올라가면 되고(배경 그래픽 위), 헤더까지 넘을 필요는 없다
+      // — 검색창이 헤더에서 한참 아래라 열린 목록이 헤더에 닿지 않는다.
+      heroInner:'position:relative;z-index:10;width:100%;max-width:'+this.L('100%','620px','740px')+';text-align:center;'
         +(S.skip
           ? 'opacity:1'
           : 'opacity:0;will-change:transform,opacity;animation:heroRise 2.9s cubic-bezier(.22,.72,.24,1) .25s forwards'),
@@ -1385,7 +1388,7 @@ class Component extends DCLogic {
     return bat?'이':'가';
   }
 
-  // 데이터 도우미 — 이 서비스가 계산한 값만 근거로 답한다. 모델 호출 없음, 없는 값은 없다고 답한다.
+  // AI 도우미 — 이 서비스가 계산한 값만 근거로 답한다. 모델 호출 없음, 없는 값은 없다고 답한다.
   answer(q, r, sel){
     const t=(q||'').trim();
     const S=this.state;
@@ -1554,7 +1557,7 @@ class Component extends DCLogic {
         {tab:'지도분석', body:'상위 후보를 지도에 놓고 서로의 위치를 봅니다.'},
         {tab:'정밀비교', body:'한 자치구 안의 동네를 전부 표로 펼쳐 훑습니다.'},
         {tab:'시세분석', body:'상가 임대료·빈 상가 비율·장사별 매출 추이를 분기별로 봅니다.'},
-        {tab:'데이터 도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
+        {tab:'AI 도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
       ],
       aboutRows:[
         {title:'장사를 먼저 골라요',
