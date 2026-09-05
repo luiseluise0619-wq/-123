@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import handler from '../api/report.js';
+import {validateData} from '../scripts/validate-data.mjs';
+import {fileURLToPath} from 'node:url';
+import {createServer} from '../server/app.js';
+const call=async(body,key='simulation-request-123456')=>{let status=200,result;await handler({method:'POST',headers:{origin:'https://test.example','idempotency-key':key},body},{status(n){status=n;return this;},json(v){result=v;}});return {status,result};};
+test('메일 동시 중복 발송 방지·본문 변경 충돌·HTML 이스케이프·오류 정보 비노출',async t=>{
+  const oldFetch=global.fetch,oldEnv={...process.env};
+  t.after(()=>{global.fetch=oldFetch;process.env=oldEnv;});
+  Object.assign(process.env,{ALLOWED_ORIGIN:'https://test.example',REPORT_EMAIL_ENABLED:'true',BREVO_API_KEY:'fake-test-key',REPORT_FROM_EMAIL:'sender@example.com'});
+  let count=0,payload;
+  global.fetch=async(url,opts)=>{count++;payload=JSON.parse(opts.body);await new Promise(r=>setTimeout(r,5));return {ok:true,status:201};};
+  const body={email:'user@example.com',agreed:true,facts:[{label:'<script>alert(1)</script>',value:'<img onerror=x>'}]};
+  const results=await Promise.all([call(body),call(body)]);
+  assert.equal(count,1);assert.ok(results.every(x=>x.status===200));assert.ok(payload.htmlContent.includes('&lt;script&gt;'));assert.ok(!payload.htmlContent.includes('<script>'));
+  assert.equal((await call({...body,email:'another@example.com'})).status,409);
+  global.fetch=async()=>({ok:false,status:401});assert.equal((await call(body,'simulation-error-123456')).status,502);
+  process.env.REPORT_EMAIL_ENABLED='false';assert.equal((await call(body,'simulation-disabled-123456')).status,503);
+});
+test('데이터 배포 전 파일·분기·단위 필드 구조 확인',()=>{const data=validateData(fileURLToPath(new URL('../frontend/data/v3',import.meta.url)));assert.equal(data.zones,1564);assert.equal(data.industries,62);});
+test('정적 리소스 압축 협상·HEAD·캐시 재검증·제거한 API 차단·반복 요청',async t=>{
+  const server=createServer(fileURLToPath(new URL('../frontend',import.meta.url)));await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));});
+  const base='http://127.0.0.1:'+server.address().port;
+  const plain=await fetch(base+'/',{headers:{'Accept-Encoding':'gzip;q=0'}});assert.equal(plain.headers.get('content-encoding'),null);const html=await plain.text();assert.ok(html.includes('MYSBIZON'));
+  const zip=await fetch(base+'/',{headers:{'Accept-Encoding':'gzip'}});assert.equal(zip.headers.get('content-encoding'),'gzip');assert.equal(await zip.text(),html);
+  const head=await fetch(base+'/',{method:'HEAD'});assert.equal(await head.text(),'');assert.equal(head.status,200);
+  assert.equal((await fetch(base+'/',{headers:{'If-None-Match':plain.headers.get('etag')}})).status,304);
+  for(const url of ['/api/chat','/api/lead','/server.js','/package.json','/api/report.js','/api/_origin.js'])assert.equal((await fetch(base+url)).status,404,url);
+  const burst=await Promise.all(Array.from({length:80},()=>fetch(base+'/data/v3/zone_industry.json').then(r=>r.json())));assert.ok(burst.every(d=>d.n_zones===1564));
+  assert.equal((await fetch(base+'/healthz')).status,200);
+});

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<title>사장님인사이트 · 분석 리포트</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./vendor/react.production.min.js"></script>
+<script src="./vendor/react-dom.production.min.js"></script>
+<script src="./report-logic.js"></script>
+<script src="./dc-runtime.js?v=2"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+
+<style>
+  doc-page:not(:defined){visibility:hidden}
+  html{--ink:#191F28;--ink2:#4E5968;--ink3:#8B95A1;--line:#EDEDF0;--line2:#D7DBE0;--accent:#167C68;--accent3:#E8F5F1;--surface:#F5F5F7;--good:#00A661;--warn:#E85A4F}
+  body{margin:0;font-family:Pretendard,-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{color:#0F6B59}
+  .keep{break-inside:avoid}
+</style>
+<script src="./doc-page.js"></script>
+<style>.print-toolbar{display:flex;gap:12px;max-width:800px;margin:20px auto;padding:0 20px}.print-toolbar button{padding:12px 20px;border:1px solid #dde3e2;border-radius:12px;background:white;color:#087f6b;font:inherit;cursor:pointer}@media print{.print-toolbar{display:none}}</style>
+</helmet>
+<div class="print-toolbar"><button onClick="{{ back }}">← 분석으로 돌아가기</button><button onClick="{{ print }}">인쇄 / PDF 저장</button></div>
+
+<doc-page margin="0.8in">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-bottom:10px;border-bottom:2px solid var(--ink)">
+    <span style="font-size:13px;font-weight:700;color:var(--accent);letter-spacing:-0.01em">MYSBIZON</span>
+    <span style="font-size:10.5px;color:var(--ink3);text-align:right">{{ quarter }} 자료 기준 · {{ today }} 작성</span>
+  </div>
+
+  <div style="font-size:11.5px;font-weight:700;color:var(--ink3);letter-spacing:.05em;margin-top:26px">{{ head }}</div>
+  <h1 style="font-size:26px;font-weight:700;letter-spacing:-0.025em;line-height:1.3;margin:8px 0 0">{{ lead }}</h1>
+  <p style="font-size:14px;color:var(--ink2);line-height:1.65;margin:12px 0 0">{{ leadSub }}</p>
+
+  <sc-if value="{{ filled }}">
+    <div class="keep" style="margin-top:28px;padding:20px 22px;border-radius:14px;background:var(--surface);display:flex;gap:24px;align-items:center">
+      <div style="flex:none">
+        <div style="font-size:11.5px;color:var(--ink2)">기회점수</div>
+        <div style="font-size:42px;font-weight:700;letter-spacing:-0.04em;line-height:1;margin-top:5px;font-variant-numeric:tabular-nums">{{ score }}</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:5px">{{ grade }}</div>
+      </div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:11px">
+        <sc-for list="{{ parts }}" as="p">
+          <div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+              <span style="font-size:12.5px;color:var(--ink2)">{{ p.label }}</span>
+              <span style="font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums">{{ p.value }}</span>
+            </div>
+            <span style="display:block;height:6px;border-radius:3px;background:#FFFFFF;overflow:hidden;margin-top:5px">
+              <span style="{{ p.bar }}"></span>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <h2 style="font-size:16px;font-weight:700;letter-spacing:-0.02em;margin:34px 0 0">본전 계산</h2>
+    <p style="font-size:12.5px;color:var(--ink2);line-height:1.6;margin:6px 0 0">{{ bepLead }}</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:12px">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:0 0 7px;border-bottom:1px solid var(--ink);font-size:10.5px;font-weight:700;color:var(--ink3)">항목</th>
+          <th style="text-align:right;padding:0 0 7px;border-bottom:1px solid var(--ink);font-size:10.5px;font-weight:700;color:var(--ink3)">값</th>
+          <th style="text-align:right;padding:0 0 7px 14px;border-bottom:1px solid var(--ink);font-size:10.5px;font-weight:700;color:var(--ink3);white-space:nowrap">어떻게 나온 값인가</th>
+        </tr>
+      </thead>
+      <sc-for list="{{ bep }}" as="b">
+        <tr>
+          <td style="padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink2)">{{ b.label }}</td>
+          <td style="padding:9px 0;border-bottom:1px solid var(--line);text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ b.value }}</td>
+          <td style="padding:9px 0 9px 14px;border-bottom:1px solid var(--line);text-align:right;font-size:10.5px;color:var(--ink3);white-space:nowrap">{{ b.tag }}</td>
+        </tr>
+      </sc-for>
+    </table>
+
+    <sc-if value="{{ hasMoney }}">
+      <h2 style="font-size:16px;font-weight:700;letter-spacing:-0.02em;margin:32px 0 0">돈이 어디로 나가나</h2>
+      <div class="keep" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ money }}" as="m">
+          <div style="display:flex;align-items:center;gap:14px">
+            <span style="flex:0 0 92px;font-size:12.5px;color:var(--ink2)">{{ m.label }}</span>
+            <span style="flex:1;min-width:0;height:7px;border-radius:4px;background:var(--surface);display:block;overflow:hidden">
+              <span style="{{ m.bar }}"></span>
+            </span>
+            <span style="flex:none;width:82px;text-align:right;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">{{ m.value }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasZones }}">
+      <h2 style="font-size:16px;font-weight:700;letter-spacing:-0.02em;margin:32px 0 0">함께 본 자리</h2>
+      <table style="width:100%;border-collapse:collapse;margin-top:12px">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:0 0 7px;border-bottom:1px solid var(--ink);font-size:10.5px;font-weight:700;color:var(--ink3)">동네</th>
+            <th style="text-align:right;padding:0 0 7px;border-bottom:1px solid var(--ink);font-size:10.5px;font-weight:700;color:var(--ink3)">기회점수</th>
+            <th style="text-align:right;padding:0 0 7px 14px;border-bottom:1px solid var(--ink);font-size:10.5px;font-weight:700;color:var(--ink3);white-space:nowrap">같은 가게</th>
+          </tr>
+        </thead>
+        <sc-for list="{{ zones }}" as="z">
+          <tr>
+            <td style="padding:9px 0;border-bottom:1px solid var(--line);font-size:13px">{{ z.name }}</td>
+            <td style="padding:9px 0;border-bottom:1px solid var(--line);text-align:right;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">{{ z.score }}</td>
+            <td style="padding:9px 0 9px 14px;border-bottom:1px solid var(--line);text-align:right;font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums">{{ z.stores }}</td>
+          </tr>
+        </sc-for>
+      </table>
+    </sc-if>
+
+    <sc-if value="{{ hasSurvey }}">
+      <h2 style="font-size:16px;font-weight:700;letter-spacing:-0.02em;margin:32px 0 0">알려주신 조건</h2>
+      <table style="width:100%;border-collapse:collapse;margin-top:12px">
+        <sc-for list="{{ survey }}" as="s">
+          <tr>
+            <td style="padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink2)">{{ s.label }}</td>
+            <td style="padding:8px 0;border-bottom:1px solid var(--line);text-align:right;font-size:12.5px;font-weight:600">{{ s.value }}</td>
+          </tr>
+        </sc-for>
+      </table>
+    </sc-if>
+  </sc-if>
+
+  <h2 style="font-size:16px;font-weight:700;letter-spacing:-0.02em;margin:32px 0 0">알 수 없는 값</h2>
+  <p style="font-size:12.5px;color:var(--ink2);line-height:1.6;margin:6px 0 0">아래는 공개 자료에 없어서 이 리포트가 답하지 못하는 것입니다. 직접 확인하셔야 합니다.</p>
+  <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ unknown }}" as="u">
+      <div class="keep" style="display:flex;gap:9px;align-items:flex-start">
+        <span style="flex:none;width:4px;height:4px;border-radius:50%;background:var(--ink3);margin-top:7px"></span>
+        <span style="flex:1;min-width:0;font-size:12.5px;color:var(--ink2);line-height:1.6">{{ u }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div class="keep" style="margin-top:30px;padding:16px 18px;border-radius:12px;background:var(--surface);font-size:11.5px;color:var(--ink2);line-height:1.75">
+    {{ footer }}
+  </div>
+  <div style="margin-top:14px;font-size:10px;color:var(--ink3);text-align:center">MYSBIZON · 투자 권유나 수익 보장이 아닙니다</div>
+</doc-page>
+</x-dc>
+<script type="text/x-dc" data-dc-script>/* Logic loaded from local script. */</script>
+</body>
+</html>

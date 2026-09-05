@@ -1,16 +1,14 @@
 {
-  "name": "sangkwon-insight",
-  "version": "1.0.0",
+  "name": "mysbizon",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "상권분석 웹서비스 — 정적 프론트 + 서버리스 API 프록시를 Node로 서빙(Render/카페24 공용)",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test",
+    "check:data": "node scripts/validate-data.mjs"
   },
   "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "pg": "^8.23.0"
+    "node": ">=22 <25"
   }
 }

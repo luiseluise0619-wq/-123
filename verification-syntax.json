@@ -1,0 +1,94 @@
+[
+  {
+    "path": "api/config.js",
+    "exitCode": 0
+  },
+  {
+    "path": "api/report.js",
+    "exitCode": 0
+  },
+  {
+    "path": "api/_err.js",
+    "exitCode": 0
+  },
+  {
+    "path": "api/_http.js",
+    "exitCode": 0
+  },
+  {
+    "path": "api/_origin.js",
+    "exitCode": 0
+  },
+  {
+    "path": "api/_request.js",
+    "exitCode": 0
+  },
+  {
+    "path": "frontend/app-logic.js",
+    "exitCode": 0
+  },
+  {
+    "path": "frontend/command-score.js",
+    "exitCode": 0
+  },
+  {
+    "path": "frontend/company-accessibility.js",
+    "exitCode": 0
+  },
+  {
+    "path": "frontend/dc-runtime.js",
+    "exitCode": 0
+  },
+  {
+    "path": "frontend/doc-page.js",
+    "exitCode": 0
+  },
+  {
+    "path": "frontend/report-logic.js",
+    "exitCode": 0
+  },
+  {
+    "path": "frontend/vendor/react-dom.production.min.js",
+    "exitCode": 0
+  },
+  {
+    "path": "frontend/vendor/react.production.min.js",
+    "exitCode": 0
+  },
+  {
+    "path": "scripts/validate-data.mjs",
+    "exitCode": 0
+  },
+  {
+    "path": "server/app.js",
+    "exitCode": 0
+  },
+  {
+    "path": "server/response.js",
+    "exitCode": 0
+  },
+  {
+    "path": "server/security.js",
+    "exitCode": 0
+  },
+  {
+    "path": "server/static.js",
+    "exitCode": 0
+  },
+  {
+    "path": "server.js",
+    "exitCode": 0
+  },
+  {
+    "path": "tests/integration.test.js",
+    "exitCode": 0
+  },
+  {
+    "path": "tests/security.test.js",
+    "exitCode": 0
+  },
+  {
+    "path": "tests/ui-logic.test.js",
+    "exitCode": 0
+  }
+]

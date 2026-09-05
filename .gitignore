@@ -1,39 +1,6 @@
-# Python & Virtual Environments
-backend/venv/
-backend/__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-
-# Node.js & Next.js
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/.vercel/
-
-# Environment Variables & Logs
+node_modules/
 .env
-.env.local
-.env.development.local
-.env.production.local
+.env.*
+!.env.example
 *.log
-
-# Large Pickle Model Cache (optional, keep code lightweight)
-# backend/app/ml/registry/v1/*.pkl
-
-# 수집된 대용량 실데이터 CSV (GitHub 100MB 초과 방지 - 로컬에만 보관)
-backend/app/data/real_data/
-
-# OS Files
 .DS_Store
-Thumbs.db
-backend/app/data/market/*.csv
-backend/app/data/market/*.pkl
-
-# 루트 Node 의존성(pg 등)
-/node_modules/
-
-# 도구 캐시 / 로컬 DB 산출물
-.ruff_cache/
-*.db

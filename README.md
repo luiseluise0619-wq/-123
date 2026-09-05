@@ -1,88 +1,70 @@
-# 서울 상권 인텔리전스
+# 사장님인사이트 — 서버와 UI 통합 배포본
 
-예비 소상공인·창업자를 위한 **서울 상권 분석 웹앱**입니다. 서울시 공공데이터(상권분석·생활인구·임대료 등)와
-국세청·통계청 통계를 바탕으로, 자치구·상권·업종별 매출·객단가·폐업률·손익분기·소비 성향을 보여주고,
-Gemini 기반 AI 상담으로 데이터에 근거한 해설을 제공합니다.
+이 폴더가 하나의 서비스입니다. `node server.js`가 화면·데이터·API를 함께 제공합니다. 화면 코드만 따로 올리거나 예전 `frontend` 폴더와 섞지 마세요.
 
-> **설계 원칙 — 데이터 정직성.** 없는 값은 지어내지 않고 "데이터 없음/보정 중"으로 표시합니다.
-> 실측·가정·추정·폴백을 화면과 코드 주석에서 구분하고, 분기 갱신 후 깨진 데이터를 자동으로 걸러냅니다.
+## 실행
 
-라이브: 정적 사이트로 **Vercel**에 배포됩니다(Root Directory = `frontend/`).
+Node.js 24 계열에서 검증했습니다. 외부 npm 패키지는 없어서 `npm install`이 필요 없습니다.
 
----
-
-## 실제 구성 (배포되는 것)
-
-정적 HTML + 커스텀 템플릿 프레임워크 + 서버리스 함수 구조입니다. 빌드 스텝 없이 파일을 그대로 서빙합니다.
-
-### 화면 (`frontend/*.html`)
-- `index.html` — 메인. 서울 지도(지표별 색), **진단(손익분기·매출분포)**, 데이터 토픽(유동/거주/직장인구·소비·매출·점포·임대료·예측), **AI 상담**
-- `compare.html` — 자치구 / 상권 / 임대료 **비교** (업종별 매출·객단가·폐업률·소비 구성·상권등급·배후 아파트)
-- `building.html` — 지도에서 지점 클릭 시 **실시간 브리핑** (주소·유동인구·주변 역·경쟁 점포·건축물대장)
-- `trends.html` — 연도별 추이 차트
-- `about.html` · `legacy.html` — 소개·구버전
-
-### 서버리스 함수 (`frontend/api/*.js`, Vercel Functions)
-API 키를 브라우저에 노출하지 않기 위한 서버 프록시입니다. 키는 Vercel 환경변수로만 보관합니다.
-- `chat.js` · `insight.js` — Gemini/OpenAI/Anthropic 상담·인사이트 (`_ai.js` 공용 모듈, 자동 폴백)
-- `building.js` — 좌표→건축물대장(건축HUB) 실시간 조회
-- `kakao.js` — 카카오 로컬(키워드·카테고리·좌표변환) 프록시
-- `models.js` — 사용 가능한 AI 모델 목록
-
-### 데이터 파이프라인 (`backend/collect_*.py`, `build_bundle.py`)
-Python 수집기가 공공 API를 호출해 `frontend/*.json`을 만들고, `build_bundle.py`가 이를
-`frontend/data-bundle.js`(`window.__SANGGWON`)로 묶어 지도 앱이 한 번에 읽습니다.
-- 수집: 생활인구·주차·추정매출·점포·상주/직장인구·소비·상권변화·집객시설·배후아파트·임대료 등
-- **자동 무결성 점검** (`backend/check_data.py`) — 분기 갱신 후 이상치(비율합·범위·소비 구성)를 걸러 로그로 경고
-- 자동 갱신: GitHub Actions `대시보드 자동 갱신` — 매주(가벼운 갱신) + 매월 1일(상권 전량 빌드)
-
-### 주요 데이터 출처
-서울 열린데이터광장(상권분석서비스·생활인구), 국세청 폐업통계, 한국부동산원 상업용부동산 임대동향,
-통계청 소상공인실태조사, 전국주차장정보표준데이터, 카카오 로컬(실시간), 건축HUB 건축물대장.
-자세한 서비스명·갱신 주기·주의점은 [`docs/DATA-UPDATE.md`](docs/DATA-UPDATE.md), [`backend/DATA_SOURCES.md`](backend/DATA_SOURCES.md).
-
----
-
-## 로컬에서 보기
-
-정적 사이트라 별도 빌드가 필요 없습니다.
-
-```bash
-cd frontend
-python -m http.server 8000    # http://localhost:8000
+```sh
+npm run check:data
+npm test
+npm start
 ```
 
-서버리스 함수(AI 상담 등)까지 로컬에서 쓰려면 Vercel CLI:
+브라우저에서 `http://localhost:3000`을 엽니다. 환경 파일을 직접 읽으려면 `node --env-file=.env server.js`를 사용합니다. `.env.example`은 예시이며 비밀키가 들어 있지 않습니다.
 
-```bash
-npm i -g vercel
-vercel dev                    # frontend/ 를 Root Directory 로 설정
-```
+## 포함 기능
 
-AI·지도 기능에 필요한 환경변수(있는 것만 설정, 없으면 해당 기능만 비활성):
-`GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`, `KAKAO_REST_KEY`, `DATA_GO_KR_KEY`, `SEOUL_API_KEY`.
+서울 상권 검색, 업종별 후보 비교, 실제 중심 좌표 지도, 상권 동향, 입력 조건별 본전 계산, 데이터 도우미, CSV 및 인쇄/PDF 리포트입니다. 프런트는 `frontend/index.html`과 `frontend/app-logic.js`, 서버 API는 공개 폴더 밖의 `api/`에 있습니다. 인쇄 페이지도 동일 서버에서 동작합니다.
 
-데이터를 직접 갱신하려면:
+데이터 도우미는 공개 집계와 계산에 기반한 규칙형 안내입니다. 외부 생성형 AI를 호출하지 않습니다. 지도는 중심 좌표와 구 경계를 보여 주며 도로·건물·실시간 경쟁점 지도는 아닙니다. 공개 집계는 개별 점포의 실제 매출이나 성공 확률이 아닙니다.
 
-```bash
-cd backend
-pip install pandas numpy requests pyproj
-SEOUL_API_KEY=... python collect_sales.py      # 개별 수집기
-python build_bundle.py                          # data-bundle.js 재생성
-python check_data.py                            # 무결성 점검
-```
+## Render에서 시험
 
----
+새 Web Service의 저장소 루트를 이 폴더로 지정합니다. Build는 `npm run check:data`, Start는 `node server.js`, Health Check는 `/healthz`입니다. `render.yaml`도 포함했습니다. `ALLOWED_ORIGIN`에는 Render가 부여한 정확한 HTTPS 주소를 넣습니다. Render가 제공하는 PORT를 그대로 사용하고 HOST는 `0.0.0.0`입니다.
 
-## 참고 — `backend/app/` (실험적, 미배포)
+이전 소스 위에 덮어쓰지 말고 이 배포본으로 새 배포를 만드세요. 실제 Render 계정과 배포에는 이번 작업에서 접근하지 않았습니다.
 
-레포에는 FastAPI + LightGBM + RAG 지식베이스 형태의 별도 실험 코드(`backend/app/`)가 있습니다.
-현재 **배포되지 않으며**, 위에서 설명한 정적 사이트가 실제 서비스입니다. 이 실험 코드는 참고용입니다.
+## 카페24 VPS로 이전
 
----
+관리자 권한으로 Node와 Nginx를 설치할 수 있는 Linux VPS를 전제로 합니다. Python 전용 공유 웹호스팅 상품의 실행 가능 여부는 별도입니다. 이 웹서버의 실행 언어는 Node이며 Python 실험 서버를 함께 띄울 필요가 없습니다.
 
-## 문서
-- [`docs/PRODUCT_BRIEF.md`](docs/PRODUCT_BRIEF.md) — 제품 개요
-- [`docs/DATA-UPDATE.md`](docs/DATA-UPDATE.md) — 데이터 갱신 방법·출처·주의점
-- [`docs/BUILD-DEPLOY.md`](docs/BUILD-DEPLOY.md) — 빌드·배포
-- [`docs/운영가이드.md`](docs/운영가이드.md) — 운영 가이드
+1. `/opt/mysbizon/releases/<버전>/`에 전체 폴더를 놓고 검사합니다. 기존 운영 폴더에서 파일을 하나씩 바꾸지 마세요.
+2. 검사한 버전을 `/opt/mysbizon/current` 심볼릭 링크로 선택합니다. 파일은 서비스 사용자에게 읽기 권한만 부여합니다.
+3. 전용 비로그인 사용자 `mysbizon`을 만들고 `.env.example`을 기준으로 `/etc/mysbizon.env`를 구성합니다. root 소유, 권한 600을 사용합니다.
+4. `deploy/mysbizon.service`를 설치합니다. 실제 Node 경로가 `/usr/bin/node`인지 확인합니다. 앱은 `127.0.0.1:3000`에서 실행합니다.
+5. `deploy/nginx.conf.example`의 도메인·인증서 경로를 실제 값으로 바꾸고 `nginx -t` 후 적용합니다. 3000번 외부 접근은 허용하지 않습니다.
+6. TLS 도메인에서 검색 → 계산 → 리포트 미리보기 → `/healthz`를 확인합니다. 실패하면 current 링크를 이전 버전으로 되돌리고 재시작합니다.
+
+프록시가 X-Forwarded-For를 덮어쓰는 예시 Nginx 구성에서는 `TRUST_PROXY_HOPS=1`입니다. 신뢰 가능한 프록시 구성 확인 전에는 0을 유지하세요. 0에서는 프록시 뒤 방문자가 같은 요청 제한을 공유합니다. Render의 실제 헤더 체인도 확인 후 변경하세요.
+
+## 이메일 발송
+
+기본값은 꺼짐입니다. 검색·비교·계산·CSV·PDF는 발송 설정 없이 작동합니다. 모의 발송 테스트만 수행했고 실제 이메일은 보내지 않았습니다.
+
+이메일을 켜려면 발신자 인증, Brevo 키, 발신 주소와 실제 회사 개인정보 처리방침을 먼저 구성합니다. `REPORT_EMAIL_ENABLED=true`로 바꾸면 화면이 서버 설정을 조회하여 활성화합니다. 수신 주소와 선택한 분석 정보가 Brevo로 전달됩니다. 운영 주체·문의처·보유기간·수탁/국외 이전 정보는 실제 회사 정책을 반영해야 합니다.
+
+요청 제한과 중복 요청 병합은 단일 Node 프로세스 메모리에 있습니다. 재시작 시 초기화되며 여러 인스턴스가 공유하지 않습니다. 이메일 공개 규모를 늘리기 전에는 수신자 확인 또는 봇 방어, 공용 요청 제한 저장소가 필요합니다. 실패/시간초과 발송은 자동 재시도하지 않습니다. 외부 메일사의 전달 결과는 별도 모니터링합니다.
+
+## 데이터 갱신과 운영
+
+배포 데이터는 첨부된 스냅샷입니다. 상권 매출 기준은 2026년 1분기이며 임대료 등 보조 자료는 별도 기준 기간을 가집니다. 자동으로 최신 자료가 되는 서비스가 아닙니다.
+
+새 스냅샷 10개 JSON을 새 릴리스의 `frontend/data/v3`에 넣고 `npm run check:data`와 `npm test`를 모두 통과한 뒤 릴리스 전체를 교체합니다. 검증기는 형식·분기 일치·범위·개수·숫자 유효성을 확인하며 원자료의 진위나 통계적 정확성을 증명하지 않습니다. 서버 시작 때도 검사하므로 깨진 자료로 조용히 서비스하지 않습니다. 원본 스냅샷과 직전 릴리스를 보관하세요.
+
+원래 Python 수집기들은 구형 데이터 구조를 생성하므로 이 UI에 자동 연결했다고 표시하지 않았습니다. 실험 API·학습/예측 모델·구형 DB 신청 API·Vercel 설정과 함께 배포 대상에서 제외했습니다. 원본 ZIP은 변경하지 않았습니다. 상세 제외 목록은 `REMOVED-FILES.json`을 확인하세요.
+
+`/healthz` 외에 실제 첫 화면/JSON 요청도 모니터링하고 5xx·429·메모리·디스크·인증서 만료를 관찰하세요. 서비스 재시작·종료 처리를 포함했지만 장기간 무장애를 증명하는 시험은 아닙니다. systemd의 메모리 상한은 VPS 용량에 맞게 조정하세요.
+
+## 주요 파일
+
+- `frontend/`: 공개 UI, 로컬 React, 검증된 JSON 스냅샷
+- `api/`: 비공개 서버 코드, config/report만 라우팅
+- `server/`: 라우터·정적 응답·보안/요청 제한·본문 크기 제한
+- `tests/`: 계산·출처·소스 노출·요청 제한·메일 모의 통합 시험
+- `scripts/validate-data.mjs`: 데이터 배포 검사
+- `deploy/`: 카페24 Linux VPS 설정 예시
+- `AUDIT.md`: 코드 검토, 수정 사항, 회사 서비스 총평과 검증 범위
+
+운영 환경 변수 변경은 재시작 후 반영합니다. 비밀키나 환경 파일을 `frontend/`에 넣지 마세요.
