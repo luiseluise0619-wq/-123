@@ -135,26 +135,6 @@
     <sc-if value="{{ onHome }}">
       <section class="home-hero" onClick="{{ skipAnim }}" style="{{ heroSection }}">
 
-        <!-- 배경: 광원 + 건물 블록 한 줄 + 데이터 포인트. 음수 delay로 첫 페인트부터 차 있다 -->
-        <div aria-hidden="true" style="{{ heroWrap }}">
-          <div style="{{ areaStyle }}"></div>
-          <div style="{{ skylineRow }}">
-            <sc-for list="{{ blocks }}" as="b">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="{{ b.style }}">
-                <sc-if value="{{ b.rect }}">
-                  <rect x="{{ b.rect.x }}" y="{{ b.rect.y }}" width="{{ b.rect.w }}" height="{{ b.rect.h }}" rx="{{ b.rect.rx }}"></rect>
-                </sc-if>
-                <sc-for list="{{ b.paths }}" as="p">
-                  <path d="{{ p.d }}"></path>
-                </sc-for>
-              </svg>
-            </sc-for>
-          </div>
-          <sc-for list="{{ dots }}" as="d">
-            <span style="{{ d.wrap }}"><span style="{{ d.style }}"></span></span>
-          </sc-for>
-        </div>
-
         <!-- 제목 · 검색 -->
         <div style="{{ heroInner }}">
           <div class="hero-eyebrow">내 장사의 시작, 데이터로 한 걸음 더</div>

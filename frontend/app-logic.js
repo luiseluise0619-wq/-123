@@ -17,7 +17,17 @@ class Component extends DCLogic {
     const ref=document.querySelector('[data-fl-ref]'), panel=document.querySelector('[data-fl-panel]');
     if(!ref||!panel)return;
     const bounds=ref.getBoundingClientRect();
-    Object.assign(panel.style,{left:'0',top:'calc(100% + 8px)',width:'100%',maxHeight:Math.max(120,window.innerHeight-bounds.bottom-24)+'px',display:'flex',flexDirection:'column',overflow:'hidden'});
+    // 예전에는 top:calc(100% + 8px) 였다. 그 100% 는 패널의 기준 상자(offsetParent) 높이인데
+    // 그 상자가 검색창보다 훨씬 커서 목록이 입력칸에서 174px 나 떨어져 떴다.
+    // 입력칸에 붙어야 '이 칸의 후보'로 읽힌다 → 기준 상자 대비 실제 위치를 재서 붙인다.
+    const base=panel.offsetParent||panel.parentElement;
+    const br=base?base.getBoundingClientRect():{top:0,left:0};
+    Object.assign(panel.style,{
+      left:Math.round(bounds.left-br.left)+'px',
+      top:Math.round(bounds.bottom-br.top+8)+'px',
+      width:Math.round(bounds.width)+'px',
+      maxHeight:Math.max(120,window.innerHeight-bounds.bottom-24)+'px',
+      display:'flex',flexDirection:'column',overflow:'hidden'});
   }
 
   // 실제 화면을 짚어주는 둘러보기
@@ -275,10 +285,10 @@ class Component extends DCLogic {
     // [x%, 아이콘 크기(px), duration, delay, 아이콘] — 바닥선에 밑을 맞춰 선다
     // 8개만 세운다. 15개는 820px 줄에 들어가지 않아 양끝이 잘렸다.
     // delay는 이웃끼리 최소 4초 이상 벌려, 붙은 두 칸이 동시에 비지 않게 한다.
-    const ALL=[
-      [0,44,15,0,'building2'],[0,34,16,5.2,'store'],[0,52,15,1.6,'building'],[0,38,17,6.8,'hotel'],
-      [0,46,16,3.2,'building2'],[0,34,15,8.4,'store'],[0,50,17,4.8,'hospital'],[0,38,16,10,'building']
-    ];
+    // 배경 건물 아이콘은 뺐다(2026-09-05). 제목·검색창과 시선을 다투기만 했고,
+    // 하이드레이션 전에 자리표시자가 SVG 속성으로 새어 콘솔 오류 35건을 만들고 있었다.
+    // 목록을 비우면 blocks 가 빈 배열이 되어 아무것도 그리지 않는다.
+    const ALL=[];
     // 좁은 화면에서는 개수를 줄이고 크기도 낮춘다
     const n=this.L(4,6,8), sc=this.L(0.72,0.86,1);
     const B=ALL.slice(0,n).map(a=>[a[0],Math.round(a[1]*sc),a[2],a[3],a[4]]);
