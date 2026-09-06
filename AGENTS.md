@@ -80,7 +80,7 @@ scripts/           build-html.mjs · validate-data.mjs
 | --- | --- | --- |
 | **① 상권분석** `nav.zone` | **"어디가 좋지?"** — 여러 곳을 훑고 비교 | 허브 `hubZone` · 지역비교 `zone` · 후보지 `find` · **비교분석 `cmp`** · 자치구 훑기 `fineCmp` · 지역 개요 `region` |
 | **② 정밀분석** `nav.fine` | **"왜 좋은 거지? 내 조건이면 얼마 남지?"** — 고른 상권 하나를 깊게 | 허브 `hubFine` · 소개 `fineIntro` · 지도 `map` · **정밀분석 `fineDetail`** · **정밀비교 `sim`** · 본전 계산 `diag` |
-| **③ 시장동향** `nav.market` | **"장사 환경은 어떤가?"** — 임대료·환율·원자재 같은 바깥 사정 | 시장동향 `price` |
+| **③ 통합시세** `nav.market` | **"장사 환경은 어떤가?"** — 임대료·환율·원자재 같은 바깥 사정 | 통합시세 `price` |
 | **④ 리포트** `nav.report` | **"어떤 지원을 받지?"** — 조건에 맞는 정부 창업지원사업 | 리포트 `report` |
 
 ### 절대 빠뜨리면 안 되는 것
@@ -105,7 +105,7 @@ scripts/           build-html.mjs · validate-data.mjs
 | `03-settings.html` | 설정 (언어 · 테마) | `settingsOpen` |
 | `05-hub.html` | ①② 메뉴의 허브 | `onHub` |
 | `10-report.html` | ④ 리포트 (설문 → 지원사업) | `onReport` |
-| `20-price.html` | ③ 시장동향 | `onPrice` |
+| `20-price.html` | ③ 통합시세 (왼쪽 세로 갈래·지표 · 오른쪽 가로 차트) | `onPrice` |
 | `30-fine-intro.html` | ② 정밀분석 소개 | `onFineIntro` |
 | `31-fine-compare.html` | ① 자치구 훑기 | `onFineCmp` |
 | `32-map.html` | ② 지도 | `onMapScreen` |
@@ -151,9 +151,9 @@ for (const name of ['i18n','theme','roman','util','design','rank','analysis',
 | `screens.js` | 화면별 값 묶음 (홈·지역비교·후보지) |
 | `chat.js` | 도우미 (규칙 기반. 외부 생성형 AI 호출 없음) |
 | `charts.js` | Chart.js 래퍼 |
-| `carousel.js` | 가로 스크롤 카드 (scroll-snap + 드래그 + 휠) |
+| `carousel.js` | 가로 슬라이드 (scroll-snap + 드래그 + 휠). `peek:false` 좁은 칸용 · `arrows:true` 모바일 화살표 |
 | `sim.js` | **정밀비교 계산** — 영업이익·이익률·회수기간 |
-| `market.js` | **시장동향** — 8갈래 28지표 |
+| `market.js` | **통합시세** — 7갈래 28지표 · 왼쪽 세로 목록(`mk.side`) |
 | `views.js` | 자료가 있어야 만들 수 있는 화면 조립 |
 | `app-logic.js` | 상태 · 생애주기 · `MENU` · `renderVals()` · 결합 |
 
@@ -221,8 +221,8 @@ for (const name of ['i18n','theme','roman','util','design','rank','analysis',
 
 | | 내용 |
 | --- | --- |
-| 🟡 | **`api/market.js` 가 서버에서 라우팅되지 않습니다.** `server/app.js` 의 `PUBLIC_APIS` 에 `'report','config','support'` 만 있어서 `/api/market` 은 404 입니다. 지금은 프론트가 이 주소를 부르지 않아(로컬 상태로 '준비 중'만 표시) 문제가 드러나지 않습니다. **키를 넣어 시장동향을 살릴 때 `PUBLIC_APIS` 에 `'market'` 추가 + `logic/market.js` 에 fetch 연결이 같이 필요합니다.** |
-| 🟡 | **시장동향 28지표 중 6개만 실제로 그려집니다.** 나머지 22개(환율·금리·물가·농축수산물·에너지)는 `ECOS_KEY` / `KAMIS_KEY`+`KAMIS_ID` / `OPINET_KEY` 가 없어 '데이터 준비 중'입니다. **목록에서 지우지 마세요.** 통계표 코드는 문서에서 찾은 값이라 실제 응답으로 확인이 안 됐습니다. |
+| 🟡 | **`api/market.js` 가 서버에서 라우팅되지 않습니다.** `server/app.js` 의 `PUBLIC_APIS` 에 `'report','config','support'` 만 있어서 `/api/market` 은 404 입니다. 지금은 프론트가 이 주소를 부르지 않아(로컬 상태로 '준비 중'만 표시) 문제가 드러나지 않습니다. **키를 넣어 통합시세를 살릴 때 `PUBLIC_APIS` 에 `'market'` 추가 + `logic/market.js` 에 fetch 연결이 같이 필요합니다.** |
+| 🟡 | **통합시세 28지표 중 6개만 실제로 그려집니다.** 나머지 22개(환율·금리·물가·농축수산물·에너지)는 `ECOS_KEY` / `KAMIS_KEY`+`KAMIS_ID` / `OPINET_KEY` 가 없어 '데이터 준비 중'입니다. **목록에서 지우지 마세요.** 통계표 코드는 문서에서 찾은 값이라 실제 응답으로 확인이 안 됐습니다. |
 | 🟡 | **상권 단위 임대료가 아직 없습니다.** 지금은 한국부동산원 임대동향조사(서울 63개 상권 + 서울 평균)를 씁니다. 이름이 정확히 맞는 상권만 그 값을 쓰고 나머지는 '서울 평균'으로 내려갑니다. `ZONE_RENT_SERVICE` 오퍼레이션명 확인이 필요합니다. |
 | 🟡 | **예측 체계가 둘입니다.** `signals.json`(엄격한 홀드아웃)과 `sales_forecast.json`(사실상 in-sample 선택). 후자는 기준이 관대합니다. 통합 여부는 아직 판단 전입니다. |
 | 🟡 | `.github/workflows/refresh-dashboard.yml` 의 **수집 단계가 전부 `continue-on-error: true`** 라, 전부 실패해도 워크플로가 초록색으로 끝납니다. |

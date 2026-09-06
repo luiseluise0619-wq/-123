@@ -44,7 +44,8 @@
 
       <section style="padding:36px 0 0">
         <div style="display:grid;gap:20px;grid-template-columns:{{ navCols }}">
-          <nav aria-label="정밀분석 항목" style="{{ dsCard }}; align-self:start;padding:10px;min-width:0">
+          <!-- 데스크톱·태블릿은 세로 목록, 모바일은 가로로 넘기는 칩 줄 (mv.navStyle) -->
+          <nav data-rail="mvNav" aria-label="정밀분석 항목" style="{{ mv.navStyle }}">
             <sc-for list="{{ mv.nav }}" as="n">
               <span role="button" tabIndex="0" onClick="{{ n.pick }}" style="{{ n.style }}">{{ n.label }}</span>
             </sc-for>

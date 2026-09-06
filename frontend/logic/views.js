@@ -613,18 +613,28 @@ globalThis.MysbizonParts.views = {
           hasGood:good.length>0, hasCare:care.length>0
         };
       })(),
-      // 세로 메뉴 — 가로 칩이 7~10개면 어디를 눌러야 할지 모른다
+      // 항목 고르기 — 데스크톱·태블릿은 왼쪽 세로 목록, 모바일은 가로로 넘기는 칩 줄.
+      // 모바일에서 6~7개를 세로로 쌓으면 그것만으로 한 화면이 차서 정작 고른 내용이 안 보였다.
+      navStyle:this.L(
+        'display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;'
+          +'scrollbar-width:none;padding:2px 0 8px;min-width:0',
+        this.ds('card')+';align-self:start;padding:10px;min-width:0',
+        this.ds('card')+';align-self:start;padding:10px;min-width:0'),
       nav:(()=>{
         const A=(this._mvA||this.mvSections(sel,L)).filter(x=>x.key!=='grow');
         const cur=S.mvTab||A[0].key;
+        const mob=this.bp()==='mobile';
         return A.map(x=>({
           label:x.title.split(' · ')[0],
           pick:()=>this.setState({mvTab:x.key}),
-          style:'display:block;padding:12px 14px;border-radius:var(--r-sm);cursor:pointer;'
-            +'font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+          style:(mob
+              ? 'flex:none;scroll-snap-align:start;display:block;padding:9px 15px;border-radius:999px;'
+                +'font-size:14px;'
+              : 'display:block;padding:12px 14px;border-radius:var(--r-sm);font-size:14.5px;')
+            +'cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
             +'transition:background .14s,color .14s;'
             +(x.key===cur?'background:var(--accent-3);color:var(--accent);font-weight:700'
-                         :'color:var(--ink2)')}));
+                         :(mob?'background:var(--surface);color:var(--ink2)':'color:var(--ink2)'))}));
       })(),
       // 지금 고른 섹션 하나만 오른쪽에 크게 — 관련 차트 2~4개와 함께
       now:(()=>{

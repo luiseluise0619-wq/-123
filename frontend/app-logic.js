@@ -192,8 +192,6 @@ class Component extends DCLogic {
   componentDidMount(){
     // 저장해 둔 화면 설정(밝기·테마·색)과 언어를 먼저 얹는다 — 얹기 전에 그리면 한 번 번쩍인다
     try{ this.loadTheme(); this.loadLocales(); }catch(e){}
-    try{ const w=JSON.parse(localStorage.getItem('mysbizon.mkWatch')||'null');
-         if(Array.isArray(w)) this.setState({mkWatch:w}); }catch(e){}
     // 첫 그림 뒤에도 한 번 — componentDidUpdate 는 첫 렌더에서 안 불린다
     setTimeout(()=>{ try{ this.paintCharts(); this.bindRails(); this.trDom(); }catch(e){} },0);
     try{const raw=sessionStorage.getItem('mysbizon.return');sessionStorage.removeItem('mysbizon.return');if(raw){const saved=JSON.parse(raw),restore={screen:'report'};for(const k of ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen']){if(saved[k]===null||typeof saved[k]==='string'||typeof saved[k]==='number')restore[k]=saved[k];}if(Array.isArray(saved.picks))restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);this.setState(restore);}}catch{}
@@ -312,7 +310,7 @@ class Component extends DCLogic {
     //   상권분석 "어디가 좋지?"        — 여러 곳을 탐색·비교
     //   정밀분석 "왜 좋은 거지?"       — 고른 상권 하나를 깊게
     //   정밀비교 "내 조건이면 얼마 남지?" — 내가 넣은 숫자로 수익성 비교
-    //   시장동향 "장사 환경은 어떤가?"  — 임대료·환율·원자재 같은 바깥 사정
+    //   통합시세 "장사 환경은 어떤가?"  — 임대료·환율·원자재 같은 바깥 사정
     //   리포트   "어떤 지원을 받지?"    — 조건에 맞는 정부 창업지원사업
     // 문구는 사전(logic/i18n.js · locales/*.json)에서 가져온다 — 여기 한국어를 박지 않는다
     const T=k=>this.t(k);
@@ -1044,39 +1042,39 @@ class Component extends DCLogic {
           zone:{t:'어디에서 시작할까요?', d:'내 업종에 맞는 지역을 찾고 상권을 비교해 보세요.'},
           fine:{t:'이 자리, 정말 괜찮을까요?', d:'고른 상권 하나를 매출·수요·경쟁·비용으로 뜯어봅니다.'}
         };
+        // 화면 키로 찾는다. 라벨로 찾으면 영어·중국어에서 설명과 아이콘이 통째로 빈다.
         const CARD={
-          zone:{
-            '지역비교':{d:'여러 지역의 매출·수요·경쟁을 나란히 비교해요', cta:'비교하기'},
-            '후보지'  :{d:'업종에 맞는 상권을 좋은 순서로 추천해요',      cta:'후보 찾기'},
-            '비교분석':{d:'고른 곳들을 견주고 종합 1위를 뽑아 줘요',      cta:'비교 시작'},
-            '자치구 훑기':{d:'한 자치구 안의 상권을 빠짐없이 훑어요',      cta:'훑어보기'}
-          },
-          fine:{
-            '지도'      :{d:'고른 상권이 정확히 어디인지 위치로 확인해요', cta:'지도 열기'},
-            '정밀분석'  :{d:'매출·수요·경쟁·비용을 뜯어보고 왜 그런지 읽어요', cta:'분석 보기'},
-            '정밀비교'  :{d:'내 숫자를 직접 넣어 어디가 더 남는지 계산해요', cta:'계산하기'},
-            '본전 계산' :{d:'이 자리 한 곳의 본전선을 확인해요',            cta:'본전 보기'}
-          }
+          zone   :{d:'여러 지역의 매출·수요·경쟁을 나란히 비교해요', cta:'비교하기'},
+          find   :{d:'업종에 맞는 상권을 좋은 순서로 추천해요',      cta:'후보 찾기'},
+          cmp    :{d:'고른 곳들을 견주고 종합 1위를 뽑아 줘요',      cta:'비교 시작'},
+          fineCmp:{d:'한 자치구 안의 상권을 빠짐없이 훑어요',        cta:'훑어보기'},
+          map        :{d:'고른 상권이 정확히 어디인지 위치로 확인해요',   cta:'지도 열기'},
+          fineDetail :{d:'매출·수요·경쟁·비용을 뜯어보고 왜 그런지 읽어요', cta:'분석 보기'},
+          sim        :{d:'내 숫자를 직접 넣어 어디가 더 남는지 계산해요',  cta:'계산하기'},
+          diag       :{d:'이 자리 한 곳의 본전선을 확인해요',              cta:'본전 보기'}
         };
         const ART={
-          '지역비교':['M6 32 h7 v10 h-7 z','M17 24 h7 v18 h-7 z','M28 28 h7 v14 h-7 z','M39 14 h7 v28 h-7 z'],
-          '후보지':['M26 8 a10 10 0 0 1 10 10 c0 8 -10 20 -10 20 s-10 -12 -10 -20 a10 10 0 0 1 10 -10 z','M26 18 h.01'],
-          '비교분석':['M6 12 h16 v28 h-16 z','M30 12 h16 v28 h-16 z','M10 21 h8','M34 21 h8','M10 29 h8','M34 29 h8'],
-          '자치구 훑기':['M22 10 a13 13 0 1 1 0 26 a13 13 0 1 1 0 -26 z','M33 33 l9 9'],
-          '지도':['M6 14 l13 -5 l13 5 l13 -5 v28 l-13 5 l-13 -5 l-13 5 z','M19 9 v28','M32 14 v28'],
-          '정밀분석':['M8 40 v-12','M18 40 v-22','M28 40 v-16','M38 40 v-28','M6 44 h40'],
-          '정밀비교':['M14 10 h24 v32 h-24 z','M20 18 h12','M20 26 h12','M20 34 h6'],
-          '본전 계산':['M8 38 l10 -12 l8 7 l14 -20','M6 44 h40','M40 13 h6 v6']
+          zone:['M6 32 h7 v10 h-7 z','M17 24 h7 v18 h-7 z','M28 28 h7 v14 h-7 z','M39 14 h7 v28 h-7 z'],
+          find:['M26 8 a10 10 0 0 1 10 10 c0 8 -10 20 -10 20 s-10 -12 -10 -20 a10 10 0 0 1 10 -10 z','M26 18 h.01'],
+          cmp:['M6 12 h16 v28 h-16 z','M30 12 h16 v28 h-16 z','M10 21 h8','M34 21 h8','M10 29 h8','M34 29 h8'],
+          fineCmp:['M22 10 a13 13 0 1 1 0 26 a13 13 0 1 1 0 -26 z','M33 33 l9 9'],
+          map:['M6 14 l13 -5 l13 5 l13 -5 v28 l-13 5 l-13 -5 l-13 5 z','M19 9 v28','M32 14 v28'],
+          fineDetail:['M8 40 v-12','M18 40 v-22','M28 40 v-16','M38 40 v-28','M6 44 h40'],
+          sim:['M14 10 h24 v32 h-24 z','M20 18 h12','M20 26 h12','M20 34 h6'],
+          diag:['M8 38 l10 -12 l8 7 l14 -20','M6 44 h40','M40 13 h6 v6']
         };
         const selId = S.sel || S.zoneId;
         const selNm = (selId && S.zi && S.zi.zones[selId]) ? this.zoneLabelOf(S.zi.zones[selId].nm) : null;
         const nPicks = (S.picks||[]).length;
         // 강조는 하나만. 셋 다 강조하면 아무것도 강조되지 않는다.
-        const next = zone ? (nPicks ? '비교분석' : '후보지')
-                          : (selNm ? '정밀분석' : '지도');
+        const next = zone ? (nPicks ? 'cmp' : 'find')
+                          : (selNm ? 'fineDetail' : 'map');
         return {
           title: HEAD[k].t,
           desc: HEAD[k].d,
+          // 카드 넷을 세로로 쌓지 않고 가로로 넘긴다 — 모바일에서 넷을 쌓으면
+          // 첫 화면이 메뉴만으로 다 찬다. 데스크톱에서는 넷이 그대로 한 줄에 들어온다.
+          rail: this.rail('hub',{per:4}),
           ctx: [
             {label:'업종', value:this.indName(S.ind)},
             ...(selNm ? [{label:'고른 상권', value:selNm}] : [])
@@ -1084,11 +1082,11 @@ class Component extends DCLogic {
             style:'display:inline-flex;align-items:baseline;gap:6px;padding:7px 12px;border-radius:999px;'
               +'background:var(--surface);white-space:nowrap;min-width:0'})),
           cards:(g?g.items:[]).map(([key,label])=>{
-            const on=label===next;
-            const c=CARD[k][label]||{d:'',cta:'열기'};
+            const on=key===next;
+            const c=CARD[key]||{d:'',cta:'열기'};
             return {
               label:label, sub:c.d, cta:c.cta+' →',
-              art:(ART[label]||[]).map(d=>({d:d})),
+              art:(ART[key]||[]).map(d=>({d:d})),
               // 카드는 '무엇을 하는 화면인가'만 알려주면 된다 — 높이를 줄여 셋이 한눈에 들어오게 한다
               artStyle:'flex:none;width:34px;height:34px;display:block;'
                 +(on?'color:var(--accent)':'color:var(--ink3)'),
@@ -1098,7 +1096,7 @@ class Component extends DCLogic {
               ctaStyle:'font-size:13.5px;font-weight:600;margin-top:auto;padding-top:12px;white-space:nowrap;'
                 +(on?'color:var(--accent)':'color:var(--ink2)'),
               go:()=>this.setState({screen:key,menu:null}),
-              style:'display:flex;flex-direction:column;gap:9px;min-height:'+this.L('126px','146px','164px')+';'
+              style:'display:flex;flex-direction:column;gap:9px;height:100%;min-height:'+this.L('126px','146px','164px')+';'
                 +'padding:'+this.L('18px','20px','22px')+';border-radius:var(--r-lg);cursor:pointer;min-width:0;'
                 +'transition:transform .18s cubic-bezier(.2,.7,.3,1),box-shadow .18s;'
                 +(on?'background:var(--accent-3);border:1px solid var(--accent-2)'
@@ -1241,7 +1239,7 @@ class Component extends DCLogic {
       // 모바일에서는 전부 1열. 세로 메뉴도 위쪽 가로 목록이 된다.
       mapCols:this.L('1fr','1fr','minmax(0,1.35fr) minmax(300px,1fr)'),
       dashCols:this.L('1fr','1fr','minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr)'),
-      navCols:this.L('1fr','1fr','200px minmax(0,1fr)'),
+      navCols:this.L('1fr','200px minmax(0,1fr)','200px minmax(0,1fr)'),
       dsCard:this.ds('card'), dsCardLg:this.ds('cardLg'), dsCardHi:this.ds('cardHi'),
       dsNum:this.ds('num'), dsNumSm:this.ds('numSm'),
       dsBody:this.ds('body'), dsSub:this.ds('sub'),

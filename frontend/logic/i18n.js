@@ -107,7 +107,7 @@ globalThis.MysbizonParts.i18n = {
   KO_BASE(){
     return {
       'nav.zone':'상권분석','nav.fine':'정밀분석','nav.sim':'정밀비교',
-      'nav.market':'시장동향','nav.report':'리포트',
+      'nav.market':'통합시세','nav.report':'리포트',
       'menu.zoneCompare':'지역비교','menu.find':'후보지','menu.compare':'비교분석',
       'menu.sweep':'자치구 훑기','menu.map':'지도','menu.detail':'정밀분석',
       'menu.sim':'정밀비교','menu.bep':'본전 계산',
@@ -166,7 +166,7 @@ globalThis.MysbizonParts.i18n = {
       // 이름·숫자가 들어가는 문장은 자리표시자를 둔 키로 관리한다(조사는 tn 이 고른다)
       "mk.waitTitle": "{name} — 데이터 준비 중",
       "mk.waitText": "{src} 자료를 연결하면 여기에 그래프가 나타나요. 아직 연결되지 않아서 지금은 값을 보여드리지 않아요 — 없는 숫자를 지어내지 않기 위해서예요.",
-      "mk.catEmpty": "‘{cat}’에 담아 둔 지표가 없어요. [+ 관심지표 추가]에서 담거나, 위에서 ‘전체’를 눌러 보세요.",
+      "mk.chartCount": "차트 {n}개",
       "sido.wait": "‘{region}’ 자료는 아직 없어요. 지금 쓰는 자료는 서울시 상권분석서비스라 서울 상권 1,564곳만 담고 있어요. 전국으로 넓히려면 소상공인시장진흥공단 상권정보로 갈아타야 하는데, 상권 구획과 업종 코드가 달라 맞춰 붙이는 작업이 필요해요.",
       "sido.waitFind": "현재 {region} 지역의 상권·임대료 데이터는 준비 중이에요. 지금 쓰는 자료는 서울시 상권분석서비스라 서울 상권 1,564곳만 담고 있어요. 전국으로 넓히려면 소상공인시장진흥공단 상권정보로 갈아타야 하는데, 상권 구획과 업종 코드가 달라 맞춰 붙이는 작업이 필요해요.",
       "zc.lead": "{ind}은(는) {gu}가 가게 한 곳당 가장 많이 팔아요.",

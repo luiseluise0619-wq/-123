@@ -1,5 +1,5 @@
 'use strict';
-// 시장동향 — "지금 장사 환경이 어떻게 움직이고 있지?"
+// 통합시세 — "지금 장사 환경이 어떻게 움직이고 있지?"
 //
 // 임대료·공실만 보는 화면이 아니다. 창업에 영향을 주는 바깥 사정(환율·원자재·농축수산물·
 // 금리·물가)을 한 곳에서 본다.
@@ -19,7 +19,6 @@ globalThis.MysbizonParts.market = {
 
   MARKET_CATS(){
     return [
-      {k:'all',    label:'전체'},
       {k:'zone',   label:'상권·부동산'},
       {k:'fx',     label:'환율'},
       {k:'macro',  label:'금리·물가'},
@@ -81,111 +80,63 @@ globalThis.MysbizonParts.market = {
     ];
   },
 
-  // 사장님이 고른 관심지표. 처음엔 상권·부동산 넷으로 시작한다.
-  marketWatch(){
-    const w=this.state.mkWatch;
-    if(Array.isArray(w)) return w;
-    return ['rent','vacancy','sales','churn'];
-  },
-  marketToggle(k){
-    const cur=this.marketWatch();
-    const next = cur.indexOf(k)>=0 ? cur.filter(x=>x!==k) : [...cur,k];
-    this.setState({mkWatch:next});
-    try{ localStorage.setItem('mysbizon.mkWatch', JSON.stringify(next)); }catch(e){}
-  },
-  marketPick(k){
-    // 관심지표에 없으면 고르는 순간 담는다 — 고른 걸 못 보는 일이 없게
-    if(this.marketWatch().indexOf(k)<0) this.marketToggle(k);
-    this.setState({mkSel:k});
-  }
+  // 지금 보는 지표 하나. 담아 두는 목록(관심지표)은 없앴다 —
+  // 갈래가 왼쪽에 늘 세로로 보이므로 '담아 둘' 이유가 사라졌다.
+  // 지표를 바꾸면 목록에서 고른 지역·업종(prPick)도 같이 푼다 —
+  // 임대료에서 고른 상권 이름을 매출 화면이 그대로 물려받을 이유가 없다.
+  marketPick(k){ this.setState({mkSel:k, prPick:null}); }
 };
 
-// 화면 — 카테고리 고르기 → 관심지표 → 큰 차트 하나
+// 화면 — 왼쪽 세로 목록(갈래 → 지표)에서 하나를 고르고, 오른쪽에서 차트를 가로로 넘긴다.
+// 고르는 곳이 한 군데뿐이라 '갈래'와 '지표'가 서로 어긋날 일이 없다.
 globalThis.MysbizonParts.market.marketView = function(){
   const S=this.state;
   const ALL=this.MARKET_INDICATORS();
   const CATS=this.MARKET_CATS();
-  const cat=S.mkCat||'all';
-  const watch=this.marketWatch();
   const byKey={}; ALL.forEach(i=>{ byKey[i.k]=i; });
 
-  // 지금 보고 있는 지표. 관심지표 중 첫 번째를 기본으로 한다.
-  const selKey=(S.mkSel && byKey[S.mkSel]) ? S.mkSel : (watch.find(k=>byKey[k]) || 'rent');
-  const sel=byKey[selKey]||ALL[0];
+  // 지금 보는 지표. 처음 열면 상가 임대료.
+  const selKey=(S.mkSel && byKey[S.mkSel]) ? S.mkSel : 'rent';
+  const sel=byKey[selKey];
+  // 갈래는 고른 지표를 따라간다 — 따로 고르게 하면 둘이 어긋난다
+  const cat=sel.cat;
 
-  const chipStyle=on=>'flex:none;padding:9px 15px;border-radius:999px;font-size:13.5px;cursor:pointer;'
-    +'white-space:nowrap;min-height:38px;display:inline-flex;align-items:center;'
-    +'transition:background .14s,color .14s;'
-    +(on?'background:var(--color-primary);color:#FFFFFF;font-weight:600'
-        :'background:var(--color-surface);color:var(--color-text-secondary)');
+  const catStyle=on=>'display:block;padding:'+this.L('9px 8px','10px 12px','11px 13px')+';'
+    +'border-radius:var(--r-sm);cursor:pointer;font-size:'+this.L('12.5px','14px','14.5px')+';'
+    +'font-weight:700;letter-spacing:-.01em;transition:color .14s;'
+    +'overflow:hidden;text-overflow:ellipsis;'
+    +(on?'color:var(--ink)':'color:var(--ink3)');
+  const indStyle=on=>'display:block;margin-left:'+this.L('0','8px','8px')+';'
+    +'padding:'+this.L('8px','9px 12px','10px 13px')+';border-radius:var(--r-sm);cursor:pointer;'
+    +'font-size:'+this.L('12.5px','14px','14.5px')+';transition:background .14s,color .14s;'
+    +'overflow:hidden;text-overflow:ellipsis;'
+    +(on?'background:var(--accent-3);color:var(--accent);font-weight:700':'color:var(--ink2)');
 
-  // 관심지표 — 가로로 넘겨 본다. × 로 뺀다.
-  // 위에서 카테고리를 고르면 그 갈래만 남는다('전체'면 다 보인다).
-  const inCat=i=> cat==='all' || i.cat===cat;
-  const chips=watch.map(k=>byKey[k]).filter(Boolean).filter(inCat).map(i=>({
-    label:i.label,
-    ready:!!i.ready,
-    on:i.k===selKey,
-    pick:()=>this.marketPick(i.k),
-    remove:e=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.marketToggle(i.k); },
-    style:'flex:none;display:inline-flex;align-items:center;gap:8px;padding:10px 12px 10px 16px;'
-      +'border-radius:999px;font-size:14px;cursor:pointer;white-space:nowrap;min-height:42px;'
-      +'transition:background .14s,color .14s;'
-      +(i.k===selKey
-        ? 'background:var(--color-primary);color:#FFFFFF;font-weight:600'
-        : 'background:var(--color-surface);color:var(--color-text-secondary)'),
-    xStyle:'flex:none;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;'
-      +'justify-content:center;font-size:13px;line-height:1;'
-      +(i.k===selKey? 'background:rgba(255,255,255,.25);color:#FFFFFF'
-                    : 'background:var(--color-surface-secondary);color:var(--color-text-muted)'),
-    tagStyle:'flex:none;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;'
-      +(i.k===selKey? 'background:rgba(255,255,255,.22);color:#FFFFFF'
-                    : 'background:var(--color-surface-secondary);color:var(--color-text-muted)')
-  }));
+  // 갈래를 누르면 그 갈래의 첫 지표로 간다. 갈래 하나만 펼쳐 둔다 —
+  // 28개를 한꺼번에 세로로 쌓으면 목록만으로 화면이 찬다.
+  const side=[];
+  CATS.forEach(c=>{
+    const items=ALL.filter(i=>i.cat===c.k);
+    side.push({label:c.label, pick:()=>this.marketPick((items[0]||sel).k), style:catStyle(c.k===cat)});
+    if(c.k===cat) items.forEach(i=>{
+      side.push({label:i.label, pick:()=>this.marketPick(i.k), style:indStyle(i.k===selKey)});
+    });
+  });
 
-  // 지표 추가 — 검색 + 카테고리별 체크 목록 (여기는 늘 전부 보여준다)
-  const q=(S.mkQ||'').trim();
-  const hitQ=i=> !q || (i.label+i.q+i.src).indexOf(q)>=0;
-  const groups=CATS.filter(c=>c.k!=='all')
-    .map(c=>({
-      label:c.label,
-      items:ALL.filter(i=>i.cat===c.k && hitQ(i)).map(i=>({
-        label:i.label,
-        ready:!!i.ready,
-        state: watch.indexOf(i.k)>=0 ? '☑' : '☐',
-        note: i.ready? i.src : '데이터 준비 중',
-        toggle:()=>this.marketToggle(i.k),
-        style:'display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:var(--r-sm);'
-          +'cursor:pointer;min-width:0;transition:background .14s;'
-          +(watch.indexOf(i.k)>=0? 'background:var(--color-primary-soft)':'background:var(--color-surface)')
-      }))
-    }))
-    .filter(g=>g.items.length>0);
-
-  const out={
-    cats:CATS.map(c=>({label:c.label, pick:()=>this.setState({mkCat:c.k}), style:chipStyle(c.k===cat)})),
-    catRail:this.rail('mkCat',{per:8}),
-    chips, hasChips:chips.length>0,
-    chipRail:this.rail('mkChip',{per:5}),
-    addOpen:!!S.mkAdd,
-    addLabel:S.mkAdd? '닫기' : '+ 관심지표 추가',
-    toggleAdd:()=>this.setState({mkAdd:!S.mkAdd, mkQ:''}),
-    q:S.mkQ||'',
-    onQ:e=>this.setState({mkQ:e.target.value}),
-    groups, hasGroups:groups.length>0,
-    noHit: !!q && groups.length===0,
-    noHitText:'‘'+q+'’와 맞는 지표가 없어요.',
+  return {
+    side,
+    // 왼쪽 세로 목록 · 오른쪽 차트. 모바일에서도 나란히 둔다(사장님 요청).
+    cols:this.L('112px minmax(0,1fr)','188px minmax(0,1fr)','224px minmax(0,1fr)'),
+    gap:this.L('10px','18px','24px'),
+    sideStyle:this.L(
+      'align-self:start;min-width:0',
+      this.ds('card')+';align-self:start;padding:10px;min-width:0',
+      this.ds('card')+';align-self:start;padding:10px;min-width:0'),
     // 지금 보는 지표
     selKey, selLabel:sel.label, selQuestion:sel.q, selSrc:sel.src,
     ready:!!sel.ready,
     waiting:!sel.ready,
     waitTitle:this.t('mk.waitTitle',{name:sel.label}),
-    waitText:this.t('mk.waitText',{src:sel.src}),
-    empty:watch.length===0,
-    emptyText:'관심지표를 하나도 담지 않으셨어요. 아래 [+ 관심지표 추가]에서 보고 싶은 걸 골라 보세요.',
-    // 갈래를 골랐는데 그 갈래에 담아 둔 게 없을 때 — 빈 줄만 남기지 않는다
-    catEmpty: watch.length>0 && chips.length===0,
-    catEmptyText:this.t('mk.catEmpty',{cat:(CATS.find(c=>c.k===cat)||{label:''}).label})
+    waitText:this.t('mk.waitText',{src:sel.src})
   };
-  return out;
 };

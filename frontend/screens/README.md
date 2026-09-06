@@ -31,7 +31,7 @@ npm test              # 위 확인이 테스트에도 들어 있습니다
 | `03-settings.html` | 설정 — 언어·테마 | `settingsOpen` |
 | `05-hub.html` | 상권분석·정밀분석 허브 | `onHub` |
 | `10-report.html` | 리포트(설문 → 지원사업) | `onReport` |
-| `20-price.html` | 시장동향 | `onPrice` |
+| `20-price.html` | 통합시세 (왼쪽 세로 갈래·지표 · 오른쪽 가로 차트) | `onPrice` |
 | `30-fine-intro.html` | 정밀분석 소개 | `onFineIntro` |
 | `31-fine-compare.html` | 자치구 훑기 | `onFineCmp` |
 | `32-map.html` | 지도 — 위치만 | `onMapScreen` |
@@ -72,12 +72,12 @@ npm test              # 위 확인이 테스트에도 들어 있습니다
 | `logic/design.js` | 카드·제목·숫자 스타일, '숫자 → 해석' |
 | `logic/rank.js` | 종합순위 — 정규화·가중치·상권 색 고정 |
 | `logic/analysis.js` | 순위·지도·정밀분석 섹션 계산 |
-| `logic/screens.js` | 화면별 값 묶음(홈·지역비교·후보 지역·시장동향) |
+| `logic/screens.js` | 화면별 값 묶음(홈·지역비교·후보 지역·통합시세) |
 | `logic/chat.js` | 도우미 |
 | `logic/charts.js` | Chart.js 래퍼 |
-| `logic/carousel.js` | 가로 스크롤 카드 |
+| `logic/carousel.js` | 가로 슬라이드 |
 | `logic/sim.js` | 정밀비교 계산(영업이익·회수기간) |
-| `logic/market.js` | 시장동향 8갈래 28지표 |
+| `logic/market.js` | 통합시세 7갈래 28지표 · 왼쪽 세로 목록 |
 | `logic/views.js` | 자료가 있어야 만들 수 있는 화면 조립 |
 | `app-logic.js` | 상태·생애주기·`MENU`·`renderVals()`·조각 결합 |
 

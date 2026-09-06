@@ -723,42 +723,23 @@ globalThis.MysbizonParts.screens = {
   },
 
   // 지역비교 — 자치구 25개를 고른 장사 기준으로 묶어 비교한다
-  // ── 시세분석 ───────────────────────────────────────────────────
-  // 왼쪽 세로 메뉴에서 하나를 고르면 오른쪽에 '핵심 수치 + 차트 2~4개 + 지역 비교'.
-  // 여러 개를 동시에 켜 두면 무엇을 보는 화면인지 흐려진다(§16).
+  // ── 통합시세 ───────────────────────────────────────────────────
+  // 갈래·지표를 고르는 세로 목록은 logic/market.js 의 marketView() 가 만든다.
+  // 여기는 '고른 지표 하나'의 핵심 수치·차트·목록만 만든다(§16).
   priceView(){
     const S=this.state;
-    // 시장동향에서 고른 지표가 우리 자료로 그릴 수 있는 것이면 그것을 따른다.
+    // 세로 목록에서 고른 지표가 우리 자료로 그릴 수 있는 것이면 그것을 따른다.
     // (환율·농산물처럼 아직 연결 안 된 지표는 여기 오지 않고 '준비 중' 카드가 뜬다.)
     const cat=(S.mkSel && PRICE_CATS.some(c=>c.k===S.mkSel)) ? S.mkSel : (S.prCat||'rent');
     const meta=PRICE_CATS.find(c=>c.k===cat)||PRICE_CATS[0];
     const R=S.rentStats, HI=S.salesHistory, ST=S.sti, IC=S.income;
     const out={
       cat, catLabel:meta.label, when:meta.when,
-      // 메뉴 — 하나만 켜진다.
-      // 데스크톱은 왼쪽 세로 목록, 모바일은 가로 칩 줄이다.
-      // 모바일에서 6개를 세로로 쌓으면 그것만으로 한 화면이 차서 차트가 안 보였다.
-      navStyle:this.L(
-        'display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 8px;min-width:0',
-        this.ds('card')+';align-self:start;padding:10px;min-width:0',
-        this.ds('card')+';align-self:start;padding:10px;min-width:0'),
-      nav:PRICE_CATS.map(c=>({
-        label:c.label, when:c.when, on:c.k===cat,
-        pick:()=>this.setState({prCat:c.k, prPick:null}),
-        style: this.bp()==='mobile'
-          ? 'flex:none;display:block;padding:9px 15px;border-radius:999px;cursor:pointer;text-align:center;'
-            +'font-size:14px;transition:background .14s,color .14s;'
-            +(c.k===cat?'background:var(--accent-3);color:var(--accent);font-weight:700'
-                       :'background:var(--surface);color:var(--ink2)')
-          : 'display:block;padding:11px 13px;border-radius:var(--r-sm);cursor:pointer;'
-            +'font-size:14.5px;transition:background .14s,color .14s;min-width:0;'
-            +(c.k===cat?'background:var(--accent-3);color:var(--accent);font-weight:700':'color:var(--ink2)'),
-        whenStyle:'display:block;font-size:10.5px;font-weight:600;margin-top:3px;white-space:nowrap;'
-          +(c.k===cat?'color:var(--accent);opacity:.8':'color:var(--ink3)')
-      })),
       title:'', now:'', nowLabel:'', delta:'', deltaStyle:'display:none',
       charts:[], hasCharts:false, note:'', missing:'', hasMissing:false,
-      list:[], listTitle:'', hasList:false
+      list:[], listTitle:'', hasList:false,
+      // 자료를 못 불러와 일찍 돌아가는 갈래에서도 값이 비지 않게 미리 넣어 둔다
+      chartCount:'', rail:this.rail('price', {per:1, peek:false, arrows:true})
     };
     const C=[];   // 이 카테고리의 차트들
     const push=(id,opt)=>{ const c=this.chartCard(id,opt); if(c) C.push(c); };
@@ -786,7 +767,7 @@ globalThis.MysbizonParts.screens = {
         const bad=isRent? d>0 : d>0;
         out.delta=(d>0?'▲ ':'▼ ')+(isRent? this.manF(Math.abs(d),1) : Math.abs(d).toFixed(1)+'%p')
           +' · '+this.t('pr.vs2y');
-        out.deltaStyle='font-size:13.5px;font-weight:700;white-space:nowrap;color:'
+        out.deltaStyle='font-size:13.5px;font-weight:700;line-height:1.4;color:'
           +(Math.abs(d)<0.05?'var(--ink3)':(bad?'var(--warn)':'var(--good)'));
       }
       // ① 이 상권의 추이
@@ -847,7 +828,7 @@ globalThis.MysbizonParts.screens = {
       if(cur&&prev){
         const g=Math.round((cur-prev)/prev*100);
         out.delta=(g>0?'▲ ':'▼ ')+Math.abs(g)+'% · 1년 전 대비';
-        out.deltaStyle='font-size:13.5px;font-weight:700;white-space:nowrap;color:'
+        out.deltaStyle='font-size:13.5px;font-weight:700;line-height:1.4;color:'
           +(Math.abs(g)<3?'var(--ink3)':(g>0?'var(--good)':'var(--warn)'));
       }
       push('pr-sales-trend',{type:'line', title:this.indName(pick)+' 매출 추이',
@@ -896,7 +877,7 @@ globalThis.MysbizonParts.screens = {
       out.now=(net>0?'+':'')+net.toLocaleString()+'곳';
       out.nowLabel='새로 연 곳 − 문 닫은 곳 · 서울 전체';
       out.delta=net>=0?'가게가 늘고 있어요':'가게가 줄고 있어요';
-      out.deltaStyle='font-size:13.5px;font-weight:700;white-space:nowrap;color:'+(net>=0?'var(--good)':'var(--warn)');
+      out.deltaStyle='font-size:13.5px;font-weight:700;line-height:1.4;color:'+(net>=0?'var(--good)':'var(--warn)');
       const byChurn=rows.slice().sort((a,b)=>(b.opened+b.closed)-(a.opened+a.closed)).slice(0,12);
       push('pr-churn',{type:'bar', title:'업종별 개업 · 폐업', sub:'움직임이 큰 12개 업종',
         unit:'곳', period:this.qtr(ST.quarter)+' · 3개월', height:280,
@@ -980,10 +961,12 @@ globalThis.MysbizonParts.screens = {
     }
 
     out.charts=C; out.hasCharts=C.length>0;
+    out.chartCount=this.t('mk.chartCount',{n:C.length});
     out.hasList=out.list.length>0;
-    // 차트가 많으면 가로로 넘겨 본다
     // 한 화면에 차트 하나. 옆으로 넘겨 다음 질문으로 간다(§8·§21)
-    out.rail=this.rail('price', {per:1});
+    // 왼쪽 세로 목록 옆의 좁은 칸이라 잘라 보일 자리가 없다 →
+    // 한 장을 꽉 채우고, 대신 화살표를 모바일에서도 낸다.
+    out.rail=this.rail('price', {per:1, peek:false, arrows:true});
     return out;
   }
 };
