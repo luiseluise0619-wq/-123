@@ -453,22 +453,46 @@
                     <div style="margin-top:12px;padding:16px 18px;border-radius:14px;background:var(--surface);font-size:14px;color:var(--ink3)">{{ rp.searchEmptyText }}</div>
                   </sc-if>
                 </sc-if>
+                <sc-if value="{{ rp.hasOpts }}">
                 <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
                   <sc-for list="{{ rp.curOpts }}" as="o">
                     <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">
-                      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">{{ o.label }}</span>
+                      <span style="flex:1;min-width:0">
+                        <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span>
+                        <sc-if value="{{ o.hasSub }}">
+                          <span style="display:block;margin-top:3px;font-size:12.5px;font-weight:500;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.sub }}</span>
+                        </sc-if>
+                      </span>
                       <sc-if value="{{ o.on }}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:16px;height:16px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
                       </sc-if>
                     </div>
                   </sc-for>
                 </div>
+                </sc-if>
+
+                <!-- 마지막 질문 — 이메일도 이 카드 안에서 끝낸다 -->
+                <sc-if value="{{ rp.isEmail }}">
+                  <input value="{{ rp.email }}" onChange="{{ rp.onEmail }}" aria-label="리포트를 받을 이메일" maxLength="254" type="email" inputMode="email" placeholder="name@example.com" style="width:100%;margin-top:20px;font-size:16px;font-weight:500;color:var(--ink);background:var(--surface);border:none;border-radius:14px;padding:0 16px;height:52px;outline:none">
+                  <div role="button" tabIndex="0" onClick="{{ rp.toggleAgree }}" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:14px">
+                    <span style="{{ rp.checkStyle }}">
+                      <sc-if value="{{ rp.agreed }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
+                      </sc-if>
+                    </span>
+                    <span style="flex:1;min-width:0;font-size:12.5px;color:var(--ink2);line-height:1.6;text-wrap:pretty">{{ rp.agreeText }}</span>
+                  </div>
+                  <button onClick="{{ rp.emailNext }}" style="{{ rp.emailNextStyle }}" style-hover="filter:brightness(.97)">{{ rp.emailNextLabel }}</button>
+                </sc-if>
+
                 <sc-if value="{{ rp.isMulti }}">
                   <button onClick="{{ rp.multiNext }}" style="width:100%;margin-top:14px;font-size:15.5px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;border-radius:14px;height:50px;cursor:pointer;transition:filter .16s" style-hover="filter:brightness(.97)">{{ rp.multiLabel }}</button>
                 </sc-if>
-                <div style="text-align:center;margin-top:16px">
-                  <span role="button" tabIndex="0" onClick="{{ rp.curSkip }}" style="font-size:13.5px;color:var(--ink3);cursor:pointer;white-space:nowrap">이 질문 건너뛰기</span>
-                </div>
+                <sc-if value="{{ rp.canSkip }}">
+                  <div style="text-align:center;margin-top:16px">
+                    <span role="button" tabIndex="0" onClick="{{ rp.curSkip }}" style="font-size:13.5px;color:var(--ink3);cursor:pointer;white-space:nowrap">이 질문 건너뛰기</span>
+                  </div>
+                </sc-if>
               </div>
             </sc-if>
 
@@ -484,7 +508,9 @@
               </div>
             </sc-if>
 
-            <button onClick="{{ rp.doneGo }}" style="{{ rp.doneStyle }}" style-hover="filter:brightness(.97)">{{ rp.doneCta }}</button>
+            <sc-if value="{{ rp.showDone }}">
+              <button onClick="{{ rp.doneGo }}" style="{{ rp.doneStyle }}" style-hover="filter:brightness(.97)">{{ rp.doneCta }}</button>
+            </sc-if>
           </div>
 
           <!-- 화면 안 리포트 — 결론 하나를 크게, 근거는 아래로 -->
@@ -536,19 +562,6 @@
             </div>
           </sc-if>
 
-          <div>
-            <div style="font-size:13.5px;font-weight:600">리포트를 받을 이메일</div>
-            <input value="{{ rp.email }}" onChange="{{ rp.onEmail }}" aria-label="리포트를 받을 이메일" maxLength="254" type="email" inputMode="email" placeholder="name@example.com" style="width:100%;max-width:360px;margin-top:9px;font-size:15.5px;color:var(--ink);background:var(--surface);border:none;border-radius:12px;padding:0 14px;height:48px;outline:none">
-          </div>
-
-          <div role="button" tabIndex="0" onClick="{{ rp.toggleAgree }}" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;max-width:560px">
-            <span style="{{ rp.checkStyle }}">
-              <sc-if value="{{ rp.agreed }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
-              </sc-if>
-            </span>
-            <span style="flex:1;min-width:0;font-size:12.5px;color:var(--ink2);line-height:1.6;text-wrap:pretty">{{ rp.agreeText }}</span>
-          </div>
         </div>
 
         <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap;max-width:520px">
