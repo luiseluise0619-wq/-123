@@ -538,39 +538,38 @@
               <span style="{{ rp.qsBar }}"></span>
             </div>
 
-            <sc-if value="{{ rp.hasDone }}">
-              <div style="margin-top:8px">
-                <sc-for list="{{ rp.qsDone }}" as="d">
-                  <div role="button" tabIndex="0" onClick="{{ d.edit }}" style="{{ d.style }}" style-hover="opacity:.72">
-                    <span style="flex:1;min-width:0;font-size:13px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.label }}</span>
-                    <span style="{{ d.valStyle }}">{{ d.value }}</span>
-                  </div>
-                </sc-for>
-              </div>
-            </sc-if>
+            <!-- 대화처럼 — 질문은 왼쪽 말풍선, 내 답은 오른쪽 말풍선 -->
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+              <sc-for list="{{ rp.qsDone }}" as="d">
+                <div style="{{ d.askStyle }}">{{ d.label }}</div>
+                <div role="button" tabIndex="0" onClick="{{ d.edit }}" style="{{ d.ansStyle }}" style-hover="filter:brightness(1.08)">{{ d.value }}</div>
+              </sc-for>
 
-            <sc-if value="{{ rp.hasCur }}">
-              <div data-anim="1" style="margin-top:22px">
-                <div style="font-size:19px;font-weight:700;letter-spacing:-0.025em;line-height:1.35;text-wrap:pretty">{{ rp.curQ }}</div>
-                <div style="font-size:13px;color:var(--ink2);margin-top:7px;text-wrap:pretty">{{ rp.curHint }}</div>
-                <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
-                  <sc-for list="{{ rp.curOpts }}" as="o">
-                    <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">
-                      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">{{ o.label }}</span>
-                      <sc-if value="{{ o.on }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:15px;height:15px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
-                      </sc-if>
-                    </div>
-                  </sc-for>
+              <sc-if value="{{ rp.hasCur }}">
+                <div data-anim="1" style="display:flex;flex-direction:column;gap:10px">
+                  <div style="align-self:flex-start;max-width:82%;font-size:15px;font-weight:600;color:var(--ink);background:var(--surface);border-radius:16px 16px 16px 4px;padding:14px 16px;line-height:1.5;text-wrap:pretty">
+                    {{ rp.curQ }}
+                    <div style="font-size:12.5px;font-weight:400;color:var(--ink2);margin-top:5px;text-wrap:pretty">{{ rp.curHint }}</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end;margin-top:2px">
+                    <sc-for list="{{ rp.curOpts }}" as="o">
+                      <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">
+                        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">{{ o.label }}</span>
+                        <sc-if value="{{ o.on }}">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:15px;height:15px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:18px;margin-top:4px">
+                    <sc-if value="{{ rp.hasBack }}">
+                      <span role="button" tabIndex="0" onClick="{{ rp.curBack }}" style="font-size:13px;color:var(--ink2);cursor:pointer;white-space:nowrap">← 이전</span>
+                    </sc-if>
+                    <span role="button" tabIndex="0" onClick="{{ rp.curSkip }}" style="font-size:13px;color:var(--ink3);cursor:pointer;white-space:nowrap">건너뛰기</span>
+                  </div>
                 </div>
-                <div style="display:flex;align-items:center;gap:18px;margin-top:16px">
-                  <sc-if value="{{ rp.hasBack }}">
-                    <span role="button" tabIndex="0" onClick="{{ rp.curBack }}" style="font-size:13.5px;color:var(--ink2);cursor:pointer;white-space:nowrap">← 이전</span>
-                  </sc-if>
-                  <span role="button" tabIndex="0" onClick="{{ rp.curSkip }}" style="font-size:13.5px;color:var(--ink3);cursor:pointer;white-space:nowrap">건너뛰기</span>
-                </div>
-              </div>
-            </sc-if>
+              </sc-if>
+            </div>
 
             <sc-if value="{{ rp.qsAllDone }}">
               <div style="margin-top:16px">
@@ -578,6 +577,50 @@
               </div>
             </sc-if>
           </div>
+
+          <!-- 화면 안 리포트 — 결론 하나를 크게, 근거는 아래로 -->
+          <sc-if value="{{ rp.rv.has }}">
+            <div style="margin-top:10px;padding:30px 26px;border-radius:22px;background:var(--surface)">
+              <div style="font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rp.rv.eyebrow }}</div>
+              <div style="font-size:clamp(38px,7vw,54px);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-top:14px;font-variant-numeric:tabular-nums">{{ rp.rv.bep }}</div>
+              <div style="font-size:15.5px;color:var(--ink2);margin-top:8px;text-wrap:pretty">{{ rp.rv.bepNote }}</div>
+              <div style="{{ rp.rv.verdictStyle }}">{{ rp.rv.verdict }}</div>
+
+              <div style="display:flex;flex-direction:column;gap:16px;margin-top:28px">
+                <sc-for list="{{ rp.rv.bars }}" as="b">
+                  <div>
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                      <span style="font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.label }}</span>
+                      <span style="flex:none;font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ b.value }}</span>
+                    </div>
+                    <span style="display:block;height:10px;border-radius:5px;background:var(--bg);overflow:hidden;margin-top:8px">
+                      <span style="{{ b.bar }}"></span>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="font-size:13.5px;font-weight:700;margin-top:30px">매달 나가는 돈</div>
+              <div style="margin-top:4px">
+                <sc-for list="{{ rp.rv.costs }}" as="c">
+                  <div style="{{ rp.rv.rowStyle }}">
+                    <span style="flex:1;min-width:0;font-size:14.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.label }}</span>
+                    <span style="flex:none;display:flex;align-items:baseline;gap:9px">
+                      <span style="font-size:11.5px;color:var(--ink3);white-space:nowrap">{{ c.tag }}</span>
+                      <span style="font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ c.value }}</span>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="font-size:13.5px;font-weight:700;margin-top:30px">이 리포트가 모르는 것</div>
+              <ul style="margin:10px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:7px">
+                <sc-for list="{{ rp.rv.unknowns }}" as="u">
+                  <li style="font-size:13px;color:var(--ink2);line-height:1.65;text-wrap:pretty">{{ u }}</li>
+                </sc-for>
+              </ul>
+            </div>
+          </sc-if>
 
           <div>
             <div style="font-size:13.5px;font-weight:600">리포트를 받을 이메일</div>

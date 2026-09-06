@@ -1739,11 +1739,13 @@ class Component extends DCLogic {
             const step=Math.max(0,Math.min(
               S.rp_step!=null ? S.rp_step : (firstOpen<0?QS.length:firstOpen), QS.length));
             const go=i=>()=>this.setState({rp_step:i});
-            const optStyle=on=>'display:flex;align-items:center;justify-content:space-between;gap:12px;'
-              +'padding:16px 18px;border-radius:14px;cursor:pointer;font-size:15.5px;'
+            // 고를 것들 — 오른쪽에 붙는 '내가 할 말' 후보. 누르면 그대로 답 말풍선이 된다.
+            const optStyle=on=>'display:inline-flex;align-items:center;justify-content:space-between;gap:10px;'
+              +'max-width:82%;padding:12px 16px;border-radius:16px 16px 4px 16px;cursor:pointer;'
+              +'font-size:14.5px;line-height:1.4;white-space:nowrap;'
               +'transition:background .14s,color .14s;'
-              +(on?'background:var(--accent-3);color:var(--accent);font-weight:600'
-                 :'background:var(--surface);color:var(--ink)');
+              +(on?'background:var(--accent);color:#FFFFFF;font-weight:600'
+                 :'background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-strong)');
             const cur=step<QS.length?QS[step]:null;
             return {
               qsTitle: cur?'몇 가지만 여쭤볼게요':'조건을 다 알려주셨어요',
@@ -1755,14 +1757,19 @@ class Component extends DCLogic {
               qsBar: 'display:block;height:100%;border-radius:2px;background:var(--accent);'
                 +'transition:width .3s cubic-bezier(.22,.7,.25,1);width:'
                 +Math.round(step/QS.length*100)+'%',
-              // 이미 답한 것 — 위로 접혀 쌓인다. 누르면 그 질문으로 돌아간다.
+              // 이미 답한 것 — 대화처럼 쌓인다. 질문은 왼쪽, 내 답은 오른쪽.
+              // 답 버블을 누르면 그 질문으로 돌아가 고칠 수 있다.
               qsDone: QS.slice(0,step).map((q,i)=>({
                 label:q.q, value:val(q.k)||'건너뜀',
                 edit:go(i),
-                style:'display:flex;align-items:baseline;justify-content:space-between;gap:14px;'
-                  +'padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;min-width:0',
-                valStyle:'flex:none;font-size:14.5px;font-weight:600;'
-                  +(val(q.k)?'color:var(--ink)':'color:var(--ink3)')
+                askStyle:'align-self:flex-start;max-width:82%;font-size:14px;color:var(--ink2);'
+                  +'background:var(--surface);border-radius:16px 16px 16px 4px;padding:11px 15px;'
+                  +'line-height:1.5;text-wrap:pretty',
+                ansStyle:'align-self:flex-end;max-width:82%;font-size:14.5px;font-weight:600;'
+                  +'border-radius:16px 16px 4px 16px;padding:11px 15px;cursor:pointer;'
+                  +'line-height:1.5;white-space:nowrap;transition:filter .14s;'
+                  +(val(q.k)?'background:var(--accent);color:#FFFFFF'
+                            :'background:var(--surface);color:var(--ink3)')
               })),
               hasDone: step>0,
               // 지금 묻는 것 하나
@@ -1876,6 +1883,59 @@ class Component extends DCLogic {
             setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },0);
           },
           // 인쇄용 한 장으로 넘긴다. 값은 지금 화면에서 계산된 것만 담는다.
+          // ── 화면 안에서 바로 보는 리포트 ───────────────────────────────
+          // 예전에는 리포트를 보려면 다른 페이지(report-print.html)로 나가야 했다.
+          // 조건을 바꿀 때마다 나갔다 들어와야 하니 아무도 안 봤다.
+          // 결론(본전선) 하나를 크게 먼저 보여주고, 근거를 아래로 쌓는다.
+          rv:(()=>{
+            const sel=reportSelection;
+            if(!sel) return {has:false, empty:true};
+            const c=this.calc(sel);
+            const over=c.rev>=c.bep;                     // 예상 매출이 본전선을 넘나
+            const gap=Math.abs(c.rev-c.bep);
+            const mx=Math.max(c.rev,c.bep,1);
+            return {
+              has:true, empty:false,
+              eyebrow:this.indName(S.ind)+' · '+this.zoneLabelOf(sel.name)
+                +(S.zi?' · '+this.qtr(S.zi.quarter):''),
+              // 결론 한 줄 — 큰 숫자는 '한 달에 얼마를 팔아야 하는가'다
+              bep:this.man(c.bep),
+              bepNote:'한 달에 이만큼 팔면 본전이에요',
+              // 판정 — 넘는지 모자라는지. 색으로 바로 읽히게.
+              verdict:over
+                ? '예상 매출이 본전선을 '+this.man(gap)+' 넘어요'
+                : '예상 매출이 본전선에 '+this.man(gap)+' 모자라요',
+              verdictStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;'
+                +'padding:8px 14px;border-radius:999px;margin-top:16px;white-space:nowrap;'
+                +(over?'background:var(--strong-soft,var(--accent-3));color:var(--good)'
+                      :'background:var(--surface);color:var(--warn)'),
+              // 두 막대를 같은 자로 재서 나란히 — 길이 비교가 곧 판정이다
+              bars:[
+                {label:'월 본전선', value:this.man(c.bep),
+                 bar:'display:block;height:100%;border-radius:5px;background:var(--ink3);width:'
+                   +(c.bep/mx*100).toFixed(1)+'%'},
+                {label:'월매출 가정 ('+S.scen+')', value:this.man(c.rev),
+                 bar:'display:block;height:100%;border-radius:5px;width:'+(c.rev/mx*100).toFixed(1)+'%;'
+                   +'background:'+(over?'var(--good)':'var(--warn)')}
+              ],
+              // 고정비 내역 — 어디로 나가는지
+              costs:[
+                {label:'월 임대료', value:(S.rent||0).toLocaleString()+'만원', tag:c.rent?'입력값':'기본 가정'},
+                {label:'인건비',   value:this.man(c.labor), tag:c.staffAuto?'평수로 추정':'입력값'},
+                {label:'그 외 고정비', value:this.man(c.etc), tag:c.etcAuto?'평수로 추정':'입력값'},
+                {label:'원가율',   value:(S.cogs||0)+'%', tag:'기본 가정 · 수정 가능'}
+              ],
+              // 이 리포트가 모르는 것 — 정직하게 남긴다
+              unknowns:[
+                '이 동네의 실제 임대료. 상가 임대차는 신고 의무가 없어 공개되지 않아요.',
+                '내가 낼 가게의 매출. 화면의 매출은 동네 전체를 가게 수로 나눈 평균이에요.',
+                '권리금·인테리어·초기 재고. 자리마다 달라 계산에 넣지 않았어요.'
+              ],
+              rowStyle:'display:flex;align-items:baseline;justify-content:space-between;gap:14px;'
+                +'padding:13px 0;border-bottom:1px solid var(--line)'
+            };
+          })(),
+
           preview:()=>{try{const payload=buildReport();sessionStorage.setItem('mysbizon.report',JSON.stringify(payload));const restore=Object.fromEntries(['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen','picks'].map(k=>[k,S[k]]));sessionStorage.setItem('mysbizon.return',JSON.stringify(restore));location.href='report-print.html';}catch{this.setState({rp_error:'브라우저 저장 공간을 사용할 수 없습니다. CSV 저장을 이용해 주세요.'});}},
           submit:async()=>{
             if(!enabled||!ok||sent||sending||this._reportSending)return;
