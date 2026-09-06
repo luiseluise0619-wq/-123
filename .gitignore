@@ -4,3 +4,7 @@ node_modules/
 !.env.example
 *.log
 .DS_Store
+
+# 파이썬 캐시 — 실행하면 자동 생성된다. 커밋 대상이 아니다.
+__pycache__/
+*.pyc
