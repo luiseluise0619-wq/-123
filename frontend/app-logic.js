@@ -992,7 +992,7 @@ class Component extends DCLogic {
         .sort((a,b)=>a.label.localeCompare(b.label,'ko')),
       onIndSel:e=>this.setState({ind:e.target.value,sel:null,picks:null,fromRegion:false}),
       onReport:S.screen==='report',
-      onPrice:S.screen==='price',
+      onPrice:S.screen==='price', mk:this.marketView(),
       pr:this.priceView(),
       onFineIntro:S.screen==='fineIntro',
       fi:{
@@ -1308,7 +1308,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['util','design','rank','analysis','screens','chat','charts','carousel','sim','views']) {
+for (const name of ['util','design','rank','analysis','screens','chat','charts','carousel','sim','market','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {

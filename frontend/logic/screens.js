@@ -717,7 +717,9 @@ globalThis.MysbizonParts.screens = {
   // 여러 개를 동시에 켜 두면 무엇을 보는 화면인지 흐려진다(§16).
   priceView(){
     const S=this.state;
-    const cat=S.prCat||'rent';
+    // 시장동향에서 고른 지표가 우리 자료로 그릴 수 있는 것이면 그것을 따른다.
+    // (환율·농산물처럼 아직 연결 안 된 지표는 여기 오지 않고 '준비 중' 카드가 뜬다.)
+    const cat=(S.mkSel && PRICE_CATS.some(c=>c.k===S.mkSel)) ? S.mkSel : (S.prCat||'rent');
     const meta=PRICE_CATS.find(c=>c.k===cat)||PRICE_CATS[0];
     const R=S.rentStats, HI=S.salesHistory, ST=S.sti, IC=S.income;
     const out={
@@ -966,7 +968,8 @@ globalThis.MysbizonParts.screens = {
     out.charts=C; out.hasCharts=C.length>0;
     out.hasList=out.list.length>0;
     // 차트가 많으면 가로로 넘겨 본다
-    out.rail=this.rail('price', {per:2});
+    // 한 화면에 차트 하나. 옆으로 넘겨 다음 질문으로 간다(§8·§21)
+    out.rail=this.rail('price', {per:1});
     return out;
   }
 };
