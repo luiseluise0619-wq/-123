@@ -1,10 +1,11 @@
-    <!-- 지역비교 (자치구) -->
+    <!-- 지역비교 — 자치구 카드는 가로로 넘겨 보고, 고른 구가 아래 차트에 반영된다 -->
     <sc-if value="{{ onZoneCmp }}">
-      <section class="u-sec-lg">
+      <section class="u-sec">
         <div class="u-lab">자치구 비교</div>
-        <h1 style="font-size:clamp(22px,3.4vw,34px);font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin:10px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ zc.lead }}</h1>
+        <h1 style="{{ ds1 }}; margin-top:10px">{{ zc.lead }}</h1>
+        <p style="{{ dsBody }}; margin-top:10px;max-width:700px">{{ zc.sub }}</p>
 
-        <div style="margin-top:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="margin-top:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span class="u-lab">업종</span>
           <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o">
@@ -12,45 +13,126 @@
             </sc-for>
           </select>
         </div>
+      </section>
 
-        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:34px">
-          <span style="font-size:15px;font-weight:600;white-space:nowrap">자치구별로 보기</span>
-          <span style="font-size:12.5px;color:var(--ink3);white-space:nowrap">{{ zc.medNote }}</span>
+      <!-- 자치구 카드 — 가로 슬라이드 -->
+      <section style="padding:24px 0 0">
+        <div class="u-between">
+          <h2 style="{{ ds3 }}">자치구별로 보기</h2>
+          <span style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11.5px;color:var(--ink3);text-align:right;text-wrap:pretty">{{ zc.medNote }}</span>
+            <sc-if value="{{ zc.rail.arrows }}">
+              <span style="display:flex;gap:8px">
+                <span role="button" tabIndex="0" aria-label="이전 자치구" onClick="{{ zc.rail.prev }}" style="{{ zc.rail.arrowStyle }}" style-hover="background:var(--line-strong)">←</span>
+                <span role="button" tabIndex="0" aria-label="다음 자치구" onClick="{{ zc.rail.next }}" style="{{ zc.rail.arrowStyle }}" style-hover="background:var(--line-strong)">→</span>
+              </span>
+            </sc-if>
+          </span>
         </div>
-        <div style="{{ zc.cardsWrap }}">
+        <div data-rail="zc" style="{{ zc.rail.trackStyle }}">
           <sc-for list="{{ zc.cards }}" as="c">
-            <div style="{{ c.style }}">
-              <div style="display:flex;align-items:baseline;gap:8px">
-                <span style="font-size:11.5px;font-weight:700;color:var(--ink3);font-variant-numeric:tabular-nums">{{ c.rank }}</span>
-                <span style="flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.gu }}</span>
-              </div>
-              <div style="font-size:26px;font-weight:700;letter-spacing:-0.03em;margin-top:14px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ c.per }}</div>
-              <div class="u-note-t">가게 한 곳당 월매출 (추정)</div>
-              <div style="position:relative;height:6px;border-radius:3px;background:var(--bg);margin-top:12px">
-                <span style="display:block;height:100%;border-radius:3px;overflow:hidden"><span style="{{ c.bar }}"></span></span>
-                <span style="{{ zc.medLine }}"></span>
-              </div>
-              <div style="font-size:12.5px;font-weight:600;color:var(--accent);margin-top:10px;text-wrap:pretty">{{ c.verdict }}</div>
-              <div style="display:flex;flex-direction:column;gap:9px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
-                <sc-for list="{{ c.facts }}" as="f">
-                  <div class="u-min">
-                    <div style="display:flex;align-items:baseline;gap:10px">
-                      <span style="flex:1;min-width:0;font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.label }}</span>
-                      <span style="flex:none;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap">{{ f.value }}</span>
+            <div style="{{ zc.rail.itemStyle }}">
+              <div role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="transform:translateY(-2px);box-shadow:var(--shadow-pop)">
+                <div style="display:flex;align-items:baseline;gap:8px">
+                  <span style="flex:none;font-size:11.5px;font-weight:700;color:var(--ink3);font-variant-numeric:tabular-nums">{{ c.rank }}</span>
+                  <span style="flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.gu }}</span>
+                </div>
+                <div style="{{ dsNumSm }}; margin-top:12px">{{ c.per }}</div>
+                <div class="u-note-t">가게 한 곳당 월매출 (추정)</div>
+                <div style="position:relative;height:6px;border-radius:3px;background:var(--surface);margin-top:12px">
+                  <span style="display:block;height:100%;border-radius:3px;overflow:hidden"><span style="{{ c.bar }}"></span></span>
+                  <span style="{{ zc.medLine }}"></span>
+                </div>
+                <div style="font-size:12.5px;font-weight:600;color:var(--accent);margin-top:10px;text-wrap:pretty">{{ c.verdict }}</div>
+                <div style="display:flex;flex-direction:column;gap:9px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
+                  <sc-for list="{{ c.facts }}" as="f">
+                    <div style="min-width:0">
+                      <div style="display:flex;align-items:baseline;gap:10px">
+                        <span class="u-fill-e" style="font-size:12.5px;color:var(--ink2)">{{ f.label }}</span>
+                        <span style="flex:none;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap">{{ f.value }}</span>
+                      </div>
+                      <sc-if value="{{ f.tag }}">
+                        <div style="font-size:11.5px;color:var(--ink3);margin-top:3px;text-wrap:pretty">{{ f.tag }}</div>
+                      </sc-if>
                     </div>
-                    <sc-if value="{{ f.tag }}">
-                      <div style="font-size:11.5px;color:var(--ink3);margin-top:3px;text-wrap:pretty">{{ f.tag }}</div>
-                    </sc-if>
-                  </div>
-                </sc-for>
+                  </sc-for>
+                </div>
               </div>
             </div>
           </sc-for>
         </div>
+      </section>
 
-        <div style="margin-top:36px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-          <button onClick="{{ goFind }}" style="{{ ctaPrimary }}">동네까지 좁혀 보기</button>
+      <!-- 차트 — 서로 다른 질문 넷. 옆으로 넘겨 본다 -->
+      <sc-if value="{{ zc.hasCharts }}">
+        <section style="padding:32px 0 0">
+          <div class="u-between">
+            <h2 style="{{ ds3 }}">{{ zc.picked }} 기준으로 견주기</h2>
+            <sc-if value="{{ zc.chartRail.arrows }}">
+              <span style="display:flex;gap:8px">
+                <span role="button" tabIndex="0" aria-label="이전 차트" onClick="{{ zc.chartRail.prev }}" style="{{ zc.chartRail.arrowStyle }}" style-hover="background:var(--line-strong)">←</span>
+                <span role="button" tabIndex="0" aria-label="다음 차트" onClick="{{ zc.chartRail.next }}" style="{{ zc.chartRail.arrowStyle }}" style-hover="background:var(--line-strong)">→</span>
+              </span>
+            </sc-if>
+          </div>
+          <div data-rail="zcc" style="{{ zc.chartRail.trackStyle }}">
+            <sc-for list="{{ zc.charts }}" as="c">
+              <div style="{{ zc.chartRail.itemStyle }}">
+                <div style="{{ c.style }}">
+                  <div style="font-size:15px;font-weight:700">{{ c.title }}</div>
+                  <sc-if value="{{ c.hasSub }}">
+                    <div class="u-note-t">{{ c.sub }}</div>
+                  </sc-if>
+                  <div style="position:relative;margin-top:14px;height:{{ c.height }}">
+                    <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
+                  </div>
+                  <sc-if value="{{ c.hasPeriod }}">
+                    <div class="u-note" style="margin-top:10px">기준 {{ c.period }}</div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- 전체 목록은 눌렀을 때만 -->
+      <section style="padding:28px 0 0">
+        <span role="button" tabIndex="0" onClick="{{ zc.toggleAll }}" style="{{ dsGhost }}; display:inline-flex;align-items:center">{{ zc.allLabel }}</span>
+        <sc-if value="{{ zc.hasList }}">
+          <div style="margin-top:16px;max-width:860px">
+            <sc-for list="{{ zc.rows }}" as="r">
+              <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="{{ r.row }}" style-hover="background:var(--surface)">
+                <span style="flex:none;width:24px;font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums">{{ r.rank }}</span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+                  <span style="font-size:15.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.gu }}</span>
+                  <span style="display:block;height:5px;border-radius:3px;background:var(--surface);overflow:hidden">
+                    <span style="{{ r.bar }}"></span>
+                  </span>
+                  <span class="u-note">상권 {{ r.zones }} · 점포 {{ r.stores }}</span>
+                </span>
+                <span style="flex:none;width:104px;text-align:right;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.per }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="margin-top:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <button onClick="{{ goFind }}" style="{{ dsCta }}" style-hover="filter:brightness(1.06)">동네까지 좁혀 보기</button>
         </div>
-        <p style="font-size:12.5px;color:var(--ink3);margin:32px 0 0;max-width:660px;text-wrap:pretty">{{ zc.note }}</p>
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;max-width:860px;margin-top:24px">
+          <span style="{{ zc.note.lineStyle }}">ⓘ {{ zc.note.line }}</span>
+          <span role="button" tabIndex="0" onClick="{{ zc.note.toggle }}" style="{{ zc.note.btnStyle }}">{{ zc.note.label }}</span>
+        </div>
+        <sc-if value="{{ zc.note.open }}">
+          <div style="{{ dsCard }}; margin-top:12px;max-width:860px">
+            <sc-for list="{{ zc.note.rows }}" as="n">
+              <div style="padding:8px 0">
+                <div style="font-size:13px;font-weight:700">{{ n.label }}</div>
+                <div style="{{ dsSub }}; margin-top:3px">{{ n.body }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
       </section>
     </sc-if>

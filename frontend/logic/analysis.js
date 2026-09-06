@@ -30,6 +30,191 @@ globalThis.MysbizonParts.analysis = {
     this._rankCache={zi,ind,value};return value;
   },
 
+  // ── 정밀분석 차트 ──────────────────────────────────────────────
+  // 메뉴 하나를 고르면 그 주제의 차트 2~4개가 나온다(§7~§14).
+  // 없는 데이터로는 만들지 않는다 — 시간대별·요일별 원자료가 없어 그 둘은 비워 두고 그렇다고 적는다.
+  mvCharts(key, sel, L){
+    const S=this.state;
+    const C=[];
+    const push=(id,opt)=>{ const c=this.chartCard(id,opt); if(c) C.push(c); };
+    const missing=[];
+    const zgu=S.zgu||{}, zlp=S.zlp||{};
+    const gu=zgu[sel.id]||'';
+    const inGu=L.filter(o=>zgu[o.id]===gu);
+    const nameOf=o=>this.zoneLabelOf(o.name);
+    const q=this.qtr(S.zi&&S.zi.quarter);
+    const me=nameOf(sel);
+
+    if(key==='sales'){
+      // ① 이 업종의 서울 전체 매출 추이 — 시장이 크고 있는지
+      const HI=S.salesHistory;
+      if(HI&&HI.ind&&HI.ind[S.ind]){
+        const qs=HI.quarters;
+        push('mv-sales-trend',{type:'line', title:this.indName(S.ind)+' 매출 추이',
+          sub:'서울 전체 분기 매출 · 시장이 크고 있는지', unit:'원',
+          period:this.qtr(qs[0])+' ~ '+this.qtr(qs[qs.length-1]), height:230,
+          labels:qs.map(x=>String(x).slice(0,4)+'.'+String(x).slice(4)+'Q'),
+          datasets:[{label:this.indName(S.ind), data:qs.map(x=>HI.ind[S.ind][x]??null)}]});
+      }
+      // ② 이 상권이 자치구 안에서 어디쯤인지
+      if(inGu.length>1){
+        const top=inGu.slice().sort((a,b)=>b.per-a.per).slice(0,12);
+        push('mv-sales-gu',{type:'hbar', title:gu+' 안에서 이 상권의 위치',
+          sub:'가게 한 곳당 월매출 (추정)', unit:'원', period:q+' 기준', height:280,
+          labels:top.map(nameOf),
+          datasets:[{label:'가게 한 곳당 월매출', data:top.map(o=>Math.round(o.per/3)),
+            colors:top.map(o=>o.id===sel.id?'on':'')}]});
+      }
+      // ③ 이 자리에서 다른 업종은 얼마나 파는지
+      const z=S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
+      if(z&&z.rows){
+        const rows=z.rows.filter(r=>r[1]&&r[2]).map(r=>({n:S.zi.inds[r[0]], per:r[2]/r[1]}))
+          .sort((a,b)=>b.per-a.per).slice(0,12);
+        push('mv-sales-near',{type:'hbar', title:'이 자리 · 업종별 매출',
+          sub:'같은 자리에서 다른 장사는 얼마나 파는지', unit:'원', period:q+' 기준', height:280,
+          labels:rows.map(o=>this.indName(o.n)),
+          datasets:[{label:'가게 한 곳당 월매출', data:rows.map(o=>Math.round(o.per/3)),
+            colors:rows.map(o=>o.n===S.ind?'on':'')}]});
+      }
+      missing.push('시간대별·요일별 매출은 공개 자료에 없어 아직 보여드리지 못해요.');
+    }
+
+    else if(key==='demand'){
+      const lp=zlp[sel.id];
+      if(lp&&Array.isArray(lp.age)&&lp.age.length===6){
+        push('mv-age',{type:'bar', title:'연령대별 유동인구', sub:lp.dong+' 행정동 하루 기준',
+          unit:'명', period:q+' 기준', height:230,
+          labels:['10대','20대','30대','40대','50대','60대+'],
+          datasets:[{label:'하루 유동인구', data:lp.age.map(v=>Math.round(v))}]});
+      }
+      if(lp&&isFinite(lp.m)&&isFinite(lp.f)){
+        push('mv-sex',{type:'doughnut', title:'성별 구성', sub:lp.dong+' 행정동',
+          unit:'명', period:q+' 기준', height:230,
+          labels:['여성','남성'], datasets:[{label:'하루 유동인구', data:[Math.round(lp.f),Math.round(lp.m)]}]});
+      }
+      // 자치구 안 상권끼리 유동인구 견주기
+      const withPop=inGu.map(o=>({o, v:(zlp[o.id]||{}).tot})).filter(x=>isFinite(x.v))
+        .sort((a,b)=>b.v-a.v).slice(0,12);
+      if(withPop.length>1){
+        push('mv-pop-gu',{type:'hbar', title:gu+' 상권별 유동인구', sub:'하루 유동인구가 많은 순',
+          unit:'명', period:q+' 기준', height:280,
+          labels:withPop.map(x=>nameOf(x.o)),
+          datasets:[{label:'하루 유동인구', data:withPop.map(x=>Math.round(x.v)),
+            colors:withPop.map(x=>x.o.id===sel.id?'on':'')}]});
+      }
+      missing.push('시간대별·요일별 유동인구는 공개 자료에 없어 아직 보여드리지 못해요.');
+    }
+
+    else if(key==='comp'){
+      if(inGu.length>1){
+        const top=inGu.slice().sort((a,b)=>b.stores-a.stores).slice(0,12);
+        push('mv-comp-gu',{type:'hbar', title:gu+' 상권별 경쟁 점포 수',
+          sub:'같은 업종 점포가 많은 순 · 적을수록 유리', unit:'곳', period:q+' 기준', height:280,
+          labels:top.map(nameOf),
+          datasets:[{label:'같은 업종 점포 수', data:top.map(o=>o.stores),
+            colors:top.map(o=>o.id===sel.id?'on':'warn')}]});
+      }
+      const ST=S.sti;
+      if(ST&&ST.ind&&ST.ind[S.ind]){
+        const r=ST.ind[S.ind];
+        push('mv-churn',{type:'bar', title:this.indName(S.ind)+' 개업 · 폐업',
+          sub:'서울 전체 3개월', unit:'곳', period:this.qtr(ST.quarter)+' 기준', height:230,
+          labels:['새로 연 곳','문 닫은 곳'],
+          datasets:[{label:'점포 수', data:[r.opened, r.closed], colors:['on','warn']}]});
+        const rows=Object.keys(ST.ind).map(n=>({n, v:ST.ind[n].close_rate}))
+          .filter(o=>isFinite(o.v)).sort((a,b)=>b.v-a.v).slice(0,12);
+        push('mv-close-rate',{type:'hbar', title:'업종별 폐업률', sub:'전체 점포 대비 폐업 비율',
+          unit:'%', period:this.qtr(ST.quarter)+' 기준', height:280,
+          labels:rows.map(o=>this.indName(o.n)),
+          datasets:[{label:'폐업률', data:rows.map(o=>o.v),
+            colors:rows.map(o=>o.n===S.ind?'on':'warn')}]});
+      }
+      missing.push('상권 단위 점포 수 시계열은 아직 없어 최근 분기 값만 보여드려요.');
+    }
+
+    else if(key==='cost'){
+      const R=S.rentStats;
+      if(R&&R.quarters&&R.zones){
+        const qs=R.quarters, zs=Object.values(R.zones);
+        const norm=t=>String(t||'').replace(/\s|·|\(.*?\)/g,'');
+        const hitZ=zs.find(z=>{const n=norm(z.nm); return n && norm(me).indexOf(n)>=0;});
+        const base=hitZ||R.seoul;
+        const who=hitZ? hitZ.nm+' 기준' : '권역 참고값 · 이 상권 값은 아니에요';
+        if(base&&base.rent_trend){
+          push('mv-rent',{type:'line', title:'상가 임대료 추이', sub:who, unit:'만원',
+            period:qs[0]+' ~ '+qs[qs.length-1], height:230,
+            labels:qs.map(x=>x.replace('년 ','.').replace('분기','Q')),
+            datasets:[{label:'㎡당 월 임대료', data:base.rent_trend}]});
+        }
+        if(base&&base.vacancy_trend){
+          push('mv-vac',{type:'line', title:'빈 상가 비율 추이', sub:who, unit:'%',
+            period:qs[0]+' ~ '+qs[qs.length-1], height:230,
+            labels:qs.map(x=>x.replace('년 ','.').replace('분기','Q')),
+            datasets:[{label:'빈 상가 비율', data:base.vacancy_trend}]});
+        }
+        const rank=zs.filter(o=>isFinite(o.rent)).sort((a,b)=>b.rent-a.rent).slice(0,12);
+        push('mv-rent-rank',{type:'hbar', title:'상권별 임대료 비교', sub:'조사 상권 중 높은 순 12곳',
+          unit:'만원', period:qs[qs.length-1]+' 기준', height:280,
+          labels:rank.map(o=>o.nm),
+          datasets:[{label:'㎡당 월 임대료', data:rank.map(o=>o.rent),
+            colors:rank.map(o=>(hitZ&&o.nm===hitZ.nm)?'on':'')}]});
+        if(!hitZ) missing.push('이 상권은 임대료 조사 대상이 아니라 권역 참고값을 보여드려요.');
+      } else missing.push('임대료 자료를 아직 불러오지 못했어요.');
+      missing.push('권리금·인테리어 비용은 공개 통계에 없어요.');
+    }
+
+    else if(key==='nearby'){
+      const z=S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
+      if(z&&z.rows){
+        const rows=z.rows.filter(r=>r[1]&&r[2]).map(r=>({n:S.zi.inds[r[0]], st:r[1], per:r[2]/r[1]}));
+        const byStore=rows.slice().sort((a,b)=>b.st-a.st).slice(0,12);
+        push('mv-near-store',{type:'hbar', title:'이 자리 · 업종별 점포 수',
+          sub:'어떤 장사가 많은 자리인지', unit:'곳', period:q+' 기준', height:280,
+          labels:byStore.map(o=>this.indName(o.n)),
+          datasets:[{label:'점포 수', data:byStore.map(o=>o.st),
+            colors:byStore.map(o=>o.n===S.ind?'on':'')}]});
+        const byPer=rows.slice().sort((a,b)=>b.per-a.per).slice(0,12);
+        push('mv-near-per',{type:'hbar', title:'이 자리 · 업종별 매출',
+          sub:'가게 한 곳당 월매출 (추정)', unit:'원', period:q+' 기준', height:280,
+          labels:byPer.map(o=>this.indName(o.n)),
+          datasets:[{label:'가게 한 곳당 월매출', data:byPer.map(o=>Math.round(o.per/3)),
+            colors:byPer.map(o=>o.n===S.ind?'on':'')}]});
+      }
+    }
+
+    else if(key==='market'){
+      const IC=S.income;
+      if(IC&&IC.gu&&IC.gu[gu]&&IC.gu[gu].spend){
+        const sp=IC.gu[gu].spend.slice().sort((a,b)=>b.pct-a.pct);
+        push('mv-spend',{type:'doughnut', title:gu+' 소비 구성', sub:'가구 지출에서 차지하는 비율',
+          unit:'%', period:this.qtr(IC.quarter)+' 기준', height:260,
+          labels:sp.map(o=>o.name), datasets:[{label:'비율', data:sp.map(o=>o.pct)}]});
+      }
+      const ST=S.sti;
+      if(ST&&ST.ind){
+        const rows=Object.keys(ST.ind).map(n=>({n, v:(ST.ind[n].opened-ST.ind[n].closed)}))
+          .filter(o=>isFinite(o.v)).sort((a,b)=>b.v-a.v);
+        const show=[...rows.slice(0,6), ...rows.slice(-6)];
+        push('mv-net',{type:'hbar', title:'가게가 느는 업종 · 주는 업종',
+          sub:'새로 연 곳 − 문 닫은 곳 · 서울 전체', unit:'곳',
+          period:this.qtr(ST.quarter)+' · 3개월', height:300,
+          labels:show.map(o=>this.indName(o.n)),
+          datasets:[{label:'순증감', data:show.map(o=>o.v),
+            colors:show.map(o=>o.v>=0?'on':'warn')}]});
+        const fr=Object.keys(ST.ind).map(n=>({n, v:ST.ind[n].fr_share}))
+          .filter(o=>isFinite(o.v)).sort((a,b)=>b.v-a.v).slice(0,12);
+        push('mv-fr',{type:'hbar', title:'업종별 프랜차이즈 비중',
+          sub:'개인 가게가 브랜드와 바로 부딪히는 정도', unit:'%',
+          period:this.qtr(ST.quarter)+' 기준', height:280,
+          labels:fr.map(o=>this.indName(o.n)),
+          datasets:[{label:'프랜차이즈 비중', data:fr.map(o=>o.v),
+            colors:fr.map(o=>o.n===S.ind?'on':'')}]});
+      }
+    }
+
+    return {charts:C, missing:missing};
+  },
+
   // 평수 하나로 직원 수와 운영비가 같이 움직인다.
   // 기준: 10평당 1명, 평당 6만원 — 우리가 정한 값이고 공표 통계가 아니다.
   // 임대료는 상권별 평당 시세가 공개되지 않아 연동하지 않는다(직접 입력).

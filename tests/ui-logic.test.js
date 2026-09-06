@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 // 브라우저는 index.html 의 <script> 순서대로 조각들을 먼저 읽고 app-logic.js 를 읽는다.
 // 테스트도 같은 순서로 읽어야 실제와 같은 상태가 된다.
-const LOGIC_PARTS=['const','util','design','analysis','screens','chat','views'];
+const LOGIC_PARTS=['const','util','design','analysis','screens','chat','charts','carousel','views'];
 
 function component() {
   const read=rel=>fs.readFileSync(new URL(rel,import.meta.url),'utf8');

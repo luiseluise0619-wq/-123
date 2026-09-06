@@ -1,10 +1,10 @@
-    <!-- 비교 -->
+    <!-- 비교분석 — 검색이 중심. 담은 상권은 가로로 넘겨 보고, 아래에서 차트로 견준다. -->
     <sc-if value="{{ onCmp }}">
       <section class="u-sec">
         <h1 style="{{ ds1 }}">{{ c.headline }}</h1>
         <p style="{{ dsBody }}; margin-top:10px;max-width:640px">{{ c.sub }}</p>
 
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:22px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px">
           <span class="u-lab">업종</span>
           <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o">
@@ -14,30 +14,77 @@
         </div>
       </section>
 
-      <!-- 담기는 이 화면 안에서 끝난다. 다른 화면으로 보내면 어디 있는지 잃는다. -->
-      <section style="padding:24px 0 0">
+      <!-- ① 검색 -->
+      <section style="padding:22px 0 0">
         <div style="{{ dsCard }}">
-          <div class="u-h">비교할 상권 담기</div>
-          <p style="{{ dsSub }}; margin-top:6px">상권 이름이나 구 이름을 쳐서 찾을 수 있어요. 최대 3곳.</p>
-          <input value="{{ c.add.q }}" onChange="{{ c.add.onQ }}" maxLength="40" aria-label="비교할 상권 찾기" placeholder="상권 이름 또는 구 (예: 역삼, 마포구)" style="{{ dsInput }}; margin-top:14px;max-width:420px">
+          <div class="u-h">비교할 상권 검색</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;max-width:460px">
+            <span style="position:relative;flex:1;min-width:0;display:block">
+              <input value="{{ c.add.q }}" onChange="{{ c.add.onQ }}" onKeyDown="{{ c.add.onKey }}" maxLength="40" aria-label="비교할 상권 검색" placeholder="상권·구·동 이름 (예: 역삼)" style="{{ dsInput }}; padding-right:44px">
+              <sc-if value="{{ c.add.hasQ }}">
+                <span role="button" tabIndex="0" aria-label="검색어 지우기" onClick="{{ c.add.clear }}" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;background:var(--line);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px">×</span>
+              </sc-if>
+            </span>
+          </div>
           <sc-if value="{{ c.add.full }}">
             <p style="font-size:13.5px;font-weight:600;color:var(--accent);margin-top:12px">{{ c.add.fullText }}</p>
           </sc-if>
-          <sc-if value="{{ c.add.hasItems }}">
-            <div style="{{ dsGrid3 }}; margin-top:14px">
-              <sc-for list="{{ c.add.items }}" as="a">
-                <div role="button" tabIndex="0" onClick="{{ a.add }}" style="{{ a.style }}" style-hover="background:var(--line)">
-                  <span class="u-fill">
-                    <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
-                    <span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
-                  </span>
-                  <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent)">+ 담기</span>
+
+          <!-- 검색 결과 -->
+          <sc-if value="{{ c.add.hasFound }}">
+            <div class="u-note" style="margin-top:16px">검색 결과 — 누르면 담깁니다 (Enter 는 첫 번째)</div>
+            <div data-rail="cmpFound" style="{{ c.add.foundRail.trackStyle }}">
+              <sc-for list="{{ c.add.found }}" as="a">
+                <div style="{{ c.add.foundRail.itemStyle }}">
+                  <div role="button" tabIndex="0" onClick="{{ a.add }}" style="{{ a.style }}" style-hover="background:var(--line)">
+                    <span class="u-fill">
+                      <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
+                      <span class="u-note" style="display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
+                    </span>
+                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent)">+ 담기</span>
+                  </div>
                 </div>
               </sc-for>
             </div>
           </sc-if>
-          <sc-if value="{{ c.add.emptyText }}">
-            <p style="{{ dsSub }}; margin-top:12px">{{ c.add.emptyText }}</p>
+          <sc-if value="{{ c.add.noResult }}">
+            <div style="margin-top:14px;padding:16px 18px;border-radius:var(--r-sm);background:var(--surface);font-size:14px;color:var(--ink2)">{{ c.add.noResultText }}</div>
+          </sc-if>
+
+          <!-- 최근 본 상권 -->
+          <sc-if value="{{ c.add.hasRecent }}">
+            <div class="u-note" style="margin-top:18px">최근 본 상권</div>
+            <div data-rail="cmpRecent" style="{{ c.add.recentRail.trackStyle }}">
+              <sc-for list="{{ c.add.recent }}" as="a">
+                <div style="{{ c.add.recentRail.itemStyle }}">
+                  <div role="button" tabIndex="0" onClick="{{ a.add }}" style="{{ a.style }}" style-hover="background:var(--line)">
+                    <span class="u-fill">
+                      <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
+                      <span class="u-note" style="display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
+                    </span>
+                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent)">+ 담기</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- 추천 상권 (검색 전에만 보조로) -->
+          <sc-if value="{{ c.add.hasSuggest }}">
+            <div class="u-note" style="margin-top:18px">추천 상권</div>
+            <div data-rail="cmpSug" style="{{ c.add.suggestRail.trackStyle }}">
+              <sc-for list="{{ c.add.suggest }}" as="a">
+                <div style="{{ c.add.suggestRail.itemStyle }}">
+                  <div role="button" tabIndex="0" onClick="{{ a.add }}" style="{{ a.style }}" style-hover="background:var(--line)">
+                    <span class="u-fill">
+                      <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
+                      <span class="u-note" style="display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
+                    </span>
+                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent)">+ 담기</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
           </sc-if>
         </div>
       </section>
@@ -50,63 +97,110 @@
         </sc-if>
       </sc-if>
 
-      <sc-if value="{{ c.on }}">
-        <!-- 결론 먼저 -->
-        <sc-if value="{{ c.hasVerdict }}">
-          <section style="padding:26px 0 0">
-            <div style="{{ dsCardHi }}">
-              <div style="font-size:18px;font-weight:700;line-height:1.45;text-wrap:pretty">{{ c.verdict }}</div>
-              <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
-                <sc-for list="{{ c.verdictWhy }}" as="w">
-                  <div style="{{ w.style }}"><span class="u-check">✓</span><span class="u-fill">{{ w.text }}</span></div>
-                </sc-for>
-              </div>
-            </div>
-          </section>
-        </sc-if>
-
+      <!-- ② 결론 -->
+      <sc-if value="{{ c.hasVerdict }}">
         <section style="padding:24px 0 0">
-          <div style="{{ dsGrid3 }}">
+          <div style="{{ dsCardHi }}">
+            <div style="font-size:18px;font-weight:700;line-height:1.45;text-wrap:pretty">{{ c.verdict }}</div>
+            <div class="u-stack">
+              <sc-for list="{{ c.verdictWhy }}" as="w">
+                <div style="{{ w.style }}"><span class="u-check">✓</span><span class="u-fill">{{ w.text }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- ③ 담은 상권 — 가로 슬라이드 -->
+      <sc-if value="{{ c.on }}">
+        <section style="padding:22px 0 0">
+          <div class="u-between">
+            <h2 style="{{ ds3 }}">담은 상권</h2>
+            <sc-if value="{{ c.rail.arrows }}">
+              <span style="display:flex;gap:8px">
+                <span role="button" tabIndex="0" aria-label="이전 상권" onClick="{{ c.rail.prev }}" style="{{ c.rail.arrowStyle }}" style-hover="background:var(--line-strong)">←</span>
+                <span role="button" tabIndex="0" aria-label="다음 상권" onClick="{{ c.rail.next }}" style="{{ c.rail.arrowStyle }}" style-hover="background:var(--line-strong)">→</span>
+              </span>
+            </sc-if>
+          </div>
+          <div data-rail="cmpCols" style="{{ c.rail.trackStyle }}">
             <sc-for list="{{ c.cols }}" as="col">
-              <div style="{{ col.cardStyle }}">
-                <span role="button" tabIndex="0" aria-label="비교에서 빼기" onClick="{{ col.drop }}" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--bg);color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;transition:background .14s,color .14s" style-hover="background:var(--line-strong);color:var(--ink)">×</span>
-                <div style="font-size:19px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:34px">{{ col.name }}</div>
-                <div style="{{ dsSub }}; margin-top:4px">{{ col.rank }}</div>
-                <div style="margin-top:20px;display:flex;flex-direction:column;gap:16px">
-                  <sc-for list="{{ col.cells }}" as="x">
-                    <div>
-                      <div class="u-lab-sm">{{ x.label }}</div>
-                      <div style="{{ x.valStyle }}">{{ x.value }}</div>
-                      <sc-if value="{{ x.bar }}">
-                        <div style="height:4px;border-radius:2px;background:var(--surface);margin-top:8px;overflow:hidden">
-                          <div style="{{ x.bar }}"></div>
-                        </div>
-                      </sc-if>
-                      <sc-if value="{{ x.note }}">
-                        <div style="font-size:11.5px;font-weight:600;color:var(--accent);margin-top:6px;text-wrap:pretty">{{ x.note }}</div>
-                      </sc-if>
-                    </div>
-                  </sc-for>
-                </div>
-                <div style="margin-top:20px">
-                  <span role="button" tabIndex="0" onClick="{{ col.diag }}" style="{{ ctaText }}">본전 계산 보기 →</span>
+              <div style="{{ c.rail.itemStyle }}">
+                <div style="{{ col.cardStyle }}">
+                  <span role="button" tabIndex="0" aria-label="비교에서 빼기" onClick="{{ col.drop }}" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--bg);color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;transition:background .14s,color .14s" style-hover="background:var(--line-strong);color:var(--ink)">×</span>
+                  <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:34px">{{ col.name }}</div>
+                  <div class="u-note-t">{{ col.rank }}</div>
+                  <div style="margin-top:16px;display:flex;flex-direction:column;gap:14px">
+                    <sc-for list="{{ col.cells }}" as="x">
+                      <div>
+                        <div style="font-size:12.5px;color:var(--ink2);white-space:nowrap">{{ x.label }}</div>
+                        <div style="{{ x.valStyle }}">{{ x.value }}</div>
+                        <sc-if value="{{ x.bar }}">
+                          <div style="height:4px;border-radius:2px;background:var(--surface);margin-top:7px;overflow:hidden">
+                            <div style="{{ x.bar }}"></div>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{ x.note }}">
+                          <div style="font-size:11.5px;font-weight:600;color:var(--accent);margin-top:5px;text-wrap:pretty">{{ x.note }}</div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="margin-top:16px">
+                    <span role="button" tabIndex="0" onClick="{{ col.diag }}" style="{{ ctaText }}">손익 계산 →</span>
+                  </div>
                 </div>
               </div>
             </sc-for>
           </div>
         </section>
+      </sc-if>
 
-        <section style="padding:44px 0 0">
+      <!-- ④ 비교 차트 -->
+      <sc-if value="{{ c.hasCharts }}">
+        <section style="padding:28px 0 0">
+          <div class="u-between">
+            <h2 style="{{ ds3 }}">항목별로 견주기</h2>
+            <sc-if value="{{ c.chartRail.arrows }}">
+              <span style="display:flex;gap:8px">
+                <span role="button" tabIndex="0" aria-label="이전 차트" onClick="{{ c.chartRail.prev }}" style="{{ c.chartRail.arrowStyle }}" style-hover="background:var(--line-strong)">←</span>
+                <span role="button" tabIndex="0" aria-label="다음 차트" onClick="{{ c.chartRail.next }}" style="{{ c.chartRail.arrowStyle }}" style-hover="background:var(--line-strong)">→</span>
+              </span>
+            </sc-if>
+          </div>
+          <div data-rail="cmpCh" style="{{ c.chartRail.trackStyle }}">
+            <sc-for list="{{ c.charts }}" as="ch">
+              <div style="{{ c.chartRail.itemStyle }}">
+                <div style="{{ ch.style }}">
+                  <div style="font-size:15px;font-weight:700">{{ ch.title }}</div>
+                  <sc-if value="{{ ch.hasSub }}">
+                    <div class="u-note-t">{{ ch.sub }}</div>
+                  </sc-if>
+                  <div style="position:relative;margin-top:14px;height:{{ ch.height }}">
+                    <canvas data-chart="{{ ch.id }}" role="img" aria-label="{{ ch.title }}"></canvas>
+                  </div>
+                  <sc-if value="{{ ch.hasPeriod }}">
+                    <div class="u-note" style="margin-top:10px">기준 {{ ch.period }}</div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ c.on }}">
+        <section style="padding:32px 0 0">
           <h2 style="{{ ds3 }}">무엇이 다른가요?</h2>
           <div style="margin-top:14px;display:flex;flex-direction:column;gap:12px">
             <sc-for list="{{ c.diffs }}" as="x">
-              <div style="display:flex;gap:11px;align-items:baseline;font-size:15.5px;max-width:760px">
+              <div style="display:flex;gap:11px;align-items:baseline;font-size:15.5px;max-width:820px">
                 <span style="{{ x.dot }}"></span>
                 <span style="text-wrap:pretty">{{ x.text }}</span>
               </div>
             </sc-for>
           </div>
-          <p style="{{ dsSub }}; margin-top:28px;max-width:760px">{{ c.honesty }}</p>
+          <p style="{{ dsSub }}; margin-top:24px;max-width:820px">{{ c.honesty }}</p>
         </section>
       </sc-if>
     </sc-if>

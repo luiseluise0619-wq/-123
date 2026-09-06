@@ -1,122 +1,79 @@
-    <!-- 시세분석 -->
+    <!-- 시세분석 — 왼쪽 세로 메뉴 하나 선택 → 오른쪽에 핵심 수치 + 차트 여러 개 -->
     <sc-if value="{{ onPrice }}">
-      <section class="u-sec-lg">
-        <h1 style="font-size:clamp(24px,3.8vw,36px);font-weight:700;letter-spacing:-0.025em;line-height:1.3;margin:0">시세분석</h1>
-        <p style="font-size:15px;color:var(--ink2);margin:10px 0 0;text-wrap:pretty">임대료와 매출이 어디로 가고 있는지 볼 수 있어요.</p>
+      <section class="u-sec">
+        <h1 style="{{ ds1 }}">시세분석</h1>
+        <p style="{{ dsBody }}; margin-top:10px;max-width:640px">임대료와 매출이 어디로 가고 있는지 볼 수 있어요.</p>
 
-        <!-- 왼쪽 세로 메뉴로 볼 차트를 고른다. 여러 개를 같이 켜 놓을 수 있다. -->
         <div style="display:grid;gap:20px;grid-template-columns:{{ navCols }};margin-top:28px">
-          <nav aria-label="볼 지표 고르기" style="{{ dsCard }}; align-self:start;padding:10px;min-width:0">
-            <sc-for list="{{ prAll }}" as="c">
-              <span role="button" tabIndex="0" aria-pressed="{{ c.on }}" onClick="{{ c.pick }}" style="{{ c.chipStyle }}">{{ c.catLabel }}</span>
+          <nav aria-label="볼 지표 고르기" style="{{ pr.navStyle }}">
+            <sc-for list="{{ pr.nav }}" as="n">
+              <span role="button" tabIndex="0" aria-pressed="{{ n.on }}" onClick="{{ n.pick }}" style="{{ n.style }}">
+                <span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.label }}</span>
+                <span style="{{ n.whenStyle }}">{{ n.when }}</span>
+              </span>
             </sc-for>
           </nav>
 
-          <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
-          <sc-for list="{{ prAll }}" as="pr">
-            <sc-if value="{{ pr.on }}">
-              <div style="{{ pr.cardStyle }}">
-                <span style="{{ pr.whenStyle }}">{{ pr.when }}</span>
-                <div style="font-size:13px;color:var(--ink2);margin-top:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pr.title }}</div>
-                <div style="display:flex;align-items:baseline;gap:14px;margin-top:8px;flex-wrap:wrap">
-                  <span style="font-size:34px;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;white-space:nowrap">{{ pr.now }}</span>
-                  <span style="{{ pr.deltaStyle }}">{{ pr.delta }}</span>
-                </div>
-                <div style="font-size:12px;color:var(--ink3);margin-top:4px;white-space:nowrap">{{ pr.nowLabel }}</div>
+          <div style="min-width:0">
+            <!-- 핵심 수치 -->
+            <div style="{{ dsCardHi }}">
+              <div class="u-lab-sm">{{ pr.title }}</div>
+              <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-top:8px">
+                <span style="{{ dsNum }}">{{ pr.now }}</span>
+                <span style="{{ pr.deltaStyle }}">{{ pr.delta }}</span>
+              </div>
+              <div class="u-note-t">{{ pr.nowLabel }}</div>
+            </div>
 
-                <sc-if value="{{ pr.hasChart }}">
-                  <div class="u-mt">
-                    <svg viewBox="0 0 {{ pr.w }} {{ pr.h }}" preserveAspectRatio="none" style="width:100%;height:180px;display:block;overflow:visible">
-                      <path d="{{ pr.line.area }}" fill="var(--accent-3)" opacity=".5"></path>
-                      <path d="{{ pr.line.d }}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
-                      <sc-for list="{{ pr.line.pts }}" as="p">
-                        <sc-if value="{{ p.last }}">
-                          <circle cx="{{ p.x }}" cy="{{ p.y }}" r="4" fill="var(--accent)"></circle>
-                        </sc-if>
-                      </sc-for>
-                    </svg>
-                    <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px;color:var(--ink3)">
-                      <sc-for list="{{ pr.labels }}" as="l">
-                        <span class="u-nowrap">{{ l }}</span>
-                      </sc-for>
+            <!-- 차트 여러 개 — 옆으로 넘겨 본다 -->
+            <sc-if value="{{ pr.hasCharts }}">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px">
+                <h2 style="{{ ds3 }}">{{ pr.catLabel }} 차트</h2>
+                <sc-if value="{{ pr.rail.arrows }}">
+                  <span style="display:flex;gap:8px">
+                    <span role="button" tabIndex="0" aria-label="이전 차트" onClick="{{ pr.rail.prev }}" style="{{ pr.rail.arrowStyle }}" style-hover="background:var(--line-strong)">←</span>
+                    <span role="button" tabIndex="0" aria-label="다음 차트" onClick="{{ pr.rail.next }}" style="{{ pr.rail.arrowStyle }}" style-hover="background:var(--line-strong)">→</span>
+                  </span>
+                </sc-if>
+              </div>
+              <div data-rail="price" style="{{ pr.rail.trackStyle }}">
+                <sc-for list="{{ pr.charts }}" as="c">
+                  <div style="{{ pr.rail.itemStyle }}">
+                    <div style="{{ c.style }}">
+                      <div style="font-size:15px;font-weight:700">{{ c.title }}</div>
+                      <sc-if value="{{ c.hasSub }}">
+                        <div class="u-note-t">{{ c.sub }}</div>
+                      </sc-if>
+                      <div style="position:relative;margin-top:14px;height:{{ c.height }}">
+                        <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
+                      </div>
+                      <sc-if value="{{ c.hasPeriod }}">
+                        <div class="u-note" style="margin-top:10px">기준 {{ c.period }}</div>
+                      </sc-if>
                     </div>
                   </div>
-                </sc-if>
+                </sc-for>
+              </div>
+            </sc-if>
 
-                <sc-if value="{{ pr.legend }}">
-                  <div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap">
-                    <sc-for list="{{ pr.legend }}" as="l">
-                      <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ink2);white-space:nowrap">
-                        <span style="width:12px;height:12px;border-radius:3px;background:{{ l.color }};opacity:{{ l.op }};display:block"></span>{{ l.label }}
-                      </span>
-                    </sc-for>
-                  </div>
-                </sc-if>
-
-                <sc-if value="{{ pr.pairs }}">
-                  <div style="margin-top:14px;display:flex;flex-direction:column;gap:2px;animation:fadeIn .14s linear both">
-                    <sc-for list="{{ pr.pairs }}" as="p">
-                      <div role="button" tabIndex="0" onClick="{{ p.pick }}" style="{{ p.style }}" style-hover="background:var(--surface)">
-                        <div class="u-between">
-                          <span style="font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.label }}</span>
-                          <span style="flex:none;font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap">{{ p.open }} / {{ p.close }}</span>
-                        </div>
-                        <span style="display:block;height:6px;border-radius:3px;background:var(--surface);overflow:hidden">
-                          <span style="{{ p.openBar }}"></span>
-                        </span>
-                        <span style="display:block;height:6px;border-radius:3px;background:var(--surface);overflow:hidden">
-                          <span style="{{ p.closeBar }}"></span>
-                        </span>
-                      </div>
-                    </sc-for>
-                  </div>
-                </sc-if>
-
-                <sc-if value="{{ pr.dots }}">
-                  <div style="margin-top:18px;border-radius:16px;background:var(--surface);padding:10px">
-                    <svg viewBox="0 0 100 100" style="width:100%;height:260px;display:block">
-                      <line x1="8" y1="92" x2="96" y2="92" stroke="var(--line-strong)" stroke-width="0.4"></line>
-                      <line x1="8" y1="92" x2="8" y2="6" stroke="var(--line-strong)" stroke-width="0.4"></line>
-                      <sc-for list="{{ pr.dots }}" as="o">
-                        <circle cx="{{ o.cx }}" cy="{{ o.cy }}" r="{{ o.r }}" fill="var(--accent)" fill-opacity="{{ o.op }}"></circle>
-                      </sc-for>
-                    </svg>
-                    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);padding:0 6px">
-                      <span class="u-nowrap">↑ 프랜차이즈 수</span>
-                      <span class="u-nowrap">가게 수 →</span>
-                    </div>
-                  </div>
-                </sc-if>
-
-                <sc-if value="{{ pr.bars }}">
-                  <div style="margin-top:22px;display:flex;flex-direction:column;gap:12px">
-                    <sc-for list="{{ pr.bars }}" as="b">
-                      <div style="display:flex;align-items:center;gap:14px">
-                        <span style="flex:0 0 78px;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.label }}</span>
-                        <span style="flex:1;min-width:0;height:6px;border-radius:3px;background:var(--surface);display:block;overflow:hidden">
-                          <span style="{{ b.bar }}"></span>
-                        </span>
-                        <span style="flex:none;width:48px;text-align:right;font-size:13px;font-variant-numeric:tabular-nums">{{ b.pct }}</span>
-                      </div>
-                    </sc-for>
-                  </div>
-                </sc-if>
-
-                <div style="font-size:13px;font-weight:600;margin-top:30px">{{ pr.listTitle }}</div>
-                <div style="margin-top:10px;max-height:260px;overflow-y:auto;padding-right:6px;display:flex;flex-direction:column;gap:2px;animation:fadeIn .14s linear both">
+            <!-- 지역·업종 목록 — 누르면 위 수치와 차트가 그 대상으로 바뀐다 -->
+            <sc-if value="{{ pr.hasList }}">
+              <div style="margin-top:26px">
+                <div class="u-h">{{ pr.listTitle }}</div>
+                <div style="margin-top:10px;max-height:300px;overflow-y:auto;padding-right:6px;display:flex;flex-direction:column;gap:2px">
                   <sc-for list="{{ pr.list }}" as="r">
                     <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="{{ r.style }}" style-hover="background:var(--surface)">
                       <span class="u-fill-e">{{ r.name }}</span>
                       <span class="u-note-f">{{ r.meta }}</span>
-                      <span style="flex:none;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.value }}</span>
+                      <span style="flex:none;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.value }}</span>
                     </div>
                   </sc-for>
                 </div>
-                <p style="font-size:12.5px;color:var(--ink3);margin:20px 0 0;text-wrap:pretty">{{ pr.note }}</p>
               </div>
             </sc-if>
-          </sc-for>
-        </div>
+
+            <p style="{{ dsSub }}; margin-top:22px">{{ pr.note }}</p>
           </div>
+        </div>
       </section>
     </sc-if>

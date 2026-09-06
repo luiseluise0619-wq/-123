@@ -15,11 +15,14 @@
         <div style="{{ dsGrid3 }}; margin-top:32px">
           <sc-for list="{{ hub.cards }}" as="c">
             <div role="button" tabIndex="0" onClick="{{ c.go }}" style="{{ c.style }}" style-hover="transform:translateY(-3px);box-shadow:var(--shadow-pop)">
-              <svg viewBox="0 0 52 52" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="{{ c.artStyle }}" aria-hidden="true">
-                <sc-for list="{{ c.art }}" as="a"><path d="{{ a.d }}"></path></sc-for>
-              </svg>
-              <div class="u-min">
+              <!-- 아이콘을 제목 옆에 둔다. 위에 쌓으면 카드가 한 뼘씩 길어져 셋이 한 화면에 안 들어온다. -->
+              <div style="display:flex;align-items:center;gap:11px;min-width:0">
+                <svg viewBox="0 0 52 52" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="{{ c.artStyle }}" aria-hidden="true">
+                  <sc-for list="{{ c.art }}" as="a"><path d="{{ a.d }}"></path></sc-for>
+                </svg>
                 <div style="{{ c.labelStyle }}">{{ c.label }}</div>
+              </div>
+              <div class="u-min">
                 <div style="{{ c.subStyle }}">{{ c.sub }}</div>
               </div>
               <div style="{{ c.ctaStyle }}">{{ c.cta }}</div>

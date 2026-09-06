@@ -102,21 +102,31 @@
             </div>
           </div>
 
-          <div style="margin-top:34px">
-            <div style="font-size:15px;font-weight:700">다른 후보도 볼까요?</div>
-            <div style="{{ dsGrid3 }}; margin-top:14px">
+          <div style="margin-top:30px">
+            <div class="u-between">
+              <div class="u-h">다른 후보도 볼까요?</div>
+              <sc-if value="{{ rowsRail.arrows }}">
+                <span style="display:flex;gap:8px">
+                  <span role="button" tabIndex="0" aria-label="이전 후보" onClick="{{ rowsRail.prev }}" style="{{ rowsRail.arrowStyle }}" style-hover="background:var(--line-strong)">←</span>
+                  <span role="button" tabIndex="0" aria-label="다음 후보" onClick="{{ rowsRail.next }}" style="{{ rowsRail.arrowStyle }}" style-hover="background:var(--line-strong)">→</span>
+                </span>
+              </sc-if>
+            </div>
+            <div data-rail="cand" style="{{ rowsRail.trackStyle }}">
               <sc-for list="{{ rows }}" as="r">
-                <div style="{{ dsCard }}; min-width:0">
-                  <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="cursor:pointer">
-                    <div style="display:flex;align-items:baseline;gap:8px">
-                      <span style="font-size:11.5px;font-weight:700;color:var(--ink3);font-variant-numeric:tabular-nums">{{ r.no }}</span>
-                      <span style="flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
+                <div style="{{ rowsRail.itemStyle }}">
+                  <div style="{{ dsCard }}; min-width:0">
+                    <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="cursor:pointer">
+                      <div style="display:flex;align-items:baseline;gap:8px">
+                        <span style="font-size:11.5px;font-weight:700;color:var(--ink3);font-variant-numeric:tabular-nums">{{ r.no }}</span>
+                        <span style="flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
+                      </div>
+                      <div class="u-note-t">{{ r.gu }}</div>
+                      <div style="font-size:13px;color:var(--ink2);margin-top:10px;line-height:1.5;text-wrap:pretty">{{ r.meaning }}</div>
                     </div>
-                    <div style="font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.5;text-wrap:pretty">{{ r.meaning }}</div>
-                    <div style="{{ dsSub }}; margin-top:6px">{{ r.gu }}</div>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:12px;margin-top:14px">
-                    <span role="button" tabIndex="0" onClick="{{ r.togglePick }}" style="{{ r.pickStyle }}">{{ r.pickLabel }}</span>
+                    <div style="margin-top:14px">
+                      <span role="button" tabIndex="0" onClick="{{ r.togglePick }}" style="{{ r.pickStyle }}">{{ r.pickLabel }}</span>
+                    </div>
                   </div>
                 </div>
               </sc-for>
@@ -143,8 +153,21 @@
           </section>
         </sc-if>
 
-        <section style="padding:32px 0 0">
-            <p style="{{ dsSub }}; max-width:760px">{{ honesty }}</p>
+        <section style="padding:28px 0 0">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;max-width:860px">
+              <span style="{{ note.lineStyle }}">ⓘ {{ note.line }}</span>
+              <span role="button" tabIndex="0" onClick="{{ note.toggle }}" style="{{ note.btnStyle }}">{{ note.label }}</span>
+            </div>
+            <sc-if value="{{ note.open }}">
+              <div style="{{ dsCard }}; margin-top:12px;max-width:860px">
+                <sc-for list="{{ note.rows }}" as="n">
+                  <div style="padding:8px 0">
+                    <div style="font-size:13px;font-weight:700">{{ n.label }}</div>
+                    <div style="{{ dsSub }}; margin-top:3px">{{ n.body }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
         </section>
       </sc-if>
     </sc-if>

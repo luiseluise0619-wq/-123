@@ -64,15 +64,15 @@ globalThis.MysbizonParts.views = {
           ? {sign:'↓', arrow:arrowDn, text:'가게가 너무 적어 평균이 흔들립니다'}
           : {sign:'↓', arrow:arrowDn, text:'임대료는 데이터 없음 · 직접 확인해야 합니다'}
       ],
-      // 표본이 적으면 단정하지 않는다. 10곳 미만은 참고용으로 돌린다.
+      // 표본이 적으면 단정하지 않는다. 다만 '판단 보류'로 모든 값을 죽이지도 않는다(§12).
       thin:sel.stores<10,
       thinWarn: sel.stores<10
-        ? '표본 '+sel.stores.toLocaleString()+'곳이라 참고용으로 봐주세요. 가게가 적으면 한 곳의 실적이 평균을 크게 흔들어요.'
+        ? '분석 가능한 점포가 '+sel.stores.toLocaleString()+'곳이라 종합 평가는 참고 수준이에요. 개별 지표는 그대로 보셔도 됩니다.'
         : '',
-      thinBadge: sel.stores<10? '표본 '+sel.stores.toLocaleString()+'곳' : '',
+      thinBadge: sel.stores<10? '점포 '+sel.stores.toLocaleString()+'곳' : '',
       // 결론 먼저 — 점수는 기준선과 함께
       verdict:(()=>{
-        if(sel.stores<10) return '판단하기엔 데이터가 적어요.';
+        if(sel.stores<10) return '참고 수준으로 봐주세요. 아래 지표는 그대로 확인하실 수 있어요.';
         const scores=L.map(o=>o.score).sort((a,b)=>a-b);
         const med=scores[Math.floor(scores.length/2)];
         const rank=L.indexOf(sel)+1, pct=Math.round(rank/L.length*100);
@@ -160,7 +160,8 @@ globalThis.MysbizonParts.views = {
         {label:'한 집당 잘 번다', meaning:monthly(sel.per)+'/월', bar:'width:'+sel._per.toFixed(1)+'%;height:100%;background:var(--accent-3);border-radius:3px'}
       ]
     };
-    out.rows=L.slice(1,6).map((o,i)=>({
+    out.rowsRail=this.rail('cand',{per:3});
+    out.rows=L.slice(1,9).map((o,i)=>({
       rank:i+2, name:o.name, score:Math.round(o.score),
       // 두 백분위 중 더 두드러진 쪽을 그 자리의 성격으로 쓴다 — 같은 말이 반복되지 않게
       meaning: o.stores<=5 ? '가게 '+o.stores+'곳뿐'
@@ -186,7 +187,15 @@ globalThis.MysbizonParts.views = {
           : 'font-size:12.5px;color:var(--ink3);cursor:pointer;white-space:nowrap'),
       row:'display:flex;align-items:baseline;gap:12px;padding:13px 0;border-top:1px solid var(--line)'
     }));
-    out.honesty='기준 '+this.qtr(r.quarter)+' · 서울시 상권분석서비스. 기회점수는 손님이 쓴 돈·경쟁 가게 수·한 곳당 매출을 저희가 정한 비율로 합친 계산값이에요. 서울 '+r.total.toLocaleString()+'개 동네 중 이 장사 데이터가 있는 '+r.covered.toLocaleString()+'곳만 견줬어요. 임대료는 동네별로 공개되지 않아 점수에 넣지 못했어요.';
+    // 긴 회색 문단을 그대로 두지 않는다 — 한 줄만 보이고 나머지는 접는다(§14)
+    out.note=this.dataNote('find',
+      '예상 매출은 상권 소비액을 점포 수로 나눈 추정값이에요.',
+      [['계산 방법','기회점수 = 상권 소비액(45%) + 경쟁 점포 수(35%) + 가게 한 곳당 매출(20%). 저희가 정한 비율로 합친 값이에요.'],
+       ['데이터 출처','서울시 상권분석서비스 · 서울 열린데이터광장 생활인구'],
+       ['기준 기간', this.qtr(r.quarter)],
+       ['다룬 범위','서울 상권 '+r.total.toLocaleString()+'곳 중 이 업종 자료가 있는 '+r.covered.toLocaleString()+'곳'],
+       ['주의','임대료는 상권 단위로 공개되지 않아 점수에 넣지 못했어요. 예상 매출은 실측이 아니라 추정값이에요.']]);
+    out.honesty='';
 
     // ── 진단
     const c=this.calc(sel), over=c.profit>=0;
@@ -450,6 +459,19 @@ globalThis.MysbizonParts.views = {
     this._mvA=this.mvSections(sel,L);
     out.mv={
       eyebrow:this.indName(S.ind)+' · '+sel.name+(this.guLabel(sel.id)?' · '+this.guLabel(sel.id):''),
+      // 화면 맨 아래 한 줄 + 펼치면 계산 방법·출처·한계 (design.js dataNote)
+      note:this.dataNote('mv',
+        '여기 숫자는 상권 전체를 집계한 추정값이에요. 한 가게의 실적이 아니에요.',
+        [['매출·점포',
+          '서울열린데이터광장 상권분석서비스의 상권별 추정매출·점포 수입니다. 가게 한 곳당 매출은 상권 매출을 점포 수로 나눈 값이고, 원자료가 3개월 합계라 3으로 나눠 월 기준으로 적습니다.'],
+         ['유동인구',
+          '상권이 속한 행정동의 하루 평균 생활인구입니다. 상권 한 곳만의 숫자가 아니라 그 동네 전체 값이에요. 시간대별·요일별은 공개 자료에 없어 보여드리지 못합니다.'],
+         ['임대료·공실',
+          '한국부동산원 상업용부동산 임대동향조사(서울 63개 주요 상권·권역)입니다. 이름이 정확히 맞는 상권만 그 값을 쓰고, 나머지는 서울 평균이라고 밝혀 적습니다. 건물·점포 단위 임대료는 공개 자료에 없습니다.'],
+         ['비교 대상',
+          '‘서울 중앙값’은 같은 업종 데이터가 있는 서울 상권들의 가운데 값이에요. 평균이 아니라 중앙값이라 아주 크거나 작은 몇 곳에 끌려가지 않습니다.'],
+         ['주의할 점',
+          '규모·업력·자리에 따라 실제 값은 크게 다를 수 있어요. 여기 숫자는 상권끼리 견주는 용도이고, 개업 여부는 현장 확인과 함께 판단해 주세요.']]),
       // 시·도를 바꾸면 구 목록도 따라 바뀐다. 서울 밖은 자료가 없으므로
       // 서울 자치구를 그대로 두지 않는다 — 부산을 골랐는데 '강남구'가 남아 있으면 거짓말이다.
       gu:seoulOnly?mapGu:'자료 없음',
@@ -602,11 +624,15 @@ globalThis.MysbizonParts.views = {
             +(x.key===cur?'background:var(--accent-3);color:var(--accent);font-weight:700'
                          :'color:var(--ink2)')}));
       })(),
-      // 지금 고른 섹션 하나만 오른쪽에 크게
+      // 지금 고른 섹션 하나만 오른쪽에 크게 — 관련 차트 2~4개와 함께
       now:(()=>{
         const A=(this._mvA||this.mvSections(sel,L)).filter(x=>x.key!=='grow');
         const cur=A.find(x=>x.key===(S.mvTab||A[0].key))||A[0];
+        const ch=this.mvCharts(cur.key, sel, L);
         return {
+          charts:ch.charts, hasCharts:ch.charts.length>0,
+          rail:this.rail('mv',{per:2}),
+          missing:ch.missing.map(t=>({text:t})), hasMissing:ch.missing.length>0,
           title:cur.title, q:cur.q||'', big:cur.big||'', bigLabel:cur.bigLabel||'',
           verdict:cur.verdict||'', hasVerdict:!!cur.verdict,
           rows:(cur.rows||[]).map(r=>({...r, hasTag:!!r.tag})),
@@ -784,28 +810,57 @@ globalThis.MysbizonParts.views = {
     // ── 비교
     const picks=PICKS.map(id=>L.find(o=>o.id===id)).filter(Boolean);
 
-    // 이 화면 안에서 바로 담는다. 다른 화면으로 보내면 '내가 어디 있는지'를 잃는다.
-    const cq=(S.cmpQ||'').trim().replace(/\s/g,'');
-    const addable=(()=>{
-      const hit=o=>!cq || (this.zoneLabelOf(o.name)+((S.zgu||{})[o.id]||'')).replace(/\s/g,'').indexOf(cq)>=0;
-      return L.filter(o=>PICKS.indexOf(o.id)<0).filter(hit).slice(0,6).map(o=>({
-        name:this.zoneLabelOf(o.name),
-        meta:[(S.zgu||{})[o.id], this.fmt(o.per/3)+'원'].filter(Boolean).join(' · '),
-        full:PICKS.length>=3,
-        add:()=>{ if(PICKS.length>=3) return; this.setState({picks:[...PICKS,o.id], cmpQ:''}); },
-        style:'display:flex;align-items:center;justify-content:space-between;gap:12px;'
-          +'padding:14px 16px;border-radius:var(--r-sm);background:var(--surface);'
-          +'cursor:pointer;min-width:0;transition:background .14s'}));
-    })();
+    // ── 비교할 상권 찾기 ─────────────────────────────────────────
+    // 검색이 중심이다(§15). 추천 목록은 검색 아래에 보조로 둔다.
+    // 다른 화면으로 보내지 않는다 — 보내면 '내가 어디 있는지'를 잃는다.
+    const rawQ=(S.cmpQ||'').trim();
+    const cq=rawQ.replace(/\s/g,'');
+    const zgu=S.zgu||{};
+    const nameOfZ=o=>this.zoneLabelOf(o.name);
+    const row=o=>({
+      id:o.id,
+      name:nameOfZ(o),
+      meta:[zgu[o.id], this.fmt(o.per/3)+'원'].filter(Boolean).join(' · '),
+      add:()=>{ if(PICKS.length>=3) return;
+        // 담으면 검색어를 비우고 최근 본 목록에 남긴다
+        const recent=[o.id, ...(S.cmpRecent||[]).filter(x=>x!==o.id)].slice(0,6);
+        this.setState({picks:[...PICKS,o.id], cmpQ:'', cmpRecent:recent}); },
+      style:'display:flex;align-items:center;justify-content:space-between;gap:12px;'
+        +'padding:14px 16px;border-radius:var(--r-sm);background:var(--surface);'
+        +'cursor:pointer;min-width:0;transition:background .14s'
+    });
+    // 검색 — 상권 이름·자치구·행정동 아무거나로 걸린다
+    const zlpAll=S.zlp||{};
+    const hit=o=>{
+      if(!cq) return false;
+      const d=(zlpAll[o.id]&&zlpAll[o.id].dong)||'';
+      return (nameOfZ(o)+(zgu[o.id]||'')+d).replace(/\s/g,'').indexOf(cq)>=0;
+    };
+    const found=L.filter(o=>PICKS.indexOf(o.id)<0).filter(hit).slice(0,8).map(row);
+    // 최근 본 상권 — 담았다 뺀 것도 여기 남는다
+    const recentIds=(S.cmpRecent||[]).filter(id=>PICKS.indexOf(id)<0);
+    const recent=recentIds.map(id=>L.find(o=>o.id===id)).filter(Boolean).slice(0,6).map(row);
+    // 추천 — 검색을 안 했을 때만 보조로
+    const suggest=L.filter(o=>PICKS.indexOf(o.id)<0).slice(0,8).map(row);
     const addBox={
       q:S.cmpQ||'',
       onQ:e=>this.setState({cmpQ:e.target.value}),
-      items:addable,
-      hasItems:addable.length>0,
-      emptyText: cq? '‘'+(S.cmpQ||'').trim()+'’와 맞는 상권이 없어요' : '',
-      isEmpty: addable.length===0,
+      // Enter 는 첫 결과를 담는다 — 검색창에서 손을 떼지 않아도 되게
+      onKey:e=>{ if(e.key!=='Enter') return;
+        if(found.length&&PICKS.length<3) found[0].add(); },
+      clear:()=>this.setState({cmpQ:''}),
+      hasQ:!!rawQ,
+      searching:!!rawQ,
+      found, hasFound:found.length>0,
+      noResult: !!rawQ && found.length===0,
+      noResultText:'‘'+rawQ+'’와 맞는 상권이 없어요. 상권 이름이나 구 이름으로 찾아보세요.',
+      recent, hasRecent:recent.length>0,
+      suggest, hasSuggest:!rawQ && suggest.length>0,
       full:PICKS.length>=3,
-      fullText:'3곳까지 담을 수 있어요. 하나를 빼면 다른 곳을 담을 수 있어요.'
+      fullText:'3곳까지 담을 수 있어요. 하나를 빼면 다른 곳을 담을 수 있어요.',
+      foundRail:this.rail('cmpFound',{per:3}),
+      recentRail:this.rail('cmpRecent',{per:3}),
+      suggestRail:this.rail('cmpSug',{per:3})
     };
 
     if(picks.length<2){
@@ -826,7 +881,8 @@ globalThis.MysbizonParts.views = {
                  {label:'경쟁 점포', value:o.stores.toLocaleString()+'곳', note:'',
                   valStyle:'font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums', bar:null}]
         })),
-        add:addBox,
+        add:addBox, rail:this.rail('cmpCols',{per:3}),
+        charts:[], chartRail:this.rail('cmpCh',{per:3}), hasCharts:false,
         diffs:[], honesty:'', empty:true, on:picks.length>0,
         verdict:'', verdictWhy:[], hasVerdict:false};
       out.openMap=false; out.mapPins=[]; out.mapNote='';
@@ -888,6 +944,30 @@ globalThis.MysbizonParts.views = {
         : '지금 담은 곳들은 항목마다 앞서는 곳이 달라요. 아래에서 무엇을 더 중요하게 볼지 정해 보세요.',
       verdictWhy: whyWin.map(t=>({text:t,
         style:'display:flex;align-items:flex-start;gap:9px;font-size:14.5px;line-height:1.55;color:var(--ink2)'})),
+      rail:this.rail('cmpCols',{per:3}),
+      // 비교 차트 — 카드에 있는 숫자를 '여러 상권 견주기'로 다시 보여준다(역할 분리)
+      charts:(()=>{
+        const C=[];
+        const push=(id,opt)=>{ const c=this.chartCard(id,opt); if(c) C.push(c); };
+        const names=picks.map(o=>this.zoneLabelOf(o.name));
+        const q=this.qtr(r.quarter);
+        push('cmp-per',{type:'bar', title:'예상 매출 비교', sub:'가게 한 곳당 월매출 (추정)',
+          unit:'원', period:q+' 기준', height:230, labels:names,
+          datasets:[{label:'가게 한 곳당 월매출', data:picks.map(o=>Math.round(o.per/3)),
+            colors:picks.map(o=>o===bP?'on':'')}]});
+        const pops=picks.map(o=>{const l=S.zlp&&S.zlp[o.id];return l?Math.round(l.tot):null;});
+        push('cmp-pop',{type:'bar', title:'유동인구 비교', sub:'상권이 속한 행정동 하루 유동인구',
+          unit:'명', period:q+' 기준', height:230, labels:names,
+          datasets:[{label:'하루 유동인구', data:pops,
+            colors:picks.map(o=>o===bPop?'on':'')}]});
+        push('cmp-store',{type:'bar', title:'경쟁 점포 비교', sub:'같은 업종 점포 수 · 적을수록 유리',
+          unit:'곳', period:q+' 기준', height:230, labels:names,
+          datasets:[{label:'같은 업종 점포 수', data:picks.map(o=>o.stores),
+            colors:picks.map(o=>o===bF?'on':'warn')}]});
+        return C;
+      })(),
+      chartRail:this.rail('cmpCh',{per:3}),
+      hasCharts:true,
       cols:picks.map(o=>{
         const lp=S.zlp&&S.zlp[o.id];
         // 회색 글자는 '계산값'·'공공 집계' 같은 출처가 아니라, 이 값이 어떤 뜻인지만 적는다

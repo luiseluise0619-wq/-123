@@ -10,20 +10,32 @@ button:disabled { cursor:not-allowed !important; opacity:.6; }
 .hero-title { font-weight:750 !important;letter-spacing:-.045em !important; }
 .hero-search > div:first-child { border:1px solid var(--line);box-shadow:0 10px 40px rgba(20,45,40,.07) !important;padding:12px !important; }
 .hero-search button { background:var(--accent) !important;color:white !important;box-shadow:none !important; }
-nav { overflow-x:auto;scrollbar-width:none; }
-nav [role=button] { min-height:44px;display:flex !important;align-items:center; }
+/* 상단 메뉴만 가로 스크롤. 화면 안의 세로 메뉴(시세분석·정밀분석)까지 걸리면 안 된다. */
+header nav { overflow-x:auto;scrollbar-width:none; }
+/* 44px 은 손가락 탭 최소 크기 — 상단 메뉴에만 필요하다.
+   예전엔 nav 전체에 걸려 있어서, 화면 안 세로 메뉴의 글자와 배지가
+   한 줄에 눌려 라벨이 잘렸다. */
+header nav [role=button] { min-height:44px;display:flex !important;align-items:center; }
+/* 화면 안 세로 메뉴는 두 줄(이름 + 언제 보는지)이라 탭 높이만 보장한다 */
+nav[aria-label] [role=button] { min-height:44px; }
 header [role=button] { min-height:44px;display:inline-flex;align-items:center; }
-main { padding-bottom:130px !important; }
+/* 도우미 버튼(40px)에 마지막 줄이 가리지 않을 만큼만 남긴다 */
+main { padding-bottom:104px !important; }
 [role=button] { touch-action:manipulation; }
 [role=status] { overflow-wrap:anywhere; }
 .home-hero { min-height:720px !important; }
 html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-strong); }
 @media(max-width:599px) {
-  header { height:auto !important;min-height:104px; }
-  header > div { flex-wrap:wrap;gap:0 12px !important;padding-top:8px !important;padding-bottom:8px !important; }
+  /* 모바일 헤더는 두 줄(이름 줄 + 메뉴 줄)이다. 104px 은 화면의 1/8 을 먹어
+     본문이 늘 아래로 밀렸다. 두 줄을 유지하되 줄마다 군살을 뺀다. */
+  header { height:auto !important;min-height:84px; }
+  header > div { flex-wrap:wrap;gap:0 12px !important;padding-top:4px !important;padding-bottom:4px !important; }
+  header > div > [role=button] { min-height:32px !important; }
   header nav { order:3;flex:0 0 100% !important;width:100%;justify-content:space-between; }
-  header nav [role=button] { padding:8px 7px !important;font-size:13px !important; }
+  /* 메뉴는 가로로 넓어 손가락으로 누르기 충분하다 — 높이만 줄인다 */
+  header nav [role=button] { min-height:38px !important;padding:6px 7px !important;font-size:13px !important; }
   header > div > [role=button]:last-child { margin-left:auto; }
+  main { padding-bottom:92px !important; }
   .home-hero { min-height:780px !important;padding-top:42px !important; }
   .hero-eyebrow { font-size:12px;margin-bottom:18px; }
   .hero-search { margin-top:28px !important; }

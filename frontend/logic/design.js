@@ -7,12 +7,12 @@ globalThis.MysbizonParts.design = {
   ds(kind){
     const CARD='background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card);';
     const M={
-      card:      CARD+'border-radius:var(--r-md);padding:20px',
-      cardLg:    CARD+'border-radius:var(--r-lg);padding:'+this.L('22px','26px','28px'),
+      card:      CARD+'border-radius:var(--r-md);padding:'+this.L('16px','18px','20px'),
+      cardLg:    CARD+'border-radius:var(--r-lg);padding:'+this.L('18px','24px','28px'),
       // 중요한 카드는 회색 배경이 아니라 민트 테두리로 구분한다
       cardHi:    'background:var(--accent-3);border:1px solid var(--accent-2);'
-                 +'border-radius:var(--r-lg);padding:'+this.L('22px','26px','28px'),
-      h1:        'font-size:'+this.L('27px','32px','36px')+';font-weight:700;letter-spacing:-.03em;line-height:1.18;margin:0;text-wrap:pretty',
+                 +'border-radius:var(--r-lg);padding:'+this.L('18px','24px','28px'),
+      h1:        'font-size:'+this.L('28px','32px','36px')+';font-weight:700;letter-spacing:-.03em;line-height:1.18;margin:0;text-wrap:pretty',
       h2:        'font-size:'+this.L('20px','22px','24px')+';font-weight:700;letter-spacing:-.02em;line-height:1.3;margin:0',
       h3:        'font-size:17px;font-weight:700;letter-spacing:-.01em;margin:0',
       num:       'font-size:'+this.L('30px','34px','38px')+';font-weight:700;letter-spacing:-.03em;'
@@ -52,6 +52,33 @@ globalThis.MysbizonParts.design = {
     };
   },
 
+  // '서울 중앙값보다 1107% 높아요'는 맞는 값이어도 사람이 못 믿는다.
+  // 화면에는 '약 12배 수준', 정확한 값은 툴팁에 둔다.
+  ratioText(v, med){
+    if(v==null||med==null||!isFinite(v)||!isFinite(med)||med<=0) return null;
+    const r=v/med, d=Math.round((v-med)/med*100);
+    const exact=(d>0?'+':'')+d+'%';
+    if(r>=2)   return {text:'서울 중앙값의 약 '+(r>=10?Math.round(r):r.toFixed(1))+'배 수준이에요', exact, tone:'good'};
+    if(r<=0.5) return {text:'서울 중앙값의 절반 아래예요', exact, tone:'warn'};
+    if(Math.abs(d)<5) return {text:'서울 중앙값과 비슷해요', exact, tone:'flat'};
+    return {text:'서울 중앙값보다 '+Math.abs(d)+'% '+(d>0?'높아요':'낮아요'), exact, tone:d>0?'good':'warn'};
+  },
+
+  // 긴 회색 문단을 화면에 그대로 두지 않는다.
+  // 한 줄만 보이고, 누르면 계산 방법·출처·기준 기간·주의사항이 펼쳐진다.
+  dataNote(key, oneLine, detail){
+    const open=!!(this.state['note_'+key]);
+    return {
+      line:oneLine,
+      open, hasDetail:!!(detail&&detail.length),
+      label:open?'접기':'데이터 기준 보기',
+      toggle:()=>this.setState({['note_'+key]:!open}),
+      rows:(detail||[]).map(d=>({label:d[0], body:d[1]})),
+      lineStyle:'font-size:12.5px;color:var(--ink3);line-height:1.55;text-wrap:pretty',
+      btnStyle:'font-size:12.5px;font-weight:600;color:var(--accent);cursor:pointer;white-space:nowrap'
+    };
+  },
+
   // 매출처럼 한쪽으로 크게 쏠린 값은 '중앙값 대비 1107% 많아요'가 나온다.
   // 숫자는 맞지만 사람이 못 읽는다. 이런 지표는 백분위로 말한다.
   pctRank(v, all, moreIsBetter){
@@ -76,6 +103,12 @@ globalThis.MysbizonParts.design = {
     const goodDir=o.moreIsBetter!==false;      // 기본은 '많을수록 좋다'
     const tone=(more===goodDir)?'good':(o.badIsRed?'bad':'warn');
     const word=o.moreWord||'많아요', less=o.lessWord||'적어요';
+    // '서울 평균보다 718% 많아요'는 맞는 값이어도 머리에 안 들어온다 — 배수로 말한다
+    if(Math.abs(d)>=200){
+      const r=v/med;
+      return {text:'서울 평균의 약 '+(r>=10?Math.round(r):r.toFixed(1))+'배 수준이에요',
+              tone:tone, diff:d};
+    }
     return {text:'서울 평균보다 '+Math.abs(d)+'% '+(more?word:less), tone:tone, diff:d};
   },
 
