@@ -15,8 +15,24 @@ class Component extends DCLogic {
   // 열린 패널을 기준 박스에 맞춰 배치한다. 아래가 좁으면 위로 뒤집힌다.
   placePanel(){
     const ref=document.querySelector('[data-fl-ref]'), panel=document.querySelector('[data-fl-panel]');
-    if(!ref||!panel)return;
+    if(!ref||!panel){ this._panelOpen=false; return; }
     const bounds=ref.getBoundingClientRect();
+    // 히어로가 검색줄을 화면 한참 아래로 밀어 놓는다. 그 자리에서 목록을 열면
+    // 아래에 남은 자리가 100~200px 뿐이라 두 줄쯤 보이고 잘린다 — 고장난 것처럼 보인다.
+    // 그래서 '갓 열렸는데 아래가 좁으면' 검색줄을 화면 위쪽으로 올려 자리를 만든다.
+    // 한 번만 한다(_panelOpen) — 매 렌더마다 스크롤하면 사용자가 스크롤을 못 한다.
+    if(!this._panelOpen){
+      this._panelOpen=true;
+      const room=window.innerHeight-bounds.bottom;
+      if(room<340){
+        const reduce=typeof matchMedia==='function'
+          && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({top:Math.max(0,window.scrollY+bounds.top-110),
+                         behavior:reduce?'auto':'smooth'});
+        clearTimeout(this._panelT);
+        this._panelT=setTimeout(()=>this.placePanel(), 360);   // 스크롤이 멈춘 뒤 다시 잰다
+      }
+    }
     // 예전에는 top:calc(100% + 8px) 였다. 그 100% 는 패널의 기준 상자(offsetParent) 높이인데
     // 그 상자가 검색창보다 훨씬 커서 목록이 입력칸에서 174px 나 떨어져 떴다.
     // 입력칸에 붙어야 '이 칸의 후보'로 읽힌다 → 기준 상자 대비 실제 위치를 재서 붙인다.
@@ -125,7 +141,7 @@ class Component extends DCLogic {
     if(this._rz) window.removeEventListener('resize',this._rz);
     if(this._raf) cancelAnimationFrame(this._raf);
     if(this._ro) this._ro.disconnect();
-    clearTimeout(this._sc);clearTimeout(this._autoT);this._dragCleanup?.();
+    clearTimeout(this._sc);clearTimeout(this._autoT);clearTimeout(this._panelT);this._dragCleanup?.();
   }
 
   // 미디어 쿼리를 쓸 수 없으므로 폭을 재서 분기한다
