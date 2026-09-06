@@ -316,3 +316,11 @@ jobs:
             done
             [ "$ok" = 1 ] || echo "최종 커밋 push 실패(경합 지속)"
           fi
+
+      # 마지막에 둔다 — 여기서 실패해도 위의 커밋은 이미 끝나 있다.
+      # continue-on-error 를 붙이지 않는 유일한 단계다. 수집이 전부 죽었을 때
+      # 워크플로가 빨간불이 돼야 GitHub 이 메일을 보내기 때문이다.
+      # 부분 실패로는 막지 않는다(스크립트가 exit 0) — 매주 빨간불이면 아무도 안 본다.
+      - name: 수집 결과 요약(무엇이 갱신됐고 무엇이 비었는지)
+        working-directory: backend
+        run: python report_freshness.py
