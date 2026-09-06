@@ -37,7 +37,7 @@ OUT = os.path.join(ROOT, "frontend", "distance_decay.json")
 KEY = os.environ.get("SEOUL_API_KEY", "").strip()
 BASE = "http://openapi.seoul.go.kr:8088"
 
-# 상권 좌표계. 서울 상권분석 영역 데이터는 보통 EPSG:5181 (make_map.py 와 동일 가정)
+# 상권 좌표계. 서울 상권분석 영역 데이터는 보통 EPSG:5181 (make_trade_zones.py 와 동일 가정)
 SRC_CRS = "EPSG:5181"
 
 # 컬럼 후보. 서울 상권분석 서비스는 버전에 따라 이름이 조금씩 달라진다.
@@ -143,7 +143,7 @@ def main():
     try:
         from pyproj import Transformer
     except ImportError:
-        fail("pyproj 가 필요합니다: pip install pyproj (make_map.py 와 동일 의존성)")
+        fail("pyproj 가 필요합니다: pip install pyproj (make_trade_zones.py 와 동일 의존성)")
     tf = Transformer.from_crs(args.crs, "EPSG:4326", always_xy=True)
 
     zones = df.groupby(c_zone).agg(x=(c_x, "first"), y=(c_y, "first")).reset_index()

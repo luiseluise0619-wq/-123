@@ -309,14 +309,15 @@ DB index · query optimization · caching · pagination · rate limit · backgro
       화면은 정직하게 degrade 하지만(값을 지어내지 않음), 충북과 보이는 정보가 다르다.
 
 **운영 — 판단 필요**
-- [ ] 🟡 `refresh_dashboard.py` 는 **CI 에서 항상 실패한다**(첫 단계, `continue-on-error`).
-      입력인 `agmarket_prices.csv` 가 `.gitignore` 대상(31행)이라 저장소에 없고,
-      산출물 `frontend/dashboard.html` 도 존재하지 않으며 어느 화면에서도 링크되지 않는다.
-      이 스크립트만 `lightgbm`·`scikit-learn` 을 쓰는데(다른 CI 스크립트는 pandas·pyproj 뿐),
-      워크플로는 매 실행마다 그 무거운 패키지들을 설치한다 — 성공할 수 없는 단계를 위해서.
-      → 셋 중 하나를 고를 것: ① 식자재 CSV 를 저장소/Secrets 로 공급해 되살린다
-      ② 이 단계와 `lightgbm scikit-learn` 설치를 워크플로에서 뺀다(설치 시간 절약)
-      ③ 그대로 둔다(비용은 CI 시간뿐). 화면 영향은 셋 다 없다.
+- [x] ✅ (2026-09-06 해결) `refresh_dashboard.py` 가 CI 에서 항상 실패하던 건 — ②번을 골랐다.
+      단계와 `lightgbm scikit-learn` 설치를 워크플로에서 뺐고, 스크립트도 지웠다.
+      같이 지운 것: 어디서도 실행·import 되지 않던 backend 스크립트 10개
+      (add_services · demo_grade · forward_select · improve_structural · make_map ·
+      model_compare · roadview_pilot · stress_test_lag · train_pipeline · validate_hardcore)
+      와 `dashboard_template.html`. 되살리려면 git 이력에서 꺼내면 된다.
+      ※ `backend/app/` (FastAPI 트리) 는 **지우지 않았다.** 대부분 CI 에서 안 돌지만
+        `app/data/collectors/seoul_trdar_client.py` 는 `build_seoul_dataset.py` 가 실제로 쓰고,
+        나머지도 §1 의 '앞으로 계획된 스택(FastAPI)' 이라 죽은 코드가 아니라 예정된 코드다.
 - [ ] 🟡 예측 체계가 둘이다. zone.html 은 `signals.json`(build_signals.py — 학습/검증 구간을
       엄격히 분리한 홀드아웃), index.html 은 `sales_forecast.json`(forecast_sales.py — 문서에는
       "홀드아웃"이라 쓰여 있지만 실제로는 **전체 구간 오차로 방법을 고르는 in-sample 선택**)을 쓴다.
