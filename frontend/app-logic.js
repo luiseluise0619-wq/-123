@@ -1,6 +1,17 @@
 'use strict';
 globalThis.MysbizonLogic = function(DCLogic, React) {
 
+// 시세분석 차트 목록. when 은 '이 차트를 언제 보면 좋은지' 배지.
+// 한 곳에만 두고 화면과 데이터가 같은 목록을 쓰게 한다.
+const PRICE_CATS=[
+  {k:'rent', label:'상가 임대료', when:'자리 고를 때'},
+  {k:'vacancy', label:'빈 상가 비율', when:'위험 볼 때'},
+  {k:'sales', label:'장사별 매출 추이', when:'업종 고를 때'},
+  {k:'spend', label:'자치구 소비 구성', when:'손님 볼 때'},
+  {k:'churn', label:'문 열고 닫는 수', when:'타이밍 볼 때'},
+  {k:'fr', label:'프랜차이즈 비중', when:'브랜드 정할 때'}
+];
+
 class Component extends DCLogic {
   state = {
     zi:null, sbi:null, sti:null, rentStats:null, salesHistory:null, err:'',
@@ -614,7 +625,15 @@ class Component extends DCLogic {
         +(S.homeZoneName?'':';box-shadow:inset 0 0 0 1.5px var(--accent)'),
       pickAll:()=>this.setState({homeZoneName:null,zoneId:null,sel:null,zq:'',pickOpen:null}),
       // 목록 높이를 끌어서 늘릴 수 있다. 최소 150 / 최대 420px로 묶는다.
-      colsStyle:'flex:none;height:'+(S.colsH||190)+'px;display:flex;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)',
+      // 구 25개를 세로 한 줄로 세우면 옆이 텅 비고 스크롤이 생긴다.
+      // ㄱㄴㄷ 순으로 여러 열에 깔면 25개가 한 화면에 다 들어와 스크롤이 없어진다.
+      guGridStyle:'flex:none;display:grid;gap:4px;margin-top:14px;padding-top:14px;'
+        +'border-top:1px solid var(--line);'
+        +'grid-template-columns:repeat('+this.L(3,4,5)+',minmax(0,1fr))',
+      // 상권 목록도 같은 이유로 폭을 채운다. 끌어서 높이를 조절하는 건 그대로.
+      colsStyle:'flex:none;height:'+(S.colsH||190)+'px;overflow-y:auto;margin-top:12px;padding-right:6px',
+      zoneGridStyle:'display:grid;gap:4px;'
+        +'grid-template-columns:repeat(auto-fill,minmax('+this.L(140,180,200)+'px,1fr))',
       onResize:e=>{
         const startY=(e.touches?e.touches[0].clientY:e.clientY);
         const startH=S.colsH||190;
@@ -643,9 +662,12 @@ class Component extends DCLogic {
         pick:()=>this.setState({homeZoneName:z.name,zoneId:z.id,sel:z.id,zq:this.zoneLabelOf(z.name),pickOpen:null}),
         style:'flex:none;display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:999px;background:var(--surface);cursor:pointer;white-space:nowrap;min-height:38px;transition:background .14s,color .14s'
       })),
-      guTabs:GU_LIST.map(g=>({
+      // ㄱㄴㄷ 순 — 행정 순서(종로구부터)는 사장님이 아는 순서가 아니라 찾기 어렵다
+      guTabs:GU_LIST.slice().sort((a,b)=>a.localeCompare(b,'ko')).map(g=>({
         label:g, pick:()=>this.setState({guTab:g}),
-        style:'flex:none;font-size:13.5px;font-weight:500;padding:10px 8px;border-radius:9px;cursor:pointer;white-space:nowrap;transition:background .14s,color .14s;'
+        style:'font-size:13.5px;font-weight:500;padding:10px 6px;border-radius:9px;cursor:pointer;'
+          +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;'
+          +'transition:background .14s,color .14s;'
           +(g===guTab?'background:var(--line);color:var(--ink);font-weight:600':'color:var(--ink2)')
       })),
       guZones:guZoneList.map(z=>({
@@ -710,38 +732,33 @@ class Component extends DCLogic {
   }
 
   // 시세분석 — 임대료·공실률·업종 매출·소비 구성. 전부 공개 통계.
-  priceView(){
+  priceView(catArg){
     const S=this.state;
-    // when: 이 차트를 언제 보면 좋은지. 배지로 짧게만 붙인다 — 설명은 길면 안 읽는다.
-    const CATS=[
-      {k:'rent', label:'상가 임대료', when:'자리 고를 때'},
-      {k:'vacancy', label:'빈 상가 비율', when:'위험 볼 때'},
-      {k:'sales', label:'장사별 매출 추이', when:'업종 고를 때'},
-      {k:'spend', label:'자치구 소비 구성', when:'손님 볼 때'},
-      {k:'churn', label:'문 열고 닫는 수', when:'타이밍 볼 때'},
-      {k:'fr', label:'프랜차이즈 비중', when:'브랜드 정할 때'}
-    ];
-    const cat=S.prCat||'rent';
+    // 차트 하나를 그린다. catArg 를 주면 그 차트를, 안 주면 고른 차트를 그린다.
+    // 여섯 개를 한 화면에 같이 보여주려고 이 함수를 여섯 번 부른다.
+    const cat=catArg||S.prCat||'rent';
+    const meta=PRICE_CATS.find(c=>c.k===cat)||PRICE_CATS[0];
+    // 켜 둔 차트들. 처음에는 임대료 하나만 켜 둔다.
+    const ON=(Array.isArray(S.prOn)&&S.prOn.length)? S.prOn : ['rent'];
     const W=640,H=200,PAD=16;
-    const ci=Math.max(CATS.findIndex(c=>c.k===cat),0);
-    const goCat=i=>()=>this.setState({prCat:CATS[(i+CATS.length)%CATS.length].k, prPick:null});
-    const out={cats:CATS.map((c,i)=>({label:c.label, when:c.when, on:c.k===cat,
-      pick:goCat(i),
-      style:'display:flex;align-items:center;justify-content:space-between;gap:8px;'
-        +'font-size:14px;font-weight:500;padding:12px 14px;border-radius:11px;cursor:pointer;'
-        +'white-space:nowrap;transition:background .14s,color .14s;'
-        +(c.k===cat?'background:var(--line);color:var(--ink);font-weight:600':'color:var(--ink2)'),
-      // 언제 보면 좋은지 — 지금 보고 있는 것만 배지를 켜서 시선을 뺏지 않는다
-      whenStyle:'flex:none;font-size:10.5px;font-weight:600;letter-spacing:.02em;'
-        +'padding:3px 7px;border-radius:999px;white-space:nowrap;'
-        +(c.k===cat?'background:var(--accent-3);color:var(--accent)':'background:transparent;color:var(--ink3)')})),
-    // 사진처럼 동그란 점으로 넘긴다 — 지금 보는 것만 알약 모양으로 길어진다
-    catDots:CATS.map((c,i)=>({
-      pick:goCat(i), label:c.label,
-      style:'flex:none;height:8px;border-radius:999px;cursor:pointer;transition:width .2s,background .2s;'
-        +(c.k===cat?'width:22px;background:var(--accent)':'width:8px;background:var(--line-strong)')})),
-    catPrev:goCat(ci-1), catNext:goCat(ci+1),
-    catNow:(ci+1)+' / '+CATS.length, catWhen:CATS[ci].when,
+    const out={
+      k:cat, catLabel:meta.label, when:meta.when, on:ON.indexOf(cat)>=0,
+      // 켜고 끄는 버튼이다 — 여러 개를 같이 켜 놓고 볼 수 있다.
+      // 다 끄면 볼 게 없어지니 마지막 하나는 안 꺼진다.
+      pick:()=>{ const has=ON.indexOf(cat)>=0;
+        const next=has? ON.filter(x=>x!==cat) : [...ON, cat];
+        this.setState({prOn: next.length? next : ON, prCat:cat, prPick:has?S.prPick:null}); },
+      chipStyle:'display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;'
+        +'font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;'
+        +'transition:background .14s,color .14s,box-shadow .14s;'
+        +(ON.indexOf(cat)>=0
+          ? 'background:var(--accent-3);color:var(--accent);font-weight:600'
+          : 'background:var(--surface);color:var(--ink2)'),
+      cardStyle:'display:flex;flex-direction:column;padding:22px 20px;border-radius:18px;'
+        +'background:var(--bg);box-shadow:0 0 0 1px var(--line)',
+      whenStyle:'flex:none;align-self:flex-start;font-size:10.5px;font-weight:600;letter-spacing:.02em;'
+        +'padding:3px 8px;border-radius:999px;white-space:nowrap;'
+        +'background:var(--accent-3);color:var(--accent)',
       title:'', unit:'', now:'', nowLabel:'', delta:'', deltaStyle:'display:none',
       labels:[], line:{d:'',area:'',pts:[]}, list:[], listTitle:'', note:'', w:W, h:H,
       missing:'', hasChart:false, pairs:null, dots:null, legend:null, bars:null};
@@ -1634,26 +1651,47 @@ class Component extends DCLogic {
             const idx=zi?zi.inds.indexOf(S.ind):-1;
             const PICKS=S.picks||[];
 
-            // 고른 구 안에서 이 장사 데이터가 있는 동네만 (매출 높은 순)
-            const zonesOfGu=(()=>{
-              if(!zi||!gu||idx<0) return [];
+            const zlp=S.zlp||{};
+            const q0=(S.rp_q||'').trim().replace(/\s/g,'');
+
+            // 서울 전체에서 이 장사 데이터가 있는 상권 (매출 높은 순).
+            // 자치구와 행정동을 함께 들고 있어야 '주소처럼' 찾을 수 있다.
+            const allZones=(()=>{
+              if(!zi||idx<0) return [];
               const out=[];
               for(const k in zi.zones){
-                if(zgu[k]!==gu) continue;
                 const row=(zi.zones[k].rows||[]).find(r=>r[0]===idx);
                 if(!row||!row[1]||!row[2]) continue;
-                out.push({id:k, name:this.zoneLabelOf(zi.zones[k].nm), stores:row[1], per:row[2]/row[1]});
+                out.push({id:k, gu:zgu[k]||'', dong:(zlp[k]&&zlp[k].dong)||'',
+                  name:this.zoneLabelOf(zi.zones[k].nm), stores:row[1], per:row[2]/row[1]});
               }
               out.sort((a,b)=>b.per-a.per);
-              out.forEach((z,i)=>{ z.rank=i+1; });
               return out;
             })();
+            // 고른 구 안에서만. 순위는 구 안에서 매긴다.
+            const zonesOfGu=allZones.filter(z=>gu&&z.gu===gu);
+            zonesOfGu.forEach((z,i)=>{ z.rank=i+1; });
             const nameOf=id=>(zi&&zi.zones[id])?this.zoneLabelOf(zi.zones[id].nm):id;
+            const guOf=id=>zgu[id]||'';
             // 동네 이름만 있으면 뭘 골라야 할지 알 수 없다 — 순위와 가게당 매출을 같이 적는다.
             // per 는 3개월 합계라 /3 해서 월로 적는다(다른 화면과 같은 기준). 가게가 2곳 이하면
             // '가게당'이 사실상 한 가게 실적이라 그 사실을 숨기지 않고 함께 적는다.
             const zoneSub=z=>z.rank+'위 · 가게당 월 '+this.fmt(z.per/3)+'원'
               +(z.stores<=2?' · 가게 '+z.stores+'곳뿐':'');
+            // 쳐서 찾을 때는 순위 대신 '어디인지'를 먼저 알려준다 — 다른 구가 나올 수 있어서다
+            const zoneWhere=z=>[z.gu, z.dong].filter(Boolean).join(' ')
+              +' · 가게당 월 '+this.fmt(z.per/3)+'원'
+              +(z.stores<=2?' · 가게 '+z.stores+'곳뿐':'');
+            // 상권 이름·행정동·자치구 아무거나로 찾는다. '역삼'을 치면 역삼역·역삼1동이 다 걸린다.
+            // 진짜 도로명 주소(테헤란로 152)는 아직 못 읽는다 — 지오코딩 키가 없다.
+            const findZones=(pool)=>{
+              if(!q0) return [];
+              const hit=z=>(z.name+z.dong+z.gu).replace(/\s/g,'').indexOf(q0)>=0;
+              const mine=pool.filter(hit);
+              // 고른 구 밖이라도 찾아준다 — 구를 잘못 골랐을 수 있다
+              const rest=allZones.filter(z=>hit(z)&&mine.indexOf(z)<0);
+              return [...mine, ...rest].slice(0,8);
+            };
 
             const SIDO=['서울특별시','부산광역시','대구광역시','인천광역시','광주광역시','대전광역시',
               '울산광역시','세종특별자치시','경기도','강원특별자치도','충청북도','충청남도',
@@ -1680,21 +1718,31 @@ class Component extends DCLogic {
 
               // 동네(상권)는 반대다 — 사장님이 이름을 모른다. 그래서 후보를 먼저 보여주고,
               // 각 줄에 '몇 위인지·가게당 얼마 파는지'를 같이 적어 고를 수 있게 한다.
-              {k:'zone', q:(gu||'서울')+' 안에서 어디부터 볼까요?',
-               hint: zonesOfGu.length
-                 ? this.indName(S.ind)+' 가게가 잘 되는 순서예요. 모르시겠으면 맨 위를 고르시면 됩니다.'
-                 : (gu||'서울')+'에는 아직 '+this.indName(S.ind)+' 자료가 없어요. ←로 다른 구를 골라 주세요.',
-               opts:zonesOfGu.map(z=>({v:z.id, label:z.name, sub:zoneSub(z)})),
-               search:'동네 이름으로 찾기',
+              // 가게를 낼 자리를 '주소처럼' 친다. 동 이름을 치면 그 동의 상권이 나온다.
+              {k:'zone', q:'가게를 낼 자리가 어디쯤인가요?',
+               hint: q0
+                 ? '동 이름·상권 이름으로 찾은 결과예요. 줄마다 어느 구 어느 동인지 적어 뒀어요.'
+                 : (zonesOfGu.length
+                   ? gu+'에서 '+this.indName(S.ind)+' 가게가 잘 되는 순서예요. 동 이름(예: 역삼동)을 쳐서 찾아도 돼요.'
+                   : (gu||'서울')+'에는 아직 '+this.indName(S.ind)+' 자료가 없어요. 동 이름을 쳐서 다른 곳을 찾아보세요.'),
+               opts: q0
+                 ? findZones(zonesOfGu).map(z=>({v:z.id, label:z.name, sub:zoneWhere(z)}))
+                 : zonesOfGu.map(z=>({v:z.id, label:z.name, sub:zoneSub(z)})),
+               search:'동 이름이나 상권 이름 (예: 역삼동)', preFiltered:true,
                val:S.sel||S.zoneId||'',
-               set:v=>({sel:v, zoneId:v, homeZoneName:nameOf(v)}), only:seoul, isZone:true},
+               // 다른 구가 검색으로 걸렸을 수 있으니 자치구도 같이 맞춰 준다
+               set:v=>({rp_gu:guOf(v)||gu, sel:v, zoneId:v, homeZoneName:nameOf(v)}),
+               only:seoul, isZone:true},
 
-              {k:'more', q:'옆 동네와 나란히 놓고 볼까요?',
-               hint:'고른 동네가 리포트에 나란히 들어가요. 필요 없으면 아래 ‘안 고르고 다음’을 누르세요.',
+              {k:'more', q:'견줘 보고 싶은 자리가 또 있나요?',
+               hint:'여기도 동 이름으로 찾을 수 있어요. 고른 자리가 리포트에 나란히 들어갑니다. 없으면 아래 ‘안 고르고 다음’을 누르세요.',
                multi:true,
-               opts:zonesOfGu.filter(z=>z.id!==(S.sel||S.zoneId))
-                 .map(z=>({v:z.id, label:z.name, sub:zoneSub(z)})),
-               search:'동네 이름으로 찾기', val:PICKS, only:seoul, isZone:true},
+               opts:(q0
+                 ? findZones(zonesOfGu).map(z=>({v:z.id, label:z.name, sub:zoneWhere(z)}))
+                 : zonesOfGu.map(z=>({v:z.id, label:z.name, sub:zoneSub(z)})))
+                 .filter(o=>o.v!==(S.sel||S.zoneId)),
+               search:'동 이름이나 상권 이름 (예: 역삼동)', preFiltered:true,
+               val:PICKS, only:seoul, isZone:true},
 
               {k:'cash', q:'창업에 쓸 수 있는 돈은 얼마인가요?',
                hint:'권리금·보증금·인테리어를 다 합친 금액이에요.',
@@ -1728,9 +1776,15 @@ class Component extends DCLogic {
             const firstOpen=STEPS.findIndex(s=>s.multi?false:!s.val);
             const step=Math.max(0,Math.min(
               S.rp_step!=null?S.rp_step:(firstOpen<0?N:firstOpen), N));
-            const go=i=>()=>this.setState({rp_step:i});
             const cur=step<N?STEPS[step]:null;
             const q=(S.rp_q||'').trim();
+            // 지금 화면에 그릴 후보. 상권 단계는 이미 걸러서 왔고(preFiltered),
+            // 구 단계는 치기 전까지 한 줄도 안 띄운다(blank).
+            const visible = !cur ? []
+              : cur.preFiltered ? cur.opts
+              : cur.search ? (cur.blank&&!q ? []
+                  : cur.opts.filter(o=>o.label.replace(/\s/g,'').indexOf(q.replace(/\s/g,''))>=0).slice(0,6))
+              : cur.opts;
 
             const optStyle=on=>'display:flex;align-items:center;justify-content:space-between;gap:12px;'
               +'width:100%;padding:17px 18px;border-radius:14px;cursor:pointer;'
@@ -1756,21 +1810,14 @@ class Component extends DCLogic {
               // 구 25개·동네 99개를 버튼으로 늘어놓으면 화면이 버튼 벽이 된다.
               // 치는 대로 걸러 6개만 보여준다. '강'만 쳐도 강남구·강동구가 뜬다.
               // 후보가 0개면 목록 칸 자체를 안 그린다 — 안 그러면 빈 여백만 22px 뜬다
-              hasOpts: !!(cur && (cur.search
-                ? !(cur.blank&&!q) && cur.opts.some(o=>!q||o.label.replace(/\s/g,'').indexOf(q.replace(/\s/g,''))>=0)
-                : cur.opts.length)),
+              hasOpts: visible.length>0,
               isSearch: !!(cur&&cur.search),
               searchHint: cur&&cur.search?cur.search:'',
               searchQ: S.rp_q||'',
               onSearchQ: e=>this.setState({rp_q:e.target.value}),
-              searchEmpty: !!(cur&&cur.search&&q&&
-                cur.opts.filter(o=>o.label.replace(/\s/g,'').indexOf(q.replace(/\s/g,''))>=0).length===0),
+              searchEmpty: !!(cur&&cur.search&&q&&visible.length===0),
               searchEmptyText: q? '‘'+q+'’와 맞는 게 없어요' : '',
-              curOpts: cur?(cur.search
-                // blank 인 단계(구)는 치기 전까지 한 줄도 안 띄운다 — 버튼이 아예 없다
-                ? (cur.blank&&!q ? []
-                  : cur.opts.filter(o=>!q||o.label.replace(/\s/g,'').indexOf(q.replace(/\s/g,''))>=0).slice(0,6))
-                : cur.opts).map(o=>{
+              curOpts: visible.map(o=>{
                 const on=cur.multi? (PICKS.indexOf(o.v)>=0) : (cur.val===o.v);
                 return {
                   label:o.label, on:on, style:optStyle(on),
@@ -1781,44 +1828,46 @@ class Component extends DCLogic {
                         this.setState({picks:next, rp_sent:false}); }
                     : ()=>this.setState({...cur.set(o.v), rp_step:step+1, rp_q:'', rp_sent:false, rp_error:''})
                 };
-              }):[],
+              }),
               // 여러 개 고르는 단계에서만 '다음'이 필요하다 — 하나 고르는 단계는 누르면 바로 넘어간다
               isMulti: !!(cur&&cur.multi),
               multiNext: ()=>this.setState({rp_step:step+1, rp_q:''}),
               multiLabel: PICKS.length? PICKS.length+'곳 담음 · 다음' : '안 고르고 다음',
 
-              // 이메일 단계 — 입력칸과 동의 체크가 이 카드 안에서 끝난다
+              // 이메일 단계 — 입력칸과 동의 체크가 이 카드 안에서 끝난다.
+              // 여기는 건너뛸 수 없다. 주소가 있어야 리포트를 보내 드릴 수 있어서다.
+              // 버튼은 늘 눌린다. 비었으면 막는 대신 입력칸이 흔들리고 빨간 글자로 이유를 말한다
+              // — 눌리지 않는 회색 버튼은 '고장난 건가?' 하고 멈추게 만든다.
               isEmail: !!(cur&&cur.input==='email'),
-              emailNext: ()=>this.setState({rp_step:step+1, rp_q:''}),
-              emailNextLabel: !email ? '메일 없이 리포트 보기'
-                : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '주소를 다시 확인해 주세요'
-                : !S.rp_agree ? '아래 동의에 체크해 주세요' : '이 주소로 받기',
+              emailNext: ()=>this.setState(ok
+                ? {rp_step:step+1, rp_q:'', rp_shake:0}
+                : {rp_shake:(S.rp_shake||0)+1}),
+              emailNextLabel:'리포트 받기',
               emailNextStyle:'width:100%;margin-top:16px;font-size:15.5px;font-weight:600;border:none;'
                 +'border-radius:14px;height:50px;cursor:pointer;transition:filter .16s;'
-                +(ok?'background:var(--accent);color:#FFFFFF':'background:var(--surface);color:var(--ink2)'),
+                +'background:var(--accent);color:#FFFFFF',
+              // 한 번이라도 그냥 누른 뒤에만 빨간 글자가 뜬다 — 처음부터 혼내지 않는다
+              hasEmailErr: !!S.rp_shake && !ok,
+              emailErr: !email ? '메일 주소를 입력해 주세요'
+                : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '메일 주소 형식이 맞지 않아요 (예: name@example.com)'
+                : '아래 동의에 체크해 주세요',
+              emailInputStyle:'width:100%;margin-top:20px;font-size:16px;font-weight:500;color:var(--ink);'
+                +'background:var(--surface);border:none;border-radius:14px;padding:0 16px;height:52px;outline:none;'
+                +((S.rp_shake && !ok)
+                  ? 'box-shadow:inset 0 0 0 1.5px var(--err);animation:'
+                    +(S.rp_shake%2?'shakeA':'shakeB')+' .4s cubic-bezier(.36,.07,.19,.97)'
+                  : ''),
 
-              // 여러 개 고르는 단계와 이메일 단계는 자기 버튼에 '안 고르고 다음'이 이미 있다
-              canSkip: !!(cur && !cur.multi && cur.input!=='email'),
-              curSkip: cur?()=>this.setState({rp_step:step+1, rp_q:''}):()=>{},
+              // 건너뛰기는 없앴다. 답이 비면 리포트의 그 칸이 빈 채로 나가서,
+              // 사장님이 '왜 이건 안 나왔지'를 나중에 다시 물어야 했다.
+              // 되돌아가는 길(←)은 남겨 둔다.
               curBack: step>0?()=>this.setState({rp_step:step-1, rp_q:''}):()=>{},
               hasBack: step>0,
               qsAllDone: !cur,
-              qsDone: STEPS.map((s,i)=>({
-                label:s.q, value:shown(s.val, s.isZone), edit:go(i),
-                style:'display:flex;align-items:center;justify-content:space-between;gap:14px;'
-                  +'padding:15px 0;border-bottom:1px solid var(--line);cursor:pointer;min-width:0',
-                valStyle:'flex:none;max-width:52%;font-size:14px;font-weight:600;'
-                  +'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
-                  +((Array.isArray(s.val)?s.val.length:s.val)?'color:var(--ink)':'color:var(--ink3)')
-              })),
-              // 마지막(이메일) 단계에는 그 안에 이미 '메일 없이 리포트 보기'가 있다 — 같은 버튼을 두 번 두지 않는다
-              showDone: !(cur && cur.input==='email'),
-              doneCta: cur?'건너뛰고 리포트 보기':'리포트 보기',
-              doneGo: cur ? ()=>this.setState({rp_step:N}) : ()=>{},
-              doneStyle:'width:100%;margin-top:20px;font-size:16px;font-weight:600;border:none;'
-                +'border-radius:14px;height:52px;cursor:pointer;transition:filter .16s;'
-                +(cur?'background:var(--surface);color:var(--ink2)'
-                     :'background:var(--accent);color:#FFFFFF'),
+              // 다 답한 뒤엔 카드가 사라진다. 답을 다시 볼 수 있게 한 줄만 남긴다.
+              doneLine: STEPS.map(s=>shown(s.val, s.isZone))
+                .filter(v=>v&&v!=='건너뜀'&&v!=='없음').join(' · '),
+              editAgain: ()=>this.setState({rp_step:0, rp_q:''}),
               // 리포트가 몇 칸까지 열렸는지 — rv 가 이 값으로 한 칸씩 연다
               qsN:N, qsStepNum:step
             };
@@ -2036,6 +2085,8 @@ class Component extends DCLogic {
       onReport:S.screen==='report',
       onPrice:S.screen==='price',
       pr:this.priceView(),
+      // 여섯 개를 한 화면에 같이 — 하나씩 넘겨 보지 않아도 되게
+      prAll:PRICE_CATS.map(c=>this.priceView(c.k)),
       onFineIntro:S.screen==='fineIntro',
       fi:{
         rows:[
