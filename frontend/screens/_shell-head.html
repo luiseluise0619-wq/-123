@@ -233,10 +233,8 @@
           </div>
         </sc-for>
       </nav>
-      <span style="flex:none;display:flex;align-items:center;gap:7px">
-        <span role="button" tabIndex="0" aria-label="언어" onClick="{{ openSettings }}" style="{{ localeBtn }}">{{ localeShort }}</span>
-        <span role="button" tabIndex="0" aria-label="설정" onClick="{{ openSettings }}" style="{{ settingsBtn }}">⚙</span>
-      </span>
+      <!-- 언어·밝기·테마는 전부 ⚙ 안에 있다(§11). 헤더에 따로 내지 않는다. -->
+      <span role="button" tabIndex="0" aria-label="설정" onClick="{{ openSettings }}" style="{{ settingsBtn }}">⚙</span>
     </div>
   </header>
 

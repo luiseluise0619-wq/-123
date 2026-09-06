@@ -5,12 +5,19 @@
 globalThis.MysbizonParts = globalThis.MysbizonParts || {};
 globalThis.MysbizonParts.design = {
   ds(kind){
-    const CARD='background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card);';
+    // 카드는 '정말 강조가 필요한 것'에만 쓴다(§2). 그림자는 쓰지 않는다(§3) —
+    // 정보 구분은 여백 → 글자 크기 → 구분선 → 테두리 순으로 푼다.
+    const CARD='background:var(--bg);border:1px solid var(--line);';
     const M={
       card:      CARD+'border-radius:var(--r-md);padding:'+this.L('16px','18px','20px'),
       cardLg:    CARD+'border-radius:var(--r-lg);padding:'+this.L('18px','24px','28px'),
-      // 중요한 카드는 회색 배경이 아니라 민트 테두리로 구분한다
-      cardHi:    'background:var(--accent-3);border:1px solid var(--accent-2);'
+      // 카드 없이 여백으로만 묶는 그룹. 카드를 걷어낼 때 자리에 넣는다.
+      plain:     'background:none;border:none;padding:0;min-width:0',
+      // 가로 구분선 — 카드를 대신한다
+      divider:   'height:1px;background:var(--line);border:none;margin:0',
+      // 강조 카드. 민트로 면을 칠하지 않는다(§1: 민트는 화면당 1~2곳) —
+      // 흰 바탕에 민트 테두리 한 줄로만 구분한다.
+      cardHi:    'background:var(--bg);border:1px solid var(--accent-2);'
                  +'border-radius:var(--r-lg);padding:'+this.L('18px','24px','28px'),
       h1:        'font-size:'+this.L('28px','32px','36px')+';font-weight:700;letter-spacing:-.03em;line-height:1.18;margin:0;text-wrap:pretty',
       h2:        'font-size:'+this.L('20px','22px','24px')+';font-weight:700;letter-spacing:-.02em;line-height:1.3;margin:0',

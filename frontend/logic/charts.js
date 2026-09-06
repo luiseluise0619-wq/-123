@@ -234,8 +234,9 @@ globalThis.MysbizonParts.charts = {
       period: (opt.period || '').replace(/\s*기준\s*$/, ''),
       hasPeriod: !!opt.period,
       height: (opt.height || 220) + 'px',
-      style: 'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card);'
-        + 'border-radius:var(--r-lg);padding:20px;min-width:0;display:flex;flex-direction:column'
+      // 차트는 카드 안에 넣지 않는다(§2 card-in-card 금지 · §7 차트가 주인공).
+      // 테두리·그림자 없이 여백만으로 띄운다.
+      style: 'background:none;border:none;padding:0;min-width:0;display:flex;flex-direction:column'
     };
   }
 };

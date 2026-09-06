@@ -101,19 +101,27 @@ globalThis.MysbizonParts.market.marketView = function(){
   // 갈래는 고른 지표를 따라간다 — 따로 고르게 하면 둘이 어긋난다
   const cat=sel.cat;
 
-  const catStyle=on=>'display:block;padding:'+this.L('9px 8px','10px 12px','11px 13px')+';'
-    +'border-radius:var(--r-sm);cursor:pointer;font-size:'+this.L('12.5px','14px','14.5px')+';'
-    +'font-weight:700;letter-spacing:-.01em;transition:color .14s;'
-    +'overflow:hidden;text-overflow:ellipsis;'
-    +(on?'color:var(--ink)':'color:var(--ink3)');
-  const indStyle=on=>'display:block;margin-left:'+this.L('0','8px','8px')+';'
-    +'padding:'+this.L('8px','9px 12px','10px 13px')+';border-radius:var(--r-sm);cursor:pointer;'
-    +'font-size:'+this.L('12.5px','14px','14.5px')+';transition:background .14s,color .14s;'
-    +'overflow:hidden;text-overflow:ellipsis;'
-    +(on?'background:var(--accent-3);color:var(--accent);font-weight:700':'color:var(--ink2)');
+  const mob=this.bp()==='mobile';
 
-  // 갈래를 누르면 그 갈래의 첫 지표로 간다. 갈래 하나만 펼쳐 둔다 —
-  // 28개를 한꺼번에 세로로 쌓으면 목록만으로 화면이 찬다.
+  // 데스크톱 — 왼쪽 세로 목록(갈래 → 지표). 모바일 — 가로 탭 두 줄(§25·§26).
+  const catStyle=on=> mob
+    ? 'flex:none;scroll-snap-align:start;padding:9px 15px;border-radius:999px;cursor:pointer;'
+      +'font-size:14px;white-space:nowrap;transition:background .14s,color .14s;'
+      +(on?'background:var(--accent);color:#FFFFFF;font-weight:600'
+          :'background:var(--surface);color:var(--ink2)')
+    : 'display:block;padding:11px 13px;border-radius:var(--r-sm);cursor:pointer;font-size:14.5px;'
+      +'font-weight:700;letter-spacing:-.01em;transition:color .14s;'
+      +'overflow:hidden;text-overflow:ellipsis;'
+      +(on?'color:var(--ink)':'color:var(--ink3)');
+  const indStyle=on=> mob
+    ? 'flex:none;scroll-snap-align:start;padding:6px 2px;cursor:pointer;font-size:14px;'
+      +'white-space:nowrap;transition:color .14s;border-bottom:2px solid '
+      +(on?'var(--accent);color:var(--ink);font-weight:700':'transparent;color:var(--ink3)')
+    : 'display:block;margin-left:8px;padding:10px 13px;border-radius:var(--r-sm);cursor:pointer;'
+      +'font-size:14.5px;transition:background .14s,color .14s;overflow:hidden;text-overflow:ellipsis;'
+      +(on?'background:var(--accent-3);color:var(--accent);font-weight:700':'color:var(--ink2)');
+
+  // 데스크톱 세로 목록 — 갈래를 누르면 그 갈래의 지표가 아래로 펼쳐진다
   const side=[];
   CATS.forEach(c=>{
     const items=ALL.filter(i=>i.cat===c.k);
@@ -124,14 +132,22 @@ globalThis.MysbizonParts.market.marketView = function(){
   });
 
   return {
+    // 모바일은 가로 탭 두 줄, 데스크톱은 왼쪽 세로 목록 — 같은 목록을 모양만 바꾼다
+    horiz:mob, vert:!mob,
     side,
-    // 왼쪽 세로 목록 · 오른쪽 차트. 모바일에서도 나란히 둔다(사장님 요청).
-    cols:this.L('112px minmax(0,1fr)','188px minmax(0,1fr)','224px minmax(0,1fr)'),
-    gap:this.L('10px','18px','24px'),
-    sideStyle:this.L(
-      'align-self:start;min-width:0',
-      this.ds('card')+';align-self:start;padding:10px;min-width:0',
-      this.ds('card')+';align-self:start;padding:10px;min-width:0'),
+    cats:CATS.map(c=>{
+      const items=ALL.filter(i=>i.cat===c.k);
+      return {label:c.label, pick:()=>this.marketPick((items[0]||sel).k), style:catStyle(c.k===cat)};
+    }),
+    inds:ALL.filter(i=>i.cat===cat).map(i=>({
+      label:i.label, pick:()=>this.marketPick(i.k), style:indStyle(i.k===selKey)})),
+    tabTrack:'display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;'
+      +'scrollbar-width:none;padding:2px 0 6px;min-width:0',
+    indTrack:'display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x proximity;'
+      +'scrollbar-width:none;padding:0 0 4px;min-width:0',
+    cols:this.L('1fr','188px minmax(0,1fr)','224px minmax(0,1fr)'),
+    gap:this.L('0','18px','24px'),
+    sideStyle:this.ds('card')+';align-self:start;padding:10px;min-width:0',
     // 지금 보는 지표
     selKey, selLabel:sel.label, selQuestion:sel.q, selSrc:sel.src,
     ready:!!sel.ready,

@@ -841,7 +841,7 @@ class Component extends DCLogic {
                 // 가로 슬라이드 안에서 카드 높이가 제각각이면 줄이 들쭉날쭉해 보인다
                 style:'display:flex;flex-direction:column;gap:0;padding:22px;border-radius:var(--r-lg);height:100%;'
                   +'background:var(--bg);border:1px solid '+(soon?'var(--accent-2)':'var(--line)')
-                  +';box-shadow:var(--shadow-card);min-width:0'
+                  +';min-width:0'
               };
             };
             const top=matched.filter(o=>{ const dd=ddOf(o.it); return horizon==null||dd==null||dd<=horizon; });
@@ -1053,16 +1053,6 @@ class Component extends DCLogic {
           sim        :{d:'내 숫자를 직접 넣어 어디가 더 남는지 계산해요',  cta:'계산하기'},
           diag       :{d:'이 자리 한 곳의 본전선을 확인해요',              cta:'본전 보기'}
         };
-        const ART={
-          zone:['M6 32 h7 v10 h-7 z','M17 24 h7 v18 h-7 z','M28 28 h7 v14 h-7 z','M39 14 h7 v28 h-7 z'],
-          find:['M26 8 a10 10 0 0 1 10 10 c0 8 -10 20 -10 20 s-10 -12 -10 -20 a10 10 0 0 1 10 -10 z','M26 18 h.01'],
-          cmp:['M6 12 h16 v28 h-16 z','M30 12 h16 v28 h-16 z','M10 21 h8','M34 21 h8','M10 29 h8','M34 29 h8'],
-          fineCmp:['M22 10 a13 13 0 1 1 0 26 a13 13 0 1 1 0 -26 z','M33 33 l9 9'],
-          map:['M6 14 l13 -5 l13 5 l13 -5 v28 l-13 5 l-13 -5 l-13 5 z','M19 9 v28','M32 14 v28'],
-          fineDetail:['M8 40 v-12','M18 40 v-22','M28 40 v-16','M38 40 v-28','M6 44 h40'],
-          sim:['M14 10 h24 v32 h-24 z','M20 18 h12','M20 26 h12','M20 34 h6'],
-          diag:['M8 38 l10 -12 l8 7 l14 -20','M6 44 h40','M40 13 h6 v6']
-        };
         const selId = S.sel || S.zoneId;
         const selNm = (selId && S.zi && S.zi.zones[selId]) ? this.zoneLabelOf(S.zi.zones[selId].nm) : null;
         const nPicks = (S.picks||[]).length;
@@ -1072,37 +1062,26 @@ class Component extends DCLogic {
         return {
           title: HEAD[k].t,
           desc: HEAD[k].d,
-          // 카드 넷을 세로로 쌓지 않고 가로로 넘긴다 — 모바일에서 넷을 쌓으면
-          // 첫 화면이 메뉴만으로 다 찬다. 데스크톱에서는 넷이 그대로 한 줄에 들어온다.
-          rail: this.rail('hub',{per:4}),
           ctx: [
             {label:'업종', value:this.indName(S.ind)},
             ...(selNm ? [{label:'고른 상권', value:selNm}] : [])
           ].map(c=>({...c,
             style:'display:inline-flex;align-items:baseline;gap:6px;padding:7px 12px;border-radius:999px;'
               +'background:var(--surface);white-space:nowrap;min-width:0'})),
-          cards:(g?g.items:[]).map(([key,label])=>{
-            const on=key===next;
-            const c=CARD[key]||{d:'',cta:'열기'};
-            return {
-              label:label, sub:c.d, cta:c.cta+' →',
-              art:(ART[key]||[]).map(d=>({d:d})),
-              // 카드는 '무엇을 하는 화면인가'만 알려주면 된다 — 높이를 줄여 셋이 한눈에 들어오게 한다
-              artStyle:'flex:none;width:34px;height:34px;display:block;'
-                +(on?'color:var(--accent)':'color:var(--ink3)'),
-              labelStyle:'font-size:'+this.L('17px','18px','19px')+';font-weight:700;letter-spacing:-.02em;'
-                +(on?'color:var(--accent)':'color:var(--ink)'),
-              subStyle:'font-size:13.5px;line-height:1.5;text-wrap:pretty;color:var(--ink2)',
-              ctaStyle:'font-size:13.5px;font-weight:600;margin-top:auto;padding-top:12px;white-space:nowrap;'
-                +(on?'color:var(--accent)':'color:var(--ink2)'),
-              go:()=>this.setState({screen:key,menu:null}),
-              style:'display:flex;flex-direction:column;gap:9px;height:100%;min-height:'+this.L('126px','146px','164px')+';'
-                +'padding:'+this.L('18px','20px','22px')+';border-radius:var(--r-lg);cursor:pointer;min-width:0;'
-                +'transition:transform .18s cubic-bezier(.2,.7,.3,1),box-shadow .18s;'
-                +(on?'background:var(--accent-3);border:1px solid var(--accent-2)'
-                    :'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card)')
-            };
-          })
+          // 메뉴판 대신 '다음 행동' 하나를 크게 둔다(§14·§18).
+          // 나머지는 아래 한 줄짜리 목록으로 — 넷을 나란히 두면 무엇부터 눌러야 할지 모른다.
+          primary:(()=>{
+            const it=(g?g.items:[]).find(([k])=>k===next);
+            if(!it) return {label:'', sub:'', go:()=>{}, has:false};
+            const c=CARD[next]||{d:'',cta:'열기'};
+            return {label:c.cta, sub:c.d, has:true,
+                    go:()=>this.setState({screen:next,menu:null})};
+          })(),
+          others:(g?g.items:[]).filter(([k])=>k!==next).map(([key,label])=>({
+            label:label, sub:(CARD[key]||{}).d||'',
+            go:()=>this.setState({screen:key,menu:null}),
+            style:'display:flex;align-items:center;gap:12px;padding:16px 0;cursor:pointer;'
+              +'border-top:1px solid var(--line);min-width:0'})),
         };
       })(),
       goFind:go('find'), goDiag:go('diag'), goCmp:go('cmp'),
@@ -1115,7 +1094,10 @@ class Component extends DCLogic {
       ...this.settingsView(),
       q:S.q, onQ:e=>this.setState({q:e.target.value,openMore:false}),
       chips:names.slice(0,5).map(n=>({name:this.indName(n), pick:()=>this.setState({ind:n,sel:null,picks:null,openWhy:false,openMore:false,fromRegion:false}),
-        style:chipBase+'flex:none;'+(n===S.ind?'background:var(--ink);color:var(--bg);font-weight:500':'background:var(--surface);color:var(--ink)')})),
+        style:chipBase+'flex:none;'+(n===S.ind?'background:var(--ink);color:var(--bg);font-weight:500':'background:var(--surface);color:var(--ink)'),
+        // 둥근 칩 대신 글자 버튼(§15) — 고른 것만 진하게
+        textStyle:'flex:none;font-size:14.5px;cursor:pointer;white-space:nowrap;transition:color .14s;'
+          +(n===S.ind?'color:var(--ink);font-weight:700':'color:var(--ink2)')})),
       hasMore:names.length>5,
       openMore:!!S.openMore,
       toggleMore:()=>this.setState({openMore:!S.openMore}),
@@ -1211,7 +1193,13 @@ class Component extends DCLogic {
           hasGu: gus.length>0,
           indValue:S.ind,
           indName:this.indName(S.ind),
-          scope: cur || '서울 전체'
+          scope: cur || '서울 전체',
+          // 고르는 칸은 접어 둔다(§35) — 화면의 주인공은 결과다.
+          // 닫혀 있을 때는 지금 조건을 한 줄로만 보여준다.
+          pickOpen: !!S.findPickOpen,
+          pickToggle: ()=>this.setState({findPickOpen:!S.findPickOpen}),
+          pickLabel: S.findPickOpen? '접기' : '바꾸기',
+          summary: (cur||'서울 전체')+' · '+this.indName(S.ind)
         };
       })(),
 
@@ -1260,12 +1248,16 @@ class Component extends DCLogic {
         +'animation:botIn .26s cubic-bezier(.22,.72,.24,1) both;'
         +this.L('left:0;right:0;bottom:0;height:78vh;','right:20px;bottom:20px;width:372px;height:min(560px,78vh);','right:28px;bottom:28px;width:392px;height:min(580px,76vh);'),
       botCloseStyle:'flex:none;width:28px;height:28px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .14s',
-      // 화면을 가리지 않게 줄였다. 손가락으로 누를 수 있는 크기(40px)는 지킨다.
-      // 아이폰 홈 인디케이터 위로 올라오게 safe-area 를 더한다.
-      botFab:'position:fixed;z-index:70;display:inline-flex;align-items:center;gap:7px;padding:0 14px;height:40px;border-radius:999px;'
+      // 모바일에서는 글자를 빼고 동그란 아이콘으로 줄인다(§17) — 차트·버튼을 가리지 않게.
+      // 손가락으로 누를 수 있는 크기(40px)는 지킨다. 아이폰 홈 인디케이터 위로 safe-area 를 더한다.
+      botFabIcon:this.bp()==='mobile',
+      botFabText:this.bp()!=='mobile',
+      botFab:'position:fixed;z-index:70;display:inline-flex;align-items:center;justify-content:center;gap:7px;'
+        +this.L('width:40px;padding:0;','padding:0 14px;','padding:0 14px;')
+        +'height:40px;border-radius:999px;'
         +'background:var(--bg);color:var(--accent);border:1px solid var(--line-strong);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.06);'
         +'transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1);'
-        +this.L('right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));',
+        +this.L('right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));',
                 'right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));',
                 'right:28px;bottom:calc(28px + env(safe-area-inset-bottom,0px));'),
       // CTA 체계 — 주 행동 하나만 강조한다

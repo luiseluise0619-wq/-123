@@ -159,6 +159,7 @@ globalThis.MysbizonParts.i18n = {
       'settings.language':'언어','settings.theme':'테마','settings.chartColors':'차트 색상',
       'settings.textColors':'글자','settings.textPrimary':'본문 글자',
       'settings.textSecondary':'보조 글자','settings.custom':'직접 설정',
+      'settings.adv':'고급 설정','settings.advClose':'고급 설정 닫기',
       'settings.primary':'포인트 색','settings.background':'배경색',
       'settings.i18nNote':'상권 이름·업종 이름과 자료에서 만들어지는 문장은 아직 한국어예요.',
 

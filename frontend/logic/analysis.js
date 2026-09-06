@@ -352,7 +352,8 @@ globalThis.MysbizonParts.analysis = {
       q:'가게 한 곳이 한 달에 얼마 파나요?',
       big:this.won(sel.per/3),
       bigLabel:this.t('mv.estMedian',{amt:this.won(mp/3)}),
-      verdict:(diff>=10? '서울 중앙값보다 '+diff+'% 높아요.' : (diff<=-10? '서울 중앙값보다 '+Math.abs(diff)+'% 낮아요.' : '서울 중앙값과 비슷해요.')),
+      // 1107% 는 맞는 값이어도 사람이 못 믿는다 — 배수로 말한다(design.js ratioText)
+      verdict:((this.ratioText(sel.per/3, mp/3)||{}).text || '서울 중앙값과 비슷해요')+'.',
       rows:sRows, bars:[], trend:trend,
       note:'한 곳당 매출은 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아니에요.'});
 

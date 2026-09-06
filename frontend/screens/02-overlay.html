@@ -53,8 +53,16 @@
     </sc-if>
 
     <sc-if value="{{ botClosed }}">
-      <div data-bot-fab="1" role="button" tabIndex="0" onClick="{{ botToggle }}" style="{{ botFab }}" style-hover="filter:brightness(1.06)" style-active="transform:scale(.96)">
-        <span style="font-size:13.5px;font-weight:600;white-space:nowrap">도우미</span>
+      <!-- 모바일은 아이콘만. 눌러야 창이 열린다(§17) -->
+      <div data-bot-fab="1" role="button" tabIndex="0" aria-label="도우미" onClick="{{ botToggle }}" style="{{ botFab }}" style-hover="filter:brightness(1.06)" style-active="transform:scale(.96)">
+        <sc-if value="{{ botFabIcon }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px" aria-hidden="true">
+            <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.6-.7L3 21l1.9-4.8A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.4-8.4 8.4 8.4 0 0 1 9 8.4z"></path>
+          </svg>
+        </sc-if>
+        <sc-if value="{{ botFabText }}">
+          <span style="font-size:13.5px;font-weight:600;white-space:nowrap">도우미</span>
+        </sc-if>
       </div>
     </sc-if>
 

@@ -182,14 +182,14 @@ globalThis.MysbizonParts.sim = {
         hasMissing: c.missing.length>0,
         cardStyle:'background:var(--color-background);border:1px solid '
           +(won?'var(--color-primary)':'var(--color-border)')
-          +';border-left:5px solid '+col+';box-shadow:var(--shadow-card);'
+          +';border-left:5px solid '+col+';'
           +'border-radius:var(--r-lg);padding:'+this.L('18px','20px','22px')+';min-width:0;'
           +(zones.length===1? 'max-width:520px' : '')
       };
     };
 
     // 더 담을 후보 — 자동 점수가 아니라 '내가 견주고 싶은 곳'을 고르는 목록
-    const picker=L.filter(o=>ids.indexOf(o.id)<0).slice(0,10).map(o=>({
+    const picker=L.filter(o=>ids.indexOf(o.id)<0).slice(0,6).map(o=>({
       name:this.zoneLabelOf(o.name),
       meta:(S.zgu&&S.zgu[o.id])||'',
       add: ids.length>=3? (()=>{}) : (()=>this.setState({picks:[...ids,o.id]})),
@@ -214,8 +214,13 @@ globalThis.MysbizonParts.sim = {
     return {
       ready:true, hasZones:true,
       lead:'내 조건이면 어디가 더 남을까요?',
-      sub:'숫자를 직접 넣어 보세요. 상권 자료에서 넣어 둔 값은 참고용이고, 고치면 바로 다시 계산돼요.',
+      sub:'숫자를 고치면 바로 다시 계산돼요.',
       zones:zones.map(cardOf),
+      // 입력칸 아홉 개를 늘 펼쳐 두지 않는다 — 결과가 먼저다(§23·§35)
+      editOpen:!!S.simEdit,
+      editToggle:()=>this.setState({simEdit:!S.simEdit}),
+      editLabel:S.simEdit? '비용 접기' : '비용 고치기',
+      pickerRail:this.rail('simPick',{per:3}),
       // 담은 수만큼만 나눠 쓴다 — 한 곳인데 3분할이면 오른쪽이 텅 빈다
       rail:this.rail('simZ',{per:Math.min(3,Math.max(zones.length,1))}),
       picker, hasPicker:picker.length>0 && ids.length<3,

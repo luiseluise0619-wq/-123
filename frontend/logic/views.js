@@ -66,13 +66,14 @@ globalThis.MysbizonParts.views = {
       ],
       // 표본이 적으면 단정하지 않는다. 다만 '판단 보류'로 모든 값을 죽이지도 않는다(§12).
       thin:sel.stores<10,
+      // 한 줄로 줄인다(§5) — 자세한 건 아래 '데이터 기준 보기'에 있다
       thinWarn: sel.stores<10
-        ? '분석 가능한 점포가 '+sel.stores.toLocaleString()+'곳이라 종합 평가는 참고 수준이에요. 개별 지표는 그대로 보셔도 됩니다.'
+        ? '분석 가능한 점포가 '+sel.stores.toLocaleString()+'곳이라 종합 평가는 참고 수준이에요.'
         : '',
       thinBadge: sel.stores<10? '점포 '+sel.stores.toLocaleString()+'곳' : '',
       // 결론 먼저 — 점수는 기준선과 함께
       verdict:(()=>{
-        if(sel.stores<10) return '참고 수준으로 봐주세요. 아래 지표는 그대로 확인하실 수 있어요.';
+        if(sel.stores<10) return '개별 지표는 그대로 보셔도 돼요.';
         const scores=L.map(o=>o.score).sort((a,b)=>a-b);
         const med=scores[Math.floor(scores.length/2)];
         const rank=L.indexOf(sel)+1, pct=Math.round(rank/L.length*100);
@@ -598,12 +599,16 @@ globalThis.MysbizonParts.views = {
         const rf=this.rentRef(sel.name);
         if(rf&&rf.exact) push(care,'임대료', rf.value+'/㎡ · '+rf.note);
         if(sel.stores<10) push(care,'표본', '가게가 '+sel.stores+'곳뿐이라 평균이 흔들려요');
-        const style=t=>'display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:var(--r-md);'
-          +'background:var(--bg);min-width:0';
+        const style=t=>'min-width:0';
+        // 종합평가는 한 줄. 강점·주의는 눌렀을 때만 편다(§21·§35).
+        const dashOpen=!!S.mvDashOpen;
         return {
           zone:this.zoneLabelOf(sel.name), ind:this.indName(S.ind),
+          open:dashOpen,
+          toggle:()=>this.setState({mvDashOpen:!dashOpen}),
+          toggleLabel:dashOpen?'접기':'강점·주의 보기',
           fit:fit.word, fitWhy:fit.why, hasFitWhy:!!fit.why,
-          fitStyle:'font-size:'+this.L('30px','34px','38px')+';font-weight:700;letter-spacing:-.03em;line-height:1.1;'
+          fitStyle:'flex:none;font-size:'+this.L('22px','24px','26px')+';font-weight:700;letter-spacing:-.02em;line-height:1.15;'
             +'color:'+({good:'var(--good)',warn:'var(--warn)',flat:'var(--ink)'}[fit.tone]),
           tips:(()=>{ const g=A.find(x=>x.key==='grow');
             return g? (g.rows||[]).slice(0,3).map(r=>({text:r.label+(r.value?' · '+r.value:'')})) : []; })(),
@@ -653,7 +658,7 @@ globalThis.MysbizonParts.views = {
               +'white-space:nowrap;background:var(--color-surface);color:var(--color-text-secondary);'
               +'transition:background .14s,color .14s'
           })),
-          chartCount:ch.charts.length+'개',
+          chartCount:this.t('mk.chartCount',{n:ch.charts.length}),
           hasChartNav:ch.charts.length>1,
           missing:ch.missing.map(t=>({text:t})), hasMissing:ch.missing.length>0,
           title:cur.title, q:cur.q||'', big:cur.big||'', bigLabel:cur.bigLabel||'',
@@ -883,7 +888,12 @@ globalThis.MysbizonParts.views = {
       fullText:'3곳까지 담을 수 있어요. 하나를 빼면 다른 곳을 담을 수 있어요.',
       foundRail:this.rail('cmpFound',{per:3}),
       recentRail:this.rail('cmpRecent',{per:3}),
-      suggestRail:this.rail('cmpSug',{per:3})
+      suggestRail:this.rail('cmpSug',{per:3}),
+      // 담을 게 없을 때만 펼쳐 둔다. 이미 비교 중이면 결론이 먼저다(§19·§35).
+      open: PICKS.length<2 ? true : !!S.cmpAddOpen,
+      canFold: PICKS.length>=2,
+      toggle:()=>this.setState({cmpAddOpen:!S.cmpAddOpen}),
+      toggleLabel: S.cmpAddOpen? '닫기' : '+ 상권 추가'
     };
 
     if(picks.length<2){
@@ -897,7 +907,7 @@ globalThis.MysbizonParts.views = {
           diag:()=>this.setState({sel:o.id,screen:'diag'}),
           drop:()=>this.setState({picks:PICKS.filter(x=>x!==o.id)}),
           best:false,
-          cardStyle:'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card);'
+          cardStyle:'background:var(--bg);border:1px solid var(--line);'
             +'border-radius:var(--r-lg);padding:20px;min-width:0;position:relative',
           cells:[{label:'예상 매출 (추정)', value:this.won(o.per/3), note:'',
                   valStyle:'font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums', bar:null},
@@ -1079,7 +1089,7 @@ globalThis.MysbizonParts.views = {
         cardStyle:'background:var(--color-background);border:1px solid '
           +(first?'var(--color-primary)':'var(--color-border)')
           +';border-left:5px solid '+o._color
-          +';box-shadow:var(--shadow-card);border-radius:var(--r-lg);padding:20px;min-width:0;position:relative',
+          +';border-radius:var(--r-lg);padding:20px;min-width:0;position:relative',
         cells:[
           {label:'예상 매출 (추정)', value:monthly(src.per),
            note:o===wPer?'담은 곳 중 가장 높아요':'',

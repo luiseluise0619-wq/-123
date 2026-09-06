@@ -161,27 +161,43 @@ globalThis.MysbizonParts.theme.settingsView = function(){
       +'border-radius:8px;background:none;cursor:pointer'
   });
 
+  // 고급 설정 — 개발자용 색 항목은 기본 화면에 내지 않는다(§12).
+  const adv=!!S.setAdv;
+
   return {
-    // 헤더
+    // 헤더 — ⚙ 하나만 둔다. 언어·밝기·테마는 전부 이 안으로 들어간다(§11).
     localeShort:cur.short,
     settingsOpen:!!S.setOpen,
     openSettings:()=>this.setState({setOpen:!S.setOpen}),
-    closeSettings:()=>this.setState({setOpen:false}),
+    closeSettings:()=>this.setState({setOpen:false, setAdv:false}),
     settingsBtn:'flex:none;width:34px;height:34px;border-radius:50%;display:inline-flex;'
       +'align-items:center;justify-content:center;cursor:pointer;font-size:15px;'
       +'background:var(--color-surface);color:var(--color-text-secondary)',
-    localeBtn:'flex:none;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;'
-      +'cursor:pointer;white-space:nowrap;background:var(--color-surface);color:var(--color-text-secondary)',
     // 시트/패널
     settingsCard: mobile
       ? 'position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--color-background);'
         +'border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.24);padding:22px 20px 28px;'
         +'max-height:82vh;overflow-y:auto;animation:botIn .24s cubic-bezier(.22,.72,.24,1) both'
-      : 'position:fixed;right:22px;top:66px;z-index:80;width:340px;background:var(--color-background);'
+      : 'position:fixed;right:22px;top:66px;z-index:80;width:320px;background:var(--color-background);'
         +'border:1px solid var(--color-border);border-radius:20px;box-shadow:var(--shadow-pop);'
         +'padding:20px;max-height:calc(100vh - 96px);overflow-y:auto;'
         +'animation:riseIn .18s cubic-bezier(.22,.72,.24,1) both',
     settingsTitle:this.t('settings.title'),
+
+    // 테마 — 색 동그라미 한 줄. 누르면 바로 바뀐다(3초 안에).
+    themeLabel2:this.t('settings.theme'),
+    presetName:(this.THEME_PRESETS().find(t=>t.k===p.preset)||this.THEME_PRESETS()[0]).label,
+    presets:this.THEME_PRESETS().map(t=>{
+      const on = p.preset===t.k && !cst.primary;
+      return {
+        label:t.label, pick:()=>this.setPreset(t.k),
+        style:'flex:none;width:30px;height:30px;border-radius:50%;cursor:pointer;'
+          +'background:'+(this.state.appearance==='dark'?t.dark.primary:t.light.primary)+';'
+          +'box-shadow:0 0 0 2px var(--color-background), 0 0 0 '+(on?'4px':'0')+' var(--color-text-primary);'
+          +'transition:box-shadow .16s'};
+    }),
+    customPrimaryLabel:this.t('settings.custom'),
+    customPrimary:color('primary', this.t('settings.custom'), '#087F6B'),
 
     appearanceLabel:this.t('settings.appearance'),
     appearances:[['light','settings.light'],['dark','settings.dark'],['system','settings.system']]
@@ -191,20 +207,11 @@ globalThis.MysbizonParts.theme.settingsView = function(){
     locales:this.LOCALES().map(l=>({
       label:l.label, pick:()=>this.setLocale(l.k), style:pill(this.locale()===l.k)})),
 
-    themeLabel2:this.t('settings.theme'),
-    presets:this.THEME_PRESETS().map(t=>({
-      label:t.label, pick:()=>this.setPreset(t.k),
-      swatch:'flex:none;width:14px;height:14px;border-radius:50%;background:'
-        +(this.state.appearance==='dark'?t.dark.primary:t.light.primary),
-      style:'display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:var(--r-sm);'
-        +'cursor:pointer;font-size:14px;transition:background .14s;'
-        +(p.preset===t.k&&!cst.primary
-          ? 'background:var(--color-primary-soft);color:var(--color-primary);font-weight:600'
-          : 'background:var(--color-surface);color:var(--color-text-secondary)')})),
-
-    customLabel:this.t('settings.custom'),
+    // 여기부터는 접어 둔다
+    advOpen:adv,
+    advLabel:this.t(adv?'settings.advClose':'settings.adv'),
+    advToggle:()=>this.setState({setAdv:!adv}),
     customs:[
-      color('primary',   this.t('settings.primary'),        '#087F6B'),
       color('background',this.t('settings.background'),     '#FFFFFF'),
       color('text',      this.t('settings.textPrimary'),    '#191F28'),
       color('text2',     this.t('settings.textSecondary'),  '#4E5968')

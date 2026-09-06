@@ -3,7 +3,6 @@
       <section class="u-sec">
         <div class="u-lab">자치구 비교</div>
         <h1 style="{{ ds1 }}; margin-top:10px">{{ zc.lead }}</h1>
-        <p style="{{ dsBody }}; margin-top:10px;max-width:700px">{{ zc.sub }}</p>
 
         <div style="margin-top:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span class="u-lab">업종</span>
@@ -98,7 +97,7 @@
 
       <!-- 전체 목록은 눌렀을 때만 -->
       <section style="padding:28px 0 0">
-        <span role="button" tabIndex="0" onClick="{{ zc.toggleAll }}" style="{{ dsGhost }}; display:inline-flex;align-items:center">{{ zc.allLabel }}</span>
+        <span role="button" tabIndex="0" onClick="{{ zc.toggleAll }}" style="{{ ctaText }}">{{ zc.allLabel }}</span>
         <sc-if value="{{ zc.hasList }}">
           <div style="margin-top:16px;max-width:860px">
             <sc-for list="{{ zc.rows }}" as="r">
@@ -125,7 +124,7 @@
           <span role="button" tabIndex="0" onClick="{{ zc.note.toggle }}" style="{{ zc.note.btnStyle }}">{{ zc.note.label }}</span>
         </div>
         <sc-if value="{{ zc.note.open }}">
-          <div style="{{ dsCard }}; margin-top:12px;max-width:860px">
+          <div style="margin-top:12px;max-width:860px">
             <sc-for list="{{ zc.note.rows }}" as="n">
               <div style="padding:8px 0">
                 <div style="font-size:13px;font-weight:700">{{ n.label }}</div>

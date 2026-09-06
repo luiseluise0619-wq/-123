@@ -5,17 +5,33 @@
         <h1 style="{{ ds1 }}; margin-top:10px">지금 장사 환경은 어떤가요?</h1>
       </section>
 
-      <section style="display:grid;gap:{{ mk.gap }};grid-template-columns:{{ mk.cols }};align-items:start">
-        <!-- ① 세로 목록 — 갈래를 누르면 그 갈래의 지표가 아래로 펼쳐진다 -->
-        <nav aria-label="시세 갈래" style="{{ mk.sideStyle }}">
-          <sc-for list="{{ mk.side }}" as="s">
-            <span role="button" tabIndex="0" onClick="{{ s.pick }}" style="{{ s.style }}">{{ s.label }}</span>
+      <!-- 모바일 — 갈래·지표를 가로 탭으로(§26). 세로 사이드바를 세로로 쌓지 않는다. -->
+      <sc-if value="{{ mk.horiz }}">
+        <nav aria-label="시세 갈래" data-rail="mkCat" style="{{ mk.tabTrack }}">
+          <sc-for list="{{ mk.cats }}" as="c">
+            <span role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</span>
           </sc-for>
         </nav>
+        <nav aria-label="지표" data-rail="mkInd" style="{{ mk.indTrack }}; margin-top:10px">
+          <sc-for list="{{ mk.inds }}" as="i">
+            <span role="button" tabIndex="0" onClick="{{ i.pick }}" style="{{ i.style }}">{{ i.label }}</span>
+          </sc-for>
+        </nav>
+      </sc-if>
+
+      <section style="display:grid;gap:{{ mk.gap }};grid-template-columns:{{ mk.cols }};align-items:start">
+        <!-- 데스크톱 — 왼쪽 세로 목록(갈래 → 지표) -->
+        <sc-if value="{{ mk.vert }}">
+          <nav aria-label="시세 갈래" style="{{ mk.sideStyle }}">
+            <sc-for list="{{ mk.side }}" as="s">
+              <span role="button" tabIndex="0" onClick="{{ s.pick }}" style="{{ s.style }}">{{ s.label }}</span>
+            </sc-for>
+          </nav>
+        </sc-if>
 
         <!-- ② 고른 지표 하나 -->
         <div style="min-width:0">
-          <h2 style="{{ ds2 }}">{{ mk.selQuestion }}</h2>
+          <h2 style="{{ ds2 }}; margin-top:18px">{{ mk.selQuestion }}</h2>
           <div class="u-note-w">{{ mk.selLabel }} · 출처 {{ mk.selSrc }}</div>
 
           <!-- 아직 연결되지 않은 지표 — 목록에서 지우지 않고 이유를 말한다 -->
@@ -28,9 +44,9 @@
 
           <sc-if value="{{ mk.ready }}">
             <!-- 핵심 수치 -->
-            <div style="{{ dsCardHi }}; margin-top:16px">
+            <div style="margin-top:22px">
               <div style="font-size:12.5px;color:var(--ink2);line-height:1.5">{{ pr.title }}</div>
-              <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-top:8px">
+              <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-top:6px">
                 <span style="{{ dsNum }}">{{ pr.now }}</span>
                 <span style="{{ pr.deltaStyle }}">{{ pr.delta }}</span>
               </div>
@@ -83,7 +99,19 @@
               </div>
             </sc-if>
 
-            <p style="{{ dsSub }}; margin-top:20px">{{ pr.note }}</p>
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:22px">
+              <span style="{{ pr.noteBox.lineStyle }}">ⓘ {{ pr.noteBox.line }}</span>
+              <sc-if value="{{ pr.noteBox.hasDetail }}">
+                <span role="button" tabIndex="0" onClick="{{ pr.noteBox.toggle }}" style="{{ pr.noteBox.btnStyle }}">{{ pr.noteBox.label }}</span>
+              </sc-if>
+            </div>
+            <sc-if value="{{ pr.noteBox.open }}">
+              <div style="margin-top:10px">
+                <sc-for list="{{ pr.noteBox.rows }}" as="n">
+                  <div style="{{ dsSub }}">{{ n.body }}</div>
+                </sc-for>
+              </div>
+            </sc-if>
           </sc-if>
         </div>
       </section>

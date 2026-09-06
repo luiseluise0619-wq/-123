@@ -15,9 +15,10 @@ globalThis.MysbizonParts.carousel = {
   rail(key, opt){
     const o = opt || {};
     const per = o.per || 3;
-    // 모바일은 1.15장 — 오른쪽이 살짝 잘려 보여야 '더 있다'는 게 읽힌다
+    // 모바일은 90% — 지금 카드가 거의 다 보이고 다음 카드는 10%만 살짝 걸친다(§9).
+    // 절반씩 잘려 보이면 '두 개를 동시에 읽어야 하나' 싶어진다.
     // peek:false 면 좁은 칸(세로 메뉴 옆) 이라 잘라 보일 자리가 없다 → 한 장을 꽉 채운다
-    const basis = this.L(o.peek === false ? '100%' : '82%',
+    const basis = this.L(o.peek === false ? '100%' : '90%',
       per === 1 ? '100%' : 'calc((100% - 16px)/2)',
       per === 1 ? '100%' : 'calc((100% - ' + (per - 1) * 20 + 'px)/' + per + ')');
     return {

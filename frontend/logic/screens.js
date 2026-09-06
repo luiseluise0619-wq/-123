@@ -500,8 +500,8 @@ globalThis.MysbizonParts.screens = {
           +'background:var(--accent);opacity:'+(0.45+0.55*(o.per/maxPer)).toFixed(2),
         style:'min-width:0;padding:20px;border-radius:var(--r-lg);cursor:pointer;'
           +'transition:box-shadow .16s,transform .16s;'
-          +(on?'background:var(--accent-3);border:1px solid var(--accent-2)'
-              :'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card)')
+          +(on?'background:var(--bg);border:1px solid var(--accent)'
+              :'background:var(--bg);border:1px solid var(--line)')
       };
     };
 
@@ -637,7 +637,9 @@ globalThis.MysbizonParts.screens = {
     const gu=S.fcGu|| (S.zoneId&&zgu&&zgu[S.zoneId]) || '강남구';
     // 정렬 기준은 하나로 고정한다 — 네 가지를 고르게 하면 무엇을 보는 화면인지 흐려진다
     const sort='per';
-    if(!zi||!zgu) return {gu:gu, guOptions:GU, onGu:()=>{}, ind:'', rows:[], lead:'', note:''};
+    if(!zi||!zgu) return {gu:gu, guOptions:GU, onGu:()=>{}, ind:'', rows:[], lead:'', top:[],
+                          hasList:false, hasMore:false, hasMed:false,
+                          topRail:this.rail('fcTop',{per:3}), note:this.dataNote('fc','',[])};
     const idx=zi.inds.indexOf(S.ind);
     const list=[];
     for(const k in zi.zones){
@@ -658,7 +660,7 @@ globalThis.MysbizonParts.screens = {
     // 71줄을 그냥 늘어놓으면 '그래서 어디로?'가 안 보인다. 결론과 상위 셋을 먼저 둔다.
     const top3=list.slice(0,3);
     const showAll=!!S.fcAll;
-    const shown=showAll? list : list.slice(0,12);
+    const shown=showAll? list : list.slice(0,6);
     return {
       gu:this.placeName(gu), ind:this.indName(S.ind),
       guOptions:GU,
@@ -687,12 +689,13 @@ globalThis.MysbizonParts.screens = {
           +((medPer&&o.per>=medPer)?'var(--good)':'var(--ink3)'),
         pick:()=>this.setState({sel:o.id,screen:'diag'}),
         style:'display:flex;flex-direction:column;padding:20px;border-radius:var(--r-lg);cursor:pointer;min-width:0;'
-          +(i===0?'background:var(--accent-3);border:1px solid var(--accent-2)'
-                 :'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card)')
+          +(i===0?'background:var(--bg);border:1px solid var(--accent)'
+                 :'background:var(--bg);border:1px solid var(--line)')
       })),
+      topRail:this.rail('fcTop',{per:3}),
       // 나머지는 접어 둔다 — 71줄을 한 번에 던지지 않는다
-      moreLabel: showAll? '접기' : ('나머지 '+Math.max(list.length-12,0)+'곳 더 보기'),
-      hasMore: list.length>12,
+      moreLabel: showAll? '접기' : ('나머지 '+Math.max(list.length-6,0)+'곳 더 보기'),
+      hasMore: list.length>6,
       toggleMore:()=>this.setState({fcAll:!showAll}),
       // 자치구 중앙값 — 화면 위에 기준선으로 적는다
       medLabel:list.length? this.won(medPer/3) : '',
@@ -718,7 +721,11 @@ globalThis.MysbizonParts.screens = {
         pick:()=>this.setState({sel:o.id,screen:'diag'}),
         row:'display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--line);cursor:pointer'
       };}),
-      note:'금액은 가게 한 곳이 한 달에 파는 돈이에요. 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적은 아니에요. 자치구는 상권 좌표로 붙였고, 경계에서 250m 안쪽인 곳은 두 구를 함께 적었어요 — 강남역처럼 강남대로를 경계로 서쪽이 서초구인 곳이 그래요.'
+      // 긴 회색 문단을 화면에 그대로 두지 않는다(§5·§6) — 한 줄만 두고 나머지는 접는다
+      note:this.dataNote('fc','금액은 가게 한 곳당 월매출 추정값이에요.',[
+        ['어떻게 계산하나요','손님이 쓴 돈을 가게 수로 나눈 값이라 어느 한 가게의 실적이 아니에요.'],
+        ['자치구는 어떻게 붙였나요','상권 좌표로 붙였고, 경계에서 250m 안쪽인 곳은 두 구를 함께 적었어요 — 강남역처럼 강남대로를 경계로 서쪽이 서초구인 곳이 그래요.']
+      ])
     };
   },
 
@@ -739,7 +746,8 @@ globalThis.MysbizonParts.screens = {
       charts:[], hasCharts:false, note:'', missing:'', hasMissing:false,
       list:[], listTitle:'', hasList:false,
       // 자료를 못 불러와 일찍 돌아가는 갈래에서도 값이 비지 않게 미리 넣어 둔다
-      chartCount:'', rail:this.rail('price', {per:1, peek:false, arrows:true})
+      chartCount:'', noteBox:this.dataNote('pr','',[]),
+      rail:this.rail('price', {per:1, peek:this.bp()!=='mobile'? false : true, arrows:true})
     };
     const C=[];   // 이 카테고리의 차트들
     const push=(id,opt)=>{ const c=this.chartCard(id,opt); if(c) C.push(c); };
@@ -962,11 +970,18 @@ globalThis.MysbizonParts.screens = {
 
     out.charts=C; out.hasCharts=C.length>0;
     out.chartCount=this.t('mk.chartCount',{n:C.length});
+    // 긴 회색 문단을 그대로 두지 않는다(§5·§6) — 첫 문장만 두고 나머지는 접는다
+    out.noteBox=(()=>{
+      const t=(out.note||'').trim();
+      if(!t) return this.dataNote('pr','',[]);
+      const i=t.indexOf('. ')>=0? t.indexOf('. ')+1 : t.length;
+      const head=t.slice(0,i).trim(), rest=t.slice(i).trim();
+      return this.dataNote('pr', head, rest? [['자세히', rest]] : []);
+    })();
     out.hasList=out.list.length>0;
     // 한 화면에 차트 하나. 옆으로 넘겨 다음 질문으로 간다(§8·§21)
-    // 왼쪽 세로 목록 옆의 좁은 칸이라 잘라 보일 자리가 없다 →
-    // 한 장을 꽉 채우고, 대신 화살표를 모바일에서도 낸다.
-    out.rail=this.rail('price', {per:1, peek:false, arrows:true});
+    // 데스크톱은 세로 메뉴 옆 좁은 칸이라 꽉 채우고, 모바일은 다음 장이 10% 걸치게 둔다(§9).
+    out.rail=this.rail('price', {per:1, peek:this.bp()!=='mobile'? false : true, arrows:true});
     return out;
   }
 };
