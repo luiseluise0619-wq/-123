@@ -1747,12 +1747,13 @@ class Component extends DCLogic {
               S.rp_step!=null ? S.rp_step : (firstOpen<0?QS.length:firstOpen), QS.length));
             const go=i=>()=>this.setState({rp_step:i});
             // 고를 것들 — 오른쪽에 붙는 '내가 할 말' 후보. 누르면 그대로 답 말풍선이 된다.
-            const optStyle=on=>'display:inline-flex;align-items:center;justify-content:space-between;gap:10px;'
-              +'max-width:82%;padding:12px 16px;border-radius:16px 16px 4px 16px;cursor:pointer;'
-              +'font-size:14.5px;line-height:1.4;white-space:nowrap;'
+            // 한 줄이 화면 폭을 다 쓴다 — 손가락으로 누르기 쉽고, 눈이 왼쪽만 훑으면 된다.
+            const optStyle=on=>'display:flex;align-items:center;justify-content:space-between;gap:12px;'
+              +'width:100%;padding:17px 18px;border-radius:14px;cursor:pointer;'
+              +'font-size:15.5px;line-height:1.4;text-align:left;'
               +'transition:background .14s,color .14s;'
-              +(on?'background:var(--accent);color:#FFFFFF;font-weight:600'
-                 :'background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-strong)');
+              +(on?'background:var(--accent-3);color:var(--accent);font-weight:600'
+                 :'background:var(--surface);color:var(--ink)');
             const cur=step<QS.length?QS[step]:null;
             const answered=QS.filter(q=>val(q.k)).length;
             return {
@@ -1771,43 +1772,44 @@ class Component extends DCLogic {
               qsCard:'width:100%;max-width:'+this.L('100%','440px','460px')+';max-height:86vh;overflow-y:auto;'
                 +'background:var(--bg);border-radius:24px;padding:26px 24px 24px;'
                 +'box-shadow:0 24px 60px rgba(0,0,0,.24)',
-              qsTitle: cur?'몇 가지만 여쭤볼게요':'조건을 다 알려주셨어요',
-              qsSub: cur
-                ? '리포트의 본전 계산과 아래 지원사업 추천에 씁니다. 건너뛰어도 돼요.'
-                : '아래 지원사업이 이 조건으로 맞춰집니다. 누르면 고칠 수 있어요.',
               qsStep: cur? (step+1)+' / '+QS.length : '',
               hasStep: !!cur,
               qsBar: 'display:block;height:100%;border-radius:2px;background:var(--accent);'
                 +'transition:width .3s cubic-bezier(.22,.7,.25,1);width:'
                 +Math.round(step/QS.length*100)+'%',
-              // 이미 답한 것 — 대화처럼 쌓인다. 질문은 왼쪽, 내 답은 오른쪽.
-              // 답 버블을 누르면 그 질문으로 돌아가 고칠 수 있다.
-              qsDone: QS.slice(0,step).map((q,i)=>({
+              // 다 답한 뒤 보이는 요약 — 누르면 그 질문으로 돌아간다.
+              // 진행 중에는 지난 답을 늘어놓지 않는다. 한 번에 하나만 묻는 게 요점이다.
+              qsDone: QS.map((q,i)=>({
                 label:q.q, value:val(q.k)||'건너뜀',
                 edit:go(i),
-                askStyle:'align-self:flex-start;max-width:82%;font-size:14px;color:var(--ink2);'
-                  +'background:var(--surface);border-radius:16px 16px 16px 4px;padding:11px 15px;'
-                  +'line-height:1.5;text-wrap:pretty',
-                ansStyle:'align-self:flex-end;max-width:82%;font-size:14.5px;font-weight:600;'
-                  +'border-radius:16px 16px 4px 16px;padding:11px 15px;cursor:pointer;'
-                  +'line-height:1.5;white-space:nowrap;transition:filter .14s;'
-                  +(val(q.k)?'background:var(--accent);color:#FFFFFF'
-                            :'background:var(--surface);color:var(--ink3)')
+                style:'display:flex;align-items:center;justify-content:space-between;gap:14px;'
+                  +'padding:15px 0;border-bottom:1px solid var(--line);cursor:pointer;min-width:0',
+                valStyle:'flex:none;font-size:14.5px;font-weight:600;white-space:nowrap;'
+                  +(val(q.k)?'color:var(--ink)':'color:var(--ink3)')
               })),
-              hasDone: step>0,
-              // 지금 묻는 것 하나
+              // 지금 묻는 질문 하나
               hasCur: !!cur,
-              curQ: cur?cur.q:'', curHint: cur?cur.hint:'',
+              curQ: cur?cur.q:'',
+              curHint: cur?cur.hint:'',
               curOpts: cur?cur.opts.map(v=>({
                 label:v, on:val(cur.k)===v,
                 style:optStyle(val(cur.k)===v),
                 pick:()=>this.setState({['rp_'+cur.k]:v, rp_step:step+1, rp_sent:false, rp_error:''})
               })):[],
               curSkip: cur?()=>this.setState({rp_step:step+1}):()=>{},
-              curBack: step>0?go(step-1):null,
+              curBack: step>0?go(step-1):()=>{},
               hasBack: step>0,
               qsAllDone: !cur,
-              qsRedo: go(0)
+              qsRedo: go(0),
+              // 마지막 질문에서는 '결과 보기'로 닫는다 — 토스처럼 끝이 분명하게.
+              doneCta: cur?'건너뛰고 결과 보기':'결과 보기',
+              doneGo: cur
+                ? ()=>this.setState({rp_step:QS.length,rp_qsOpen:false})
+                : ()=>this.setState({rp_qsOpen:false}),
+              doneStyle:'width:100%;margin-top:20px;font-size:16px;font-weight:600;border:none;'
+                +'border-radius:14px;height:52px;cursor:pointer;transition:filter .16s;'
+                +(cur?'background:var(--surface);color:var(--ink2)'
+                     :'background:var(--accent);color:#FFFFFF')
             };
           })(),
           email:email,
