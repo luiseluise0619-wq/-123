@@ -522,9 +522,6 @@ class Component extends DCLogic {
       tagRow:'display:flex;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;justify-content:center;'
         +(S.skip?'opacity:1':'opacity:0;animation:lateIn .8s cubic-bezier(.22,.7,.25,1) 2.7s forwards'),
       tags:tags,
-      trustStyle:'font-size:12px;color:var(--ink3);margin-top:'+this.L('40px','52px','64px')+';text-align:center;'
-        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .8s cubic-bezier(.22,.7,.25,1) 2.9s forwards'),
-      trustText:'서울 공공데이터 기반 · 출처와 계산 근거 공개',
       // 이메일을 받게 되었으니 소개의 약속 문구도 바꾼다
 
       // 드롭다운이 잘리지 않도록 세로 클리핑은 하지 않는다(배경 그래픽은 자체 마스크로 처리)
