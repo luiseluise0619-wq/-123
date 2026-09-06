@@ -704,19 +704,36 @@ class Component extends DCLogic {
   // 시세분석 — 임대료·공실률·업종 매출·소비 구성. 전부 공개 통계.
   priceView(){
     const S=this.state;
+    // when: 이 차트를 언제 보면 좋은지. 배지로 짧게만 붙인다 — 설명은 길면 안 읽는다.
     const CATS=[
-      {k:'rent', label:'상가 임대료'},
-      {k:'vacancy', label:'빈 상가 비율'},
-      {k:'sales', label:'장사별 매출 추이'},
-      {k:'spend', label:'자치구 소비 구성'},
-      {k:'churn', label:'문 열고 닫는 수'},
-      {k:'fr', label:'프랜차이즈 비중'}
+      {k:'rent', label:'상가 임대료', when:'자리 고를 때'},
+      {k:'vacancy', label:'빈 상가 비율', when:'위험 볼 때'},
+      {k:'sales', label:'장사별 매출 추이', when:'업종 고를 때'},
+      {k:'spend', label:'자치구 소비 구성', when:'손님 볼 때'},
+      {k:'churn', label:'문 열고 닫는 수', when:'타이밍 볼 때'},
+      {k:'fr', label:'프랜차이즈 비중', when:'브랜드 정할 때'}
     ];
     const cat=S.prCat||'rent';
     const W=640,H=200,PAD=16;
-    const out={cats:CATS.map(c=>({label:c.label, pick:()=>this.setState({prCat:c.k,prPick:null}),
-      style:'font-size:14px;font-weight:500;padding:12px 14px;border-radius:11px;cursor:pointer;white-space:nowrap;transition:background .14s,color .14s;'
-        +(c.k===cat?'background:var(--line);color:var(--ink);font-weight:600':'color:var(--ink2)')})),
+    const ci=Math.max(CATS.findIndex(c=>c.k===cat),0);
+    const goCat=i=>()=>this.setState({prCat:CATS[(i+CATS.length)%CATS.length].k, prPick:null});
+    const out={cats:CATS.map((c,i)=>({label:c.label, when:c.when, on:c.k===cat,
+      pick:goCat(i),
+      style:'display:flex;align-items:center;justify-content:space-between;gap:8px;'
+        +'font-size:14px;font-weight:500;padding:12px 14px;border-radius:11px;cursor:pointer;'
+        +'white-space:nowrap;transition:background .14s,color .14s;'
+        +(c.k===cat?'background:var(--line);color:var(--ink);font-weight:600':'color:var(--ink2)'),
+      // 언제 보면 좋은지 — 지금 보고 있는 것만 배지를 켜서 시선을 뺏지 않는다
+      whenStyle:'flex:none;font-size:10.5px;font-weight:600;letter-spacing:.02em;'
+        +'padding:3px 7px;border-radius:999px;white-space:nowrap;'
+        +(c.k===cat?'background:var(--accent-3);color:var(--accent)':'background:transparent;color:var(--ink3)')})),
+    // 사진처럼 동그란 점으로 넘긴다 — 지금 보는 것만 알약 모양으로 길어진다
+    catDots:CATS.map((c,i)=>({
+      pick:goCat(i), label:c.label,
+      style:'flex:none;height:8px;border-radius:999px;cursor:pointer;transition:width .2s,background .2s;'
+        +(c.k===cat?'width:22px;background:var(--accent)':'width:8px;background:var(--line-strong)')})),
+    catPrev:goCat(ci-1), catNext:goCat(ci+1),
+    catNow:(ci+1)+' / '+CATS.length, catWhen:CATS[ci].when,
       title:'', unit:'', now:'', nowLabel:'', delta:'', deltaStyle:'display:none',
       labels:[], line:{d:'',area:'',pts:[]}, list:[], listTitle:'', note:'', w:W, h:H,
       missing:'', hasChart:false, pairs:null, dots:null, legend:null, bars:null};
