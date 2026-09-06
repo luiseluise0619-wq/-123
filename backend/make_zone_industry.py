@@ -11,7 +11,7 @@ collect_sales.py 는 업종별 서울 '전체' 패턴만 남기고 상권 축을
   { available, quarter, updated, n_zones, n_inds,
     inds:[업종명, ...],                         # 업종명 인터닝(중복 문자열 제거)
     zones:{ "<cd>":{ nm, rows:[[indIdx, stores, sales, unit], ...] } } }
-  rows 는 매출 상위 TOP_N 업종만(파일 크기 상한). unit=객단가(원, sales/건수), 건수 없으면 0.
+  rows 는 그 상권에서 매출이 잡히는 업종 전부(매출 상위순). unit=객단가(원, sales/건수), 건수 없으면 0.
 
 CSV 가 없거나 컬럼을 못 찾으면 available:false 로 남기고 정상 종료(화면은 요약으로 동작).
 
@@ -27,14 +27,32 @@ CSV 가 없거나 컬럼을 못 찾으면 available:false 로 남기고 정상 �
 
 원천에 해당 컬럼이 없으면 tmz/dow 를 그냥 넣지 않는다(있던 동작 그대로).
 """
-import os, sys, json, datetime
+import os, sys, json, gzip, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 CSV  = os.path.join(HERE, "app", "data", "real_data", "seoul_trdar_dataset.csv")
 OUT  = os.path.join(ROOT, "frontend", "zone_industry.json")
 
-TOP_N = 15   # 상권당 매출 상위 업종 수(파일 크기 상한 ~ 1MB 내)
+# 상권당 담을 업종 수 상한. 0 이면 상한 없음(그 상권에서 매출이 잡히는 업종 전부).
+#
+# 왜 상한을 없앴나 (2026-09-06)
+# ------------------------------
+# 예전 값은 15였다. 그런데 이 상한은 "데이터가 없다"와 구분되지 않는 형태로 화면에 나온다.
+# 치킨전문점은 1,564곳 중 226곳(14%)에만 데이터가 있는 것처럼 보였는데, 한국에서
+# 치킨집 없는 동네가 14%일 리가 없다. 원인은 수집이 아니라 이 상한이었다 —
+# 치킨집이 그 상권 매출 15위 안에 못 들면 화면에서는 '데이터 없음'이 된다.
+# 실측: 1,564곳 중 584곳(37%)이 정확히 15종에서 잘려 있었다.
+#
+# 크기는 재보고 결정했다(서버가 .json 을 gzip 으로 보낸다 — server/static.js):
+#   현재(15종)            원본  415KB → gzip 180KB
+#   상한 없음(최악 62종)   원본 1,011KB → gzip 451KB
+# 최악의 경우가 원래 두었던 1MB 예산 안에 들어오고, 실제로는 대부분의 상권이
+# 62종을 다 갖고 있지 않으므로 이보다 작다. 첫 화면(히어로)은 이 파일을 기다리지 않고,
+# 재방문은 ETag 로 304 라 다시 받지 않는다.
+#
+# 실제 크기는 아래에서 출력한다 — CI 로그에서 확인하고, 너무 크면 이 값만 되돌리면 된다.
+TOP_N = 0
 
 # make_trade_zones / collect_sales 와 동일한 컬럼 후보(서비스 버전마다 이름 다름).
 CAND = {
@@ -165,7 +183,8 @@ def main():
             unit = round(a["sales"] / a["cnt"]) if a["cnt"] > 0 else 0
             rows.append((name, round(a["stores"]), round(a["sales"]), unit))
         rows.sort(key=lambda r: r[2], reverse=True)   # 매출 상위
-        rows = rows[:TOP_N]
+        if TOP_N:
+            rows = rows[:TOP_N]
         rec = {
             "nm": z["nm"],
             "rows": [[idx_of(name), st, sa, un] for (name, st, sa, un) in rows],
@@ -186,14 +205,29 @@ def main():
     json.dump({"available": True, "quarter": quarter,
                "updated": datetime.datetime.utcnow().strftime("%Y-%m-%d"),
                "n_zones": len(out_zones), "n_inds": len(inds),
-               "note": ("상권×업종 추정매출·점포·객단가(원천 상권분석서비스). 상권당 매출 상위 %d개 업종. "
+               "note": ("상권×업종 추정매출·점포·객단가(원천 상권분석서비스). %s "
                         "tmz/dow 는 그 상권 '전 업종 합계'의 시간대·요일 매출 구성비(%%)이며 "
-                        "업종별 구분이 아니다 — 업종별 패턴은 sales_by_industry.json(서울 평균)에 있다." % TOP_N),
+                        "업종별 구분이 아니다 — 업종별 패턴은 sales_by_industry.json(서울 평균)에 있다."
+                        % ("상권당 매출 상위 %d개 업종." % TOP_N if TOP_N
+                           else "상권마다 매출이 잡히는 업종 전부(상한 없음).")),
                **({"tmz_labels": TMZ_LABELS} if tmz_cols else {}),
                **({"dow_labels": DOW_LABELS} if dow_cols else {}),
                "inds": inds, "zones": out_zones},
               open(OUT, "w", encoding="utf-8"), ensure_ascii=False)
+
+    # 크기를 로그에 남긴다 — 상한을 없앴으므로 실제로 얼마가 되는지 사람이 봐야 한다.
+    # 서버가 .json 을 gzip 으로 보내므로(server/static.js) 전송 크기까지 함께 적는다.
+    n_rows = sum(len(z["rows"]) for z in out_zones.values())
+    raw = os.path.getsize(OUT)
+    with open(OUT, "rb") as f:
+        gz = len(gzip.compress(f.read(), 9))
+    mx = max((len(z["rows"]) for z in out_zones.values()), default=0)
     print(f"저장: {OUT} · 상권 {len(out_zones)}개 · 업종 {len(inds)}종 · 분기 {quarter}")
+    print(f"  행 {n_rows:,}개 · 상권당 최다 {mx}종 · "
+          f"원본 {raw/1024:.0f}KB → 전송(gzip) {gz/1024:.0f}KB")
+    if gz > 700 * 1024:
+        print(f"  ⚠ 전송 크기가 700KB 를 넘었다. make_zone_industry.py 의 TOP_N 에 "
+              f"상한을 다시 넣는 것을 검토할 것(예: TOP_N = 40).")
     return 0
 
 
