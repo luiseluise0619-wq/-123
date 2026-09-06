@@ -296,69 +296,10 @@ class Component extends DCLogic {
     return (I[name]||[]).map(p=>({d:p.d||'', cx:p.c?p.c[0]:null, cy:p.c?p.c[1]:null, r:p.c?p.c[2]:null, isCircle:!!p.c}));
   }
 
-  // 업로드된 Lucide 선 아이콘 6종 — 건물 블록 대신 실제 건물 형태로 쓴다
-  icon(name){
-    const P={
-      building:['M12 10h.01','M12 14h.01','M12 6h.01','M16 10h.01','M16 14h.01','M16 6h.01','M8 10h.01','M8 14h.01','M8 6h.01','M9 22v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3'],
-      building2:['M10 12h4','M10 8h4','M14 21v-3a2 2 0 0 0-4 0v3','M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2','M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16'],
-      hospital:['M12 7v4','M14 21v-3a2 2 0 0 0-4 0v3','M14 9h-4','M18 11h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2','M18 21V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16'],
-      hotel:['M10 22v-6.57','M12 11h.01','M12 7h.01','M14 15.43V22','M15 16a5 5 0 0 0-6 0','M16 11h.01','M16 7h.01','M8 11h.01','M8 7h.01'],
-      house:['M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8','M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],
-      store:['M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5','M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244','M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05']
-    };
-    const RECT={building:1,hotel:1};
-    return {paths:P[name]||[], rect:!!RECT[name]};
-  }
 
-  // 살아 움직이는 도시. 좌표·박자는 고정 배열이라 리렌더에도 흔들리지 않는다.
-  // 화면 가운데(제목·검색창)를 비우도록 좌표를 좌우·상하 가장자리에만 둔다.
-  graphic(){
-    const picking=!!this.state.picking;
-    // [x, y, size(px), duration, delay, 아이콘]
-    // 아래쪽 스카이라인 — 바닥선(bottom 19%)에 밑을 맞춰 한 줄로 선다
-    // [x%, 아이콘 크기(px), duration, delay, 아이콘] — 바닥선에 밑을 맞춰 선다
-    // 8개만 세운다. 15개는 820px 줄에 들어가지 않아 양끝이 잘렸다.
-    // delay는 이웃끼리 최소 4초 이상 벌려, 붙은 두 칸이 동시에 비지 않게 한다.
-    // 배경 건물 아이콘은 뺐다(2026-09-05). 제목·검색창과 시선을 다투기만 했고,
-    // 하이드레이션 전에 자리표시자가 SVG 속성으로 새어 콘솔 오류 35건을 만들고 있었다.
-    // 목록을 비우면 blocks 가 빈 배열이 되어 아무것도 그리지 않는다.
-    const ALL=[];
-    // 좁은 화면에서는 개수를 줄이고 크기도 낮춘다
-    const n=this.L(4,6,8), sc=this.L(0.72,0.86,1);
-    const B=ALL.slice(0,n).map(a=>[a[0],Math.round(a[1]*sc),a[2],a[3],a[4]]);
-    // 뜻 없는 장식 점은 뺐다. 남긴 것은 도시 형태와 바닥선뿐.
-    const D=[];
-    const DR=['driftA','driftB','driftC'];
-    return {
-      // 파란 영역은 '고른 지역'을 뜻할 때만 나타난다. 평소에는 없다.
-      areaStyle:'position:absolute;left:50%;top:36%;width:min(760px,120%);height:520px;transform:translate(-50%,-50%);border-radius:50%;'
-        +'background:radial-gradient(closest-side,rgba(22,124,104,'+(picking?'.14':'.05')+'),transparent 72%);'
-        +'transition:opacity .7s cubic-bezier(.22,.7,.25,1)',
-      // 채워진 기하 블록. 선 아이콘은 배경에서 시선을 끌어 제목과 경쟁한다.
-      // flex 한 줄에 세운다 — 간격은 gap이 맡고, 크기 차이가 간격을 흔들지 않는다
-      blocks:B.map(([x,size,dur,del,name])=>{
-        const ic=this.icon(name);
-        void x;
-        return {
-          style:'flex:0 1 auto;width:'+size+'px;height:'+size+'px;min-width:0;'
-            +'color:var(--line-strong);'
-            // 음수 delay — 첫 페인트부터 주기 중간에서 시작하므로 빈 스카이라인이 없다
-            +'transform-origin:bottom;opacity:.22;will-change:transform,opacity;animation:buildLoop '+dur+'s cubic-bezier(.33,.7,.3,1) -'+del+'s infinite',
-          paths:ic.paths.map(d=>({d:d})), rect:ic.rect
-        };
-      }),
-      dots:D.map(([x,y,v],i)=>{
-        const core=i%3===0;
-        return {
-          wrap:'position:absolute;left:'+x+'%;bottom:'+y+'%;will-change:transform;animation:'+DR[(v-1)%3]+' '+(16+i%5*3)+'s ease-in-out '+(i*0.6).toFixed(1)+'s infinite',
-          style:'width:'+(core?7:5)+'px;height:'+(core?7:5)+'px;border-radius:50%;background:'+(core?'var(--accent)':'var(--ink3)')+';opacity:0;will-change:transform,opacity;animation:dotLoop '+(9+i%4*2.5)+'s ease-in-out '+(i*0.8).toFixed(1)+'s infinite'
-        };
-      })
-    };
-  }
 
   home(){
-    const S=this.state, g=this.graphic();
+    const S=this.state;
     // 원자료의 골목상권 이름에는 주민센터·은행지점·학교 같은 POI가 섞여 있다.
     // 지역을 찾는 사람에게 학교나 은행을 보여주지 않도록 걸러낸다.
     const POI=/주민센터|지점|초등학교|중학교|고등학교|중부중|병원|우체국|파출소|지구대|시장\)|아파트|교회|성당|역\d|출구/;
@@ -515,11 +456,8 @@ class Component extends DCLogic {
     }
 
     return {
-      ...g,
       badgeStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);background:var(--surface);border-radius:999px;padding:7px 14px;margin:0 auto 26px;'
         +(S.skip?'opacity:1':'opacity:0;animation:lateIn .7s cubic-bezier(.22,.7,.25,1) .5s forwards'),
-      countLabel:(S.count!=null?S.count:1564).toLocaleString(),
-      // 한 줄로 쓴다 — 줄바꿈 없이 들어가는 크기까지만 키운다(칸 폭 ÷ 글자수 기준)
       titleStyle:'font-size:'+this.L('23px','44px','52px')+';font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin:0;white-space:nowrap',
       tagRow:'display:flex;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;justify-content:center;'
         +(S.skip?'opacity:1':'opacity:0;animation:lateIn .8s cubic-bezier(.22,.7,.25,1) 2.7s forwards'),
@@ -604,12 +542,7 @@ class Component extends DCLogic {
         +'font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .14s',
       clearZone:e=>{ e.stopPropagation(); this.setState({homeZoneName:null,zoneId:null,sel:null,zq:'',pickOpen:null}); },
       clearInd:e=>{ e.stopPropagation(); this.setState({homeInd:null,iq:'',pickOpen:null}); },
-      indLabel:S.homeInd?this.indName(S.homeInd):'예: 카페, 편의점',
-      zoneLabel:S.homeZoneName||'서울 전체',
       zoneHint:S.homeZoneName?'':'· 몰라도 돼요',
-      indHint:'',
-      indValStyle:valBase+(hasInd?'color:var(--ink)':'color:var(--ink3)'),
-      zoneValStyle:valBase+(S.homeZoneName?'color:var(--ink)':'color:var(--ink3)'),
       openInd:()=>{ if(open!=='ind') this.setState({pickOpen:'ind'});
         const el=document.querySelectorAll('[data-search] input')[1]; if(el) el.focus(); },
       openZone:()=>{ if(open!=='zone') this.setState({pickOpen:'zone'});
@@ -635,10 +568,6 @@ class Component extends DCLogic {
             :(i===(S.cursor||0)&&open==='ind'?'background:var(--line)':'background:var(--surface)'))})),
       indEmpty:catList.length===0,
       indEmptyText: pq? '‘'+pq+'’와 맞는 장사가 없어요' : '이 분류에 해당하는 장사가 없어요',
-      pickHeading: open==='zone'
-        ? (pq? (zoneList.length? '찾은 곳 '+zoneList.length+'군데':'')
-             : ((S.recent||[]).length?'최근에 본 곳과 많이 찾는 동네':'많이 찾는 동네')+' · 모두 '+zoneAll.length.toLocaleString()+'곳 검색 가능')
-        : (pq? (indList.length? '찾은 장사 '+indList.length+'가지':'') : '많이 찾는 장사 · 모두 '+indsAll.length+'가지'),
       pickList: open==='zone'
         ? (()=>{
             const out=[{row:true, name:'서울 전체', meta:'아직 안 정함',
@@ -711,7 +640,6 @@ class Component extends DCLogic {
         style:'display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:11px;cursor:pointer;font-size:15px;transition:background .14s;'
           +(z.id===S.zoneId?'background:var(--accent-3)':'')
       })),
-      guEmpty:guZoneList.length===0, guEmptyText:'이 구에는 데이터가 없어요',
       pickEmpty: !!pq && (open==='zone'? zoneList.length===0 : indList.length===0),
       pickEmptyText:'‘'+pq+'’와 맞는 '+(open==='zone'?'동네가':'장사가')+' 없어요',
       startDisabled:!!S.starting,
@@ -736,17 +664,6 @@ class Component extends DCLogic {
         this.setState({screen:'find',sel:null,fromRegion:false,homeZone:null,starting:false});
       },
       // 흰 필드 + 아주 얕은 그림자. 회색 덩어리보다 가볍고 정확해 보인다.
-      searchBox:'position:relative;display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:20px;padding:0 24px;transition:box-shadow .18s;'
-        +(S.zFocus
-          ? 'box-shadow:0 0 0 1.5px var(--accent),0 8px 24px rgba(0,0,0,.08)'
-          : 'box-shadow:0 0 0 1px var(--line-strong),0 4px 16px rgba(0,0,0,.05)'),
-      onZq:e=>this.setState({zq:e.target.value,zFocus:true}),
-      onZfocus:()=>{
-        this.setState({zFocus:true});
-        const el=document.querySelector('input[placeholder*="지역"]');
-        if(el) el.focus();
-      },
-      clearZq:()=>this.setState({zq:'',zFocus:true}),
       picking:!!S.picking,
       pickingText:S.picking? S.picking+' 상권을 분석하고 있어요' : ''
     };
@@ -1314,7 +1231,6 @@ class Component extends DCLogic {
         stores:o.stores.toLocaleString()+'개',
         zones:o.zones+'곳',
         bar:'display:block;width:'+Math.max(o.per/maxPer*100,2).toFixed(1)+'%;height:100%;border-radius:3px;background:var(--accent);opacity:'+(0.35+0.65*(o.per/maxPer)).toFixed(2),
-        salesBar:'display:block;width:'+Math.max(o.sales/maxSales*100,2).toFixed(1)+'%;height:100%;background:var(--line-strong);border-radius:3px',
         row:'display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line)'
       })),
       note:'막대는 가게 한 곳이 한 달에 파는 돈이에요. 자치구는 동네 좌표를 서울시 행정구역 경계와 대조해 붙였어요. 이 자료에는 동네별 매출 상위 15개 업종만 포함하니, 이 장사 데이터가 있는 동네만 합산했어요.'
@@ -1742,11 +1658,8 @@ class Component extends DCLogic {
               curBack: step>0?go(step-1):()=>{},
               hasBack: step>0,
               qsAllDone: !cur,
-              qsRedo: go(0),
-              // 마지막 질문에서는 '결과 보기'로 닫는다 — 토스처럼 끝이 분명하게.
               doneCta: cur?'건너뛰고 결과 보기':'결과 보기',
               doneGo: cur ? ()=>this.setState({rp_step:QS.length}) : ()=>{},
-              hasDoneCta: !!cur,
               doneStyle:'width:100%;margin-top:20px;font-size:16px;font-weight:600;border:none;'
                 +'border-radius:14px;height:52px;cursor:pointer;transition:filter .16s;'
                 +(cur?'background:var(--surface);color:var(--ink2)'
@@ -1815,10 +1728,6 @@ class Component extends DCLogic {
               message:d?(d.error||''):'',
               retry:()=>{this._spLoading=false;this.setState({sp:null});},
               // 조건을 아직 안 골랐으면 '추린 목록'이라고 하지 않는다
-              hasFilter:kw.length>0,
-              // 맨 위에 큰 숫자 하나 — '몇 건이나 되는지'가 먼저 눈에 들어와야 한다.
-              // 금액을 크게 쓰고 싶지만 공고 데이터에 지원금액 필드가 없다.
-              // 없는 값을 지어내지 않는다(CLAUDE.md 데이터 정직성) — 건수를 쓴다.
               ask:this.indName(S.ind)+'를 시작하는 분이\n신청할 수 있는 지원사업이에요',
               bigNum:(kw.length?matched.length:all.length)+'건',
               bigLabel:kw.length?'고른 조건에 해당할 수 있는 제도':'지금 접수 중인 공고',
@@ -2079,8 +1988,6 @@ class Component extends DCLogic {
         };
       })(),
       goFind:go('find'), goDiag:go('diag'), goCmp:go('cmp'),
-      goAbout:()=>this.setState({screen:'home',menu:null,notice:true}),
-      // 정밀분석으로 갈 때 지도 필터를 고른 자리의 자치구로 맞춘다
       goMap:()=>this.setState({screen:'map',menu:null,
         mapGu:(S.sel&&S.zgu&&S.zgu[S.sel])||'서울 전체'}),
       goFineCmp:go('fineCmp'),
@@ -2123,7 +2030,6 @@ class Component extends DCLogic {
         : '손님 많고 경쟁 적은 자리를 찾아드려요.',
       bp:this.bp(),
       icoX:this.ui('x'), icoChevron:this.ui('chevronRight'), icoBack:this.ui('arrowLeft'),
-      icoPin:this.ui('mapPin'),
       headerStyle:'position:sticky;top:0;z-index:50;height:'+this.L('56px','60px','64px')+';display:flex;align-items:center;'
         +'background:var(--bg-blur);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);'
         +'border-bottom:1px solid rgba(0,0,0,.05);transition:all .2s ease-in-out',
@@ -2189,7 +2095,6 @@ class Component extends DCLogic {
         cards:[], cardIndex:0,
         metrics:{has:false,rows:[],seoul:[],missing:[],note:''},
         pros:{good:[],care:[]}, vs:{rows:[],note:''}, sections:[],
-        compMap:{has:false,dots:[],fr:0,own:0,total:0,inner:0,lead:'',note:''},
         gu:'서울 전체', guOptions:['서울 전체'], onGu:()=>{},
         list:[], cta:'후보지 찾기', honesty:''};
       return out;
@@ -2490,7 +2395,6 @@ class Component extends DCLogic {
         medMark:'position:absolute;top:-5px;bottom:-5px;left:'+(med/mx*100).toFixed(1)+'%;width:2px;background:var(--ink);border-radius:1px',
         medLabel:'position:absolute;top:14px;left:'+(med/mx*100).toFixed(1)+'%;transform:translateX(-50%);font-size:11px;color:var(--ink3);white-space:nowrap',
         note:'가게 수를 그 동네 유동인구로 나눈 값이에요. 가게 수만 보면 큰 동네가 늘 불리해 보이니 사람 수로 나눠 견줘요. 검은 선은 이 장사의 서울 중앙값이에요. 유동인구는 행정동 단위라 상권보다 넓어요.',
-        medWord:'서울 중앙값'
       };
     })();
 
@@ -2725,7 +2629,6 @@ class Component extends DCLogic {
           cardStyle:'flex:0 0 100%;scroll-snap-align:start;min-width:0;padding:24px 0 8px;'
             +'display:flex;flex-direction:column',
           // 경쟁 카드에서만 배치도를 보여준다
-          mapStyle:s.key==='comp'? 'display:block;margin-top:22px' : 'display:none',
           prevStyle:i>0? 'font-size:14.5px;color:var(--accent);cursor:pointer;white-space:nowrap' : 'display:none',
           nextStyle:i<A.length-1? 'font-size:14.5px;color:var(--accent);cursor:pointer;white-space:nowrap' : 'display:none',
           nextLabel:i<A.length-1? (A[i+1].title.split(' · ')[0]+' →') : '',
