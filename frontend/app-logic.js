@@ -3,7 +3,7 @@ globalThis.MysbizonLogic = function(DCLogic, React) {
 
 class Component extends DCLogic {
   state = {
-    zi:null, sbi:null, sti:null, rentStats:null, salesHistory:null, hist:[], err:'',
+    zi:null, sbi:null, sti:null, rentStats:null, salesHistory:null, err:'',
     q:'', ind:'커피-음료', sel:null, picks:null, screen:'home', menu:null,
     openWhy:false, open:{cond:false,money:false,day:false,risk:false},
     scen:'보통일 때', rent:400, cogs:35, area:15,
@@ -730,7 +730,7 @@ class Component extends DCLogic {
           const el=document.querySelectorAll('[data-search] input')[1]; if(el) el.focus(); return; }
         this.setState({starting:true,pickOpen:null});
         if(S.zoneId){ this.startZone(); return; }
-        this.setState({screen:'find',sel:null,fromRegion:false,homeZone:null,starting:false,hist:['home']});
+        this.setState({screen:'find',sel:null,fromRegion:false,homeZone:null,starting:false});
       },
       // 흰 필드 + 아주 얕은 그림자. 회색 덩어리보다 가볍고 정확해 보인다.
       searchBox:'position:relative;display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:20px;padding:0 24px;transition:box-shadow .18s;'
@@ -756,7 +756,7 @@ class Component extends DCLogic {
     const recent=[name,...prev].slice(0,4);
     try{ localStorage.setItem('mysbizon.recentZones',JSON.stringify(recent)); }catch(e){}
     this.setState({picking:name,pickOpen:null,recent:recent});
-    this.setState({screen:'region',picking:null,starting:false,homeZone:name,regPick:S.homeInd||null,hist:['home']});
+    this.setState({screen:'region',picking:null,starting:false,homeZone:name,regPick:S.homeInd||null});
   }
 
   pickZone(z){
@@ -764,7 +764,7 @@ class Component extends DCLogic {
     const recent=[z.name,...prev].slice(0,4);
     try{ localStorage.setItem('mysbizon.recentZones',JSON.stringify(recent)); }catch(e){}
     this.setState({picking:z.name,zFocus:false,recent:recent});
-    this.setState({screen:'region',picking:null,homeZone:z.name,zoneId:z.id,sel:z.id,regPick:null,hist:['home']});
+    this.setState({screen:'region',picking:null,homeZone:z.name,zoneId:z.id,sel:z.id,regPick:null});
   }
 
   // 순수 SVG 꺾은선 — 차트 라이브러리를 쓰지 않는다
@@ -1522,8 +1522,7 @@ class Component extends DCLogic {
   renderVals(){
     const S=this.state, r=this.rank();
     // 화면을 옮길 때 이전 화면을 기록한다(뒤로가기용)
-    const go=s=>()=>this.setState({screen:s,menu:null,
-      hist:(S.screen&&S.screen!==s)?[...(S.hist||[]),S.screen].slice(-8):(S.hist||[])});
+    const go=s=>()=>this.setState({screen:s,menu:null});
     // 헤더를 누르면 드롭다운이 열리고, 항목을 누르면 바로 그 화면으로 들어간다
     const MENU=[
       {label:'상권분석', keys:['hubZone','zone','find','cmp'], hub:'hubZone',
@@ -1555,7 +1554,7 @@ class Component extends DCLogic {
         label:g.label, isOpen:false,
         open:()=> g.hub==='__bot'
           ? this.setState({bot:true,menu:null})
-          : this.setState({screen:g.hub,menu:null,hist:[...(S.hist||[]),S.screen].slice(-8)}),
+          : this.setState({screen:g.hub,menu:null}),
         style:'font-size:14px;white-space:nowrap;cursor:pointer;padding:8px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
           +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:600;background:var(--surface)':'color:var(--ink2)'),
         items:g.items.map(([k,label,tag])=>({
@@ -1566,8 +1565,7 @@ class Component extends DCLogic {
       })),
       // 홈으로 돌아올 때마다 도입 애니메이션을 다시 튼다(가운데에서 떠서 위로 올라감).
       // 화면 아무 곳이나 누르면 skipAnim 이 건너뛴다.
-      goHome:()=>this.setState({screen:'home',menu:null,skip:false,
-        hist:(S.screen&&S.screen!=='home')?[...(S.hist||[]),S.screen].slice(-8):(S.hist||[])}),
+      goHome:()=>this.setState({screen:'home',menu:null,skip:false}),
       onHome:S.screen==='home',
       // 소개는 별도 화면이 아니라 홈 위에 뜨는 안내창
       noticeOn:!!S.notice,
@@ -2100,7 +2098,7 @@ class Component extends DCLogic {
                 : 'font-size:15px;font-weight:500;line-height:1.3;color:var(--ink3)',
               labelStyle:'font-size:15px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;'
                 +'overflow:hidden;text-overflow:ellipsis;'+(on?'color:var(--accent)':'color:var(--ink)'),
-              go:()=>this.setState({screen:key,menu:null,hist:[...(S.hist||[]),S.screen].slice(-8)}),
+              go:()=>this.setState({screen:key,menu:null}),
               style:'display:flex;flex-direction:column;gap:10px;min-height:158px;padding:22px;'
                 +'border-radius:18px;cursor:pointer;min-width:0;'
                 +'transition:transform .18s cubic-bezier(.2,.7,.3,1),background .18s;'
@@ -2114,11 +2112,10 @@ class Component extends DCLogic {
       goAbout:()=>this.setState({screen:'home',menu:null,notice:true}),
       // 정밀분석으로 갈 때 지도 필터를 고른 자리의 자치구로 맞춘다
       goMap:()=>this.setState({screen:'map',menu:null,
-        mapGu:(S.sel&&S.zgu&&S.zgu[S.sel])||'서울 전체',
-        hist:(S.screen&&S.screen!=='map')?[...(S.hist||[]),S.screen].slice(-8):(S.hist||[])}),
+        mapGu:(S.sel&&S.zgu&&S.zgu[S.sel])||'서울 전체'}),
       goFineCmp:go('fineCmp'),
       // 다시 열면 보낸 상태가 남아 있지 않게 초기화한다
-      openReport:()=>this.setState({screen:'report',rp_sent:false,hist:[...(S.hist||[]),S.screen].slice(-8)}),
+      openReport:()=>this.setState({screen:'report',rp_sent:false}),
       themeLabel: (typeof document!=='undefined' && document.documentElement.getAttribute('data-theme')==='dark')?'밝게':'어둡게',
       toggleTheme:()=>{ const h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
         h.setAttribute('data-theme',d?'light':'dark'); this.forceUpdate(); },
@@ -2185,20 +2182,6 @@ class Component extends DCLogic {
       ctaPrimary:'font-size:16px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
       ctaText:'font-size:14.5px;color:var(--accent);cursor:pointer;white-space:nowrap',
       prosCols:this.L('1fr','1fr 1fr','1fr 1fr'),
-      // 뒤로가기 — 화면 이동 기록을 쌓아 되돌린다
-      // 홈에는 뒤로가기를 두지 않는다 — 홈이 시작점이라 '← 상권분석'이 무엇으로 돌아가는지 읽히지 않는다
-      canBack:(S.hist||[]).length>0 && S.screen!=='home',
-      backLabel:(()=>{
-        const NM={find:'후보지',diag:'본전 계산',cmp:'비교분석',map:'지도분석',fineCmp:'정밀비교',
-          fineIntro:'정밀분석 소개',zone:'지역비교',price:'시세분석',report:'리포트',region:'동네',home:'처음',hubZone:'상권분석',hubFine:'정밀분석'};
-        const h=S.hist||[];
-        return h.length? '← '+(NM[h[h.length-1]]||'이전') : '';
-      })(),
-      goBack:()=>{
-        const h=[...(S.hist||[])];
-        const prev=h.pop();
-        if(prev) this.setState({screen:prev,hist:h,menu:null});
-      },
       openWhy:S.openWhy, whyLabel:S.openWhy?'계산 방식 접기':'점수 계산 방식 보기',
       toggleWhy:()=>this.setState({openWhy:!S.openWhy}),
       openCond:S.open.cond, openMoney:S.open.money, openDay:S.open.day, openRisk:S.open.risk,

@@ -129,9 +129,6 @@
 
   <main id="main-content" style="{{ mainStyle }}">
     <sc-if value="{{ dataError }}"><div role="alert" style="padding:18px;margin-top:24px;border-radius:16px;background:var(--surface)">{{ dataError }} <button onClick="{{ retryData }}">다시 불러오기</button></div></sc-if>
-    <sc-if value="{{ canBack }}">
-      <div role="button" tabIndex="0" onClick="{{ goBack }}" style="position:sticky;top:0;z-index:12;padding:14px 0 10px;background:var(--bg);font-size:14px;color:var(--accent);cursor:pointer;white-space:nowrap;display:inline-block">{{ backLabel }}</div>
-    </sc-if>
 
     <!-- HOME -->
     <sc-if value="{{ onHome }}">
