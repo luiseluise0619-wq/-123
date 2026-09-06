@@ -429,7 +429,7 @@ globalThis.MysbizonParts.screens = {
   zoneCompare(){
     const S=this.state, zi=S.zi, zgu=S.zgu;
     const empty={rows:[], cards:[], ind:'', lead:'', sub:'', note:this.dataNote('zc','',[]), maxPer:1,
-      charts:[], hasCharts:false, rail:this.rail('zc',{per:4}), chartRail:this.rail('zcc',{per:2}),
+      charts:[], hasCharts:false, rail:this.rail('zc',{per:4}), chartRail:this.rail('zcc',{per:1}),
       hasList:false, allOpen:false, toggleAll:()=>{}, allLabel:'', medLine:'', medNote:'', picked:''};
     if(!zi||!zgu) return empty;
     const idx=zi.inds.indexOf(S.ind);
@@ -480,6 +480,8 @@ globalThis.MysbizonParts.screens = {
         {label:'경쟁 점포', value:o.stores.toLocaleString()+'곳',
          tag: dStore==null? '' : (Math.abs(dStore)<1? '서울 중앙값과 비슷'
               : '중앙값보다 '+Math.abs(dStore).toLocaleString()+'곳 '+(dStore>0?'많아요':'적어요'))},
+        {label:'유동인구', value:o.pop? Math.round(o.pop).toLocaleString()+'명' : '자료 없음',
+         tag:o.pop? '자치구 안 행정동 하루 합계' : ''},
         {label:'상권 소비 규모', value:this.fmt(o.sales)+'원', tag:'최근 3개월'}
       ];
       if(sat!=null && satMed!=null){
@@ -543,7 +545,7 @@ globalThis.MysbizonParts.screens = {
       medNote:'가운데 눈금이 서울 자치구 중앙값이에요',
       // 가로 슬라이드 — 25개를 세로로 펼치지 않는다
       rail:this.rail('zc',{per:4}),
-      chartRail:this.rail('zcc',{per:2}),
+      chartRail:this.rail('zcc',{per:1}),
       cards:list.map(card),
       charts:C, hasCharts:C.length>0,
       // 전체 목록은 눌렀을 때만

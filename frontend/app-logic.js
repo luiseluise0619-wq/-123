@@ -1128,11 +1128,19 @@ class Component extends DCLogic {
       // ── 후보지 3단계: 지역 → 구 → 업종 ─────────────────────────────
       // 업종 검색창 하나만 있으면 '어디에서 찾는지'가 화면에 없다.
       fd:(()=>{
+        // 지역 목록은 자료 보유와 별개로 유지한다(§3). 지금 자료가 있는 곳은 서울뿐이지만
+        // 부산·인천·경기를 목록에서 지우면 '이 서비스는 서울만 하는구나'가 되어 버린다.
+        // 지우는 대신, 고르면 왜 아직 비어 있는지 말한다.
         const SIDO=[
-          {v:'서울특별시', label:'서울', on:true},
-          {v:'부산광역시', label:'부산', on:false},
-          {v:'인천광역시', label:'인천', on:false},
-          {v:'경기도',     label:'경기', on:false}
+          {v:'서울특별시',     label:'서울', on:true},
+          {v:'부산광역시',     label:'부산'}, {v:'대구광역시', label:'대구'},
+          {v:'인천광역시',     label:'인천'}, {v:'광주광역시', label:'광주'},
+          {v:'대전광역시',     label:'대전'}, {v:'울산광역시', label:'울산'},
+          {v:'세종특별자치시', label:'세종'}, {v:'경기도',     label:'경기'},
+          {v:'강원특별자치도', label:'강원'}, {v:'충청북도',   label:'충북'},
+          {v:'충청남도',       label:'충남'}, {v:'전북특별자치도', label:'전북'},
+          {v:'전라남도',       label:'전남'}, {v:'경상북도',   label:'경북'},
+          {v:'경상남도',       label:'경남'}, {v:'제주특별자치도', label:'제주'}
         ];
         const sido=S.sido||'서울특별시';
         const ready=!!S.zi&&!!S.zgu;
@@ -1155,11 +1163,21 @@ class Component extends DCLogic {
           +(on?'background:var(--accent);color:#FFFFFF;font-weight:600'
               :'background:var(--surface);color:var(--ink2)');
         return {
+          // 누르면 바뀐다. 자료가 없는 곳은 눌러도 '아직 없어요'가 뜬다 — 죽은 칩을 두지 않는다.
           sido:SIDO.map(o=>({
-            label:o.label+(o.on?'':' · 준비 중'),
-            pick:o.on? (()=>this.setState({sido:o.v, findGu:''})) : (()=>{}),
-            style:chip(o.on&&sido===o.v)
-              +(o.on?'':';opacity:.45;cursor:default')})),
+            label:o.label,
+            pick:()=>this.setState({sido:o.v, findGu:''}),
+            style:chip(sido===o.v)+(o.on?'':(sido===o.v?'':';opacity:.65'))})),
+          sidoRail:this.rail('fdSido',{per:8}),
+          // 서울 밖을 골랐을 때 — 목록·구·결과 대신 이 안내가 뜬다
+          sidoWaiting: sido!=='서울특별시',
+          sidoReady:  sido==='서울특별시',
+          sidoWaitTitle: sido+' — 데이터 준비 중',
+          sidoWaitText: '현재 '+sido+' 지역의 상권·임대료 데이터는 준비 중이에요. '
+            +'지금 쓰는 자료는 서울시 상권분석서비스라 서울 상권 1,564곳만 담고 있어요. '
+            +'전국으로 넓히려면 소상공인시장진흥공단 상권정보로 갈아타야 하는데, '
+            +'상권 구획과 업종 코드가 달라 맞춰 붙이는 작업이 필요해요.',
+          backToSeoulFind:()=>this.setState({sido:'서울특별시', findGu:''}),
           // 구는 25개라 접어 둔다. 편 상태에서는 스크롤이 생기게 높이를 묶는다.
           guOpen:!!S.findGuOpen,
           guToggle:()=>this.setState({findGuOpen:!S.findGuOpen}),
