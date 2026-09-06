@@ -120,7 +120,8 @@ globalThis.MysbizonParts.screens = {
     };
     // 자치구 목록과 선택된 구의 동네 (좌표로 계산한 zone_gu.json)
     const GU_LIST=['종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구','강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구','금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
-    const guTab=S.guTab||'강남구';
+    // 처음엔 아무 구도 골라져 있지 않다 — 기본값을 두면 첫 클릭이 곧 '두 번째 클릭'이 된다
+    const guTab=S.guTab||'';
     // 시·도 — ready 는 '이 서비스가 그 지역 상권 자료를 실제로 갖고 있는가'다.
     // 지금은 서울뿐이라 나머지는 눌러도 '아직 없어요'로 안내한다.
     const SIDO_ALL=[
@@ -135,17 +136,6 @@ globalThis.MysbizonParts.screens = {
       {v:'제주특별자치도',label:'제주'}
     ];
     const homeSido=S.sido||'서울특별시';
-    const guZoneList=(()=>{
-      if(!S.zi||!S.zgu) return [];
-      const out=[];
-      for(const k in S.zi.zones){
-        if(S.zgu[k]!==guTab) continue;
-        const rows=(S.zi.zones[k].rows||[]).filter(r=>r[1]&&r[2]);
-        out.push({id:k, name:S.zi.zones[k].nm, n:rows.reduce((a,r)=>a+r[1],0),
-          stores:rows.length? '' : '데이터 없음'});
-      }
-      return out.sort((a,b)=>b.n-a.n);
-    })();
     const fieldBase='flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:'+this.L('14px','16px','16px')+';transition:background .16s;'
       // 라벨 21px + 입력 22px 이 들어간다. 56 이면 위아래 6px 밖에 안 남아 꾸겨 보였다.
       +'padding:0 '+this.L('14px','18px','18px')+';height:'+this.L('58px','64px','64px')+';';
@@ -271,12 +261,12 @@ globalThis.MysbizonParts.screens = {
       indBtn:fieldBase+(open==='ind'?'background:rgba(0,0,0,.04)':''),
       zoneBtn:fieldBase+(open==='zone'?'background:rgba(0,0,0,.04)':''),
       // 값이 있을 때만 나오는 지우기. 메인 버튼과 12px 이상 떨어져 있고 클릭이 위로 전파되지 않는다.
-      hasZone:!!S.homeZoneName, hasIndVal:hasInd,
+      hasZone:!!(S.homeZoneName||S.homeGu), hasIndVal:hasInd,
       clearStyle:'flex:none;width:32px;height:32px;margin-left:8px;border-radius:50%;background:var(--surface);color:var(--ink3);'
         +'font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .14s',
-      clearZone:e=>{ e.stopPropagation(); this.setState({homeZoneName:null,zoneId:null,sel:null,zq:'',pickOpen:null}); },
+      clearZone:e=>{ e.stopPropagation(); this.setState({homeZoneName:null,homeGu:null,findGu:'',zoneId:null,sel:null,zq:'',pickOpen:null}); },
       clearInd:e=>{ e.stopPropagation(); this.setState({homeInd:null,iq:'',pickOpen:null}); },
-      zoneHint:S.homeZoneName?'':'· 몰라도 돼요',
+      zoneHint:(S.homeZoneName||S.homeGu)?'':'· 몰라도 돼요',
       openInd:()=>{ if(open!=='ind') this.setState({pickOpen:'ind'});
         const el=document.querySelectorAll('[data-search] input')[1]; if(el) el.focus(); },
       openZone:()=>{ if(open!=='zone') this.setState({pickOpen:'zone'});
@@ -354,17 +344,12 @@ globalThis.MysbizonParts.screens = {
       // — 예전에는 패널이 overflow:hidden 이라 구 25개 중 첫 줄만 보이고 잘려 있었다.
       panelBodyStyle:'flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:4px',
       allCardStyle:'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:12px;background:var(--surface);cursor:pointer;transition:background .14s'
-        +(S.homeZoneName?'':';box-shadow:inset 0 0 0 1.5px var(--accent)'),
-      pickAll:()=>this.setState({homeZoneName:null,zoneId:null,sel:null,zq:'',pickOpen:null}),
+        +((S.homeZoneName||S.homeGu)?'':';box-shadow:inset 0 0 0 1.5px var(--accent)'),
+      pickAll:()=>this.setState({homeZoneName:null,homeGu:null,findGu:'',zoneId:null,sel:null,zq:'',pickOpen:null}),
       // 구 25개를 세로 한 줄로 세우면 옆이 텅 빈다. ㄱㄴㄷ 순으로 여러 열에 깐다.
       guGridStyle:'display:grid;gap:4px;margin-top:14px;padding-top:14px;'
         +'border-top:1px solid var(--line);'
         +'grid-template-columns:repeat('+this.L(3,4,5)+',minmax(0,1fr))',
-      // 스크롤은 패널 본문(panelBodyStyle) 한 곳에서만 한다.
-      // 여기서 또 스크롤하면 상자 안 상자가 되어 어느 쪽이 움직이는지 알 수 없다.
-      colsStyle:'margin-top:12px',
-      zoneGridStyle:'display:grid;gap:4px;'
-        +'grid-template-columns:repeat(auto-fill,minmax('+this.L(140,180,200)+'px,1fr))',
       hasRecent:(S.recent||[]).length>0,
       recentChips:(S.recent||[]).map(nm=>zoneAll.find(z=>z.name===nm)).filter(Boolean).slice(0,4).map(z=>({
         name:this.zoneLabelOf(z.name), meta:guOf(z.id),
@@ -372,19 +357,22 @@ globalThis.MysbizonParts.screens = {
         style:'flex:none;display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:999px;background:var(--surface);cursor:pointer;white-space:nowrap;min-height:38px;transition:background .14s,color .14s'
       })),
       // ㄱㄴㄷ 순 — 행정 순서(종로구부터)는 사장님이 아는 순서가 아니라 찾기 어렵다
+      // 한 번 누르면 고르고, 같은 구를 한 번 더 누르면 그 구로 정하고 창을 닫는다.
+      // 상권까지 고르지 않아도 '이 구에서 찾아 줘'로 넘어갈 수 있어야 한다.
       guTabs:GU_LIST.slice().sort((a,b)=>a.localeCompare(b,'ko')).map(g=>({
-        label:g, pick:()=>this.setState({guTab:g}),
+        label:g,
+        pick:()=> g===guTab
+          ? this.setState({homeGu:g, homeZoneName:null, zoneId:null, sel:null,
+                           findGu:g, zq:g, pickOpen:null})
+          : this.setState({guTab:g}),
         style:'font-size:13.5px;font-weight:500;padding:10px 6px;border-radius:9px;cursor:pointer;'
           +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;'
           +'transition:background .14s,color .14s;'
-          +(g===guTab?'background:var(--line);color:var(--ink);font-weight:600':'color:var(--ink2)')
+          +(g===guTab?'background:var(--accent-3);color:var(--accent);font-weight:700'
+                     :(g===S.homeGu?'color:var(--accent);font-weight:600':'color:var(--ink2)'))
       })),
-      guZones:guZoneList.map(z=>({
-        name:this.zoneLabelOf(z.name), meta:z.stores,
-        pick:()=>this.setState({homeZoneName:z.name,zoneId:z.id,sel:z.id,zq:this.zoneLabelOf(z.name),pickOpen:null}),
-        style:'display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:11px;cursor:pointer;font-size:15px;transition:background .14s;'
-          +(z.id===S.zoneId?'background:var(--accent-3)':'')
-      })),
+      // 고른 구를 한 번 더 누르라고 알려 준다 — 두 번 눌러야 하는 걸 알 방법이 없다
+      guHint: guTab? guTab+'를 한 번 더 누르면 이 구로 찾습니다' : '구를 누르면 골라지고, 한 번 더 누르면 정해져요',
       pickEmpty: !!pq && (open==='zone'? zoneList.length===0 : indList.length===0),
       pickEmptyText:'‘'+pq+'’와 맞는 '+(open==='zone'?'동네가':'장사가')+' 없어요',
       startDisabled:!!S.starting,

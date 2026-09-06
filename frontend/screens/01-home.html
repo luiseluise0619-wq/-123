@@ -136,22 +136,14 @@
                           </div>
                         </sc-if>
 
-                        <!-- 구 25개 — ㄱㄴㄷ 순으로 여러 열에 깐다 -->
+                        <!-- 구 25개 — ㄱㄴㄷ 순으로 여러 열에 깐다.
+                             한 번 누르면 골라지고, 한 번 더 누르면 그 구로 정해진다. -->
                         <div style="{{ guGridStyle }}">
                           <sc-for list="{{ guTabs }}" as="t">
                             <span role="button" tabIndex="0" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</span>
                           </sc-for>
                         </div>
-                        <div style="{{ colsStyle }}">
-                          <div data-anim="1" style="{{ zoneGridStyle }}">
-                            <sc-for list="{{ guZones }}" as="z">
-                              <div role="button" tabIndex="0" onClick="{{ z.pick }}" style="{{ z.style }}">
-                                <span class="u-fill-e">{{ z.name }}</span>
-                                <span class="u-note-f">{{ z.meta }}</span>
-                              </div>
-                            </sc-for>
-                          </div>
-                        </div>
+                        <div style="font-size:12.5px;color:var(--ink3);margin-top:12px;text-wrap:pretty">{{ guHint }}</div>
                       </div>
                     </sc-if>
                   </div>
