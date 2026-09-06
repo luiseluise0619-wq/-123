@@ -77,13 +77,35 @@ globalThis.MysbizonParts.carousel = {
         down = true; moved = 0;
         startX = e.clientX; startLeft = el.scrollLeft;
         el.style.cursor = 'grabbing';
+        // 끄는 동안에는 스냅과 부드러운 스크롤을 잠시 끈다.
+        // 켜 둔 채로 scrollLeft 를 직접 넣으면 브라우저가 계속 되돌려서
+        // 손을 따라오지 않고 뚝뚝 끊긴다(실제로 그랬다).
+        el.style.scrollSnapType = 'none';
+        el.style.scrollBehavior = 'auto';
+        if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (err) {} }
       });
       el.addEventListener('pointermove', e => {
         if (!down) return;
+        e.preventDefault();
         const dx = e.clientX - startX;
         if (Math.abs(dx) > 3) { el.scrollLeft = startLeft - dx; moved = Math.abs(dx); }
       });
-      const up = () => { down = false; el.style.cursor = 'grab'; };
+      // 손을 떼면 가장 가까운 카드로 부드럽게 붙인다 — 반쯤 걸친 채로 멈추지 않게
+      const up = () => {
+        if (!down) return;
+        down = false;
+        el.style.cursor = 'grab';
+        el.style.scrollBehavior = 'smooth';
+        const base = el.getBoundingClientRect().left - el.scrollLeft;
+        const stops = [...el.children].map(c => Math.round(c.getBoundingClientRect().left - base));
+        const max = el.scrollWidth - el.clientWidth;
+        if (stops.length) {
+          const near = stops.reduce((a, b) => Math.abs(b - el.scrollLeft) < Math.abs(a - el.scrollLeft) ? b : a);
+          el.scrollTo({ left: Math.max(0, Math.min(near, max)), behavior: 'smooth' });
+        }
+        // 스냅은 붙는 애니메이션이 끝난 뒤에 되돌린다(도중에 켜면 튄다)
+        setTimeout(() => { el.style.scrollSnapType = ''; }, 320);
+      };
       el.addEventListener('pointerup', up);
       el.addEventListener('pointerleave', up);
       el.addEventListener('pointercancel', up);

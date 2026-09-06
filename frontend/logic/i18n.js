@@ -107,7 +107,7 @@ globalThis.MysbizonParts.i18n = {
   KO_BASE(){
     return {
       'nav.zone':'상권분석','nav.fine':'정밀분석','nav.sim':'정밀비교',
-      'nav.market':'통합시세','nav.report':'리포트',
+      'pr.seoulAll':'서울 전체','nav.market':'통합시세','nav.report':'리포트',
       'menu.zoneCompare':'지역비교','menu.find':'후보지','menu.compare':'비교분석',
       'menu.sweep':'자치구 훑기','menu.map':'지도','menu.detail':'정밀분석',
       'menu.sim':'정밀비교','menu.bep':'본전 계산',

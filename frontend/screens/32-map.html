@@ -22,21 +22,29 @@
       <section style="padding:28px 0 0">
         <div style="display:grid;gap:20px;grid-template-columns:{{ mapCols }}">
           <div class="u-min">
-            <div style="width:100%;aspect-ratio:16/12;border-radius:var(--r-lg);background:var(--surface);overflow:hidden">
-              <svg aria-label="상권 위치 지도" role="img" viewBox="{{ mv.map.vb }}" style="width:100%;height:100%;display:block">
-                <sc-for list="{{ mv.map.gus }}" as="g"><path d="{{ g.d }}" fill="{{ g.fill }}" fill-opacity="{{ g.op }}" stroke="{{ g.sc }}" stroke-width="{{ g.sw }}"></path></sc-for>
-                <sc-for list="{{ mv.map.pins }}" as="p"><g><circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="{{ p.fill }}"></circle><text x="{{ p.x }}" y="{{ p.ty }}" text-anchor="middle" font-size="{{ p.fs }}" font-weight="700" fill="white">{{ p.n }}</text></g></sc-for>
-              </svg>
+            <!-- ▼ 카카오지도가 들어갈 자리 (아직 비어 있음) -----------------------------
+                 넣을 때 할 일
+                 ① 카카오 JavaScript 키는 코드에 박지 말고 서버가 내려 준다(CLAUDE.md §2).
+                    JS 키는 브라우저에 노출되는 종류지만, 카카오 developers 에서
+                    '플랫폼 > 사이트 도메인'을 반드시 등록해야 남이 우리 한도를 쓰지 못한다.
+                 ② 아래 div#kakao-map 에 지도를 붙이고, 상권 중심 좌표로 마커를 찍는다.
+                    좌표는 이미 있다 — logic/analysis.js 의 mv.map.pins 가 상권별 x·y 를 만든다.
+                 ③ 지도 SDK 는 외부 스크립트라 CSP 를 같이 손봐야 한다(지금은 self 만 허용).
+                 ※ 지도를 못 불러와도 아래 상권 목록과 오른쪽 지표는 그대로 동작해야 한다. -->
+            <div id="kakao-map" role="img" aria-label="상권 위치 지도 (준비 중)"
+                 style="width:100%;aspect-ratio:16/12;border-radius:var(--r-lg);background:var(--surface);
+                        display:flex;align-items:center;justify-content:center;overflow:hidden">
+              <span style="{{ dsSub }}">지도는 준비 중이에요</span>
             </div>
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
               <sc-for list="{{ mv.map.pins }}" as="p">
                 <span role="button" tabIndex="0" onClick="{{ p.pick }}" style="{{ p.chip }}">{{ p.n }} {{ p.name }}</span>
               </sc-for>
             </div>
-            <p style="{{ dsSub }}; margin-top:12px">번호를 누르면 그 상권으로 바뀝니다. 핀은 상권 중심 좌표예요.</p>
+            <p style="{{ dsSub }}; margin-top:12px">번호를 누르면 그 상권으로 바뀝니다.</p>
           </div>
 
-          <div style="{{ dsCardLg }}; min-width:0;align-self:start">
+          <div style="min-width:0;align-self:start">
             <div style="font-size:19px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ mv.dash.zone }}</div>
             <div style="{{ dsSub }}; margin-top:4px">{{ mv.dash.ind }}</div>
             <div style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
@@ -56,7 +64,7 @@
 
       <sc-if value="{{ sidoWait }}">
         <section style="padding:36px 0 0;max-width:640px">
-          <div style="{{ dsCard }}">
+          <div>
             <div style="font-size:16px;font-weight:700">아직 이 지역 자료가 없어요</div>
             <p style="{{ dsBody }}; margin-top:8px">{{ sidoNote }}</p>
             <button onClick="{{ backToSeoul }}" style="{{ dsGhost }}; margin-top:16px">서울로 돌아가기</button>

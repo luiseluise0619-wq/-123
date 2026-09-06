@@ -759,15 +759,20 @@ globalThis.MysbizonParts.screens = {
       }
       const isRent=cat==='rent';
       const zones=Object.values(R.zones);
-      const pickNm=S.prPick||(zones[0]&&zones[0].nm);
-      const z=zones.find(o=>o.nm===pickNm)||zones[0];
-      const trend=(z? (isRent? z.rent_trend : z.vacancy_trend) : [])||[];
+      // 여기는 '통합'시세다 — 기본은 서울 전체다. 목록 첫 줄(명동)이 기본일 이유가 없다.
+      // 아래 목록에서 상권을 고르면 그때 그 상권으로 바뀐다.
+      const z=S.prPick? (zones.find(o=>o.nm===S.prPick)||null) : null;
+      const seoulName=this.t('pr.seoulAll');
+      const subjectName = z? this.placeName(z.nm) : seoulName;
+      const trend=(z? (isRent? z.rent_trend : z.vacancy_trend)
+                    : (R.seoul? (isRent? R.seoul.rent_trend : R.seoul.vacancy_trend) : []))||[];
       const qs=R.quarters, qLabel=q=>String(q).replace('년 ','.').replace('분기','Q');
-      const val=isRent? (z&&z.rent) : (z&&z.vacancy);
+      const val=z? (isRent? z.rent : z.vacancy)
+                 : (R.seoul? (isRent? R.seoul.rent : R.seoul.vacancy) : null);
       const first=trend[0], last=trend[trend.length-1];
       const d=(isFinite(first)&&isFinite(last))? last-first : null;
 
-      out.title=this.placeName(z?z.nm:'')+' · '+this.t(isRent?'pr.rentUnit':'pr.vacancy');
+      out.title=subjectName+' · '+this.t(isRent?'pr.rentUnit':'pr.vacancy');
       out.now=(val==null?'—':(isRent? this.manF(val,1) : val.toFixed(1)+'%'));
       out.nowLabel=qs[qs.length-1]+' 기준';
       if(d!=null){
@@ -780,10 +785,10 @@ globalThis.MysbizonParts.screens = {
       }
       // ① 이 상권의 추이
       push('pr-trend',{type:'line',
-        title:this.t(isRent?'pr.trendRent':'pr.trendVac',{name:this.placeName(z?z.nm:'')}),
+        title:this.t(isRent?'pr.trendRent':'pr.trendVac',{name:subjectName}),
         sub:this.t(isRent?'pr.rentUnit':'pr.vacancy'),
         unit:isRent?'만원':'%', period:qs[0]+' ~ '+qs[qs.length-1], height:230,
-        labels:qs.map(qLabel), datasets:[{label:this.placeName(z?z.nm:''), data:trend}]});
+        labels:qs.map(qLabel), datasets:[{label:subjectName, data:trend}]});
       // ② 상권별 비교 — 상위 12곳
       const rankBy=zones.slice().filter(o=>isFinite(isRent?o.rent:o.vacancy))
         .sort((a,b)=> (isRent? b.rent-a.rent : b.vacancy-a.vacancy)).slice(0,12);
@@ -794,7 +799,7 @@ globalThis.MysbizonParts.screens = {
           data:rankBy.map(o=>isRent?o.rent:o.vacancy),
           colors:rankBy.map(o=>o.nm===(z&&z.nm)?'on':'')}]});
       // ③ 서울 전체 추이 — 이 상권이 흐름을 따라가는지 견준다
-      if(R.seoul){
+      if(R.seoul && z){
         const st=isRent?R.seoul.rent_trend:R.seoul.vacancy_trend;
         push('pr-seoul',{type:'line', title:this.t(isRent?'pr.seoulRent':'pr.seoulVac'),
           sub:'같은 기간 서울 평균', unit:isRent?'만원':'%',
@@ -810,13 +815,19 @@ globalThis.MysbizonParts.screens = {
           unit:isRent?'%':'만원', period:qs[0]+' ~ '+qs[qs.length-1], height:230,
           labels:qs.map(qLabel), datasets:[{label:this.placeName(z.nm), data:other||[]}]});
       }
+      const rowStyle=on=>'display:flex;align-items:center;gap:12px;padding:12px 14px;'
+        +'border-radius:var(--r-sm);cursor:pointer;'+(on?'background:var(--accent-3)':'');
       out.listTitle='상권 '+zones.length+'곳';
-      out.list=zones.slice().sort((a,b)=>(isRent?b.rent-a.rent:b.vacancy-a.vacancy)).map(o=>({
-        name:this.placeName(o.nm), meta:this.placeName(o.gwon||''),
-        value:(isRent? this.manF(o.rent||0,1) : (o.vacancy||0).toFixed(1)+'%'),
-        pick:()=>this.setState({prPick:o.nm}),
-        style:'display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-sm);cursor:pointer;'
-          +(o.nm===(z&&z.nm)?'background:var(--accent-3)':'')}));
+      out.list=[
+        // 맨 위는 언제나 서울 전체 — 상권을 골랐다가 종합으로 되돌아올 수 있어야 한다
+        ...(R.seoul? [{name:seoulName, meta:'',
+            value:(isRent? this.manF(R.seoul.rent||0,1) : (R.seoul.vacancy||0).toFixed(1)+'%'),
+            pick:()=>this.setState({prPick:null}), style:rowStyle(!z)}] : []),
+        ...zones.slice().sort((a,b)=>(isRent?b.rent-a.rent:b.vacancy-a.vacancy)).map(o=>({
+          name:this.placeName(o.nm), meta:this.placeName(o.gwon||''),
+          value:(isRent? this.manF(o.rent||0,1) : (o.vacancy||0).toFixed(1)+'%'),
+          pick:()=>this.setState({prPick:o.nm}),
+          style:rowStyle(o.nm===(z&&z.nm))}))];
       out.note='한국부동산원 상업용부동산 임대동향조사(중대형 상가). '+R.unit
         +'. 이 조사의 상권 구획은 서울시 상권분석의 상권 1,564곳과 다른 지리라, 권역 수준의 참고값이에요.';
     }
