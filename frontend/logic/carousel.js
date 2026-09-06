@@ -46,12 +46,22 @@ globalThis.MysbizonParts.carousel = {
     el.scrollTo({ left: el.children[i].offsetLeft - el.offsetLeft, behavior: 'smooth' });
   },
 
+  // 화살표 한 번에 한 장씩. 카드 폭을 재서 미는 대신 '다음 카드의 시작점'으로 보낸다 —
+  // 폭 계산이 어긋나면 두 장씩 넘어가 버린다(실제로 그랬다).
   railMove(key, dir){
     const el = document.querySelector('[data-rail="' + key + '"]');
-    if (!el) return;
-    const first = el.firstElementChild;
-    const step = first ? (first.getBoundingClientRect().width + 20) : el.clientWidth * 0.8;
-    el.scrollBy({ left: dir * step * (this.bp() === 'desktop' ? 2 : 1), behavior: 'smooth' });
+    if (!el || !el.children.length) return;
+    const base = el.getBoundingClientRect().left - el.scrollLeft;
+    // 각 카드의 트랙 안 시작 위치
+    const stops = [...el.children].map(c => Math.round(c.getBoundingClientRect().left - base));
+    const now = el.scrollLeft;
+    // 반올림 오차로 제자리에 머무는 걸 막는다(1px 여유)
+    const next = dir > 0
+      ? stops.find(x => x > now + 1)
+      : [...stops].reverse().find(x => x < now - 1);
+    const max = el.scrollWidth - el.clientWidth;
+    el.scrollTo({ left: Math.max(0, Math.min(next == null ? (dir > 0 ? max : 0) : next, max)),
+                  behavior: 'smooth' });
   },
 
   // 드래그로 밀기 + 세로 휠을 가로 이동으로. 트랙마다 한 번만 붙인다.

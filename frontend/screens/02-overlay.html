@@ -3,7 +3,7 @@
       <div style="{{ botPanel }}">
         <div role="button" tabIndex="0" onClick="{{ botToggle }}" style="flex:none;display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--line);cursor:pointer">
           <span style="width:7px;height:7px;border-radius:50%;background:var(--good);flex:none"></span>
-          <span style="flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap">도우미</span>
+          <span style="flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap">AI 도우미</span>
           <span style="flex:none;font-size:11.5px;color:var(--ink3);white-space:nowrap">눌러서 접기</span>
           <span aria-hidden="true" style="{{ botCloseStyle }}" style-hover="background:var(--line-strong)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="width:12px;height:12px;display:block">
@@ -54,14 +54,14 @@
 
     <sc-if value="{{ botClosed }}">
       <!-- 모바일은 아이콘만. 눌러야 창이 열린다(§17) -->
-      <div data-bot-fab="1" role="button" tabIndex="0" aria-label="도우미" onClick="{{ botToggle }}" style="{{ botFab }}" style-hover="filter:brightness(1.06)" style-active="transform:scale(.96)">
+      <div data-bot-fab="1" role="button" tabIndex="0" aria-label="AI 도우미" onClick="{{ botToggle }}" style="{{ botFab }}" style-hover="filter:brightness(1.06)" style-active="transform:scale(.96)">
         <sc-if value="{{ botFabIcon }}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px" aria-hidden="true">
             <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.6-.7L3 21l1.9-4.8A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.4-8.4 8.4 8.4 0 0 1 9 8.4z"></path>
           </svg>
         </sc-if>
         <sc-if value="{{ botFabText }}">
-          <span style="font-size:13.5px;font-weight:600;white-space:nowrap">도우미</span>
+          <span style="font-size:13.5px;font-weight:600;white-space:nowrap">AI 도우미</span>
         </sc-if>
       </div>
     </sc-if>

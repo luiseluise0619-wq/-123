@@ -384,7 +384,7 @@ class Component extends DCLogic {
         {tab:'지도분석', body:'상위 후보를 지도에 놓고 서로의 위치를 봅니다.'},
         {tab:'정밀비교', body:'한 자치구 안의 동네를 전부 표로 펼쳐 훑습니다.'},
         {tab:'시세분석', body:'상가 임대료·빈 상가 비율·장사별 매출 추이를 분기별로 봅니다.'},
-        {tab:'도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
+        {tab:'AI 도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
       ],
       aboutRows:[
         {title:'장사를 먼저 골라요',
@@ -1077,11 +1077,33 @@ class Component extends DCLogic {
             return {label:c.cta, sub:c.d, has:true,
                     go:()=>this.setState({screen:next,menu:null})};
           })(),
-          others:(g?g.items:[]).filter(([k])=>k!==next).map(([key,label])=>({
-            label:label, sub:(CARD[key]||{}).d||'',
-            go:()=>this.setState({screen:key,menu:null}),
-            style:'display:flex;align-items:center;gap:12px;padding:16px 0;cursor:pointer;'
-              +'border-top:1px solid var(--line);min-width:0'})),
+          // 배너 — 이 메뉴가 무엇을 하는 곳인지 한 덩어리로. 화면 폭을 다 쓴다.
+          banner:'background:var(--surface);border-radius:var(--r-lg);'
+            +'padding:'+this.L('26px 20px','34px 30px','44px 40px'),
+          // 카드 한 줄 — 데스크톱은 나란히, 모바일은 가로로 넘긴다(§9·§10)
+          cardsGrid:this.L('', 'display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))',
+                               'display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))'),
+          cardsAsRail:this.bp()==='mobile',
+          cardsAsGrid:this.bp()!=='mobile',
+          rail:this.rail('hub',{per:4}),
+          cards:(g?g.items:[]).map(([key,label])=>{
+            const on=key===next;
+            const c=CARD[key]||{d:'',cta:'열기'};
+            return {
+              label:label, sub:c.d, cta:c.cta+' →', on:on,
+              go:()=>this.setState({screen:key,menu:null}),
+              labelStyle:'font-size:'+this.L('17px','18px','19px')+';font-weight:700;letter-spacing:-.02em;'
+                +(on?'color:var(--accent)':'color:var(--ink)'),
+              subStyle:'font-size:13.5px;line-height:1.5;text-wrap:pretty;color:var(--ink2);margin-top:8px',
+              ctaStyle:'font-size:13.5px;font-weight:600;margin-top:auto;padding-top:16px;white-space:nowrap;'
+                +(on?'color:var(--accent)':'color:var(--ink2)'),
+              // 강조는 하나뿐. 나머지는 얇은 선으로만 구분한다(§2·§3)
+              style:'display:flex;flex-direction:column;height:100%;min-height:'+this.L('132px','150px','168px')+';'
+                +'padding:'+this.L('18px','20px','22px')+';border-radius:var(--r-lg);cursor:pointer;min-width:0;'
+                +'transition:border-color .16s,transform .18s cubic-bezier(.2,.7,.3,1);background:var(--bg);'
+                +(on?'border:1px solid var(--accent)':'border:1px solid var(--line)')
+            };
+          }),
         };
       })(),
       goFind:go('find'), goDiag:go('diag'), goCmp:go('cmp'),
@@ -1240,7 +1262,7 @@ class Component extends DCLogic {
       ...this.home(),
       ai:this.chat(),
       // 오른쪽 아래에서 접었다 폈다 — 어느 화면에서나 쓸 수 있다
-      // 홈에서 지역·업종 목록이 열려 있으면 도우미 버튼은 비켜 준다 — 목록 오른쪽 아래를 가린다
+      // 홈에서 지역·업종 목록이 열려 있으면 AI 도우미 버튼은 비켜 준다 — 목록 오른쪽 아래를 가린다
       botOpen:!!S.bot, botClosed:!S.bot && !S.pickOpen,
       botToggle:()=>this.setState({bot:!S.bot},()=>{ if(!S.bot) this.scrollBot(); }),
       botPanel:'position:fixed;z-index:70;display:flex;flex-direction:column;background:var(--bg);'

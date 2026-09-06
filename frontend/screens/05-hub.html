@@ -1,38 +1,46 @@
-    <!-- 허브 (상권분석 · 정밀분석) — 메뉴판이 아니라 '다음 행동' 하나가 먼저다(§18). -->
+    <!-- 허브 (상권분석 · 정밀분석) — 위에 배너, 아래에 카드 한 줄 -->
     <sc-if value="{{ onHub }}">
-      <section style="padding:56px 0 56px">
-        <h1 style="{{ ds1 }}">{{ hub.title }}</h1>
-        <p style="{{ dsBody }}; margin-top:10px;max-width:620px">{{ hub.desc }}</p>
-
-        <!-- 지금 조건 -->
-        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:16px">
-          <sc-for list="{{ hub.ctx }}" as="c">
-            <span style="display:inline-flex;align-items:baseline;gap:7px;min-width:0">
-              <span class="u-note-f">{{ c.label }}</span>
-              <span style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis">{{ c.value }}</span>
-            </span>
-          </sc-for>
+      <section style="padding:32px 0 0">
+        <!-- 배너 + 서비스 소개 -->
+        <div style="{{ hub.banner }}">
+          <h1 style="{{ ds1 }}">{{ hub.title }}</h1>
+          <p style="{{ dsBody }}; margin-top:12px;max-width:620px">{{ hub.desc }}</p>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:18px">
+            <sc-for list="{{ hub.ctx }}" as="c">
+              <span style="display:inline-flex;align-items:baseline;gap:7px;min-width:0">
+                <span class="u-note-f">{{ c.label }}</span>
+                <span style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis">{{ c.value }}</span>
+              </span>
+            </sc-for>
+          </div>
         </div>
 
-        <!-- 다음 행동 — 채워진 버튼 하나(§14) -->
-        <sc-if value="{{ hub.primary.has }}">
-          <div style="margin-top:30px;max-width:560px">
-            <button onClick="{{ hub.primary.go }}" style="{{ dsCta }}" style-hover="filter:brightness(1.06)">{{ hub.primary.label }}</button>
-            <div style="{{ dsSub }}; margin-top:10px">{{ hub.primary.sub }}</div>
+        <!-- 카드 한 줄 — 데스크톱·태블릿은 나란히 -->
+        <sc-if value="{{ hub.cardsAsGrid }}">
+          <div style="{{ hub.cardsGrid }}; margin-top:24px">
+            <sc-for list="{{ hub.cards }}" as="c">
+              <div role="button" tabIndex="0" onClick="{{ c.go }}" style="{{ c.style }}" style-hover="transform:translateY(-3px)">
+                <div style="{{ c.labelStyle }}">{{ c.label }}</div>
+                <div style="{{ c.subStyle }}">{{ c.sub }}</div>
+                <div style="{{ c.ctaStyle }}">{{ c.cta }}</div>
+              </div>
+            </sc-for>
           </div>
         </sc-if>
 
-        <!-- 나머지는 한 줄짜리 목록으로 — 카드로 늘어놓지 않는다(§2) -->
-        <div style="margin-top:34px;max-width:560px">
-          <sc-for list="{{ hub.others }}" as="o">
-            <div role="button" tabIndex="0" onClick="{{ o.go }}" style="{{ o.style }}" style-hover="opacity:.7">
-              <span style="flex:1;min-width:0">
-                <span style="display:block;font-size:16px;font-weight:600;letter-spacing:-.01em">{{ o.label }}</span>
-                <span style="display:block;font-size:13px;color:var(--ink2);margin-top:3px;text-wrap:pretty">{{ o.sub }}</span>
-              </span>
-              <span style="flex:none;font-size:15px;color:var(--ink3)">›</span>
-            </div>
-          </sc-for>
-        </div>
+        <!-- 모바일은 가로로 넘긴다(§10) -->
+        <sc-if value="{{ hub.cardsAsRail }}">
+          <div data-rail="hub" style="{{ hub.rail.trackStyle }}; margin-top:20px">
+            <sc-for list="{{ hub.cards }}" as="c">
+              <div style="{{ hub.rail.itemStyle }}">
+                <div role="button" tabIndex="0" onClick="{{ c.go }}" style="{{ c.style }}">
+                  <div style="{{ c.labelStyle }}">{{ c.label }}</div>
+                  <div style="{{ c.subStyle }}">{{ c.sub }}</div>
+                  <div style="{{ c.ctaStyle }}">{{ c.cta }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
       </section>
     </sc-if>
