@@ -659,7 +659,14 @@
 
         <!-- 정부·지자체 지원사업 — 위 '내 창업 조건'의 답으로 순서를 맞춘다 -->
         <div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--line)">
-          <h2 style="font-size:20px;font-weight:700;letter-spacing:-0.02em;margin:0">받을 수 있는 정부지원사업</h2>
+          <h2 style="font-size:20px;font-weight:700;letter-spacing:-0.02em;margin:0">정부지원사업</h2>
+          <sc-if value="{{ rp.sp.ready }}">
+            <div style="margin-top:20px;padding:26px 22px;border-radius:20px;background:var(--accent-3);text-align:center">
+              <div style="font-size:15.5px;font-weight:600;color:var(--ink);line-height:1.5;white-space:pre-line;text-wrap:pretty">{{ rp.sp.ask }}</div>
+              <div style="font-size:12.5px;color:var(--ink2);margin-top:16px">{{ rp.sp.bigLabel }}</div>
+              <div style="font-size:34px;font-weight:800;letter-spacing:-0.035em;color:var(--accent);margin-top:4px;font-variant-numeric:tabular-nums">{{ rp.sp.bigNum }}</div>
+            </div>
+          </sc-if>
 
           <sc-if value="{{ rp.sp.loading }}">
             <div style="margin-top:16px;padding:18px;border-radius:14px;background:var(--surface);font-size:14px;color:var(--ink2)">공고를 불러오는 중이에요…</div>
@@ -682,8 +689,7 @@
 
           <sc-if value="{{ rp.sp.ready }}">
             <div>
-              <p style="font-size:14.5px;font-weight:600;margin:14px 0 0">{{ rp.sp.headline }}</p>
-              <p style="font-size:13px;color:var(--ink2);margin:6px 0 0;text-wrap:pretty">{{ rp.sp.subline }}</p>
+              <p style="font-size:13px;color:var(--ink2);margin:16px 0 0;text-wrap:pretty">{{ rp.sp.subline }}</p>
 
               <sc-if value="{{ rp.sp.noMatch }}">
                 <div style="margin-top:14px;padding:18px;border-radius:14px;background:var(--surface);font-size:13.5px;color:var(--ink2);text-wrap:pretty">고른 조건에 걸리는 공고가 지금은 없어요. 조건을 줄여 보시거나 아래 전체 목록을 보세요.</div>
@@ -692,11 +698,12 @@
               <sc-if value="{{ rp.sp.hasMatched }}">
                 <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
                   <sc-for list="{{ rp.sp.matched }}" as="s">
-                    <div style="{{ s.style }}">
+                    <div style="{{ s.style }}" style-hover="background:var(--line-strong)">
+                      <span style="{{ s.kindStyle }}">{{ s.kind }}</span>
                       <div style="min-width:0;flex:1">
-                        <div style="font-size:14.5px;font-weight:600;line-height:1.5;text-wrap:pretty">{{ s.title }}</div>
-                        <sc-if value="{{ s.hasSub }}"><div style="font-size:12.5px;color:var(--ink2);margin-top:4px;text-wrap:pretty">{{ s.sub }}</div></sc-if>
-                        <sc-if value="{{ s.hasUrl }}"><a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-size:12.5px;color:var(--accent);margin-top:6px">공고 원문 보기</a></sc-if>
+                        <div style="font-size:14.5px;font-weight:600;line-height:1.45;text-wrap:pretty">{{ s.title }}</div>
+                        <sc-if value="{{ s.hasSub }}"><div style="font-size:12px;color:var(--ink2);margin-top:3px;text-wrap:pretty">{{ s.sub }}</div></sc-if>
+                        <sc-if value="{{ s.hasUrl }}"><a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-size:12px;color:var(--accent);margin-top:5px">공고 원문 보기</a></sc-if>
                       </div>
                       <span style="{{ s.ddayStyle }}">{{ s.dday }}</span>
                     </div>
@@ -713,11 +720,12 @@
                   <summary style="cursor:pointer;font-size:13.5px;color:var(--ink2);padding:10px 0">{{ rp.sp.restLabel }}</summary>
                   <div style="display:flex;flex-direction:column;gap:8px;padding-top:8px">
                     <sc-for list="{{ rp.sp.rest }}" as="s">
-                      <div style="{{ s.style }}">
+                      <div style="{{ s.style }}" style-hover="background:var(--line-strong)">
+                        <span style="{{ s.kindStyle }}">{{ s.kind }}</span>
                         <div style="min-width:0;flex:1">
-                          <div style="font-size:14.5px;font-weight:600;line-height:1.5;text-wrap:pretty">{{ s.title }}</div>
-                          <sc-if value="{{ s.hasSub }}"><div style="font-size:12.5px;color:var(--ink2);margin-top:4px;text-wrap:pretty">{{ s.sub }}</div></sc-if>
-                          <sc-if value="{{ s.hasUrl }}"><a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-size:12.5px;color:var(--accent);margin-top:6px">공고 원문 보기</a></sc-if>
+                          <div style="font-size:14.5px;font-weight:600;line-height:1.45;text-wrap:pretty">{{ s.title }}</div>
+                          <sc-if value="{{ s.hasSub }}"><div style="font-size:12px;color:var(--ink2);margin-top:3px;text-wrap:pretty">{{ s.sub }}</div></sc-if>
+                          <sc-if value="{{ s.hasUrl }}"><a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-size:12px;color:var(--accent);margin-top:5px">공고 원문 보기</a></sc-if>
                         </div>
                         <span style="{{ s.ddayStyle }}">{{ s.dday }}</span>
                       </div>

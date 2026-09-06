@@ -115,7 +115,17 @@ class Component extends DCLogic {
   }
 
   componentDidUpdate(){
-    if(this._screen!==this.state.screen){this._screen=this.state.screen;window.scrollTo({top:0,behavior:'auto'});}
+    if(this._screen!==this.state.screen){
+      this._screen=this.state.screen;
+      window.scrollTo({top:0,behavior:'auto'});
+      // 리포트에 들어오면 조건 질문을 바로 띄운다 — 버튼을 눌러야 열리면 아무도 안 누른다.
+      // 아직 안 끝냈을 때만, 그리고 한 번만. 닫았는데 또 뜨면 성가시다.
+      if(this.state.screen==='report' && !this._qsAsked){
+        this._qsAsked=true;
+        const KEYS=['rp_cash','rp_loan','rp_runway','rp_exp','rp_when'];
+        if(KEYS.some(k=>!this.state[k])) this.setState({rp_qsOpen:true});
+      }
+    }
     if(this.state.screen==='report') this.loadSupport();
     this.placePanel();this.syncTrack();
   }
@@ -1834,17 +1844,24 @@ class Component extends DCLogic {
             const today=new Date(); today.setHours(0,0,0,0);
             const row=it=>{
               const dd=it.deadline?Math.round((new Date(it.deadline+'T00:00:00')-today)/86400000):null;
+              const soon=dd!=null&&dd<=7;
               return {
                 title:it.title,
-                sub:[it.org,it.kind,it.region].filter(Boolean).join(' · '),
-                hasSub:!![it.org,it.kind,it.region].filter(Boolean).length,
-                dday:dd==null?'상시 · 마감일 확인 필요':(dd===0?'오늘 마감':'D-'+dd),
-                ddayStyle:'flex:none;font-size:12px;font-weight:600;white-space:nowrap;color:'
-                  +(dd==null?'var(--ink3)':(dd<=7?'var(--warn)':'var(--ink2)')),
+                // 분야를 왼쪽 표식으로 세운다. 없으면 '지원' — 지어내지 않고 중립어를 쓴다.
+                kind:(it.kind||'지원').slice(0,4),
+                kindStyle:'flex:none;display:inline-flex;align-items:center;justify-content:center;'
+                  +'min-width:46px;height:46px;padding:0 8px;border-radius:14px;background:var(--accent-3);'
+                  +'color:var(--accent);font-size:11.5px;font-weight:700;white-space:nowrap;text-align:center',
+                sub:[it.org,it.region].filter(Boolean).join(' · '),
+                hasSub:!![it.org,it.region].filter(Boolean).length,
+                dday:dd==null?'상시':(dd===0?'오늘 마감':'D-'+dd),
+                ddayStyle:'flex:none;font-size:12.5px;font-weight:700;white-space:nowrap;'
+                  +'font-variant-numeric:tabular-nums;color:'
+                  +(dd==null?'var(--ink3)':(soon?'var(--warn)':'var(--ink2)')),
                 url:it.url||'',
                 hasUrl:!!it.url,
-                style:'display:flex;align-items:flex-start;justify-content:space-between;gap:12px;'
-                  +'padding:14px 16px;border-radius:14px;background:var(--surface)'
+                style:'display:flex;align-items:center;gap:14px;padding:14px 16px;'
+                  +'border-radius:16px;background:var(--surface);transition:background .14s'
               };
             };
             return {
@@ -1856,9 +1873,12 @@ class Component extends DCLogic {
               retry:()=>{this._spLoading=false;this.setState({sp:null});},
               // 조건을 아직 안 골랐으면 '추린 목록'이라고 하지 않는다
               hasFilter:kw.length>0,
-              headline:kw.length
-                ? '고른 조건에 해당할 수 있는 제도 '+matched.length+'건'
-                : '지금 접수 중인 공고 '+all.length+'건',
+              // 맨 위에 큰 숫자 하나 — '몇 건이나 되는지'가 먼저 눈에 들어와야 한다.
+              // 금액을 크게 쓰고 싶지만 공고 데이터에 지원금액 필드가 없다.
+              // 없는 값을 지어내지 않는다(CLAUDE.md 데이터 정직성) — 건수를 쓴다.
+              ask:this.indName(S.ind)+'를 시작하는 분이\n신청할 수 있는 지원사업이에요',
+              bigNum:(kw.length?matched.length:all.length)+'건',
+              bigLabel:kw.length?'고른 조건에 해당할 수 있는 제도':'지금 접수 중인 공고',
               subline:kw.length
                 ? '마감이 지난 공고는 빼고 마감이 가까운 순으로 놓았어요.'
                 : '위에서 조건을 고르면 해당할 수 있는 것부터 보여드려요.',
