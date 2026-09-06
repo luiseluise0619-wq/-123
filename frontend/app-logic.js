@@ -1719,19 +1719,70 @@ class Component extends DCLogic {
             check:'flex:none;width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;margin-top:2px;'
               +(partOn(k)?'background:var(--accent)':'background:var(--bg);box-shadow:inset 0 0 0 1.5px var(--line-strong)')
           })),
-          // 계산에 실제로 쓰이거나 리포트에서 판단이 갈리는 것만 묻는다
-          qs:[
-            {label:'창업에 사용할 자금은 얼마인가요?', options:['5천만원 미만','5천만~1억 미만','1억~2억 미만','2억 이상'].map(v=>({label:v,pick:pick('cash',v),style:chip('cash',v)}))},
-            {label:'창업 자금 중 대출 비중은 얼마인가요?', options:['없음','절반 미만','절반 이상'].map(v=>({label:v,pick:pick('loan',v),style:chip('loan',v)}))},
-            {label:'매출 없이 운영비를 감당할 수 있는 기간은?', options:['3개월 미만','3~6개월 미만','6~12개월 미만','1년 이상'].map(v=>({label:v,pick:pick('runway',v),style:chip('runway',v)}))},
-            {label:'이 장사를 해본 적 있나요?', options:['처음','비슷한 일 해봤음','같은 장사 해봤음'].map(v=>({label:v,pick:pick('exp',v),style:chip('exp',v)}))},
-            {label:'언제 열 계획이세요?', options:['3개월 안','6개월 안','1년 안','아직 미정'].map(v=>({label:v,pick:pick('when',v),style:chip('when',v)}))}
-          ],
-          // 위 질문은 '선택 설문'이 아니라 아래 지원사업을 고르는 입력이다.
-          // 답을 하나라도 고르면 그 조건에 걸리는 공고가 앞으로 온다.
-          qsLabel:(S.rp_exp||S.rp_loan||S.rp_cash||S.rp_runway||S.rp_when)
-            ? '내 창업 조건 — 아래 지원사업을 이 조건으로 맞춥니다'
-            : '내 창업 조건 남기기 — 받을 수 있는 지원사업을 찾는 데 씁니다',
+          // ── 창업 조건 — 한 번에 하나씩 묻는다 ────────────────────────────
+          // 다섯 개를 한 화면에 늘어놓으면 '설문지'로 읽혀서 그냥 지나친다.
+          // 하나씩 물으면 대답 하나가 화면 전체의 할 일이 되고, 답한 것은 위로 접힌다.
+          // 계산에 실제로 쓰이거나 리포트에서 판단이 갈리는 것만 묻는다.
+          ...(()=>{
+            const QS=[
+              {k:'cash',  q:'창업에 쓸 수 있는 돈은 얼마인가요?', hint:'권리금·보증금·인테리어를 다 합친 금액이에요',
+               opts:['5천만원 미만','5천만~1억 미만','1억~2억 미만','2억 이상']},
+              {k:'loan',  q:'그중 대출은 얼마나 되나요?', hint:'매달 나가는 이자가 본전선을 올려요',
+               opts:['없음','절반 미만','절반 이상']},
+              {k:'runway',q:'장사가 안 될 때 몇 달을 버틸 수 있나요?', hint:'매출 없이 월세·인건비를 낼 수 있는 기간이에요',
+               opts:['3개월 미만','3~6개월 미만','6~12개월 미만','1년 이상']},
+              {k:'exp',   q:'이 장사를 해본 적 있나요?', hint:'처음이면 지원사업 중 예비창업 쪽이 맞아요',
+               opts:['처음','비슷한 일 해봤음','같은 장사 해봤음']},
+              {k:'when',  q:'언제 문을 열 계획이세요?', hint:'공고 마감이 그 안에 있는지 봐 드려요',
+               opts:['3개월 안','6개월 안','1년 안','아직 미정']}
+            ];
+            const val=k=>S['rp_'+k];
+            // 다시 들어왔을 때 1번부터 또 묻지 않는다 — 아직 답 안 한 첫 질문에서 이어 한다.
+            const firstOpen=QS.findIndex(q=>!val(q.k));
+            const step=Math.max(0,Math.min(
+              S.rp_step!=null ? S.rp_step : (firstOpen<0?QS.length:firstOpen), QS.length));
+            const go=i=>()=>this.setState({rp_step:i});
+            const optStyle=on=>'display:flex;align-items:center;justify-content:space-between;gap:12px;'
+              +'padding:16px 18px;border-radius:14px;cursor:pointer;font-size:15.5px;'
+              +'transition:background .14s,color .14s;'
+              +(on?'background:var(--accent-3);color:var(--accent);font-weight:600'
+                 :'background:var(--surface);color:var(--ink)');
+            const cur=step<QS.length?QS[step]:null;
+            return {
+              qsTitle: cur?'몇 가지만 여쭤볼게요':'조건을 다 알려주셨어요',
+              qsSub: cur
+                ? '리포트의 본전 계산과 아래 지원사업 추천에 씁니다. 건너뛰어도 돼요.'
+                : '아래 지원사업이 이 조건으로 맞춰집니다. 누르면 고칠 수 있어요.',
+              qsStep: cur? (step+1)+' / '+QS.length : '',
+              hasStep: !!cur,
+              qsBar: 'display:block;height:100%;border-radius:2px;background:var(--accent);'
+                +'transition:width .3s cubic-bezier(.22,.7,.25,1);width:'
+                +Math.round(step/QS.length*100)+'%',
+              // 이미 답한 것 — 위로 접혀 쌓인다. 누르면 그 질문으로 돌아간다.
+              qsDone: QS.slice(0,step).map((q,i)=>({
+                label:q.q, value:val(q.k)||'건너뜀',
+                edit:go(i),
+                style:'display:flex;align-items:baseline;justify-content:space-between;gap:14px;'
+                  +'padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;min-width:0',
+                valStyle:'flex:none;font-size:14.5px;font-weight:600;'
+                  +(val(q.k)?'color:var(--ink)':'color:var(--ink3)')
+              })),
+              hasDone: step>0,
+              // 지금 묻는 것 하나
+              hasCur: !!cur,
+              curQ: cur?cur.q:'', curHint: cur?cur.hint:'',
+              curOpts: cur?cur.opts.map(v=>({
+                label:v, on:val(cur.k)===v,
+                style:optStyle(val(cur.k)===v),
+                pick:()=>this.setState({['rp_'+cur.k]:v, rp_step:step+1, rp_sent:false, rp_error:''})
+              })):[],
+              curSkip: cur?()=>this.setState({rp_step:step+1}):()=>{},
+              curBack: step>0?go(step-1):null,
+              hasBack: step>0,
+              qsAllDone: !cur,
+              qsRedo: go(0)
+            };
+          })(),
           email:email,
           onEmail:e=>{this._reportKey=null;this.setState({rp_email:e.target.value,rp_sent:false,rp_error:''});},
           agreed:!!S.rp_agree,
