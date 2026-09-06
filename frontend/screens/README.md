@@ -28,18 +28,20 @@ npm test              # 위 확인이 테스트에도 들어 있습니다
 | `00-data-error.html` | 자료 못 불러왔을 때 안내 | `dataError` |
 | `01-home.html` | 첫 화면 | `onHome` |
 | `02-overlay.html` | 도우미 창·소개 안내창 (화면 위에 뜨는 층) | `botOpen` 등 |
+| `03-settings.html` | 설정 — 언어·테마 | `settingsOpen` |
 | `05-hub.html` | 상권분석·정밀분석 허브 | `onHub` |
 | `10-report.html` | 리포트(설문 → 지원사업) | `onReport` |
-| `20-price.html` | 시세분석 | `onPrice` |
+| `20-price.html` | 시장동향 | `onPrice` |
 | `30-fine-intro.html` | 정밀분석 소개 | `onFineIntro` |
-| `31-fine-compare.html` | 정밀비교 | `onFineCmp` |
+| `31-fine-compare.html` | 자치구 훑기 | `onFineCmp` |
 | `32-map.html` | 지도 — 위치만 | `onMapScreen` |
 | `33-fine-detail.html` | 정밀분석 — 왜 좋은/나쁜지 | `onFineDetail` |
 | `40-zone-compare.html` | 지역비교(자치구) | `onZoneCmp` |
 | `41-region.html` | 고른 지역의 업종 목록 | `onRegion` |
 | `42-find.html` | 후보지 | `onFind` |
 | `43-diagnosis.html` | 본전 계산 | `onDiag` |
-| `44-compare.html` | 비교분석 | `onCmp` |
+| `44-compare.html` | 비교분석 — 담은 상권 종합순위 | `onCmp` |
+| `45-sim.html` | 정밀비교 — 내 조건으로 계산 | `onSim` |
 | `50-ai.html` | 도우미 전체 화면 | `onAi` |
 | `51-soon.html` | 준비 중 화면 | `onSoon` |
 | `_shell-foot.html` | `</main>` 닫는 태그·스크립트 | 항상 |
@@ -63,10 +65,21 @@ npm test              # 위 확인이 테스트에도 들어 있습니다
 | 파일 | 맡은 일 |
 | --- | --- |
 | `logic/const.js` | 여러 곳이 함께 쓰는 목록 |
-| `logic/util.js` | 값 다듬기·이름 바꾸기 |
+| `logic/i18n.js` | 다국어 — 사전·조사·문장 번역·DOM 훑기 |
+| `logic/theme.js` | 테마·라이트/다크·색 고르기 |
+| `logic/roman.js` | 한글 → 로마자(영어 화면의 상권 이름) |
+| `logic/util.js` | 값 다듬기·이름 바꾸기·언어별 숫자 표기 |
 | `logic/design.js` | 카드·제목·숫자 스타일, '숫자 → 해석' |
+| `logic/rank.js` | 종합순위 — 정규화·가중치·상권 색 고정 |
 | `logic/analysis.js` | 순위·지도·정밀분석 섹션 계산 |
-| `logic/screens.js` | 화면별 값 묶음(홈·지역비교·후보 지역·시세분석) |
+| `logic/screens.js` | 화면별 값 묶음(홈·지역비교·후보 지역·시장동향) |
 | `logic/chat.js` | 도우미 |
+| `logic/charts.js` | Chart.js 래퍼 |
+| `logic/carousel.js` | 가로 스크롤 카드 |
+| `logic/sim.js` | 정밀비교 계산(영업이익·회수기간) |
+| `logic/market.js` | 시장동향 8갈래 28지표 |
 | `logic/views.js` | 자료가 있어야 만들 수 있는 화면 조립 |
-| `app-logic.js` | 상태·생애주기·`renderVals()`·조각 결합 |
+| `app-logic.js` | 상태·생애주기·`MENU`·`renderVals()`·조각 결합 |
+
+새 모듈을 만들면 **`app-logic.js` 맨 아래 결합 목록 · `_shell-head.html` 의 `<script>` 순서 ·
+`tests/ui-logic.test.js` 와 `tests/i18n.test.js` 의 `LOGIC_PARTS`** 에 같이 넣어야 합니다.

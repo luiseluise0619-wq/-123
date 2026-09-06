@@ -380,4 +380,15 @@ DB index · query optimization · caching · pagination · rate limit · backgro
         실제 응답으로 확인**해야 정확하다. 이 작업 환경에서는 세 곳 모두 접속이 막혀
         실제 응답으로 확인하지 못했다.
 
+- [ ] 🟡 **`/api/market` 은 아직 서버에 열려 있지 않다** (2026-09-06 추가)
+      `api/market.js` 는 만들어 뒀지만 `server/app.js` 의 허용 목록
+      `PUBLIC_APIS = new Set(['report','config','support'])` 에 `'market'` 이 없어서
+      지금 부르면 404 다. 지금은 프론트가 이 주소를 부르지 않고 로컬에서
+      '데이터 준비 중'만 그리기 때문에 화면에는 아무 문제가 없다(확인함).
+      → 위 키를 넣어 시장동향을 실제로 살릴 때 **두 가지를 같이** 해야 한다:
+        ① `server/app.js` 의 `PUBLIC_APIS` 에 `'market'` 추가
+        ② `frontend/logic/market.js` 에서 `/api/market?k=...` 를 실제로 호출하도록 연결
+      ※ 허용 목록은 일부러 좁게 두는 장치다(경로만 맞으면 아무 파일이나 실행되는 걸 막는다).
+        그러니 지금 미리 열어 두지 않았다 — 쓰지도 않는 엔드포인트를 열면 공격면만 넓어진다.
+
 - _새 항목은 발견 즉시 여기에 추가_
