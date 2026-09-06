@@ -1,11 +1,11 @@
-    <!-- 정밀비교 -->
+    <!-- 정밀비교 — 한 자치구 안을 빠짐없이. 결론 먼저, 나머지는 접어서. -->
     <sc-if value="{{ onFineCmp }}">
-      <section class="u-sec-lg">
+      <section class="u-sec">
         <div class="u-lab">{{ fc.ind }} · 정밀비교</div>
-        <h1 style="font-size:clamp(22px,3.4vw,34px);font-weight:700;letter-spacing:-0.025em;line-height:1.25;margin:10px 0 0;text-wrap:pretty">{{ fc.lead }}</h1>
-        <p style="font-size:14.5px;color:var(--ink2);margin:10px 0 0;text-wrap:pretty">한 자치구 안의 동네를 빠짐없이 훑어요. 내가 담은 것만 보는 비교분석과 달라요.</p>
+        <h1 style="{{ ds1 }}; margin-top:10px">{{ fc.lead }}</h1>
+        <p style="{{ dsBody }}; margin-top:10px;max-width:700px">{{ fc.sub }}</p>
 
-        <div style="margin-top:24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="margin-top:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span class="u-lab">업종</span>
           <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o">
@@ -19,31 +19,63 @@
             </sc-for>
           </select>
         </div>
-
-        <sc-if value="{{ fc.hasMed }}">
-          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:22px;flex-wrap:wrap">
-            <span class="u-lab-sm">이 자치구 중앙값 <b style="font-variant-numeric:tabular-nums">{{ fc.medLabel }}</b></span>
-            <span style="font-size:12px;color:var(--ink3);white-space:nowrap">가게 한 곳이 한 달에 파는 돈</span>
-          </div>
-        </sc-if>
-        <div data-anim="1" style="margin-top:10px">
-          <sc-for list="{{ fc.rows }}" as="r">
-            <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="{{ r.row }}" style-hover="background:var(--surface)">
-              <span style="flex:none;width:20px;font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums">{{ r.rank }}</span>
-              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
-                <span style="font-size:15.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
-                <span style="display:block;height:5px;border-radius:3px;background:var(--surface);overflow:hidden">
-                  <span style="{{ r.bar }}"></span>
-                </span>
-                <span style="display:flex;align-items:baseline;gap:10px;min-width:0">
-                  <span style="{{ r.storeStyle }}">가게 {{ r.storeTag }}</span>
-                  <span style="{{ r.vsStyle }}">{{ r.vsMed }}</span>
-                </span>
-              </span>
-              <span style="flex:none;width:96px;text-align:right;font-size:14.5px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.per }}</span>
-            </div>
-          </sc-for>
-        </div>
-        <p style="font-size:12.5px;color:var(--ink3);margin:30px 0 0;max-width:700px;text-wrap:pretty">{{ fc.note }}</p>
       </section>
+
+      <sc-if value="{{ fc.hasList }}">
+        <!-- 결론: 상위 세 곳 -->
+        <section style="padding:28px 0 0">
+          <h2 style="{{ ds3 }}">가장 잘 되는 세 곳</h2>
+          <div style="{{ dsGrid3 }}; margin-top:14px">
+            <sc-for list="{{ fc.top }}" as="t">
+              <div role="button" tabIndex="0" onClick="{{ t.pick }}" style="{{ t.style }}" style-hover="transform:translateY(-2px)">
+                <div style="display:flex;align-items:baseline;gap:9px;min-width:0">
+                  <span style="flex:none;font-size:12.5px;font-weight:700;color:var(--ink3);font-variant-numeric:tabular-nums">{{ t.rank }}</span>
+                  <span style="flex:1;min-width:0;font-size:18px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span>
+                </div>
+                <div style="{{ dsNumSm }}; margin-top:12px">{{ t.per }}</div>
+                <div class="u-note-t">가게 한 곳당 월매출 (추정)</div>
+                <div style="{{ t.vsStyle }}">{{ t.vs }}</div>
+                <div class="u-note" style="margin-top:10px">경쟁 점포 {{ t.stores }}</div>
+                <sc-if value="{{ t.thin }}">
+                  <div style="font-size:11.5px;font-weight:600;color:var(--warn);margin-top:4px">{{ t.thinText }}</div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <!-- 전체 순위 -->
+        <section style="padding:40px 0 0">
+          <div class="u-between">
+            <h2 style="{{ ds3 }}">전체 순위</h2>
+            <sc-if value="{{ fc.hasMed }}">
+              <span class="u-lab-sm">구 중앙값 <b style="font-variant-numeric:tabular-nums">{{ fc.medLabel }}</b></span>
+            </sc-if>
+          </div>
+          <div data-anim="1" style="margin-top:10px">
+            <sc-for list="{{ fc.rows }}" as="r">
+              <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="{{ r.row }}" style-hover="background:var(--surface)">
+                <span style="flex:none;width:24px;font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums">{{ r.rank }}</span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+                  <span style="font-size:15.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
+                  <span style="display:block;height:5px;border-radius:3px;background:var(--surface);overflow:hidden">
+                    <span style="{{ r.bar }}"></span>
+                  </span>
+                  <span style="display:flex;align-items:baseline;gap:10px;min-width:0">
+                    <span style="{{ r.storeStyle }}">경쟁 점포 {{ r.storeTag }}</span>
+                    <span style="{{ r.vsStyle }}">{{ r.vsMed }}</span>
+                  </span>
+                </span>
+                <span style="flex:none;width:104px;text-align:right;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.per }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ fc.hasMore }}">
+            <div style="margin-top:16px">
+              <span role="button" tabIndex="0" onClick="{{ fc.toggleMore }}" style="{{ dsGhost }}; display:inline-flex;align-items:center">{{ fc.moreLabel }}</span>
+            </div>
+          </sc-if>
+          <p style="{{ dsSub }}; margin-top:28px;max-width:760px">{{ fc.note }}</p>
+        </section>
+      </sc-if>
     </sc-if>

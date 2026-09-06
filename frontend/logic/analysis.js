@@ -165,7 +165,7 @@ globalThis.MysbizonParts.analysis = {
     out.push({key:'sales', title:'매출 · 얼마나 버나요',
       q:'가게 한 곳이 한 달에 얼마 파나요?',
       big:this.fmt(sel.per/3)+'원',
-      bigLabel:'서울 중앙값 '+this.fmt(mp/3)+'원 · 추정',
+      bigLabel:'(추정) · 서울 중앙값 '+this.fmt(mp/3)+'원',
       verdict:(diff>=10? '서울 중앙값보다 '+diff+'% 높아요.' : (diff<=-10? '서울 중앙값보다 '+Math.abs(diff)+'% 낮아요.' : '서울 중앙값과 비슷해요.')),
       rows:sRows, bars:[], trend:trend,
       note:'한 곳당 매출은 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아니에요.'});

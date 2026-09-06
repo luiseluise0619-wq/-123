@@ -129,6 +129,7 @@ globalThis.MysbizonParts.util = {
     if(kind==='eun') return bat?'은':'는';
     if(kind==='eul') return bat?'을':'를';
     if(kind==='ramyeon') return bat?'이라면':'라면';
+    if(kind==='ieyo') return bat?'이에요':'예요';   // 관광특구'예요' · 역삼역'이에요'
     return bat?'이':'가';
   },
 

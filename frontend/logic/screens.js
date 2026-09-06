@@ -571,17 +571,49 @@ globalThis.MysbizonParts.screens = {
     // 기준선이 없으면 금액만 71줄이라 어느 줄이 좋은 건지 읽히지 않는다.
     const perSorted=list.map(o=>o.per).sort((a,b)=>a-b);
     const medPer=perSorted.length?perSorted[Math.floor(perSorted.length/2)]:0;
+    // 71줄을 그냥 늘어놓으면 '그래서 어디로?'가 안 보인다. 결론과 상위 셋을 먼저 둔다.
+    const top3=list.slice(0,3);
+    const showAll=!!S.fcAll;
+    const shown=showAll? list : list.slice(0,12);
     return {
       gu:gu, ind:this.indName(S.ind),
       guOptions:GU,
-      onGu:e=>this.setState({fcGu:e.target.value}),
+      onGu:e=>this.setState({fcGu:e.target.value, fcAll:false}),
       lead: list.length
-        ? gu+' 안의 '+list.length+'곳을 전부 줄 세웠어요'
-        : gu+'에는 '+this.indName(S.ind)+' 데이터가 있는 동네가 없어요.',
+        ? gu+'에서 '+this.indName(S.ind)+this.josa(this.indName(S.ind),'ga')+' 가장 잘 되는 곳은 '+top3[0].name+this.josa(top3[0].name,'ieyo')
+        : gu+'에는 '+this.indName(S.ind)+' 자료가 있는 상권이 없어요.',
+      sub: list.length
+        ? gu+' 안에서 자료가 있는 상권 '+list.length+'곳을 가게 한 곳당 매출로 줄 세웠어요.'
+        : '다른 자치구를 골라 보세요.',
+      hasList:list.length>0,
+      // 상위 셋은 카드로 — 눈이 먼저 닿는 곳에 결론을 둔다
+      top:top3.map((o,i)=>({
+        rank:String(i+1),
+        name:o.name, gu:o.gu||'',
+        per:this.fmt(o.per/3)+'원',
+        stores:o.stores.toLocaleString()+'곳',
+        thin:o.stores<=2, thinText:'표본 '+o.stores+'곳이라 참고용이에요',
+        vs:(()=>{
+          if(!medPer) return '';
+          const d=Math.round((o.per-medPer)/medPer*100);
+          if(Math.abs(d)>=200) return this.pctRank(o.per, list.map(x=>x.per), true).text.replace('서울 상권 중','이 구에서');
+          return d>=0? '구 중앙값보다 '+d+'% 높아요' : '구 중앙값보다 '+Math.abs(d)+'% 낮아요';
+        })(),
+        vsStyle:'font-size:12.5px;font-weight:600;margin-top:6px;color:'
+          +((medPer&&o.per>=medPer)?'var(--good)':'var(--ink3)'),
+        pick:()=>this.setState({sel:o.id,screen:'diag'}),
+        style:'display:flex;flex-direction:column;padding:20px;border-radius:var(--r-lg);cursor:pointer;min-width:0;'
+          +(i===0?'background:var(--accent-3);border:1px solid var(--accent-2)'
+                 :'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card)')
+      })),
+      // 나머지는 접어 둔다 — 71줄을 한 번에 던지지 않는다
+      moreLabel: showAll? '접기' : ('나머지 '+Math.max(list.length-12,0)+'곳 더 보기'),
+      hasMore: list.length>12,
+      toggleMore:()=>this.setState({fcAll:!showAll}),
       // 자치구 중앙값 — 화면 위에 기준선으로 적는다
       medLabel:list.length? this.fmt(medPer/3)+'원' : '',
       hasMed:list.length>0,
-      rows:list.map((o,i)=>{
+      rows:shown.map((o,i)=>{
         // 가게가 2곳 이하면 '가게 한 곳당'이 사실상 그 한 가게의 실적이다.
         // 숫자를 지우지는 않고(값은 진짜다) 믿을 만한 정도를 함께 적는다.
         const thin=o.stores<=2;
@@ -602,7 +634,7 @@ globalThis.MysbizonParts.screens = {
         pick:()=>this.setState({sel:o.id,screen:'diag'}),
         row:'display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--line);cursor:pointer'
       };}),
-      note:'비교분석은 담아 둔 몇 곳만, 정밀비교는 한 자치구 안을 빠짐없이 봐요. 막대와 금액은 가게 한 곳이 한 달에 파는 돈이에요. 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아니에요. 자치구는 동네 좌표로 계산해 붙였고, 경계에서 250m 안쪽인 곳은 두 구를 함께 적었어요 — 강남역처럼 강남대로를 경계로 서쪽이 서초구인 곳이 그래요. 건물 단위 임대료와 공실은 공개 데이터에 없어요.'
+      note:'금액은 가게 한 곳이 한 달에 파는 돈이에요. 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적은 아니에요. 자치구는 상권 좌표로 붙였고, 경계에서 250m 안쪽인 곳은 두 구를 함께 적었어요 — 강남역처럼 강남대로를 경계로 서쪽이 서초구인 곳이 그래요.'
     };
   },
 

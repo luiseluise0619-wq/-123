@@ -783,12 +783,51 @@ globalThis.MysbizonParts.views = {
 
     // ── 비교
     const picks=PICKS.map(id=>L.find(o=>o.id===id)).filter(Boolean);
+
+    // 이 화면 안에서 바로 담는다. 다른 화면으로 보내면 '내가 어디 있는지'를 잃는다.
+    const cq=(S.cmpQ||'').trim().replace(/\s/g,'');
+    const addable=(()=>{
+      const hit=o=>!cq || (this.zoneLabelOf(o.name)+((S.zgu||{})[o.id]||'')).replace(/\s/g,'').indexOf(cq)>=0;
+      return L.filter(o=>PICKS.indexOf(o.id)<0).filter(hit).slice(0,6).map(o=>({
+        name:this.zoneLabelOf(o.name),
+        meta:[(S.zgu||{})[o.id], this.fmt(o.per/3)+'원'].filter(Boolean).join(' · '),
+        full:PICKS.length>=3,
+        add:()=>{ if(PICKS.length>=3) return; this.setState({picks:[...PICKS,o.id], cmpQ:''}); },
+        style:'display:flex;align-items:center;justify-content:space-between;gap:12px;'
+          +'padding:14px 16px;border-radius:var(--r-sm);background:var(--surface);'
+          +'cursor:pointer;min-width:0;transition:background .14s'}));
+    })();
+    const addBox={
+      q:S.cmpQ||'',
+      onQ:e=>this.setState({cmpQ:e.target.value}),
+      items:addable,
+      hasItems:addable.length>0,
+      emptyText: cq? '‘'+(S.cmpQ||'').trim()+'’와 맞는 상권이 없어요' : '',
+      isEmpty: addable.length===0,
+      full:PICKS.length>=3,
+      fullText:'3곳까지 담을 수 있어요. 하나를 빼면 다른 곳을 담을 수 있어요.'
+    };
+
     if(picks.length<2){
       out.c={
         headline:'상권을 비교해 보세요',
         sub:'관심 있는 상권을 최대 3곳까지 나란히 놓고 볼 수 있어요.',
-        emptyCount: picks.length===1? '지금 1곳을 담았어요. 한 곳만 더 담으면 비교가 시작돼요.' : '',
-        cols:[], diffs:[], honesty:'', empty:true, on:false,
+        emptyCount: picks.length===1? '지금 1곳 담았어요. 한 곳만 더 담으면 비교가 시작돼요.' : '',
+        // 담은 게 하나면 그 카드도 보여 준다 — 담은 게 사라진 것처럼 보이면 안 된다
+        cols:picks.map(o=>({
+          name:this.zoneLabelOf(o.name), rank:(S.zgu&&S.zgu[o.id])||'',
+          diag:()=>this.setState({sel:o.id,screen:'diag'}),
+          drop:()=>this.setState({picks:PICKS.filter(x=>x!==o.id)}),
+          best:false,
+          cardStyle:'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card);'
+            +'border-radius:var(--r-lg);padding:20px;min-width:0;position:relative',
+          cells:[{label:'예상 매출 (추정)', value:this.fmt(o.per/3)+'원', note:'',
+                  valStyle:'font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums', bar:null},
+                 {label:'경쟁 점포', value:o.stores.toLocaleString()+'곳', note:'',
+                  valStyle:'font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums', bar:null}]
+        })),
+        add:addBox,
+        diffs:[], honesty:'', empty:true, on:picks.length>0,
         verdict:'', verdictWhy:[], hasVerdict:false};
       out.openMap=false; out.mapPins=[]; out.mapNote='';
       out.cmpMap={ready:false,gus:[],pins:[],vb:'0 0 100 100',stroke:'0.5',legend:[],legendNote:''};
@@ -812,6 +851,11 @@ globalThis.MysbizonParts.views = {
     const KOW=['','한','두','세','네','다섯'];
     const countWord=picks.length<=5?KOW[picks.length]+' 곳':picks.length+'곳';
     const bS=best('score',true), bP=best('per',true), bF=best('stores',false), bD=best('sales',true);
+    // 유동인구는 rank() 결과에 없어 따로 구한다
+    const popOfZone=o=>{ const l=S.zlp&&S.zlp[o.id]; return (l&&Number.isFinite(l.tot))?l.tot:null; };
+    const maxPop=Math.max(...picks.map(o=>popOfZone(o)||0), 0)||null;
+    const popTop=picks.filter(o=>popOfZone(o)===maxPop);
+    const bPop=(maxPop&&popTop.length===1)?popTop[0]:null;
     const tieWord=picks.length===2?'두 곳 같음':picks.length+'곳 같음';
     // 셀 라벨('3곳 같음')과 문장('세 곳이 모두 같습니다')은 형태가 달라야 한다
     const tieSent=KOW[picks.length]+' 곳이 모두 같습니다';
@@ -826,15 +870,18 @@ globalThis.MysbizonParts.views = {
       if(winner===bD) w.push('상권 전체 매출이 가장 커요');
       if(winner===bP) w.push('가게 한 곳당 매출이 가장 높아요');
       if(winner===bF) w.push('같은 업종 경쟁이 가장 적어요');
-      const lp=S.zlp&&S.zlp[winner.id];
-      if(lp) w.push('하루 유동인구가 '+Math.round(lp.tot).toLocaleString()+'명이에요');
+      // 유동인구는 '담은 곳 중 가장 많을 때'만 강점이다. 아니면 적지 않는다.
+      const popOf=o=>{ const l=S.zlp&&S.zlp[o.id]; return l?l.tot:null; };
+      const mine=popOf(winner), others=picks.filter(o=>o!==winner).map(popOf).filter(v=>v!=null);
+      if(mine!=null && others.length && mine>Math.max(...others))
+        w.push('하루 유동인구가 '+Math.round(mine).toLocaleString()+'명으로 가장 많아요');
       if(winner.stores<10) w.push('다만 표본이 '+winner.stores+'곳뿐이라 참고용이에요');
       return w.slice(0,3);
     })();
     out.c={
       headline:'담아 둔 '+picks.length+'곳, 어디로 할까요?',
       sub:'내가 고른 상권만 나란히 놓고 봅니다.',
-      empty:false, on:true, emptyCount:'',
+      empty:false, on:true, emptyCount:'', add:addBox,
       hasVerdict: !!winner,
       verdict: winner
         ? '종합적으로는 '+this.zoneLabelOf(winner.name)+ga(winner.name)+' '+this.indName(S.ind)+' 창업에 더 유리해 보여요.'
@@ -863,7 +910,10 @@ globalThis.MysbizonParts.views = {
            valStyle:bigc+(o===bF?';color:var(--accent)':''),
            bar:'width:'+Math.max((1-(o.stores/(MX.stores*1.15)))*100,2).toFixed(1)+'%;height:100%;background:'+(o===bF?'var(--accent)':'var(--line-strong)')+';border-radius:2px'},
           {label:'유동인구', value:lp? Math.round(lp.tot).toLocaleString()+'명':'자료 없음',
-           note:'', valStyle:bigc+(lp?'':';color:var(--ink3)'), bar:null},
+           note:(lp&&o===bPop)?'담은 곳 중 사람이 가장 많아요':'',
+           valStyle:bigc+(lp?((o===bPop)?';color:var(--accent)':''):';color:var(--ink3)'),
+           bar:(lp&&maxPop)?('width:'+Math.max(lp.tot/maxPop*100,3).toFixed(1)+'%;height:100%;background:'
+             +((o===bPop)?'var(--accent)':'var(--line-strong)')+';border-radius:2px'):null},
           {label:'상권 소비 규모', value:this.fmt(o.sales)+'원',
            note:o===bD?'담은 곳 중 가장 커요':'',
            valStyle:bigc+(o===bD?';color:var(--accent)':''),

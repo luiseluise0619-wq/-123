@@ -11,30 +11,43 @@
               <option value="{{ o.raw }}">{{ o.label }}</option>
             </sc-for>
           </select>
-          <select value="" onChange="{{ onAddZone }}" disabled="{{ addZoneFull }}" style="{{ selectStyle }}">
-            <sc-for list="{{ addZoneOptions }}" as="z">
-              <option value="{{ z.id }}">{{ z.label }}</option>
-            </sc-for>
-          </select>
         </div>
       </section>
 
-      <!-- 빈 화면 — 정상 화면과 같은 수준으로 만든다 -->
+      <!-- 담기는 이 화면 안에서 끝난다. 다른 화면으로 보내면 어디 있는지 잃는다. -->
+      <section style="padding:24px 0 0">
+        <div style="{{ dsCard }}">
+          <div class="u-h">비교할 상권 담기</div>
+          <p style="{{ dsSub }}; margin-top:6px">상권 이름이나 구 이름을 쳐서 찾을 수 있어요. 최대 3곳.</p>
+          <input value="{{ c.add.q }}" onChange="{{ c.add.onQ }}" maxLength="40" aria-label="비교할 상권 찾기" placeholder="상권 이름 또는 구 (예: 역삼, 마포구)" style="{{ dsInput }}; margin-top:14px;max-width:420px">
+          <sc-if value="{{ c.add.full }}">
+            <p style="font-size:13.5px;font-weight:600;color:var(--accent);margin-top:12px">{{ c.add.fullText }}</p>
+          </sc-if>
+          <sc-if value="{{ c.add.hasItems }}">
+            <div style="{{ dsGrid3 }}; margin-top:14px">
+              <sc-for list="{{ c.add.items }}" as="a">
+                <div role="button" tabIndex="0" onClick="{{ a.add }}" style="{{ a.style }}" style-hover="background:var(--line)">
+                  <span class="u-fill">
+                    <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
+                    <span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
+                  </span>
+                  <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent)">+ 담기</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ c.add.emptyText }}">
+            <p style="{{ dsSub }}; margin-top:12px">{{ c.add.emptyText }}</p>
+          </sc-if>
+        </div>
+      </section>
+
       <sc-if value="{{ c.empty }}">
-        <section style="padding:28px 0 0">
-          <div style="{{ dsCard }}; padding:56px 28px;text-align:center;border-style:dashed">
-            <svg viewBox="0 0 52 52" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px;display:block;margin:0 auto" aria-hidden="true">
-              <path d="M6 12 h16 v28 h-16 z"></path><path d="M30 12 h16 v28 h-16 z"></path>
-              <path d="M10 21 h8"></path><path d="M34 21 h8"></path>
-            </svg>
-            <div style="font-size:17px;font-weight:700;margin-top:18px">아직 비교한 상권이 없어요</div>
-            <p style="{{ dsSub }}; margin-top:8px">관심 있는 상권을 추가해 차이를 확인해 보세요.</p>
-            <sc-if value="{{ c.emptyCount }}">
-              <p style="font-size:13.5px;font-weight:600;color:var(--accent);margin-top:10px">{{ c.emptyCount }}</p>
-            </sc-if>
-            <button onClick="{{ goFind }}" style="{{ dsCta }}; margin-top:22px" style-hover="filter:brightness(1.06)">+ 상권 추가</button>
-          </div>
-        </section>
+        <sc-if value="{{ c.emptyCount }}">
+          <section style="padding:16px 0 0">
+            <p style="font-size:14px;font-weight:600;color:var(--accent)">{{ c.emptyCount }}</p>
+          </section>
+        </sc-if>
       </sc-if>
 
       <sc-if value="{{ c.on }}">
