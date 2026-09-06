@@ -296,15 +296,23 @@ class Component extends DCLogic {
     // 화면을 옮길 때 이전 화면을 기록한다(뒤로가기용)
     const go=s=>()=>this.setState({screen:s,menu:null});
     // 헤더를 누르면 드롭다운이 열리고, 항목을 누르면 바로 그 화면으로 들어간다
+    // 메뉴마다 답하는 질문이 하나씩이고, 서로 겹치지 않는다.
+    //   상권분석 "어디가 좋지?"        — 여러 곳을 탐색·비교
+    //   정밀분석 "왜 좋은 거지?"       — 고른 상권 하나를 깊게
+    //   정밀비교 "내 조건이면 얼마 남지?" — 내가 넣은 숫자로 수익성 비교
+    //   시장동향 "장사 환경은 어떤가?"  — 임대료·환율·원자재 같은 바깥 사정
+    //   리포트   "어떤 지원을 받지?"    — 조건에 맞는 정부 창업지원사업
     const MENU=[
-      // region(동네 개요)은 '넓게 훑는' 화면이라 1단계에 둔다.
-      // 정밀분석에 있던 탓에, 목록에도 없는 항목 때문에 정밀분석 탭만 켜져 혼란스러웠다.
-      {label:'상권분석', keys:['hubZone','zone','find','cmp','region'], hub:'hubZone',
-       items:[['zone','지역비교'],['find','후보지'],['cmp','비교분석']]},
+      // region(동네 개요)·fineCmp(자치구 훑기)는 둘 다 '여러 곳을 훑는' 화면이라 여기 둔다.
+      {label:'상권분석', keys:['hubZone','zone','find','cmp','region','fineCmp'], hub:'hubZone',
+       items:[['zone','지역비교'],['find','후보지'],['cmp','비교분석'],['fineCmp','자치구 훑기']]},
       // 지도는 '어디인지', 정밀분석은 '왜 좋은지/나쁜지'. 역할이 겹치지 않게 나눈다.
-      {label:'정밀분석', keys:['hubFine','fineIntro','map','fineDetail','fineCmp'], hub:'hubFine',
-       items:[['map','지도'],['fineDetail','정밀분석'],['fineCmp','정밀비교']]},
-      {label:'시세분석', keys:['price'], hub:'price', items:[['price','시세분석']]},
+      {label:'정밀분석', keys:['hubFine','fineIntro','map','fineDetail'], hub:'hubFine',
+       items:[['map','지도'],['fineDetail','정밀분석']]},
+      // 정밀비교는 상권 점수 비교가 아니라 '내가 넣은 숫자'로 도는 계산기다.
+      {label:'정밀비교', keys:['sim','diag'], hub:'sim',
+       items:[['sim','정밀비교'],['diag','본전 계산']]},
+      {label:'시장동향', keys:['price'], hub:'price', items:[['price','시장동향']]},
       {label:'리포트', keys:['report'], hub:'report', items:[['report','리포트']]},
 
     ];
@@ -1022,21 +1030,21 @@ class Component extends DCLogic {
           zone:{
             '지역비교':{d:'여러 지역의 매출·수요·경쟁을 나란히 비교해요', cta:'비교하기'},
             '후보지'  :{d:'업종에 맞는 상권을 좋은 순서로 추천해요',      cta:'후보 찾기'},
-            '비교분석':{d:'관심 있는 상권을 직접 골라 견줘 봐요',          cta:'비교 시작'}
+            '비교분석':{d:'고른 곳들을 견주고 종합 1위를 뽑아 줘요',      cta:'비교 시작'},
+            '자치구 훑기':{d:'한 자치구 안의 상권을 빠짐없이 훑어요',      cta:'훑어보기'}
           },
           fine:{
             '지도'      :{d:'고른 상권이 정확히 어디인지 위치로 확인해요', cta:'지도 열기'},
-            '정밀분석'  :{d:'매출·수요·경쟁·비용을 뜯어보고 왜 그런지 읽어요', cta:'분석 보기'},
-            '정밀비교'  :{d:'한 자치구 안의 상권을 빠짐없이 훑어요',       cta:'훑어보기'}
+            '정밀분석'  :{d:'매출·수요·경쟁·비용을 뜯어보고 왜 그런지 읽어요', cta:'분석 보기'}
           }
         };
         const ART={
           '지역비교':['M6 32 h7 v10 h-7 z','M17 24 h7 v18 h-7 z','M28 28 h7 v14 h-7 z','M39 14 h7 v28 h-7 z'],
           '후보지':['M26 8 a10 10 0 0 1 10 10 c0 8 -10 20 -10 20 s-10 -12 -10 -20 a10 10 0 0 1 10 -10 z','M26 18 h.01'],
           '비교분석':['M6 12 h16 v28 h-16 z','M30 12 h16 v28 h-16 z','M10 21 h8','M34 21 h8','M10 29 h8','M34 29 h8'],
+          '자치구 훑기':['M22 10 a13 13 0 1 1 0 26 a13 13 0 1 1 0 -26 z','M33 33 l9 9'],
           '지도':['M6 14 l13 -5 l13 5 l13 -5 v28 l-13 5 l-13 -5 l-13 5 z','M19 9 v28','M32 14 v28'],
-          '정밀분석':['M8 40 v-12','M18 40 v-22','M28 40 v-16','M38 40 v-28','M6 44 h40'],
-          '정밀비교':['M22 10 a13 13 0 1 1 0 26 a13 13 0 1 1 0 -26 z','M33 33 l9 9']
+          '정밀분석':['M8 40 v-12','M18 40 v-22','M28 40 v-16','M38 40 v-28','M6 44 h40']
         };
         const selId = S.sel || S.zoneId;
         const selNm = (selId && S.zi && S.zi.zones[selId]) ? this.zoneLabelOf(S.zi.zones[selId].nm) : null;
@@ -1252,7 +1260,18 @@ class Component extends DCLogic {
       out.condHint=''; out.moneyHint=''; out.dayHint=''; out.riskHint='';
       // 불러오기 실패에도 죽은 컨트롤이 남지 않도록 중립값을 채운다
       out.c={headline: S.err?'데이터를 읽지 못했습니다.':'불러오는 중입니다.',
-        sub: S.err? '잠시 후 다시 열어 주세요.':'', cols:[], diffs:[], honesty:'', empty:true, on:false};
+        sub: S.err? '잠시 후 다시 열어 주세요.':'', cols:[], diffs:[], honesty:'', empty:true, on:false,
+        add:{q:'',onQ:()=>{},onKey:()=>{},clear:()=>{},hasQ:false,searching:false,
+             found:[],hasFound:false,noResult:false,noResultText:'',
+             recent:[],hasRecent:false,suggest:[],hasSuggest:false,full:false,fullText:'',
+             foundRail:this.rail('cmpFound',{per:3}),recentRail:this.rail('cmpRecent',{per:3}),
+             suggestRail:this.rail('cmpSug',{per:3})},
+        rail:this.rail('cmpCols',{per:3}), chartRail:this.rail('cmpCh',{per:1}),
+        charts:[], hasCharts:false, emptyCount:'',
+        verdict:'', verdictWhy:[], hasVerdict:false,
+        presets:[], presetRail:this.rail('cmpPre',{per:5}),
+        whyOpen:false, whyLabel:'', toggleWhy:()=>{}, why:{label:'',rows:[],how:''},
+        bestName:'', bestSlotStyle:'', bestRanks:[], order:[]};
       out.openMap=false; out.mapPins=[]; out.mapNote='';
       out.cmpMap={ready:false,gus:[],pins:[],vb:'0 0 100 100',stroke:'0.5',legend:[],legendNote:''};
       out.addZoneOptions=[{id:'',label:'동네 더하기'}]; out.addZoneFull=false; out.onAddZone=()=>{};
@@ -1288,7 +1307,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['util','design','analysis','screens','chat','charts','carousel','views']) {
+for (const name of ['util','design','rank','analysis','screens','chat','charts','carousel','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {

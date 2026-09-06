@@ -14,6 +14,7 @@
 <script src="./logic/const.js"></script>
 <script src="./logic/util.js"></script>
 <script src="./logic/design.js"></script>
+<script src="./logic/rank.js"></script>
 <script src="./logic/analysis.js"></script>
 <script src="./logic/screens.js"></script>
 <script src="./logic/chat.js"></script>
@@ -41,29 +42,77 @@
 <link rel="stylesheet" href="company.css">
 <script src="company-accessibility.js" defer></script>
 <style>
+  /* ── 디자인 토큰 ───────────────────────────────────────────────
+     색은 화면 코드에 직접 쓰지 않는다. 테마를 바꾼다는 건 이 값만 바꾸는 것이다.
+     --color-* 가 원본이고, 아래 짧은 이름(--accent 등)은 별칭이다.
+     별칭을 남겨 둔 이유: 이미 수천 곳이 그 이름을 쓰고 있어서, 한 번에 갈아엎으면
+     빠뜨린 곳이 생긴다. 새 코드는 --color-* 를 쓴다.
+     사용자가 고른 테마는 <html> 의 인라인 스타일로 --color-* 만 덮어쓴다. */
   :root{
-    --bg:#FFFFFF; --bg-blur:rgba(255,255,255,.8);
-    --ink:#191F28; --ink2:#4E5968; --ink3:#687583;
-    --line:#EAECEC; --line-strong:#D2D2D7; --surface:#F5F5F7;
-    --accent:#087F6B; --accent-hover:#0F6B59;
-    --accent-2:#7FBCAE; --accent-3:#E8F5F1; --selection:#D6EBE4;
+    --color-primary:#087F6B;
+    --color-primary-hover:#0F6B59;
+    --color-primary-mid:#7FBCAE;
+    --color-primary-soft:#E8F5F1;
+    --color-background:#FFFFFF;
+    --color-surface:#F5F5F7;
+    --color-surface-secondary:#EAECEC;
+    --color-text-primary:#191F28;
+    --color-text-secondary:#4E5968;
+    --color-text-muted:#687583;
+    --color-border:#EAECEC;
+    --color-border-strong:#D2D2D7;
     /* 의미 색 — '+' 라서 초록이 아니라, 사장님에게 좋은 값일 때만 초록이다.
-       경쟁 점포가 +30% 인 건 나쁜 값이라 주황/빨강으로 쓴다. */
-    --good:#1F7A4D; --warn:#A8620F; --err:#D93025;
+       경쟁 점포가 +30% 인 건 나쁜 값이라 주황/빨강으로 쓴다.
+       비교 대상을 구분하는 색(--chart-series-*)과 절대 섞어 쓰지 않는다. */
+    --color-positive:#1F7A4D;
+    --color-warning:#A8620F;
+    --color-negative:#D93025;
+    /* 비교 대상 색 — Okabe-Ito 팔레트. 색각 이상에서도 서로 갈린다.
+       한 상권은 모든 차트에서 같은 색을 쓴다(logic/rank.js 의 colorSlot). */
+    --chart-series-1:#0072B2;
+    --chart-series-2:#E69F00;
+    --chart-series-3:#009E73;
+    --chart-series-4:#CC79A7;
+    --chart-series-5:#D55E00;
+
+    --bg:var(--color-background); --bg-blur:rgba(255,255,255,.8);
+    --ink:var(--color-text-primary); --ink2:var(--color-text-secondary); --ink3:var(--color-text-muted);
+    --line:var(--color-border); --line-strong:var(--color-border-strong); --surface:var(--color-surface);
+    --accent:var(--color-primary); --accent-hover:var(--color-primary-hover);
+    --accent-2:var(--color-primary-mid); --accent-3:var(--color-primary-soft);
+    --selection:var(--color-primary-soft);
+    --good:var(--color-positive); --warn:var(--color-warning); --err:var(--color-negative);
     /* 카드 그림자 — 회색 배경 대신 흰 카드 + 얇은 테두리 + 아주 옅은 그림자 */
     --shadow-card:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.03);
     --shadow-pop:0 12px 32px -12px rgba(16,24,40,.18);
     --r-lg:20px; --r-md:16px; --r-sm:12px;
   }
+  /* 다크는 색 반전이 아니다. 같은 뜻의 토큰을 어두운 화면에서 읽히는 값으로 다시 정한다. */
   html[data-theme="dark"]{
-    --bg:#000000; --bg-blur:rgba(0,0,0,.72);
+    --color-primary:#3FA88F;
+    --color-primary-hover:#6FC4AE;
+    --color-primary-mid:#2E7565;
+    --color-primary-soft:#12332C;
+    --color-background:#000000;
+    --color-surface:#121214;
+    --color-surface-secondary:#1F1F22;
     /* ink3 는 --surface 위에서는 5.4:1 로 충분했지만 --accent-3(선택된 카드) 위에서
        3.98:1 로 떨어져 설명 글자가 흐리게 보였다. 두 배경 모두에서 4.5:1 을 넘기게 올린다. */
-    --ink:#F5F5F7; --ink2:#A8A8AE; --ink3:#9A9AA0;
-    --line:#1F1F22; --line-strong:#3A3A3E; --surface:#121214;
-    --accent:#3FA88F; --accent-hover:#6FC4AE;
-    --accent-2:#2E7565; --accent-3:#12332C; --selection:#12332C;
-    --good:#4E9E6A; --warn:#C88A3A; --err:#FF6B60;
+    --color-text-primary:#F5F5F7;
+    --color-text-secondary:#A8A8AE;
+    --color-text-muted:#9A9AA0;
+    --color-border:#1F1F22;
+    --color-border-strong:#3A3A3E;
+    --color-positive:#4E9E6A;
+    --color-warning:#C88A3A;
+    --color-negative:#FF6B60;
+    /* 어두운 배경에서는 같은 팔레트가 가라앉는다 — 밝기만 올린 짝을 쓴다 */
+    --chart-series-1:#56B4E9;
+    --chart-series-2:#F0B849;
+    --chart-series-3:#34C99B;
+    --chart-series-4:#E8A0C4;
+    --chart-series-5:#F07A3C;
+    --bg-blur:rgba(0,0,0,.72);
     --shadow-card:0 1px 2px rgba(0,0,0,.5);
     --shadow-pop:0 12px 32px -12px rgba(0,0,0,.7);
     color-scheme:dark;

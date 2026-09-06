@@ -63,11 +63,16 @@ globalThis.MysbizonParts.charts = {
         data: d.data,
         borderWidth: kind === 'line' ? 2.4 : 0,
         borderRadius: kind === 'bar' ? 5 : 0,
-        // 강조할 항목만 진하게 — 배열로 주면 막대마다 색이 달라진다
+        // 배열로 주면 막대마다 색이 달라진다.
+        //   '#...' → 그 색 그대로 (비교 대상 고유색 — 상권마다 고정)
+        //   'on'   → 강조,  'warn' → 주의색,  그 밖 → 연한 기본색
         backgroundColor: d.colors
-          ? d.colors.map(c => c === 'on' ? T.accent : (c === 'warn' ? T.warn : T.accent2))
+          ? d.colors.map(c => (typeof c === 'string' && c.charAt(0) === '#') ? c
+              : (c === 'on' ? T.accent : (c === 'warn' ? T.warn : T.accent2)))
           : (kind === 'line' ? 'rgba(8,127,107,.10)' : (i === 0 ? T.accent : T.accent2)),
-        borderColor: kind === 'line' ? (i === 0 ? T.accent : T.accent2) : 'transparent',
+        borderColor: kind === 'line'
+          ? (d.color || (i === 0 ? T.accent : T.accent2))
+          : 'transparent',
         fill: kind === 'line' ? (spec.fill !== false) : false,
         tension: .32,
         pointRadius: kind === 'line' ? (many ? 0 : 2.5) : 0,
@@ -192,11 +197,22 @@ globalThis.MysbizonParts.charts = {
     if (!labels.length || !sets.length) return null;
     this._charts = this._charts || {};
     this._charts[id] = { type: opt.type || 'bar', unit: opt.unit || '', labels, datasets: sets, fill: opt.fill };
+    // 승자 표시(§7) — 색이 아니라 배지와 한 줄 문장으로 말한다.
+    // 낮을수록 좋은 지표(경쟁·임대료·공실)는 부르는 쪽에서 방향을 이미 뒤집어 넘긴다.
+    const w = opt.winner || null;
     return {
       id,
       title: opt.title || '',
       sub: opt.sub || '',
       hasSub: !!opt.sub,
+      hasWinner: !!w,
+      winName: w ? w.name : '',
+      winValue: w ? w.value : '',
+      winBadge: w ? w.badge : '',
+      winText: w ? w.text : '',
+      winDot: w ? 'flex:none;width:9px;height:9px;border-radius:50%;background:' + (w.color || 'var(--accent)') : '',
+      winBadgeStyle: 'flex:none;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;'
+        + 'white-space:nowrap;background:var(--color-primary-soft);color:var(--color-primary)',
       // 화면에서 '기준 …'을 앞에 붙이므로 '2026년 1분기 기준 기준'이 되지 않게 꼬리를 뗀다
       period: (opt.period || '').replace(/\s*기준\s*$/, ''),
       hasPeriod: !!opt.period,

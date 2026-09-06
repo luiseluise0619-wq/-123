@@ -97,16 +97,78 @@
         </sc-if>
       </sc-if>
 
-      <!-- ② 결론 -->
+      <!-- ② 무엇을 중요하게 볼지 — 누르면 순위가 바로 바뀐다 -->
       <sc-if value="{{ c.hasVerdict }}">
-        <section style="padding:24px 0 0">
+        <section style="padding:26px 0 0">
+          <div class="u-between">
+            <h2 style="{{ ds3 }}">무엇을 더 중요하게 볼까요?</h2>
+            <span role="button" tabIndex="0" onClick="{{ c.toggleWhy }}" style="{{ ctaText }}">{{ c.whyLabel }}</span>
+          </div>
+          <div data-rail="cmpPre" style="{{ c.presetRail.trackStyle }}; gap:8px">
+            <sc-for list="{{ c.presets }}" as="p">
+              <span role="button" tabIndex="0" onClick="{{ p.pick }}" style="{{ p.style }}">{{ p.label }}</span>
+            </sc-for>
+          </div>
+          <sc-if value="{{ c.whyOpen }}">
+            <div style="{{ dsCard }}; margin-top:12px;max-width:640px">
+              <div class="u-h">{{ c.why.label }} 기준</div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
+                <sc-for list="{{ c.why.rows }}" as="w">
+                  <div style="display:flex;align-items:baseline;gap:10px">
+                    <span style="flex:1;min-width:0;font-size:14px">{{ w.label }}</span>
+                    <span style="flex:none;font-size:12px;color:var(--color-text-muted);white-space:nowrap">{{ w.dir }}</span>
+                    <span style="flex:none;width:52px;text-align:right;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums">{{ w.weight }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <p style="{{ dsSub }}; margin-top:14px">{{ c.why.how }}</p>
+            </div>
+          </sc-if>
+        </section>
+      </sc-if>
+
+      <!-- ③ 종합 1위 -->
+      <sc-if value="{{ c.hasVerdict }}">
+        <section style="padding:20px 0 0">
           <div style="{{ dsCardHi }}">
-            <div style="font-size:18px;font-weight:700;line-height:1.45;text-wrap:pretty">{{ c.verdict }}</div>
-            <div class="u-stack">
-              <sc-for list="{{ c.verdictWhy }}" as="w">
-                <div style="{{ w.style }}"><span class="u-check">✓</span><span class="u-fill">{{ w.text }}</span></div>
+            <div style="display:flex;align-items:center;gap:9px">
+              <span style="{{ c.bestSlotStyle }}"></span>
+              <span class="u-lab">종합 1위</span>
+            </div>
+            <div style="font-size:26px;font-weight:700;letter-spacing:-.03em;margin-top:6px">{{ c.bestName }}</div>
+            <div style="font-size:15.5px;line-height:1.55;margin-top:8px;text-wrap:pretty">{{ c.verdict }}</div>
+            <div style="display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--color-border)">
+              <sc-for list="{{ c.bestRanks }}" as="b">
+                <div style="{{ b.style }}">
+                  <span style="font-size:12.5px;color:var(--color-text-secondary);white-space:nowrap">{{ b.label }}</span>
+                  <span style="font-size:19px;font-weight:700;font-variant-numeric:tabular-nums">{{ b.value }}</span>
+                </div>
               </sc-for>
             </div>
+            <div class="u-stack">
+              <sc-for list="{{ c.verdictWhy }}" as="w">
+                <div style="{{ w.style }}"><span style="flex:none;font-weight:700">{{ w.mark }}</span><span class="u-fill">{{ w.text }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- ④ 전체 순위 -->
+      <sc-if value="{{ c.hasVerdict }}">
+        <section style="padding:22px 0 0">
+          <h2 style="{{ ds3 }}">전체 순위</h2>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;max-width:620px">
+            <sc-for list="{{ c.order }}" as="o">
+              <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}">
+                <span style="flex:none;font-size:13px;font-weight:700;color:var(--color-text-secondary);width:28px;font-variant-numeric:tabular-nums">{{ o.place }}</span>
+                <span style="{{ o.dot }}"></span>
+                <span style="flex:1;min-width:0;font-size:15.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.name }}</span>
+                <sc-if value="{{ o.best }}">
+                  <span style="flex:none;font-size:11.5px;font-weight:700;color:var(--color-primary);white-space:nowrap">{{ o.badge }}</span>
+                </sc-if>
+              </div>
+            </sc-for>
           </div>
         </section>
       </sc-if>
@@ -128,7 +190,12 @@
               <div style="{{ c.rail.itemStyle }}">
                 <div style="{{ col.cardStyle }}">
                   <span role="button" tabIndex="0" aria-label="비교에서 빼기" onClick="{{ col.drop }}" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--bg);color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;transition:background .14s,color .14s" style-hover="background:var(--line-strong);color:var(--ink)">×</span>
-                  <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:34px">{{ col.name }}</div>
+                  <!-- 색은 어느 상권인지, 배지는 몇 위인지 — 역할을 섞지 않는다 -->
+                  <div style="display:flex;align-items:center;gap:8px;padding-right:34px">
+                    <span style="{{ col.dot }}"></span>
+                    <span style="{{ col.badgeStyle }}">{{ col.badge }}</span>
+                  </div>
+                  <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:34px;margin-top:10px">{{ col.name }}</div>
                   <div class="u-note-t">{{ col.rank }}</div>
                   <div style="margin-top:16px;display:flex;flex-direction:column;gap:14px">
                     <sc-for list="{{ col.cells }}" as="x">
@@ -156,7 +223,7 @@
         </section>
       </sc-if>
 
-      <!-- ④ 비교 차트 -->
+      <!-- ⑤ 비교 차트 — 한 번에 하나씩 크게. 옆으로 넘겨 다음 질문으로 간다 -->
       <sc-if value="{{ c.hasCharts }}">
         <section style="padding:28px 0 0">
           <div class="u-between">
@@ -172,9 +239,19 @@
             <sc-for list="{{ c.charts }}" as="ch">
               <div style="{{ c.chartRail.itemStyle }}">
                 <div style="{{ ch.style }}">
-                  <div style="font-size:15px;font-weight:700">{{ ch.title }}</div>
+                  <div style="font-size:17px;font-weight:700;letter-spacing:-.02em">{{ ch.title }}</div>
                   <sc-if value="{{ ch.hasSub }}">
                     <div class="u-note-t">{{ ch.sub }}</div>
+                  </sc-if>
+                  <!-- 승자 한 줄 — 색이 아니라 이름·값·배지로 말한다 -->
+                  <sc-if value="{{ ch.hasWinner }}">
+                    <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px">
+                      <span style="{{ ch.winDot }}"></span>
+                      <span style="font-size:16px;font-weight:700">{{ ch.winName }}</span>
+                      <span style="font-size:16px;font-weight:700;font-variant-numeric:tabular-nums">{{ ch.winValue }}</span>
+                      <span style="{{ ch.winBadgeStyle }}">{{ ch.winBadge }}</span>
+                    </div>
+                    <div style="font-size:13.5px;color:var(--color-text-secondary);margin-top:6px;text-wrap:pretty">{{ ch.winText }}</div>
                   </sc-if>
                   <div style="position:relative;margin-top:14px;height:{{ ch.height }}">
                     <canvas data-chart="{{ ch.id }}" role="img" aria-label="{{ ch.title }}"></canvas>
