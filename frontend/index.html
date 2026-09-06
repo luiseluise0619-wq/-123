@@ -1059,9 +1059,6 @@
             <div role="button" tabIndex="0" onClick="{{ c.go }}" style="{{ c.style }}" style-hover="transform:translateY(-3px)">
               <div style="display:flex;align-items:center;gap:8px;min-width:0">
                 <span style="{{ c.labelStyle }}">{{ c.label }}</span>
-                <sc-if value="{{ c.hasBadge }}">
-                  <span style="flex:none;font-size:10.5px;font-weight:600;letter-spacing:.04em;color:var(--accent);background:var(--bg);border-radius:999px;padding:3px 8px;white-space:nowrap">{{ c.badge }}</span>
-                </sc-if>
               </div>
               <sc-if value="{{ c.hasStat }}">
                 <div style="{{ c.statStyle }}">{{ c.stat }}</div>
@@ -1502,11 +1499,11 @@
         </sc-if>
 
         <section style="padding:44px 0 0">
-            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;max-width:660px">
-              <span style="font-size:15px;font-weight:600;white-space:nowrap">다음 후보</span>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+              <span style="font-size:15px;font-weight:600;white-space:nowrap">2위부터 5곳 더</span>
               <span style="font-size:12.5px;color:var(--ink3);white-space:nowrap">옆으로 넘겨 보세요</span>
             </div>
-            <div style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin-top:12px;padding:2px 2px 6px;max-width:660px">
+            <div style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin-top:12px;padding:2px 2px 6px">
               <sc-for list="{{ rows }}" as="r">
                 <div style="{{ r.cardStyle }}">
                   <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="cursor:pointer">

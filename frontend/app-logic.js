@@ -2084,8 +2084,6 @@ class Component extends DCLogic {
                 : 'font-size:15px;font-weight:500;line-height:1.3;color:var(--ink3)',
               labelStyle:'font-size:15px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;'
                 +'overflow:hidden;text-overflow:ellipsis;'+(on?'color:var(--accent)':'color:var(--ink)'),
-              badge: on ? '다음 단계' : '',
-              hasBadge: on,
               go:()=>this.setState({screen:key,menu:null,hist:[...(S.hist||[]),S.screen].slice(-8)}),
               style:'display:flex;flex-direction:column;gap:10px;min-height:158px;padding:22px;'
                 +'border-radius:18px;cursor:pointer;min-width:0;'
