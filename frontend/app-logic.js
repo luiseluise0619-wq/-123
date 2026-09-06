@@ -1596,74 +1596,150 @@ class Component extends DCLogic {
           sub:'지금 보고 있는 동네와 장사, 본전 계산까지 한 장으로 묶습니다. 화면에 없는 것만 물어봅니다.',
           // '담을 항목 N개'는 지운 체크박스를 가리키던 말이라 뺐다
           target:(S.ind?this.indName(S.ind):'장사 미선택')+' · '+reportZone,
-          // ── 창업 조건 — 한 번에 하나씩 묻는다 ────────────────────────────
-          // 다섯 개를 한 화면에 늘어놓으면 '설문지'로 읽혀서 그냥 지나친다.
-          // 하나씩 물으면 대답 하나가 화면 전체의 할 일이 되고, 답한 것은 위로 접힌다.
-          // 계산에 실제로 쓰이거나 리포트에서 판단이 갈리는 것만 묻는다.
+          // ── 리포트에 담을 내용을 한 번에 하나씩 묻는다 ──────────────────
+          // 설문이 아니라 '리포트 만들기'다. 답한 것이 그대로 리포트에 들어간다.
+          // 지역 → 구 → 동네 → 비교 대상 → 창업 조건 순으로, 큰 것부터 좁혀 간다.
           ...(()=>{
-            const QS=[
-              {k:'cash',  q:'창업에 쓸 수 있는 돈은 얼마인가요?', hint:'권리금·보증금·인테리어를 다 합친 금액이에요',
-               opts:['5천만원 미만','5천만~1억 미만','1억~2억 미만','2억 이상']},
-              {k:'loan',  q:'그중 대출은 얼마나 되나요?', hint:'매달 나가는 이자가 본전선을 올려요',
-               opts:['없음','절반 미만','절반 이상']},
-              {k:'runway',q:'장사가 안 될 때 몇 달을 버틸 수 있나요?', hint:'매출 없이 월세·인건비를 낼 수 있는 기간이에요',
-               opts:['3개월 미만','3~6개월 미만','6~12개월 미만','1년 이상']},
-              {k:'exp',   q:'이 장사를 해본 적 있나요?', hint:'처음이면 지원사업 중 예비창업 쪽이 맞아요',
-               opts:['처음','비슷한 일 해봤음','같은 장사 해봤음']},
-              {k:'when',  q:'언제 문을 열 계획이세요?', hint:'공고 마감이 그 안에 있는지 봐 드려요',
-               opts:['3개월 안','6개월 안','1년 안','아직 미정']}
-            ];
-            const val=k=>S['rp_'+k];
-            // 다시 들어왔을 때 1번부터 또 묻지 않는다 — 아직 답 안 한 첫 질문에서 이어 한다.
-            const firstOpen=QS.findIndex(q=>!val(q.k));
+            const zi=S.zi, zgu=S.zgu||{};
+            const sido=S.sido||'서울특별시';
+            const seoul=sido==='서울특별시';
+            const gu=S.rp_gu||'';
+            const idx=zi?zi.inds.indexOf(S.ind):-1;
+            const PICKS=S.picks||[];
+
+            // 고른 구 안에서 이 장사 데이터가 있는 동네만 (매출 높은 순)
+            const zonesOfGu=(()=>{
+              if(!zi||!gu||idx<0) return [];
+              const out=[];
+              for(const k in zi.zones){
+                if(zgu[k]!==gu) continue;
+                const row=(zi.zones[k].rows||[]).find(r=>r[0]===idx);
+                if(!row||!row[1]||!row[2]) continue;
+                out.push({id:k, name:this.zoneLabelOf(zi.zones[k].nm), per:row[2]/row[1]});
+              }
+              out.sort((a,b)=>b.per-a.per);
+              return out;
+            })();
+            const nameOf=id=>(zi&&zi.zones[id])?this.zoneLabelOf(zi.zones[id].nm):id;
+
+            const SIDO=['서울특별시','부산광역시','대구광역시','인천광역시','광주광역시','대전광역시',
+              '울산광역시','세종특별자치시','경기도','강원특별자치도','충청북도','충청남도',
+              '전북특별자치도','전라남도','경상북도','경상남도','제주특별자치도'];
+            const GU=['종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구','강북구',
+              '도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구','금천구',
+              '영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
+
+            // 각 단계: q(질문) · hint(왜 묻는지) · opts([{v,label,off}]) · val(고른 값) · set(고르면 바뀔 상태)
+            // multi:true 면 여러 개를 고르고 '다음'으로 넘어간다.
+            const STEPS=[
+              {k:'sido', q:'어느 지역에서 시작하시나요?',
+               hint:'지금 자료가 있는 곳은 서울이에요. 다른 지역은 준비 중이라 비워 둡니다.',
+               opts:SIDO.map(v=>({v, label:v+(v==='서울특별시'?'':' · 준비 중')})),
+               val:sido, set:v=>({sido:v, rp_gu:'', zoneId:null, sel:null, picks:null})},
+
+              {k:'gu', q:'서울 어느 구인가요?',
+               hint:'구를 고르면 그 안의 동네만 추려 드려요.',
+               opts:GU.map(v=>({v, label:v})), val:gu,
+               set:v=>({rp_gu:v, zoneId:null, sel:null, picks:null}), only:seoul},
+
+              {k:'zone', q:(gu||'서울')+' 어느 동네를 보실까요?',
+               hint:this.indName(S.ind)+' 데이터가 있는 동네만 나와요. 가게 한 곳당 매출이 높은 순이에요.',
+               opts:zonesOfGu.map(z=>({v:z.id, label:z.name})),
+               val:S.sel||S.zoneId||'',
+               set:v=>({sel:v, zoneId:v, homeZoneName:nameOf(v)}), only:seoul, isZone:true},
+
+              {k:'more', q:'같이 견줄 동네가 더 있나요?',
+               hint:'고른 동네들이 리포트에 나란히 들어가요. 없으면 건너뛰셔도 돼요.',
+               multi:true,
+               opts:zonesOfGu.filter(z=>z.id!==(S.sel||S.zoneId)).map(z=>({v:z.id, label:z.name})),
+               val:PICKS, only:seoul, isZone:true},
+
+              {k:'cash', q:'창업에 쓸 수 있는 돈은 얼마인가요?',
+               hint:'권리금·보증금·인테리어를 다 합친 금액이에요.',
+               opts:['5천만원 미만','5천만~1억 미만','1억~2억 미만','2억 이상'].map(v=>({v,label:v})),
+               val:S.rp_cash, set:v=>({rp_cash:v})},
+              {k:'loan', q:'그중 대출은 얼마나 되나요?',
+               hint:'매달 나가는 이자가 본전선을 올려요.',
+               opts:['없음','절반 미만','절반 이상'].map(v=>({v,label:v})),
+               val:S.rp_loan, set:v=>({rp_loan:v})},
+              {k:'runway', q:'장사가 안 될 때 몇 달을 버틸 수 있나요?',
+               hint:'매출 없이 월세·인건비를 낼 수 있는 기간이에요.',
+               opts:['3개월 미만','3~6개월 미만','6~12개월 미만','1년 이상'].map(v=>({v,label:v})),
+               val:S.rp_runway, set:v=>({rp_runway:v})},
+              {k:'exp', q:'이 장사를 해본 적 있나요?',
+               hint:'처음이면 지원사업 중 예비창업 쪽이 맞아요.',
+               opts:['처음','비슷한 일 해봤음','같은 장사 해봤음'].map(v=>({v,label:v})),
+               val:S.rp_exp, set:v=>({rp_exp:v})},
+              {k:'when', q:'언제 문을 열 계획이세요?',
+               hint:'공고 마감이 그 안에 있는지 봐 드려요.',
+               opts:['3개월 안','6개월 안','1년 안','아직 미정'].map(v=>({v,label:v})),
+               val:S.rp_when, set:v=>({rp_when:v})}
+            ].filter(s=>s.only!==false);
+
+            const N=STEPS.length;
+            const firstOpen=STEPS.findIndex(s=>s.multi?false:!s.val);
             const step=Math.max(0,Math.min(
-              S.rp_step!=null ? S.rp_step : (firstOpen<0?QS.length:firstOpen), QS.length));
+              S.rp_step!=null?S.rp_step:(firstOpen<0?N:firstOpen), N));
             const go=i=>()=>this.setState({rp_step:i});
-            // 고를 것들 — 오른쪽에 붙는 '내가 할 말' 후보. 누르면 그대로 답 말풍선이 된다.
-            // 한 줄이 화면 폭을 다 쓴다 — 손가락으로 누르기 쉽고, 눈이 왼쪽만 훑으면 된다.
+            const cur=step<N?STEPS[step]:null;
+
             const optStyle=on=>'display:flex;align-items:center;justify-content:space-between;gap:12px;'
               +'width:100%;padding:17px 18px;border-radius:14px;cursor:pointer;'
               +'font-size:15.5px;line-height:1.4;text-align:left;'
               +'transition:background .14s,color .14s;'
               +(on?'background:var(--accent-3);color:var(--accent);font-weight:600'
                  :'background:var(--surface);color:var(--ink)');
-            const cur=step<QS.length?QS[step]:null;
-            const answered=QS.filter(q=>val(q.k)).length;
+
+            // 요약에 적을 말. 상권 단계는 코드(3001496)가 아니라 동네 이름으로 적는다.
+            const shown=(v,isZone)=>Array.isArray(v)
+              ? (v.length? v.map(nameOf).join(' · ') : '없음')
+              : (v? (isZone? nameOf(v) : v) : '건너뜀');
+
             return {
-              qsStep: cur? (step+1)+' / '+QS.length : '',
+              qsStep: cur? (step+1)+' / '+N : '',
               hasStep: !!cur,
-              qsBar: 'display:block;height:100%;border-radius:2px;background:var(--accent);'
-                +'transition:width .3s cubic-bezier(.22,.7,.25,1);width:'
-                +Math.round(step/QS.length*100)+'%',
-              // 다 답한 뒤 보이는 요약 — 누르면 그 질문으로 돌아간다.
-              // 진행 중에는 지난 답을 늘어놓지 않는다. 한 번에 하나만 묻는 게 요점이다.
-              qsDone: QS.map((q,i)=>({
-                label:q.q, value:val(q.k)||'건너뜀',
-                edit:go(i),
-                style:'display:flex;align-items:center;justify-content:space-between;gap:14px;'
-                  +'padding:15px 0;border-bottom:1px solid var(--line);cursor:pointer;min-width:0',
-                valStyle:'flex:none;font-size:14.5px;font-weight:600;white-space:nowrap;'
-                  +(val(q.k)?'color:var(--ink)':'color:var(--ink3)')
-              })),
-              // 지금 묻는 질문 하나
+              qsBar:'display:block;height:100%;border-radius:2px;background:var(--accent);'
+                +'transition:width .3s cubic-bezier(.22,.7,.25,1);width:'+Math.round(step/N*100)+'%',
+
               hasCur: !!cur,
               curQ: cur?cur.q:'',
               curHint: cur?cur.hint:'',
-              curOpts: cur?cur.opts.map(v=>({
-                label:v, on:val(cur.k)===v,
-                style:optStyle(val(cur.k)===v),
-                pick:()=>this.setState({['rp_'+cur.k]:v, rp_step:step+1, rp_sent:false, rp_error:''})
-              })):[],
+              curOpts: cur?cur.opts.map(o=>{
+                const on=cur.multi? (PICKS.indexOf(o.v)>=0) : (cur.val===o.v);
+                return {
+                  label:o.label, on:on, style:optStyle(on),
+                  pick: cur.multi
+                    ? ()=>{ const has=PICKS.indexOf(o.v)>=0;
+                        const next=has?PICKS.filter(x=>x!==o.v):(PICKS.length>=5?PICKS:[...PICKS,o.v]);
+                        this.setState({picks:next, rp_sent:false}); }
+                    : ()=>this.setState({...cur.set(o.v), rp_step:step+1, rp_sent:false, rp_error:''})
+                };
+              }):[],
+              // 여러 개 고르는 단계에서만 '다음'이 필요하다 — 하나 고르는 단계는 누르면 바로 넘어간다
+              isMulti: !!(cur&&cur.multi),
+              multiNext: ()=>this.setState({rp_step:step+1}),
+              multiLabel: PICKS.length? PICKS.length+'곳 담음 · 다음' : '안 고르고 다음',
+
               curSkip: cur?()=>this.setState({rp_step:step+1}):()=>{},
               curBack: step>0?go(step-1):()=>{},
               hasBack: step>0,
               qsAllDone: !cur,
-              doneCta: cur?'건너뛰고 결과 보기':'결과 보기',
-              doneGo: cur ? ()=>this.setState({rp_step:QS.length}) : ()=>{},
+              qsDone: STEPS.map((s,i)=>({
+                label:s.q, value:shown(s.val, s.isZone), edit:go(i),
+                style:'display:flex;align-items:center;justify-content:space-between;gap:14px;'
+                  +'padding:15px 0;border-bottom:1px solid var(--line);cursor:pointer;min-width:0',
+                valStyle:'flex:none;max-width:52%;font-size:14px;font-weight:600;'
+                  +'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
+                  +((Array.isArray(s.val)?s.val.length:s.val)?'color:var(--ink)':'color:var(--ink3)')
+              })),
+              doneCta: cur?'건너뛰고 리포트 보기':'리포트 보기',
+              doneGo: cur ? ()=>this.setState({rp_step:N}) : ()=>{},
               doneStyle:'width:100%;margin-top:20px;font-size:16px;font-weight:600;border:none;'
                 +'border-radius:14px;height:52px;cursor:pointer;transition:filter .16s;'
                 +(cur?'background:var(--surface);color:var(--ink2)'
-                     :'background:var(--accent);color:#FFFFFF')
+                     :'background:var(--accent);color:#FFFFFF'),
+              // 리포트가 몇 칸까지 열렸는지 — rv 가 이 값으로 한 칸씩 연다
+              qsN:N, qsStepNum:step
             };
           })(),
           email:email,
@@ -1781,19 +1857,21 @@ class Component extends DCLogic {
             const mx=Math.max(c.rev,c.bep,1);
             // 종이가 한 장씩 채워지는 느낌 — 질문에 답할수록 아래 칸이 하나씩 열린다.
             // 답을 건너뛰어도 단계는 넘어가므로 결국 다 열린다(막히지 않는다).
-            const QN=5;
-            const st=Math.max(0,Math.min(
-              S.rp_step!=null?S.rp_step:0, QN));
-            // 처음 열릴 때만 흘러내리게 한다. 이미 다 답한 뒤 다시 들어오면 조용히 다 보인다.
-            const grow=i=>st===i+1
+            // 종이가 한 칸씩 채워진다. 단계 번호가 아니라 '무엇을 답했는가'로 연다 —
+            // 단계 수가 지역 선택 때문에 달라져도 흔들리지 않는다.
+            const gotZone=!!(S.sel||S.zoneId);
+            const opened=[gotZone, !!S.rp_cash, !!S.rp_runway];
+            const nOpen=opened.filter(Boolean).length;
+            // 방금 열린 칸만 흘러내리게 한다
+            const grow=i=>opened[i]&&nOpen===i+1
               ? 'animation:lateIn .45s cubic-bezier(.22,.7,.25,1) both;' : '';
             return {
               has:true, empty:false,
               // 아직 아무것도 안 물었으면 리포트 자체를 감춘다 — 빈 종이부터 보여준다
-              started:st>0,
-              showBep:st>=1,   bepStyle:grow(0),
-              showBars:st>=2,  barsStyle:'margin-top:28px;'+grow(1),
-              showCosts:st>=3, costsStyle:'margin-top:30px;'+grow(2),
+              started:opened[0],
+              showBep:opened[0],   bepStyle:grow(0),
+              showBars:opened[1],  barsStyle:'margin-top:28px;'+grow(1),
+              showCosts:opened[2], costsStyle:'margin-top:30px;'+grow(2),
               eyebrow:this.indName(S.ind)+' · '+this.zoneLabelOf(sel.name)
                 +(S.zi?' · '+this.qtr(S.zi.quarter):''),
               // 결론 한 줄 — 큰 숫자는 '한 달에 얼마를 팔아야 하는가'다

@@ -457,6 +457,9 @@
                     </div>
                   </sc-for>
                 </div>
+                <sc-if value="{{ rp.isMulti }}">
+                  <button onClick="{{ rp.multiNext }}" style="width:100%;margin-top:14px;font-size:15.5px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;border-radius:14px;height:50px;cursor:pointer;transition:filter .16s" style-hover="filter:brightness(.97)">{{ rp.multiLabel }}</button>
+                </sc-if>
                 <div style="text-align:center;margin-top:16px">
                   <span role="button" tabIndex="0" onClick="{{ rp.curSkip }}" style="font-size:13.5px;color:var(--ink3);cursor:pointer;white-space:nowrap">이 질문 건너뛰기</span>
                 </div>
