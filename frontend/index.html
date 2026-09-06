@@ -427,7 +427,7 @@
 
         <div style="margin-top:28px;display:flex;flex-direction:column;gap:18px">
           <!-- 창업 조건 — 답할 때마다 아래 리포트가 한 칸씩 자란다 -->
-          <div style="padding:24px 22px;border-radius:20px;background:var(--bg);box-shadow:0 0 0 1px var(--line)">
+          <div data-rp-card="1" style="padding:24px 22px;border-radius:20px;background:var(--bg);box-shadow:0 0 0 1px var(--line)">
             <div style="display:flex;align-items:center;gap:10px">
               <sc-if value="{{ rp.hasBack }}">
                 <span role="button" tabIndex="0" aria-label="이전 질문" onClick="{{ rp.curBack }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .14s" style-hover="background:var(--line-strong)">←</span>
@@ -447,6 +447,12 @@
               <div data-anim="1">
                 <div style="font-size:21px;font-weight:700;letter-spacing:-0.025em;line-height:1.35;margin-top:24px;text-wrap:pretty">{{ rp.curQ }}</div>
                 <div style="font-size:13.5px;color:var(--ink2);margin-top:8px;text-wrap:pretty">{{ rp.curHint }}</div>
+                <sc-if value="{{ rp.isSearch }}">
+                  <input value="{{ rp.searchQ }}" onChange="{{ rp.onSearchQ }}" maxLength="40" aria-label="{{ rp.searchHint }}" placeholder="{{ rp.searchHint }}" style="width:100%;margin-top:18px;font-size:16px;font-weight:500;color:var(--ink);background:var(--surface);border:none;border-radius:14px;padding:0 16px;height:52px;outline:none">
+                  <sc-if value="{{ rp.searchEmpty }}">
+                    <div style="margin-top:12px;padding:16px 18px;border-radius:14px;background:var(--surface);font-size:14px;color:var(--ink3)">{{ rp.searchEmptyText }}</div>
+                  </sc-if>
+                </sc-if>
                 <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
                   <sc-for list="{{ rp.curOpts }}" as="o">
                     <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">

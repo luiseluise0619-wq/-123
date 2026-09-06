@@ -118,6 +118,20 @@ class Component extends DCLogic {
     if(this._screen!==this.state.screen){
       this._screen=this.state.screen;
       window.scrollTo({top:0,behavior:'auto'});
+      // 리포트는 묻는 카드가 화면에 딱 들어오게 맞춘다.
+      // 맨 위로만 올리면 제목만 보이고 정작 답할 곳이 아래에 걸린다.
+      if(this.state.screen==='report') requestAnimationFrame(()=>{
+        const card=document.querySelector('[data-rp-card]');
+        if(!card) return;
+        const r=card.getBoundingClientRect();
+        const head=document.querySelector('header');
+        const top=(head?head.getBoundingClientRect().height:64)+16;
+        // 카드가 화면보다 길면 카드 위쪽을 헤더 바로 아래에, 짧으면 가운데에 둔다
+        const y=r.height>window.innerHeight-top-24
+          ? window.scrollY+r.top-top
+          : window.scrollY+r.top-(window.innerHeight-r.height)/2;
+        window.scrollTo({top:Math.max(0,Math.round(y)),behavior:'auto'});
+      });
     }
     if(this.state.screen==='report') this.loadSupport();
     this.placePanel();this.syncTrack();
@@ -679,13 +693,7 @@ class Component extends DCLogic {
     this.setState({screen:'region',picking:null,starting:false,homeZone:name,regPick:S.homeInd||null});
   }
 
-  pickZone(z){
-    const prev=(this.state.recent||[]).filter(n=>n!==z.name);
-    const recent=[z.name,...prev].slice(0,4);
-    try{ localStorage.setItem('mysbizon.recentZones',JSON.stringify(recent)); }catch(e){}
-    this.setState({picking:z.name,zFocus:false,recent:recent});
-    this.setState({screen:'region',picking:null,homeZone:z.name,zoneId:z.id,sel:z.id,regPick:null});
-  }
+
 
   // 순수 SVG 꺾은선 — 차트 라이브러리를 쓰지 않는다
   linePath(vals,w,h,pad){
@@ -1461,9 +1469,11 @@ class Component extends DCLogic {
     const go=s=>()=>this.setState({screen:s,menu:null});
     // 헤더를 누르면 드롭다운이 열리고, 항목을 누르면 바로 그 화면으로 들어간다
     const MENU=[
-      {label:'상권분석', keys:['hubZone','zone','find','cmp'], hub:'hubZone',
+      // region(동네 개요)은 '넓게 훑는' 화면이라 1단계에 둔다.
+      // 정밀분석에 있던 탓에, 목록에도 없는 항목 때문에 정밀분석 탭만 켜져 혼란스러웠다.
+      {label:'상권분석', keys:['hubZone','zone','find','cmp','region'], hub:'hubZone',
        items:[['zone','지역비교'],['find','후보지'],['cmp','비교분석']]},
-      {label:'정밀분석', keys:['hubFine','fineIntro','map','fineCmp','region'], hub:'hubFine',
+      {label:'정밀분석', keys:['hubFine','fineIntro','map','fineCmp'], hub:'hubFine',
        items:[['fineIntro','정밀분석 소개'],['map','지도분석'],['fineCmp','정밀비교']]},
       {label:'시세분석', keys:['price'], hub:'price', items:[['price','시세분석']]},
       {label:'리포트', keys:['report'], hub:'report', items:[['report','리포트']]},
@@ -1656,12 +1666,12 @@ class Component extends DCLogic {
 
               {k:'gu', q:'서울 어느 구인가요?',
                hint:'구를 고르면 그 안의 동네만 추려 드려요.',
-               opts:GU.map(v=>({v, label:v})), val:gu,
+               opts:GU.map(v=>({v, label:v})), val:gu, search:'구 이름 (예: 강남)',
                set:v=>({rp_gu:v, zoneId:null, sel:null, picks:null}), only:seoul},
 
               {k:'zone', q:(gu||'서울')+' 어느 동네를 보실까요?',
                hint:this.indName(S.ind)+' 데이터가 있는 동네만 나와요. 가게 한 곳당 매출이 높은 순이에요.',
-               opts:zonesOfGu.map(z=>({v:z.id, label:z.name})),
+               opts:zonesOfGu.map(z=>({v:z.id, label:z.name})), search:'동네 이름',
                val:S.sel||S.zoneId||'',
                set:v=>({sel:v, zoneId:v, homeZoneName:nameOf(v)}), only:seoul, isZone:true},
 
@@ -1669,7 +1679,7 @@ class Component extends DCLogic {
                hint:'고른 동네들이 리포트에 나란히 들어가요. 없으면 건너뛰셔도 돼요.',
                multi:true,
                opts:zonesOfGu.filter(z=>z.id!==(S.sel||S.zoneId)).map(z=>({v:z.id, label:z.name})),
-               val:PICKS, only:seoul, isZone:true},
+               search:'동네 이름', val:PICKS, only:seoul, isZone:true},
 
               {k:'cash', q:'창업에 쓸 수 있는 돈은 얼마인가요?',
                hint:'권리금·보증금·인테리어를 다 합친 금액이에요.',
@@ -1699,6 +1709,7 @@ class Component extends DCLogic {
               S.rp_step!=null?S.rp_step:(firstOpen<0?N:firstOpen), N));
             const go=i=>()=>this.setState({rp_step:i});
             const cur=step<N?STEPS[step]:null;
+            const q=(S.rp_q||'').trim();
 
             const optStyle=on=>'display:flex;align-items:center;justify-content:space-between;gap:12px;'
               +'width:100%;padding:17px 18px;border-radius:14px;cursor:pointer;'
@@ -1721,7 +1732,18 @@ class Component extends DCLogic {
               hasCur: !!cur,
               curQ: cur?cur.q:'',
               curHint: cur?cur.hint:'',
-              curOpts: cur?cur.opts.map(o=>{
+              // 구 25개·동네 99개를 버튼으로 늘어놓으면 화면이 버튼 벽이 된다.
+              // 치는 대로 걸러 6개만 보여준다. '강'만 쳐도 강남구·강동구가 뜬다.
+              isSearch: !!(cur&&cur.search),
+              searchHint: cur&&cur.search?cur.search:'',
+              searchQ: S.rp_q||'',
+              onSearchQ: e=>this.setState({rp_q:e.target.value}),
+              searchEmpty: !!(cur&&cur.search&&q&&
+                cur.opts.filter(o=>o.label.replace(/\s/g,'').indexOf(q.replace(/\s/g,''))>=0).length===0),
+              searchEmptyText: q? '‘'+q+'’와 맞는 게 없어요' : '',
+              curOpts: cur?(cur.search
+                ? cur.opts.filter(o=>!q||o.label.replace(/\s/g,'').indexOf(q.replace(/\s/g,''))>=0).slice(0,6)
+                : cur.opts).map(o=>{
                 const on=cur.multi? (PICKS.indexOf(o.v)>=0) : (cur.val===o.v);
                 return {
                   label:o.label, on:on, style:optStyle(on),
@@ -1729,16 +1751,16 @@ class Component extends DCLogic {
                     ? ()=>{ const has=PICKS.indexOf(o.v)>=0;
                         const next=has?PICKS.filter(x=>x!==o.v):(PICKS.length>=5?PICKS:[...PICKS,o.v]);
                         this.setState({picks:next, rp_sent:false}); }
-                    : ()=>this.setState({...cur.set(o.v), rp_step:step+1, rp_sent:false, rp_error:''})
+                    : ()=>this.setState({...cur.set(o.v), rp_step:step+1, rp_q:'', rp_sent:false, rp_error:''})
                 };
               }):[],
               // 여러 개 고르는 단계에서만 '다음'이 필요하다 — 하나 고르는 단계는 누르면 바로 넘어간다
               isMulti: !!(cur&&cur.multi),
-              multiNext: ()=>this.setState({rp_step:step+1}),
+              multiNext: ()=>this.setState({rp_step:step+1, rp_q:''}),
               multiLabel: PICKS.length? PICKS.length+'곳 담음 · 다음' : '안 고르고 다음',
 
-              curSkip: cur?()=>this.setState({rp_step:step+1}):()=>{},
-              curBack: step>0?go(step-1):()=>{},
+              curSkip: cur?()=>this.setState({rp_step:step+1, rp_q:''}):()=>{},
+              curBack: step>0?()=>this.setState({rp_step:step-1, rp_q:''}):()=>{},
               hasBack: step>0,
               qsAllDone: !cur,
               qsDone: STEPS.map((s,i)=>({
