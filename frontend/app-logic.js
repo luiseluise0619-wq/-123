@@ -1621,7 +1621,6 @@ class Component extends DCLogic {
           ['cmp','비교한 자리들','담아 둔 동네를 항목별로 나란히']
         ];
         const partOn=k=>S['rp_p_'+k]!==false;
-        const chosen=P.filter(([k])=>partOn(k)).length;
         const buildReport=()=>{
             const sel=r?(r.list.find(o=>o.id===S.sel)||r.list.find(o=>o.id===S.zoneId)||r.list[0]):null;
             const t=sel?{score:sel.score,scoreNum:sel.score,grade:'비교지수',headline:'선택한 상권의 비교 결과',parts:[{label:'수요',value:sel.c1.toFixed(1)+'점',pctText:String(sel._sales)},{label:'경쟁',value:sel.c2.toFixed(1)+'점',pctText:String(sel._stores)},{label:'점포당 매출',value:sel.c3.toFixed(1)+'점',pctText:String(sel._per)}]}:null;
@@ -1682,47 +1681,12 @@ class Component extends DCLogic {
             return payload;
         };
         return {
-          exportDisabled:!reportSelection||chosen===0,
+          // 담을 항목 체크박스를 없앴으니 '고른 게 0개'인 상태도 없다 — 자리만 있으면 내보낼 수 있다
+          exportDisabled:!reportSelection,
           title:'분석한 내용을 정리해 드립니다',
           sub:'지금 보고 있는 동네와 장사, 본전 계산까지 한 장으로 묶습니다. 화면에 없는 것만 물어봅니다.',
-          target:(S.ind?this.indName(S.ind):'장사 미선택')+' · '+reportZone+' · 담을 항목 '+chosen+'개',
-          // 리포트 화면에서도 장사와 위치를 바로 고를 수 있다
-          // 선택 블록은 접어 두고 고른 값만 보여준다 — 펼치면 홈과 같은 방식
-          openInd:S.rpEdit==='ind', openZone:S.rpEdit==='zone',
-          editInd:()=>this.setState({rpEdit:S.rpEdit==='ind'?null:'ind'}),
-          editZone:()=>this.setState({rpEdit:S.rpEdit==='zone'?null:'zone'}),
-          indLabel:S.ind?this.indName(S.ind):'고르기',
-          zoneLabel:reportZone,
-          caretInd:'flex:none;font-size:15px;color:var(--ink3);display:inline-block;transition:transform .16s;transform:rotate('+(S.rpEdit==='ind'?'180deg':'0deg')+')',
-          caretZone:'flex:none;font-size:15px;color:var(--ink3);display:inline-block;transition:transform .16s;transform:rotate('+(S.rpEdit==='zone'?'180deg':'0deg')+')',
-          zoneSel:S.zoneId||'',
-          zoneOptions:(()=>{
-            const out=[{id:'',label:'동네 안 고름 (서울 전체)'}];
-            if(!S.zi) return out;
-            const idx=S.zi.inds.indexOf(S.ind);
-            const list=[];
-            for(const k in S.zi.zones){
-              const row=idx>=0?(S.zi.zones[k].rows||[]).find(r=>r[0]===idx):null;
-              if(!row||!row[1]||!row[2]) continue;
-              list.push({id:k,label:this.zoneLabelOf(S.zi.zones[k].nm),n:row[2]/row[1]});
-            }
-            list.sort((a,b)=>b.n-a.n);
-            return out.concat(list.slice(0,120).map(o=>({id:o.id,label:o.label})));
-          })(),
-          onZone:e=>{
-            const id=e.target.value;
-            if(!id){ this.setState({zoneId:null,homeZoneName:null,sel:null}); return; }
-            const nm=S.zi&&S.zi.zones[id]?S.zi.zones[id].nm:'';
-            this.setState({zoneId:id,homeZoneName:nm,sel:id});
-          },
-          parts:P.map(([k,label,desc])=>({
-            label:label, desc:desc, on:partOn(k),
-            toggle:()=>this.setState({['rp_p_'+k]:!partOn(k)}),
-            style:'display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:14px;cursor:pointer;transition:background .14s;'
-              +(partOn(k)?'background:var(--accent-3)':'background:var(--surface)'),
-            check:'flex:none;width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;margin-top:2px;'
-              +(partOn(k)?'background:var(--accent)':'background:var(--bg);box-shadow:inset 0 0 0 1.5px var(--line-strong)')
-          })),
+          // '담을 항목 N개'는 지운 체크박스를 가리키던 말이라 뺐다
+          target:(S.ind?this.indName(S.ind):'장사 미선택')+' · '+reportZone,
           // ── 창업 조건 — 한 번에 하나씩 묻는다 ────────────────────────────
           // 다섯 개를 한 화면에 늘어놓으면 '설문지'로 읽혀서 그냥 지나친다.
           // 하나씩 물으면 대답 하나가 화면 전체의 할 일이 되고, 답한 것은 위로 접힌다.
@@ -1959,12 +1923,6 @@ class Component extends DCLogic {
                 {label:'인건비',   value:this.man(c.labor), tag:c.staffAuto?'평수로 추정':'입력값'},
                 {label:'그 외 고정비', value:this.man(c.etc), tag:c.etcAuto?'평수로 추정':'입력값'},
                 {label:'원가율',   value:(S.cogs||0)+'%', tag:'기본 가정 · 수정 가능'}
-              ],
-              // 이 리포트가 모르는 것 — 정직하게 남긴다
-              unknowns:[
-                '이 동네의 실제 임대료. 상가 임대차는 신고 의무가 없어 공개되지 않아요.',
-                '내가 낼 가게의 매출. 화면의 매출은 동네 전체를 가게 수로 나눈 평균이에요.',
-                '권리금·인테리어·초기 재고. 자리마다 달라 계산에 넣지 않았어요.'
               ],
               rowStyle:'display:flex;align-items:baseline;justify-content:space-between;gap:14px;'
                 +'padding:13px 0;border-bottom:1px solid var(--line)'

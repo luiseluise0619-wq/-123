@@ -424,101 +424,6 @@
       <section style="padding:64px 0 0;max-width:640px">
         <h1 style="font-size:clamp(24px,3.8vw,36px);font-weight:700;letter-spacing:-0.025em;line-height:1.14;margin:0;white-space:normal">리포트로 정리해 드려요</h1>
         <p style="font-size:15px;color:var(--ink2);margin:10px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rp.target }}</p>
-        <div style="display:flex;flex-direction:column">
-
-        <!-- 무슨 장사 · 접었다 폈다 (위치 아래) -->
-        <div style="margin-top:12px;padding:16px;border-radius:20px;background:var(--surface);order:2">
-          <div role="button" tabIndex="0" onClick="{{ rp.editInd }}" style="display:flex;align-items:center;gap:12px;cursor:pointer">
-            <span style="flex:none;font-size:13.5px;font-weight:600">무슨 장사</span>
-            <span style="flex:1;min-width:0;text-align:right;font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rp.indLabel }}</span>
-            <span style="{{ rp.caretInd }}">⌄</span>
-          </div>
-          <sc-if value="{{ rp.openInd }}">
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">
-            <sc-for list="{{ hotInds }}" as="h">
-              <span role="button" tabIndex="0" onClick="{{ h.pick }}" style="{{ h.style }}">{{ h.label }}</span>
-            </sc-for>
-          </div>
-          <div style="display:flex;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
-            <div style="flex:0 0 92px;max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
-              <sc-for list="{{ indCats }}" as="c">
-                <span role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</span>
-              </sc-for>
-            </div>
-            <div style="flex:1;min-width:0;max-height:200px;overflow-y:auto;padding-right:6px">
-              <div style="{{ indGridStyle }}">
-                <sc-for list="{{ indCards }}" as="i">
-                  <div role="button" tabIndex="0" onClick="{{ i.pick }}" style="{{ i.style }}" style-hover="background:var(--line)">
-                    <span style="font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ i.name }}</span>
-                  </div>
-                </sc-for>
-              </div>
-            </div>
-          </div>
-          </sc-if>
-        </div>
-
-        <!-- 위치 · 접었다 폈다 (먼저) -->
-        <div style="margin-top:28px;padding:16px;border-radius:20px;background:var(--surface);order:1">
-          <div role="button" tabIndex="0" onClick="{{ rp.editZone }}" style="display:flex;align-items:center;gap:12px;cursor:pointer">
-            <span style="flex:none;font-size:13.5px;font-weight:600">위치</span>
-            <span style="flex:1;min-width:0;text-align:right;font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rp.zoneLabel }}</span>
-            <span style="{{ rp.caretZone }}">⌄</span>
-          </div>
-          <sc-if value="{{ rp.openZone }}">
-          <div role="button" tabIndex="0" onClick="{{ pickAll }}" style="{{ allCardStyle }}" style-hover="background:var(--line)">
-            <span style="font-size:15px;font-weight:600;white-space:nowrap">서울 전체</span>
-            <span style="font-size:12px;color:var(--ink3);white-space:nowrap">아직 안 정함</span>
-          </div>
-          <sc-if value="{{ hasRecent }}">
-            <div data-anim="1" style="display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:2px">
-              <sc-for list="{{ recentChips }}" as="c">
-                <div role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="background:var(--line)">
-                  <span style="font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap">{{ c.name }}</span>
-                  <span style="font-size:11.5px;color:var(--ink3);white-space:nowrap">{{ c.meta }}</span>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
-          <div style="display:flex;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
-            <div style="flex:0 0 96px;max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:6px">
-              <sc-for list="{{ guTabs }}" as="t">
-                <span role="button" tabIndex="0" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</span>
-              </sc-for>
-            </div>
-            <div style="flex:1;min-width:0;max-height:200px;overflow-y:auto;padding-right:6px">
-              <div data-anim="1" style="display:flex;flex-direction:column;gap:2px">
-                <sc-for list="{{ guZones }}" as="z">
-                  <div role="button" tabIndex="0" onClick="{{ z.pick }}" style="{{ z.style }}">
-                    <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ z.name }}</span>
-                    <span style="flex:none;font-size:12px;color:var(--ink3);white-space:nowrap">{{ z.meta }}</span>
-                  </div>
-                </sc-for>
-              </div>
-            </div>
-          </div>
-          </sc-if>
-        </div>
-        </div>
-
-        <div style="margin-top:28px">
-          <div style="font-size:14.5px;font-weight:600">무엇을 담을까요?</div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-            <sc-for list="{{ rp.parts }}" as="p">
-              <div role="button" tabIndex="0" onClick="{{ p.toggle }}" style="{{ p.style }}">
-                <span style="{{ p.check }}">
-                  <sc-if value="{{ p.on }}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
-                  </sc-if>
-                </span>
-                <span style="flex:1;min-width:0">
-                  <span style="display:block;font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.label }}</span>
-                  <span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.desc }}</span>
-                </span>
-              </div>
-            </sc-for>
-          </div>
-        </div>
 
         <div style="margin-top:28px;display:flex;flex-direction:column;gap:18px">
           <!-- 창업 조건 — 새 창에서 한 번에 하나씩 묻는다 -->
@@ -621,13 +526,6 @@
                   </div>
                 </sc-for>
               </div>
-
-              <div style="font-size:13.5px;font-weight:700;margin-top:30px">이 리포트가 모르는 것</div>
-              <ul style="margin:10px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:7px">
-                <sc-for list="{{ rp.rv.unknowns }}" as="u">
-                  <li style="font-size:13px;color:var(--ink2);line-height:1.65;text-wrap:pretty">{{ u }}</li>
-                </sc-for>
-              </ul>
             </div>
           </sc-if>
 
