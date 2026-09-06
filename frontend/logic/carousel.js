@@ -34,6 +34,13 @@ globalThis.MysbizonParts.carousel = {
     };
   },
 
+  // 몇 번째 카드로 보내기. 차트 이름을 눌러 그 차트로 건너뛸 때 쓴다(§8).
+  railTo(key, i){
+    const el = document.querySelector('[data-rail="' + key + '"]');
+    if (!el || !el.children[i]) return;
+    el.scrollTo({ left: el.children[i].offsetLeft - el.offsetLeft, behavior: 'smooth' });
+  },
+
   railMove(key, dir){
     const el = document.querySelector('[data-rail="' + key + '"]');
     if (!el) return;

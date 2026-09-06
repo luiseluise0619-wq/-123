@@ -631,7 +631,18 @@ globalThis.MysbizonParts.views = {
         const ch=this.mvCharts(cur.key, sel, L);
         return {
           charts:ch.charts, hasCharts:ch.charts.length>0,
-          rail:this.rail('mv',{per:2}),
+          // 한 화면에 차트 하나(§8). 두 개를 나란히 두면 관리자 대시보드가 된다.
+          rail:this.rail('mv',{per:1}),
+          // 아래에 차트 이름을 늘어놓고, 누르면 그 차트로 건너뛴다
+          chartNav:ch.charts.map((c,i)=>({
+            label:c.title,
+            go:()=>this.railTo('mv',i),
+            style:'flex:none;padding:8px 14px;border-radius:999px;font-size:13px;cursor:pointer;'
+              +'white-space:nowrap;background:var(--color-surface);color:var(--color-text-secondary);'
+              +'transition:background .14s,color .14s'
+          })),
+          chartCount:ch.charts.length+'개',
+          hasChartNav:ch.charts.length>1,
           missing:ch.missing.map(t=>({text:t})), hasMissing:ch.missing.length>0,
           title:cur.title, q:cur.q||'', big:cur.big||'', bigLabel:cur.bigLabel||'',
           verdict:cur.verdict||'', hasVerdict:!!cur.verdict,
