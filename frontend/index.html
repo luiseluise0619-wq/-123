@@ -985,7 +985,7 @@
           <div style="{{ rg.paneStyle }}">
             <div style="font-size:20px;font-weight:600;letter-spacing:-0.03em;white-space:nowrap">무슨 장사를 하실 건가요?</div>
             <p style="font-size:14px;color:var(--ink3);margin:10px 0 0;text-wrap:pretty">{{ rg.sub }}</p>
-            <div data-anim="1" style="margin-top:22px;max-width:660px">
+            <div data-anim="1" style="margin-top:22px">
               <sc-for list="{{ rg.inds }}" as="i">
                 <div role="button" tabIndex="0" onClick="{{ i.pick }}" style="{{ i.row }}">
                   <span style="flex:1;min-width:0;font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ i.name }}</span>
@@ -1229,7 +1229,7 @@
       </sc-if>
 
       <section style="{{ mv.prosOnly }}">
-        <div style="display:grid;grid-template-columns:{{ prosCols }};gap:32px;max-width:660px">
+        <div style="display:grid;grid-template-columns:{{ prosCols }};gap:32px">
           <div>
             <div style="font-size:13.5px;font-weight:700;color:var(--good);white-space:nowrap">좋은 점</div>
             <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
@@ -1251,7 +1251,7 @@
 
       <section style="{{ mv.prosSectionStyle }}">
         <div style="font-size:17px;font-weight:700;letter-spacing:-0.02em;text-wrap:pretty">이 상권은 서울과 얼마나 다를까요?</div>
-        <table style="width:100%;max-width:660px;border-collapse:collapse;margin-top:16px">
+        <table style="width:100%;border-collapse:collapse;margin-top:16px">
           <thead>
             <tr>
               <th style="text-align:left;padding:0 0 8px;border-bottom:1px solid var(--ink);font-size:11px;font-weight:700;color:var(--ink3)">항목</th>
