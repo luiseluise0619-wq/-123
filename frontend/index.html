@@ -426,81 +426,73 @@
         <p style="font-size:15px;color:var(--ink2);margin:10px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rp.target }}</p>
 
         <div style="margin-top:28px;display:flex;flex-direction:column;gap:18px">
-          <!-- 창업 조건 — 새 창에서 한 번에 하나씩 묻는다 -->
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:18px;background:var(--surface)">
-            <div style="min-width:0">
-              <div style="font-size:14.5px;font-weight:600">내 창업 조건</div>
-              <div style="font-size:12.5px;color:var(--ink2);margin-top:3px;text-wrap:pretty">{{ rp.qsSummary }} · 본전 계산과 지원사업 추천에 씁니다</div>
+          <!-- 창업 조건 — 답할 때마다 아래 리포트가 한 칸씩 자란다 -->
+          <div style="padding:24px 22px;border-radius:20px;background:var(--bg);box-shadow:0 0 0 1px var(--line)">
+            <div style="display:flex;align-items:center;gap:10px">
+              <sc-if value="{{ rp.hasBack }}">
+                <span role="button" tabIndex="0" aria-label="이전 질문" onClick="{{ rp.curBack }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .14s" style-hover="background:var(--line-strong)">←</span>
+              </sc-if>
+              <span style="flex:1"></span>
+              <sc-if value="{{ rp.hasStep }}">
+                <span style="flex:none;font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap">{{ rp.qsStep }}</span>
+              </sc-if>
             </div>
-            <button onClick="{{ rp.openQs }}" style="flex:none;font-size:14px;font-weight:600;color:var(--accent);background:var(--accent-3);border:none;border-radius:12px;height:42px;padding:0 18px;cursor:pointer;white-space:nowrap;transition:filter .16s" style-hover="filter:brightness(.97)">{{ rp.qsCta }}</button>
+
+            <div style="height:3px;border-radius:2px;background:var(--surface);overflow:hidden;margin-top:14px">
+              <span style="{{ rp.qsBar }}"></span>
+            </div>
+
+            <!-- 질문 하나 — 한 화면에 이것만 -->
+            <sc-if value="{{ rp.hasCur }}">
+              <div data-anim="1">
+                <div style="font-size:21px;font-weight:700;letter-spacing:-0.025em;line-height:1.35;margin-top:24px;text-wrap:pretty">{{ rp.curQ }}</div>
+                <div style="font-size:13.5px;color:var(--ink2);margin-top:8px;text-wrap:pretty">{{ rp.curHint }}</div>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
+                  <sc-for list="{{ rp.curOpts }}" as="o">
+                    <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">
+                      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">{{ o.label }}</span>
+                      <sc-if value="{{ o.on }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:16px;height:16px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="text-align:center;margin-top:16px">
+                  <span role="button" tabIndex="0" onClick="{{ rp.curSkip }}" style="font-size:13.5px;color:var(--ink3);cursor:pointer;white-space:nowrap">이 질문 건너뛰기</span>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- 다 답한 뒤 — 요약. 줄을 누르면 그 질문으로 돌아간다 -->
+            <sc-if value="{{ rp.qsAllDone }}">
+              <div data-anim="1" style="margin-top:20px">
+                <sc-for list="{{ rp.qsDone }}" as="d">
+                  <div role="button" tabIndex="0" onClick="{{ d.edit }}" style="{{ d.style }}" style-hover="opacity:.7">
+                    <span style="flex:1;min-width:0;font-size:13.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.label }}</span>
+                    <span style="{{ d.valStyle }}">{{ d.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <button onClick="{{ rp.doneGo }}" style="{{ rp.doneStyle }}" style-hover="filter:brightness(.97)">{{ rp.doneCta }}</button>
           </div>
 
-          <sc-if value="{{ rp.qsOpen }}">
-            <div onClick="{{ rp.closeQs }}" style="position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.32);animation:riseIn .22s cubic-bezier(.22,.7,.25,1) both">
-              <div role="dialog" aria-modal="true" aria-label="내 창업 조건" tabIndex="-1" onClick="{{ rp.stopQs }}" style="{{ rp.qsCard }}">
-                <!-- 위: 뒤로 · 진행 · 닫기 -->
-                <div style="display:flex;align-items:center;gap:10px">
-                  <sc-if value="{{ rp.hasBack }}">
-                    <span role="button" tabIndex="0" aria-label="이전 질문" onClick="{{ rp.curBack }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .14s" style-hover="background:var(--line-strong)">←</span>
-                  </sc-if>
-                  <span style="flex:1"></span>
-                  <sc-if value="{{ rp.hasStep }}">
-                    <span style="flex:none;font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap">{{ rp.qsStep }}</span>
-                  </sc-if>
-                  <span role="button" tabIndex="0" aria-label="닫기" data-dialog-close="1" onClick="{{ rp.closeQs }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:background .14s" style-hover="background:var(--line-strong)">✕</span>
-                </div>
-
-                <div style="height:3px;border-radius:2px;background:var(--surface);overflow:hidden;margin-top:14px">
-                  <span style="{{ rp.qsBar }}"></span>
-                </div>
-
-                <!-- 질문 하나 — 한 화면에 이것만 -->
-                <sc-if value="{{ rp.hasCur }}">
-                  <div data-anim="1">
-                    <div style="font-size:21px;font-weight:700;letter-spacing:-0.025em;line-height:1.35;margin-top:24px;text-wrap:pretty">{{ rp.curQ }}</div>
-                    <div style="font-size:13.5px;color:var(--ink2);margin-top:8px;text-wrap:pretty">{{ rp.curHint }}</div>
-                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
-                      <sc-for list="{{ rp.curOpts }}" as="o">
-                        <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">
-                          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">{{ o.label }}</span>
-                          <sc-if value="{{ o.on }}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:16px;height:16px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
-                          </sc-if>
-                        </div>
-                      </sc-for>
-                    </div>
-                    <div style="text-align:center;margin-top:16px">
-                      <span role="button" tabIndex="0" onClick="{{ rp.curSkip }}" style="font-size:13.5px;color:var(--ink3);cursor:pointer;white-space:nowrap">이 질문 건너뛰기</span>
-                    </div>
-                  </div>
-                </sc-if>
-
-                <!-- 다 답한 뒤 — 요약. 줄을 누르면 그 질문으로 돌아간다 -->
-                <sc-if value="{{ rp.qsAllDone }}">
-                  <div data-anim="1" style="margin-top:20px">
-                    <sc-for list="{{ rp.qsDone }}" as="d">
-                      <div role="button" tabIndex="0" onClick="{{ d.edit }}" style="{{ d.style }}" style-hover="opacity:.7">
-                        <span style="flex:1;min-width:0;font-size:13.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.label }}</span>
-                        <span style="{{ d.valStyle }}">{{ d.value }}</span>
-                      </div>
-                    </sc-for>
-                  </div>
-                </sc-if>
-
-                <button onClick="{{ rp.doneGo }}" style="{{ rp.doneStyle }}" style-hover="filter:brightness(.97)">{{ rp.doneCta }}</button>
-              </div>
-            </div>
-          </sc-if>
-
           <!-- 화면 안 리포트 — 결론 하나를 크게, 근거는 아래로 -->
-          <sc-if value="{{ rp.rv.has }}">
+          <sc-if value="{{ rp.rv.started }}">
             <div style="margin-top:10px;padding:30px 26px;border-radius:22px;background:var(--surface)">
               <div style="font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rp.rv.eyebrow }}</div>
-              <div style="font-size:clamp(38px,7vw,54px);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-top:14px;font-variant-numeric:tabular-nums">{{ rp.rv.bep }}</div>
-              <div style="font-size:15.5px;color:var(--ink2);margin-top:8px;text-wrap:pretty">{{ rp.rv.bepNote }}</div>
-              <div style="{{ rp.rv.verdictStyle }}">{{ rp.rv.verdict }}</div>
+              <sc-if value="{{ rp.rv.showBep }}">
+                <div style="{{ rp.rv.bepStyle }}">
+                  <div style="font-size:clamp(38px,7vw,54px);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-top:14px;font-variant-numeric:tabular-nums">{{ rp.rv.bep }}</div>
+                  <div style="font-size:15.5px;color:var(--ink2);margin-top:8px;text-wrap:pretty">{{ rp.rv.bepNote }}</div>
+                  <div style="{{ rp.rv.verdictStyle }}">{{ rp.rv.verdict }}</div>
+                </div>
+              </sc-if>
 
-              <div style="display:flex;flex-direction:column;gap:16px;margin-top:28px">
+              <sc-if value="{{ rp.rv.showBars }}">
+              <div style="{{ rp.rv.barsStyle }}">
+              <div style="display:flex;flex-direction:column;gap:16px">
                 <sc-for list="{{ rp.rv.bars }}" as="b">
                   <div>
                     <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
@@ -513,8 +505,12 @@
                   </div>
                 </sc-for>
               </div>
+              </div>
+              </sc-if>
 
-              <div style="font-size:13.5px;font-weight:700;margin-top:30px">매달 나가는 돈</div>
+              <sc-if value="{{ rp.rv.showCosts }}">
+              <div style="{{ rp.rv.costsStyle }}">
+              <div style="font-size:13.5px;font-weight:700">매달 나가는 돈</div>
               <div style="margin-top:4px">
                 <sc-for list="{{ rp.rv.costs }}" as="c">
                   <div style="{{ rp.rv.rowStyle }}">
@@ -526,6 +522,8 @@
                   </div>
                 </sc-for>
               </div>
+              </div>
+              </sc-if>
             </div>
           </sc-if>
 

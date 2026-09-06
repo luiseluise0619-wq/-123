@@ -118,13 +118,6 @@ class Component extends DCLogic {
     if(this._screen!==this.state.screen){
       this._screen=this.state.screen;
       window.scrollTo({top:0,behavior:'auto'});
-      // 리포트에 들어오면 조건 질문을 바로 띄운다 — 버튼을 눌러야 열리면 아무도 안 누른다.
-      // 아직 안 끝냈을 때만, 그리고 한 번만. 닫았는데 또 뜨면 성가시다.
-      if(this.state.screen==='report' && !this._qsAsked){
-        this._qsAsked=true;
-        const KEYS=['rp_cash','rp_loan','rp_runway','rp_exp','rp_when'];
-        if(KEYS.some(k=>!this.state[k])) this.setState({rp_qsOpen:true});
-      }
     }
     if(this.state.screen==='report') this.loadSupport();
     this.placePanel();this.syncTrack();
@@ -1721,21 +1714,6 @@ class Component extends DCLogic {
             const cur=step<QS.length?QS[step]:null;
             const answered=QS.filter(q=>val(q.k)).length;
             return {
-              // 창을 열고 닫는다. 리포트 화면에 그대로 펼쳐 두면 화면이 길어지고
-              // '답하는 일'과 '결과 보는 일'이 섞인다 — 물을 때는 물음에만 집중하게 한다.
-              qsOpen:!!S.rp_qsOpen,
-              qsShut:!S.rp_qsOpen,
-              openQs:()=>this.setState({rp_qsOpen:true,
-                // 다 답한 뒤 다시 열면 마지막 요약부터 보여준다
-                rp_step:(S.rp_step!=null?S.rp_step:(firstOpen<0?QS.length:firstOpen))}),
-              closeQs:()=>this.setState({rp_qsOpen:false}),
-              stopQs:e=>e.stopPropagation(),
-              // 닫혀 있을 때 보이는 한 줄 — 몇 개 답했는지
-              qsSummary:answered? '조건 '+answered+'/'+QS.length+'개 입력함' : '아직 입력 안 함',
-              qsCta:answered? '고치기' : '조건 입력하기',
-              qsCard:'width:100%;max-width:'+this.L('100%','440px','460px')+';max-height:86vh;overflow-y:auto;'
-                +'background:var(--bg);border-radius:24px;padding:26px 24px 24px;'
-                +'box-shadow:0 24px 60px rgba(0,0,0,.24)',
               qsStep: cur? (step+1)+' / '+QS.length : '',
               hasStep: !!cur,
               qsBar: 'display:block;height:100%;border-radius:2px;background:var(--accent);'
@@ -1767,9 +1745,8 @@ class Component extends DCLogic {
               qsRedo: go(0),
               // 마지막 질문에서는 '결과 보기'로 닫는다 — 토스처럼 끝이 분명하게.
               doneCta: cur?'건너뛰고 결과 보기':'결과 보기',
-              doneGo: cur
-                ? ()=>this.setState({rp_step:QS.length,rp_qsOpen:false})
-                : ()=>this.setState({rp_qsOpen:false}),
+              doneGo: cur ? ()=>this.setState({rp_step:QS.length}) : ()=>{},
+              hasDoneCta: !!cur,
               doneStyle:'width:100%;margin-top:20px;font-size:16px;font-weight:600;border:none;'
                 +'border-radius:14px;height:52px;cursor:pointer;transition:filter .16s;'
                 +(cur?'background:var(--surface);color:var(--ink2)'
@@ -1893,8 +1870,21 @@ class Component extends DCLogic {
             const over=c.rev>=c.bep;                     // 예상 매출이 본전선을 넘나
             const gap=Math.abs(c.rev-c.bep);
             const mx=Math.max(c.rev,c.bep,1);
+            // 종이가 한 장씩 채워지는 느낌 — 질문에 답할수록 아래 칸이 하나씩 열린다.
+            // 답을 건너뛰어도 단계는 넘어가므로 결국 다 열린다(막히지 않는다).
+            const QN=5;
+            const st=Math.max(0,Math.min(
+              S.rp_step!=null?S.rp_step:0, QN));
+            // 처음 열릴 때만 흘러내리게 한다. 이미 다 답한 뒤 다시 들어오면 조용히 다 보인다.
+            const grow=i=>st===i+1
+              ? 'animation:lateIn .45s cubic-bezier(.22,.7,.25,1) both;' : '';
             return {
               has:true, empty:false,
+              // 아직 아무것도 안 물었으면 리포트 자체를 감춘다 — 빈 종이부터 보여준다
+              started:st>0,
+              showBep:st>=1,   bepStyle:grow(0),
+              showBars:st>=2,  barsStyle:'margin-top:28px;'+grow(1),
+              showCosts:st>=3, costsStyle:'margin-top:30px;'+grow(2),
               eyebrow:this.indName(S.ind)+' · '+this.zoneLabelOf(sel.name)
                 +(S.zi?' · '+this.qtr(S.zi.quarter):''),
               // 결론 한 줄 — 큰 숫자는 '한 달에 얼마를 팔아야 하는가'다
