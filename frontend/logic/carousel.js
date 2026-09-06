@@ -82,13 +82,16 @@ globalThis.MysbizonParts.carousel = {
         // 손을 따라오지 않고 뚝뚝 끊긴다(실제로 그랬다).
         el.style.scrollSnapType = 'none';
         el.style.scrollBehavior = 'auto';
-        if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (err) {} }
+        // setPointerCapture 는 쓰지 않는다 — 포인터 이벤트가 트랙으로 몰려서
+        // 안에 있는 카드의 click 이 죽는다(실제로 '+ 담기'가 안 눌렸다).
       });
       el.addEventListener('pointermove', e => {
         if (!down) return;
-        e.preventDefault();
         const dx = e.clientX - startX;
-        if (Math.abs(dx) > 3) { el.scrollLeft = startLeft - dx; moved = Math.abs(dx); }
+        if (Math.abs(dx) > 3) {
+          e.preventDefault();                 // 끌기 시작한 뒤에만. 그냥 누른 건 클릭으로 남긴다
+          el.scrollLeft = startLeft - dx; moved = Math.abs(dx);
+        }
       });
       // 손을 떼면 가장 가까운 카드로 부드럽게 붙인다 — 반쯤 걸친 채로 멈추지 않게
       const up = () => {

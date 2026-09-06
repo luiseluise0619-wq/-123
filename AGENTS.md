@@ -78,8 +78,8 @@ scripts/           build-html.mjs · validate-data.mjs
 
 | 메뉴 | 답하는 질문 | 안에 들어 있는 화면 (`screen` 키) |
 | --- | --- | --- |
-| **① 상권분석** `nav.zone` | **"어디가 좋지?"** — 여러 곳을 훑고 비교 | 허브 `hubZone` · 지역비교 `zone` · 후보지 `find` · **비교분석 `cmp`** · 자치구 훑기 `fineCmp` · 지역 개요 `region` |
-| **② 정밀분석** `nav.fine` | **"왜 좋은 거지? 내 조건이면 얼마 남지?"** — 고른 상권 하나를 깊게 | 허브 `hubFine` · 소개 `fineIntro` · 지도 `map` · **정밀분석 `fineDetail`** · **정밀비교 `sim`** · 본전 계산 `diag` |
+| **① 상권분석** `nav.zone` | **"어디가 좋지?"** — 여러 곳을 훑는다 | 허브 `hubZone` · 지역비교 `zone` · 후보지 `find` · 자치구 훑기 `fineCmp` · 지역 개요 `region` |
+| **② 정밀분석** `nav.fine` | **"왜 좋은 거지? 어디로 정할까?"** — 고른 곳을 깊게 보고 정한다 | 허브 `hubFine` · 소개 `fineIntro` · 지도 `map` · **정밀분석 `fineDetail`** · **정밀비교 `sim`** · 본전 계산 `diag` |
 | **③ 통합시세** `nav.market` | **"장사 환경은 어떤가?"** — 임대료·환율·원자재 같은 바깥 사정 | 통합시세 `price` |
 | **④ 리포트** `nav.report` | **"어떤 지원을 받지?"** — 조건에 맞는 정부 창업지원사업 | 리포트 `report` |
 
@@ -90,9 +90,13 @@ scripts/           build-html.mjs · validate-data.mjs
   - 정밀분석 = **한 곳** 을 정한 뒤 파고드는 단계
   - 이 둘이 섞이면 "어디로 할까"와 "여기 왜 괜찮은가"가 한 화면에 뒤엉킵니다.
 - **정밀비교(`sim`)는 ② 정밀분석 메뉴 안에** 있습니다. 최상위 메뉴로 빼지 마세요. (사장님이 명시적으로 그렇게 요청했습니다.)
-- **비교분석(`cmp`)은 ① 상권분석 안**, **정밀분석(`fineDetail`)은 ② 정밀분석 안**입니다. 이름이 비슷하니 헷갈리지 마세요.
-  - `cmp` 비교분석 — 담아 둔 상권 3곳을 **공개 데이터**로 순위 매김 (종합순위 · 가중치 5가지)
-  - `sim` 정밀비교 — 그 3곳에 **사장님이 직접 넣은 숫자**(매출·월세·인건비…)로 월 영업이익·회수기간 계산
+- **정밀비교(`sim`)와 본전 계산(`diag`)은 하는 일이 다릅니다** — 이름이 비슷하니 헷갈리지 마세요.
+  - `sim` 정밀비교 — 담아 둔 상권 3곳을 **공개 데이터**로 순위 매김 (종합순위 · 가중치 5가지). **내 숫자를 넣지 않습니다.**
+  - `diag` 본전 계산 — **사장님이 직접 넣은 숫자**(평수·임대료·인건비…)로 한 자리의 본전선을 계산
+- 2026-09-06 에 옛 `cmp` 비교분석 화면(① 상권분석 안)을 `sim` 자리로 옮겼고,
+  내 숫자를 넣던 옛 정밀비교 계산기(`logic/sim.js`)는 지웠습니다.
+  '내 숫자로 계산'하는 화면이 둘이라 무엇이 다른지 알 수 없다는 지적 때문입니다.
+  되살리려면 git 이력에서 `logic/sim.js` 와 `screens/45-sim.html` 을 꺼내면 됩니다.
 
 ### 화면 ↔ 파일 대응
 
@@ -114,8 +118,7 @@ scripts/           build-html.mjs · validate-data.mjs
 | `41-region.html` | ① 고른 지역의 업종 목록 | `onRegion` |
 | `42-find.html` | ① 후보지 | `onFind` |
 | `43-diagnosis.html` | ② 본전 계산 | `onDiag` |
-| `44-compare.html` | ① 비교분석 (종합순위) | `onCmp` |
-| `45-sim.html` | ② 정밀비교 (내 조건 계산기) | `onSim` |
+| `45-sim.html` | ② 정밀비교 (담은 상권 종합순위) | `onSim` |
 | `50-ai.html` | 도우미 전체 화면 | `onAi` |
 | `51-soon.html` | 준비 중 | `onSoon` |
 | `_shell-foot.html` | `</main>` 닫기·스크립트 | 항상 |
@@ -131,7 +134,7 @@ scripts/           build-html.mjs · validate-data.mjs
 
 ```js
 for (const name of ['i18n','theme','roman','util','design','rank','analysis',
-                    'screens','chat','charts','carousel','sim','market','views']) { ... }
+                    'screens','chat','charts','carousel','market','views']) { ... }
 ```
 
 이 결합기는 **메서드 이름이 겹치면 예외를 던집니다.** 새 메서드를 만들 때 이름이 안 겹치는지 보세요.
@@ -152,7 +155,6 @@ for (const name of ['i18n','theme','roman','util','design','rank','analysis',
 | `chat.js` | 도우미 (규칙 기반. 외부 생성형 AI 호출 없음) |
 | `charts.js` | Chart.js 래퍼 |
 | `carousel.js` | 가로 슬라이드 (scroll-snap + 드래그 + 휠). `peek:false` 좁은 칸용 · `arrows:true` 모바일 화살표 |
-| `sim.js` | **정밀비교 계산** — 영업이익·이익률·회수기간 |
 | `market.js` | **통합시세** — 7갈래 28지표 · 왼쪽 세로 목록(`mk.side`) |
 | `views.js` | 자료가 있어야 만들 수 있는 화면 조립 |
 | `app-logic.js` | 상태 · 생애주기 · `MENU` · `renderVals()` · 결합 |

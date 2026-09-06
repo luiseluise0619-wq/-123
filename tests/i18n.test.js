@@ -76,7 +76,7 @@ test('이름 뒤에 붙는 말은 영어 관행대로 적는다', () => {
 
 // ── 실제 화면 값에 한국어가 남는지 ──────────────────────────────
 const LOGIC_PARTS = ['const', 'i18n', 'theme', 'roman', 'util', 'design', 'rank',
-  'analysis', 'screens', 'chat', 'charts', 'carousel', 'sim', 'market', 'views'];
+  'analysis', 'screens', 'chat', 'charts', 'carousel', 'market', 'views'];
 
 function component(locale) {
   const source = LOGIC_PARTS.map(n => read('../frontend/logic/' + n + '.js')).join('\n')

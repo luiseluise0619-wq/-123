@@ -309,20 +309,21 @@ class Component extends DCLogic {
     // 메뉴마다 답하는 질문이 하나씩이고, 서로 겹치지 않는다.
     //   상권분석 "어디가 좋지?"        — 여러 곳을 탐색·비교
     //   정밀분석 "왜 좋은 거지?"       — 고른 상권 하나를 깊게
-    //   정밀비교 "내 조건이면 얼마 남지?" — 내가 넣은 숫자로 수익성 비교
+    //   정밀비교 "담아 둔 곳 중 어디가 나은가?" — 공개 데이터로 종합순위
     //   통합시세 "장사 환경은 어떤가?"  — 임대료·환율·원자재 같은 바깥 사정
     //   리포트   "어떤 지원을 받지?"    — 조건에 맞는 정부 창업지원사업
     // 문구는 사전(logic/i18n.js · locales/*.json)에서 가져온다 — 여기 한국어를 박지 않는다
     const T=k=>this.t(k);
     const MENU=[
       // region(동네 개요)·fineCmp(자치구 훑기)는 둘 다 '여러 곳을 훑는' 화면이라 여기 둔다.
-      {label:T('nav.zone'), keys:['hubZone','zone','find','cmp','region','fineCmp'], hub:'hubZone',
+      // 비교(담은 상권 종합순위)는 ② 정밀분석의 '정밀비교'로 옮겼다 — 입구를 둘로 두지 않는다.
+      {label:T('nav.zone'), keys:['hubZone','zone','find','region','fineCmp'], hub:'hubZone',
        items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],
-              ['cmp',T('menu.compare')],['fineCmp',T('menu.sweep')]]},
+              ['fineCmp',T('menu.sweep')]]},
       // 고른 상권 하나를 깊게 보는 것들이 다 여기 있다.
       //   지도     어디인지
       //   정밀분석 왜 좋은지/나쁜지
-      //   정밀비교 내 숫자를 넣으면 얼마 남는지
+      //   정밀비교 담아 둔 상권들의 종합순위
       //   본전 계산 이 자리 한 곳의 본전선
       {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'hubFine',
        items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],
@@ -379,10 +380,9 @@ class Component extends DCLogic {
         {tab:'첫 화면', body:'장사를 고르면 서울 동네를 좋은 순서로 줄 세워요. 볼 동네가 있으면 위치도 함께 고르세요.'},
         {tab:'지역비교', body:'자치구 25개를 가게 한 곳당 매출로 비교해요. 어느 구부터 볼지 정할 때 써요.'},
         {tab:'후보지', body:'동네 순위와 점수 근거를 봅니다. 손님 수·경쟁 가게 수·한 곳당 매출로 쪼개 보여줍니다.'},
-        {tab:'비교분석', body:'담은 동네를 최대 3곳까지 나란히 놓고 항목별로 비교합니다.'},
         {tab:'본전 계산', body:'평수와 임대료를 넣으면 월 얼마를 팔아야 본전인지, 하루 몇 건인지 계산합니다.'},
         {tab:'지도분석', body:'상위 후보를 지도에 놓고 서로의 위치를 봅니다.'},
-        {tab:'정밀비교', body:'한 자치구 안의 동네를 전부 표로 펼쳐 훑습니다.'},
+        {tab:'정밀비교', body:'담아 둔 상권을 최대 3곳까지 나란히 놓고 종합 1위를 뽑습니다.'},
         {tab:'시세분석', body:'상가 임대료·빈 상가 비율·장사별 매출 추이를 분기별로 봅니다.'},
         {tab:'AI 도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
       ],
@@ -998,8 +998,8 @@ class Component extends DCLogic {
       sidoWait:(S.sido||'서울특별시')!=='서울특별시',
       backToSeoul:()=>this.setState({sido:'서울특별시'}),
       sidoNote:'‘'+(S.sido||'서울특별시')+'’ 자료는 아직 없습니다. 지금 계산에 쓰는 자료는 서울시 상권분석서비스라 서울 1,564곳만 담고 있습니다. 전국은 소상공인시장진흥공단 상권정보로 갈아타야 하고, 상권 구획과 업종 코드가 달라 매칭이 필요합니다.',
-      onFind:S.screen==='find', onDiag:S.screen==='diag', onCmp:S.screen==='cmp',
-      onSim:S.screen==='sim', sim:this.simView(),
+      onFind:S.screen==='find', onDiag:S.screen==='diag',
+      onSim:S.screen==='sim',
       // 어느 장사를 보고 있는지 화면에서 바로 보이고 바꿀 수 있게 한다
       indSel:S.ind,
       selectStyle:'font-size:15px;font-weight:500;color:var(--ink);background:var(--surface);border:none;border-radius:12px;padding:0 14px;height:44px;cursor:pointer;outline:none;max-width:200px',
@@ -1046,18 +1046,16 @@ class Component extends DCLogic {
         const CARD={
           zone   :{d:'여러 지역의 매출·수요·경쟁을 나란히 비교해요', cta:'비교하기'},
           find   :{d:'업종에 맞는 상권을 좋은 순서로 추천해요',      cta:'후보 찾기'},
-          cmp    :{d:'고른 곳들을 견주고 종합 1위를 뽑아 줘요',      cta:'비교 시작'},
           fineCmp:{d:'한 자치구 안의 상권을 빠짐없이 훑어요',        cta:'훑어보기'},
           map        :{d:'고른 상권이 정확히 어디인지 위치로 확인해요',   cta:'지도 열기'},
           fineDetail :{d:'매출·수요·경쟁·비용을 뜯어보고 왜 그런지 읽어요', cta:'분석 보기'},
-          sim        :{d:'내 숫자를 직접 넣어 어디가 더 남는지 계산해요',  cta:'계산하기'},
+          sim        :{d:'담아 둔 상권을 견주고 종합 1위를 뽑아 줘요',      cta:'비교 시작'},
           diag       :{d:'이 자리 한 곳의 본전선을 확인해요',              cta:'본전 보기'}
         };
         const selId = S.sel || S.zoneId;
         const selNm = (selId && S.zi && S.zi.zones[selId]) ? this.zoneLabelOf(S.zi.zones[selId].nm) : null;
-        const nPicks = (S.picks||[]).length;
         // 강조는 하나만. 셋 다 강조하면 아무것도 강조되지 않는다.
-        const next = zone ? (nPicks ? 'cmp' : 'find')
+        const next = zone ? 'find'
                           : (selNm ? 'fineDetail' : 'map');
         return {
           title: HEAD[k].t,
@@ -1106,7 +1104,7 @@ class Component extends DCLogic {
           }),
         };
       })(),
-      goFind:go('find'), goDiag:go('diag'), goCmp:go('cmp'),
+      goFind:go('find'), goDiag:go('diag'), goCmp:go('sim'),
       goMap:()=>this.setState({screen:'map',menu:null,
         mapGu:(S.sel&&S.zgu&&S.zgu[S.sel])||'서울 전체'}),
       goFineCmp:go('fineCmp'),
@@ -1360,7 +1358,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['i18n','theme','roman','util','design','rank','analysis','screens','chat','charts','carousel','sim','market','views']) {
+for (const name of ['i18n','theme','roman','util','design','rank','analysis','screens','chat','charts','carousel','market','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {

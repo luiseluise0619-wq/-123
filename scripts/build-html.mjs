@@ -40,7 +40,6 @@ export const ORDER = [
   '41-region',
   '42-find',
   '43-diagnosis',
-  '44-compare',
   '45-sim',
   '50-ai',
   '51-soon',

@@ -40,8 +40,7 @@ npm test              # 위 확인이 테스트에도 들어 있습니다
 | `41-region.html` | 고른 지역의 업종 목록 | `onRegion` |
 | `42-find.html` | 후보지 | `onFind` |
 | `43-diagnosis.html` | 본전 계산 | `onDiag` |
-| `44-compare.html` | 비교분석 — 담은 상권 종합순위 | `onCmp` |
-| `45-sim.html` | 정밀비교 — 내 조건으로 계산 | `onSim` |
+| `45-sim.html` | 정밀비교 — 담은 상권 종합순위 | `onSim` |
 | `50-ai.html` | 도우미 전체 화면 | `onAi` |
 | `51-soon.html` | 준비 중 화면 | `onSoon` |
 | `_shell-foot.html` | `</main>` 닫는 태그·스크립트 | 항상 |
@@ -76,7 +75,6 @@ npm test              # 위 확인이 테스트에도 들어 있습니다
 | `logic/chat.js` | 도우미 |
 | `logic/charts.js` | Chart.js 래퍼 |
 | `logic/carousel.js` | 가로 슬라이드 |
-| `logic/sim.js` | 정밀비교 계산(영업이익·회수기간) |
 | `logic/market.js` | 통합시세 7갈래 28지표 · 왼쪽 세로 목록 |
 | `logic/views.js` | 자료가 있어야 만들 수 있는 화면 조립 |
 | `app-logic.js` | 상태·생애주기·`MENU`·`renderVals()`·조각 결합 |

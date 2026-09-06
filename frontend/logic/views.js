@@ -1120,7 +1120,7 @@ globalThis.MysbizonParts.views = {
          text: wPer? '한 집당 월매출은 '+wPer.name+ga(wPer.name)+' '+monthly(wPer.src.per)+'으로 가장 높아요.'
                  : '한 집당 월매출은 '+tieSent+'. 이 항목으로는 구분되지 않아요.'},
         {dot:'width:5px;height:5px;border-radius:50%;background:var(--color-warning);flex:none;margin-top:9px',
-         text:'임대료는 상권 단위 자료가 대부분 없어요. 중개인에게 확인한 금액을 정밀비교에 직접 넣어 견주세요.'}
+         text:'임대료는 상권 단위 자료가 대부분 없어요. 중개인에게 확인한 금액을 본전 계산에 직접 넣으세요.'}
       ],
       honesty:''
     };
