@@ -984,6 +984,7 @@ class Component extends DCLogic {
       backToSeoul:()=>this.setState({sido:'서울특별시'}),
       sidoNote:'‘'+(S.sido||'서울특별시')+'’ 자료는 아직 없습니다. 지금 계산에 쓰는 자료는 서울시 상권분석서비스라 서울 1,564곳만 담고 있습니다. 전국은 소상공인시장진흥공단 상권정보로 갈아타야 하고, 상권 구획과 업종 코드가 달라 매칭이 필요합니다.',
       onFind:S.screen==='find', onDiag:S.screen==='diag', onCmp:S.screen==='cmp',
+      onSim:S.screen==='sim', sim:this.simView(),
       // 어느 장사를 보고 있는지 화면에서 바로 보이고 바꿀 수 있게 한다
       indSel:S.ind,
       selectStyle:'font-size:15px;font-weight:500;color:var(--ink);background:var(--surface);border:none;border-radius:12px;padding:0 14px;height:44px;cursor:pointer;outline:none;max-width:200px',
@@ -1307,7 +1308,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['util','design','rank','analysis','screens','chat','charts','carousel','views']) {
+for (const name of ['util','design','rank','analysis','screens','chat','charts','carousel','sim','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {
