@@ -192,6 +192,15 @@ class Component extends DCLogic {
   componentDidMount(){
     // 저장해 둔 화면 설정(밝기·테마·색)과 언어를 먼저 얹는다 — 얹기 전에 그리면 한 번 번쩍인다
     try{ this.loadTheme(); this.loadLocales(); }catch(e){}
+    // 처음 온 분에게만 소개·사용법을 띄운다.
+    // '시작하기'를 누르면 다시 안 뜨고, '일주일 동안 안 보기'는 그 기간만 쉰다.
+    // localStorage 가 막힌 브라우저(사생활 보호 모드 등)에서는 그냥 띄우지 않는다 —
+    // 매번 뜨는 것보다 안 뜨는 쪽이 덜 성가시다.
+    try{
+      const seen = localStorage.getItem('mysbizon.noticeSeen');
+      const until = Number(localStorage.getItem('mysbizon.noticeUntil')||0);
+      if(!seen && !(until && Date.now() < until)) this.setState({notice:true});
+    }catch(e){}
     // 첫 그림 뒤에도 한 번 — componentDidUpdate 는 첫 렌더에서 안 불린다
     setTimeout(()=>{ try{ this.paintCharts(); this.bindRails(); this.trDom(); }catch(e){} },0);
     try{const raw=sessionStorage.getItem('mysbizon.return');sessionStorage.removeItem('mysbizon.return');if(raw){const saved=JSON.parse(raw),restore={screen:'report'};for(const k of ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen']){if(saved[k]===null||typeof saved[k]==='string'||typeof saved[k]==='number')restore[k]=saved[k];}if(Array.isArray(saved.picks))restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);this.setState(restore);}}catch{}
@@ -376,23 +385,27 @@ class Component extends DCLogic {
         {value:'62가지', label:'장사 종류'},
         {value: S.zi? this.qtr(S.zi.quarter).replace('년 ','.').replace('분기','Q') : '—', label:'자료 기준'}
       ],
+      // 세 걸음 — 처음 온 분이 무엇부터 하면 되는지
+      aboutSteps:[
+        {n:'1', title:'업종과 지역을 고른다', body:'첫 화면에서 장사 종류만 고르면 서울 동네가 좋은 순서로 줄 섭니다.'},
+        {n:'2', title:'후보를 견준다',       body:'마음에 드는 곳을 담아 두면 매출·손님·경쟁으로 종합 1위를 뽑아 줍니다.'},
+        {n:'3', title:'내 숫자로 계산한다',   body:'평수와 임대료를 넣으면 월 얼마를 팔아야 본전인지 나옵니다.'}
+      ],
+      // 메뉴 넷 — 각각 답하는 질문 하나
       aboutTabs:[
-        {tab:'첫 화면', body:'장사를 고르면 서울 동네를 좋은 순서로 줄 세워요. 볼 동네가 있으면 위치도 함께 고르세요.'},
-        {tab:'지역비교', body:'자치구 25개를 가게 한 곳당 매출로 비교해요. 어느 구부터 볼지 정할 때 써요.'},
-        {tab:'후보지', body:'동네 순위와 점수 근거를 봅니다. 손님 수·경쟁 가게 수·한 곳당 매출로 쪼개 보여줍니다.'},
-        {tab:'본전 계산', body:'평수와 임대료를 넣으면 월 얼마를 팔아야 본전인지, 하루 몇 건인지 계산합니다.'},
-        {tab:'지도분석', body:'상위 후보를 지도에 놓고 서로의 위치를 봅니다.'},
-        {tab:'정밀비교', body:'담아 둔 상권을 최대 3곳까지 나란히 놓고 종합 1위를 뽑습니다.'},
-        {tab:'시세분석', body:'상가 임대료·빈 상가 비율·장사별 매출 추이를 분기별로 봅니다.'},
+        {tab:'상권분석', body:'어디가 좋지? — 여러 동네를 훑고 줄 세웁니다.'},
+        {tab:'정밀분석', body:'여기 왜 괜찮지? — 고른 곳 하나를 매출·수요·경쟁·비용으로 뜯어봅니다.'},
+        {tab:'통합시세', body:'장사 환경은 어떤가? — 임대료·공실부터 환율·원자재까지.'},
+        {tab:'리포트',   body:'어떤 지원을 받지? — 조건에 해당할 수 있는 정부 창업지원사업을 찾아 줍니다.'},
         {tab:'AI 도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
       ],
       aboutRows:[
         {title:'장사를 먼저 골라요',
-         body:'보통은 동네를 고르고 그 동네가 어떤지 봐요. 여기는 거꾸로예요. 업종을 말해 주시면 서울 동네를 좋은 순서대로 줄 세워 드려요.'},
+         body:'보통은 동네를 고르고 그 동네가 어떤지 봅니다. 여기는 거꾸로예요. 업종을 말해 주시면 서울 동네를 좋은 순서대로 줄 세워 드립니다.'},
         {title:'점수가 어떻게 나왔는지 보여드려요',
-         body:'손님이 얼마나 쓰는지, 같은 가게가 몇 곳인지, 한 곳당 얼마 버는지. 이 세 가지를 합쳐 점수를 내요. 어느 항목 때문에 점수가 높은지 그 자리에서 보실 수 있어요.'},
+         body:'손님이 얼마나 쓰는지, 같은 가게가 몇 곳인지, 한 곳당 얼마 버는지. 어느 항목 때문에 점수가 높은지 그 자리에서 보실 수 있어요.'},
         {title:'모르는 건 모른다고 써요',
-         body:'임대료는 동네별로 공개되지 않아요. 그래서 비워 두고 직접 넣으시게 해요. 실제로 센 숫자와 나눠서 낸 숫자도 따로 표시해요.'}
+         body:'없는 값을 지어내지 않습니다. 실제로 센 숫자와 나눠서 낸 추정값을 화면에서 구분해 표시합니다.'}
       ],
       // 리포트 — 화면에 없는 값만 묻는다(개업 시기 · 자금 · 인력). 이메일은 동의를 받아야 보낸다.
       rp:(()=>{
@@ -980,6 +993,12 @@ class Component extends DCLogic {
       noticeStop:e=>e.stopPropagation(),
       // 배경·✕로 닫으면 기록하지 않는다(다음 방문에 다시 뜸)
       noticeClose:()=>this.setState({notice:false}),
+      // 한 번 닫아도 설정에서 다시 열 수 있어야 한다 — 한 번 보고 사라지면 다시 찾을 길이 없다
+      noticeOpen:()=>this.setState({notice:true, setOpen:false}),
+      // 소개창의 '이 서비스가 지키는 것' 세 줄 — 첫 화면에 다 쏟지 않고 눌렀을 때만(§35)
+      aboutMoreOpen:!!S.aboutMore,
+      aboutMoreLabel:S.aboutMore? '접기' : '이 서비스가 지키는 것',
+      aboutMoreToggle:()=>this.setState({aboutMore:!S.aboutMore}),
       // 시작하기 = 봤다고 기록. 자동으로는 다시 뜨지 않는다.
       noticeConfirm:()=>{
         try{ localStorage.setItem('mysbizon.noticeSeen','1'); }catch(e){}
@@ -1095,11 +1114,12 @@ class Component extends DCLogic {
               subStyle:'font-size:13.5px;line-height:1.5;text-wrap:pretty;color:var(--ink2);margin-top:8px',
               ctaStyle:'font-size:13.5px;font-weight:600;margin-top:auto;padding-top:16px;white-space:nowrap;'
                 +(on?'color:var(--accent)':'color:var(--ink2)'),
-              // 강조는 하나뿐. 나머지는 얇은 선으로만 구분한다(§2·§3)
+              // 카드 넷은 테두리를 똑같이 둔다. 강조는 색 테두리가 아니라
+              // 제목·버튼 글자 색으로만 준다 — 테두리에 색을 넣으면 그것부터 눈에 걸린다.
               style:'display:flex;flex-direction:column;height:100%;min-height:'+this.L('132px','150px','168px')+';'
                 +'padding:'+this.L('18px','20px','22px')+';border-radius:var(--r-lg);cursor:pointer;min-width:0;'
-                +'transition:border-color .16s,transform .18s cubic-bezier(.2,.7,.3,1);background:var(--bg);'
-                +(on?'border:1px solid var(--accent)':'border:1px solid var(--line)')
+                +'transition:transform .18s cubic-bezier(.2,.7,.3,1);background:var(--bg);'
+                +'border:1px solid var(--line)'
             };
           }),
         };

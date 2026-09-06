@@ -73,7 +73,7 @@
           <div style="display:flex;align-items:flex-start;gap:14px">
             <div class="u-fill">
               <div style="font-size:12.5px;color:var(--accent);font-weight:700;letter-spacing:-0.01em;white-space:nowrap">MYSBIZON</div>
-              <div style="font-size:20px;font-weight:700;letter-spacing:-0.025em;line-height:1.2;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">내 장사가 들어갈 빈자리를 찾습니다</div>
+              <div style="font-size:20px;font-weight:700;letter-spacing:-0.025em;line-height:1.25;margin-top:8px;text-wrap:pretty">내 장사가 들어갈 빈자리를 찾습니다</div>
             </div>
             <span role="button" tabIndex="0" aria-label="서비스 소개 닫기" data-dialog-close="1" onClick="{{ noticeClose }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .14s" style-hover="background:var(--line-strong)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:14px;height:14px;display:block">
@@ -91,17 +91,24 @@
             </sc-for>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:16px;margin-top:20px">
-            <sc-for list="{{ aboutRows }}" as="a">
-              <div>
-                <div style="font-size:14.5px;font-weight:600;letter-spacing:-0.015em;text-wrap:pretty">{{ a.title }}</div>
-                <p style="font-size:13.5px;color:var(--ink2);line-height:1.65;margin:5px 0 0;text-wrap:pretty">{{ a.body }}</p>
-              </div>
-            </sc-for>
+          <!-- 세 걸음 — 처음 온 분이 무엇부터 하면 되는지 -->
+          <div style="margin-top:22px">
+            <div style="font-size:14.5px;font-weight:600;letter-spacing:-0.015em">이렇게 쓰세요</div>
+            <div style="display:flex;flex-direction:column;gap:14px;margin-top:14px">
+              <sc-for list="{{ aboutSteps }}" as="s">
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                  <span style="flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#FFFFFF;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">{{ s.n }}</span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:block;font-size:14.5px;font-weight:600;letter-spacing:-.015em">{{ s.title }}</span>
+                    <span style="display:block;font-size:13px;color:var(--ink2);line-height:1.6;margin-top:3px;text-wrap:pretty">{{ s.body }}</span>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
           </div>
 
           <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-            <div style="font-size:14.5px;font-weight:600;letter-spacing:-0.015em">어디서 무엇을 보나</div>
+            <div style="font-size:14.5px;font-weight:600;letter-spacing:-0.015em">메뉴 넷</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
               <sc-for list="{{ aboutTabs }}" as="t">
                 <div style="display:flex;gap:12px;align-items:flex-start">
@@ -111,6 +118,20 @@
               </sc-for>
             </div>
           </div>
+
+          <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
+            <span role="button" tabIndex="0" onClick="{{ aboutMoreToggle }}" style="{{ ctaText }}">{{ aboutMoreLabel }}</span>
+          </div>
+          <sc-if value="{{ aboutMoreOpen }}">
+            <div style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
+              <sc-for list="{{ aboutRows }}" as="a">
+                <div>
+                  <div style="font-size:14.5px;font-weight:600;letter-spacing:-0.015em;text-wrap:pretty">{{ a.title }}</div>
+                  <p style="font-size:13.5px;color:var(--ink2);line-height:1.65;margin:5px 0 0;text-wrap:pretty">{{ a.body }}</p>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
 
           <div style="display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap">
             <button onClick="{{ noticeConfirm }}" style="flex:1;min-width:110px;font-size:15.5px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;border-radius:14px;height:50px;cursor:pointer;transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)" style-hover="filter:brightness(1.05)" style-active="transform:scale(.98)">시작하기</button>
