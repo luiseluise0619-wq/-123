@@ -59,7 +59,7 @@ globalThis.MysbizonParts.analysis = {
       // ② 이 상권이 자치구 안에서 어디쯤인지
       if(inGu.length>1){
         const top=inGu.slice().sort((a,b)=>b.per-a.per).slice(0,12);
-        push('mv-sales-gu',{type:'hbar', title:gu+' 안에서 여기는 어디쯤인가요?',
+        push('mv-sales-gu',{type:'hbar', title:this.t('mv.guWhere',{gu:this.placeName(gu)}),
           sub:'가게 한 곳당 월매출 (추정)', unit:'원', period:q+' 기준', height:280,
           labels:top.map(nameOf),
           datasets:[{label:'가게 한 곳당 월매출', data:top.map(o=>Math.round(o.per/3)),
@@ -96,7 +96,7 @@ globalThis.MysbizonParts.analysis = {
       const withPop=inGu.map(o=>({o, v:(zlp[o.id]||{}).tot})).filter(x=>isFinite(x.v))
         .sort((a,b)=>b.v-a.v).slice(0,12);
       if(withPop.length>1){
-        push('mv-pop-gu',{type:'hbar', title:gu+' 안에서 사람이 가장 많은 곳은?', sub:'상권별 하루 유동인구',
+        push('mv-pop-gu',{type:'hbar', title:this.t('mv.guPop',{gu:this.placeName(gu)}), sub:'상권별 하루 유동인구',
           unit:'명', period:q+' 기준', height:280,
           labels:withPop.map(x=>nameOf(x.o)),
           datasets:[{label:'하루 유동인구', data:withPop.map(x=>Math.round(x.v)),
@@ -108,7 +108,7 @@ globalThis.MysbizonParts.analysis = {
     else if(key==='comp'){
       if(inGu.length>1){
         const top=inGu.slice().sort((a,b)=>b.stores-a.stores).slice(0,12);
-        push('mv-comp-gu',{type:'hbar', title:gu+' 안에서 경쟁이 센 곳은?',
+        push('mv-comp-gu',{type:'hbar', title:this.t('mv.guComp',{gu:this.placeName(gu)}),
           sub:'같은 업종 점포가 많은 순 · 적을수록 유리', unit:'곳', period:q+' 기준', height:280,
           labels:top.map(nameOf),
           datasets:[{label:'같은 업종 점포 수', data:top.map(o=>o.stores),
@@ -139,7 +139,8 @@ globalThis.MysbizonParts.analysis = {
         const norm=t=>String(t||'').replace(/\s|·|\(.*?\)/g,'');
         const hitZ=zs.find(z=>{const n=norm(z.nm); return n && norm(me).indexOf(n)>=0;});
         const base=hitZ||R.seoul;
-        const who=hitZ? hitZ.nm+' 기준' : '권역 참고값 · 이 상권 값은 아니에요';
+        const who=hitZ? this.t('rent.basis',{name:this.placeName(hitZ.nm)})
+                      : this.t('rent.region');
         if(base&&base.rent_trend){
           push('mv-rent',{type:'line', title:'임대료는 오르고 있나요?', sub:who, unit:'만원',
             period:qs[0]+' ~ '+qs[qs.length-1], height:230,
@@ -186,7 +187,7 @@ globalThis.MysbizonParts.analysis = {
       const IC=S.income;
       if(IC&&IC.gu&&IC.gu[gu]&&IC.gu[gu].spend){
         const sp=IC.gu[gu].spend.slice().sort((a,b)=>b.pct-a.pct);
-        push('mv-spend',{type:'doughnut', title:gu+' 사람들은 어디에 돈을 쓰나요?', sub:'가구 지출에서 차지하는 비율',
+        push('mv-spend',{type:'doughnut', title:this.t('mv.guSpend',{gu:this.placeName(gu)}), sub:'가구 지출에서 차지하는 비율',
           unit:'%', period:this.qtr(IC.quarter)+' 기준', height:260,
           labels:sp.map(o=>o.name), datasets:[{label:'비율', data:sp.map(o=>o.pct)}]});
       }
@@ -288,13 +289,13 @@ globalThis.MysbizonParts.analysis = {
     if(lp){
       const mxA=Math.max(...lp.age,1);
       lp.age.forEach((v,i)=>dBars.push({label:AL[i], value:Math.round(v).toLocaleString()+'명', bar:bar(v/mxA*100)}));
-      dRows.push({label:'추정 객단가', value:Math.round(sel.unit).toLocaleString()+'원', tag:'(추정)'});
+      dRows.push({label:'추정 객단가', value:this.wonRaw(Math.round(sel.unit)), tag:'(추정)'});
       dRows.push({label:'여성 / 남성', value:Math.round(lp.f/lp.tot*100)+'% / '+Math.round(lp.m/lp.tot*100)+'%', tag:''});
     }
     out.push({key:'demand', title:'수요 · 누가 오나요',
       q:'하루에 사람이 얼마나 오나요?',
       big: lp? Math.round(lp.tot).toLocaleString()+'명' : '데이터 없음',
-      bigLabel: lp? lp.dong+' 행정동 하루 유동인구' : '유동인구 자료가 없어요',
+      bigLabel: lp? this.t('mv.popLabel',{dong:this.placeName(lp.dong)}) : this.t('mv.noPop'),
       verdict:(()=>{
         if(!lp) return '유동인구 데이터가 없어서 수요는 판단하지 못했어요.';
         const t=L.map(o=>{ const l=S.zlp&&S.zlp[o.id]; return l?l.tot:null; }).filter(v=>v!=null).sort((a,b)=>a-b);
@@ -327,9 +328,9 @@ globalThis.MysbizonParts.analysis = {
 
     // 매출
     const mp=med('per'), diff=Math.round((sel.per-mp)/mp*100);
-    const sRows=[{label:'가게 한 곳당 월매출', value:this.fmt(sel.per/3)+'원', tag:'(추정)'},
-      {label:'서울 중앙값', value:this.fmt(mp/3)+'원', tag:'이 장사 동네들의 중앙값'},
-      {label:'손님이 쓴 돈 (3개월)', value:this.fmt(sel.sales)+'원', tag:''}];
+    const sRows=[{label:'가게 한 곳당 월매출', value:this.won(sel.per/3), tag:'(추정)'},
+      {label:'서울 중앙값', value:this.won(mp/3), tag:'이 장사 동네들의 중앙값'},
+      {label:'손님이 쓴 돈 (3개월)', value:this.won(sel.sales), tag:''}];
     let trend=null;
     if(HI&&HI.ind[S.ind]){
       const series=HI.ind[S.ind];
@@ -349,8 +350,8 @@ globalThis.MysbizonParts.analysis = {
     }
     out.push({key:'sales', title:'매출 · 얼마나 버나요',
       q:'가게 한 곳이 한 달에 얼마 파나요?',
-      big:this.fmt(sel.per/3)+'원',
-      bigLabel:'(추정) · 서울 중앙값 '+this.fmt(mp/3)+'원',
+      big:this.won(sel.per/3),
+      bigLabel:this.t('mv.estMedian',{amt:this.won(mp/3)}),
       verdict:(diff>=10? '서울 중앙값보다 '+diff+'% 높아요.' : (diff<=-10? '서울 중앙값보다 '+Math.abs(diff)+'% 낮아요.' : '서울 중앙값과 비슷해요.')),
       rows:sRows, bars:[], trend:trend,
       note:'한 곳당 매출은 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아니에요.'});
@@ -361,7 +362,7 @@ globalThis.MysbizonParts.analysis = {
       const zs=Object.values(RENT.zones);
       const rr=zs.map(o=>o.rent).sort((a,b)=>a-b);
       const vv=zs.map(o=>o.vacancy).sort((a,b)=>a-b);
-      kRows.push({label:'서울 권역 ㎡당 월 임대료 중앙값', value:rr[Math.floor(rr.length/2)].toFixed(1)+'만원', tag:'서울 평균'});
+      kRows.push({label:'서울 권역 ㎡당 월 임대료 중앙값', value:this.manF(rr[Math.floor(rr.length/2)],1), tag:'서울 평균'});
       kRows.push({label:'서울 권역 빈 상가 비율 중앙값', value:vv[Math.floor(vv.length/2)].toFixed(1)+'%', tag:'서울 평균'});
     }
     kRows.push({label:'권리금 · 인테리어', value:'자료 없음', tag:'공개 통계에 없어요'});
@@ -401,7 +402,7 @@ globalThis.MysbizonParts.analysis = {
         total:all.length,
         mine:mine||null,
         rank:mine? all.slice().sort((a,b)=>b.per-a.per).findIndex(o=>o.name===S.ind)+1 : null,
-        bars:top.map(o=>({label:o.name, value:this.fmt(o.per)+'원',
+        bars:top.map(o=>({label:o.name, value:this.won(o.per),
           bar:bar(o.per/mx*100)+(o.name===S.ind?';background:var(--accent)':';background:var(--ink3)')}))
       };
     })();
@@ -427,7 +428,7 @@ globalThis.MysbizonParts.analysis = {
       tips.push({label:'가장 많은 손님', value:AL[hi], tag:'하루 '+Math.round(lp.age[hi]).toLocaleString()+'명'});
       tips.push({label:'여성 비율', value:fw+'%', tag:fw>=55?'여성 손님이 많아요':(fw<=45?'남성 손님이 많아요':'비슷해요')});
       const perHead=sel.unit;
-      tips.push({label:'추정 객단가', value:Math.round(perHead).toLocaleString()+'원',
+      tips.push({label:'추정 객단가', value:this.wonRaw(Math.round(perHead)),
         tag:'(추정)'});
     }
     if(nb&&nb.bars.length>1) tips.push({label:'같이 잘 되는 장사', value:nb.bars.slice(0,2).map(b=>b.label).join(' · '), tag:'이 자리 매출 상위'});

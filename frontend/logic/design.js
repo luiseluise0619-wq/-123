@@ -118,7 +118,7 @@ globalThis.MysbizonParts.design = {
     const zr=this.state.zoneRent;                    // 상권 단위 실측(있으면 최우선)
     const id=this.state.sel||this.state.zoneId;
     if(zr&&id&&zr[id]&&Number.isFinite(zr[id].rent)){
-      return {value:zr[id].rent.toFixed(1)+'만원', per:'㎡당 월',
+      return {value:this.manF(zr[id].rent,1), per:'㎡당 월',
               note:'서울시 상권분석서비스 환산임대료', exact:true};
     }
     const norm=t=>String(t||'').replace(/\s|·|\(.*?\)/g,'');
@@ -129,11 +129,11 @@ globalThis.MysbizonParts.design = {
       return n && (n===target || target.indexOf(n)>=0);
     });
     if(hit&&Number.isFinite(hit.rent)){
-      return {value:hit.rent.toFixed(1)+'만원', per:'㎡당 월',
+      return {value:this.manF(hit.rent,1), per:'㎡당 월',
               note:hit.nm+' 기준 (한국부동산원)', exact:true};
     }
     if(R.seoul&&Number.isFinite(R.seoul.rent)){
-      return {value:R.seoul.rent.toFixed(1)+'만원', per:'㎡당 월',
+      return {value:this.manF(R.seoul.rent,1), per:'㎡당 월',
               note:'서울 평균 · 이 상권만의 값은 아니에요', exact:false};
     }
     return null;

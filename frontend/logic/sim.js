@@ -220,12 +220,11 @@ globalThis.MysbizonParts.sim = {
       rail:this.rail('simZ',{per:Math.min(3,Math.max(zones.length,1))}),
       picker, hasPicker:picker.length>0 && ids.length<3,
       pickerFull: ids.length>=3,
-      pickerLabel: ids.length>=3? '3곳까지 견줄 수 있어요' : '견줄 곳 더하기',
+      pickerLabel: ids.length>=3? this.t('sim.full') : this.t('sim.addMore'),
       hasVerdict: !!(best && done.length>1),
       verdict: !best? ''
-        : (bestTie? '입력한 조건에서는 이익이 같아요. 숫자를 조금 바꿔 보면 갈립니다.'
-          : '내가 입력한 조건에서는 '+this.zoneLabelOf(best.name)
-            +this.josa(best.name,'ga')+' 가장 유리해요.'),
+        : (bestTie? this.t('sim.tie')
+          : this.tn('sim.verdict',{name:this.zoneLabelOf(best.name)})),
       order:done.slice().sort((a,b)=>calc[b.id].profit-calc[a.id].profit).map((z,i)=>({
         place:(i+1)+'위', name:this.zoneLabelOf(z.name),
         value:this.man(calc[z.id].profit),

@@ -6,16 +6,67 @@ globalThis.MysbizonParts = globalThis.MysbizonParts || {};
 globalThis.MysbizonParts.util = {
   loadData(url){return fetch(url,{signal:AbortSignal.timeout(10000)}).then(r=>{if(!r.ok)throw new Error('Data unavailable');return r;});},
 
+  // 금액 표기는 언어마다 단위가 다르다(§35). 화면마다 따로 만들지 않고 여기만 쓴다.
+  //   한국어  1,000만 / 3.3억          영어  KRW 10.0M / KRW 330M
+  //   중국어  1,000万 / 3.3亿
+  // fmt 는 '원 단위' 값을, man 은 '만원 단위' 값을 받는다.
   fmt(v){ if(v==null||!isFinite(v)) return '—';
+    const L=(this.locale?this.locale():'ko');
+    if(L==='en'){
+      const a=Math.abs(v), s=v<0?'-':'';
+      if(a>=1e9) return s+'KRW '+(a/1e9).toFixed(a>=1e10?0:1)+'B';
+      if(a>=1e6) return s+'KRW '+(a/1e6).toFixed(a>=1e7?0:1)+'M';
+      if(a>=1e3) return s+'KRW '+Math.round(a/1e3).toLocaleString('en')+'K';
+      return s+'KRW '+Math.round(a).toLocaleString('en');
+    }
+    if(L==='zh-CN'){
+      if(v>=1e8) return (v/1e8).toFixed(v>=1e9?0:1)+'亿';
+      return Math.round(v/1e4).toLocaleString('zh-CN')+'万';
+    }
     if(v>=1e8) return (v/1e8).toFixed(v>=1e9?0:1)+'억';
     return Math.round(v/1e4).toLocaleString()+'만'; },
 
   man(v){ if(v==null||!isFinite(v)) return '—';
-    const s=v<0?'−':'', a=Math.abs(v);
+    const L=(this.locale?this.locale():'ko');
+    const a=Math.abs(v);
+    if(L==='en'){
+      const s=v<0?'-':'';
+      if(a>=100) return s+'KRW '+(a/100).toFixed(a>=1000?0:1)+'M';
+      return s+'KRW '+Math.round(a*10000).toLocaleString('en');
+    }
+    if(L==='zh-CN'){
+      const s=v<0?'−':'';
+      if(a>=10000) return s+(a/10000).toFixed(a>=100000?0:1)+'亿韩元';
+      return s+Math.round(a).toLocaleString('zh-CN')+'万韩元';
+    }
+    const s=v<0?'−':'';
     if(a>=10000) return s+(a/10000).toFixed(a>=100000?0:1)+'억원';
     return s+Math.round(a).toLocaleString()+'만원'; },
 
-  qtr(q){ const s=String(q||''); return s.length===5? s.slice(0,4)+'년 '+s.slice(4)+'분기':s; },
+  // fmt/man 은 단위 글자를 안 붙인다. 화면에서 '원'을 덧붙이던 곳들을 위해 아래를 쓴다.
+  // 예전에는 화면 코드가 숫자 뒤에 '원'을 직접 붙였는데, 영어에서는 그러면
+  // 'KRW 10.0M원' 이 되어 버린다. 단위는 이 함수들이 언어에 맞게 붙인다.
+  won(v){ const s=this.fmt(v); if(s==='—') return s;
+    const L=(this.locale?this.locale():'ko');
+    return L==='en'? s : (L==='zh-CN'? s+'韩元' : s+'원'); },
+  wonRaw(v){ if(v==null||!isFinite(v)) return '—';
+    const L=(this.locale?this.locale():'ko');
+    const n=Math.round(v).toLocaleString(L==='ko'?undefined:L);
+    return L==='en'? 'KRW '+n : (L==='zh-CN'? n+'韩元' : n+'원'); },
+  // 만원 단위 값을 소수점까지 남겨 적는다(㎡당 임대료 15.2만원 처럼)
+  manF(v,d){ if(v==null||!isFinite(v)) return '—';
+    const L=(this.locale?this.locale():'ko');
+    const n=Number(v).toFixed(d==null?1:d);
+    if(L==='en') return 'KRW '+Number(n*10000).toLocaleString('en');
+    if(L==='zh-CN') return n+'万韩元';
+    return n+'만원'; },
+
+  qtr(q){ const s=String(q||''); if(s.length!==5) return s;
+    const y=s.slice(0,4), q4=s.slice(4);
+    const L=(this.locale?this.locale():'ko');
+    if(L==='en') return 'Q'+q4+' '+y;
+    if(L==='zh-CN') return y+'年'+q4+'季度';
+    return y+'년 '+q4+'분기'; },
 
   bound(value,min,max,fallback){const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback;},
 
@@ -89,10 +140,25 @@ globalThis.MysbizonParts.util = {
   // Lucide 아이콘 (lucide-icons/lucide@main, ISC). 텍스트 글리프(✕, ›) 대신 쓴다.
   zoneLabelOf(nm){
     const m=String(nm||'').match(/^(.+?)\(([^()]+)\)$/);
-    if(!m) return nm;
-    const base=m[1].trim(), inner=m[2].trim();
-    if(base.indexOf(inner)>=0 || inner.indexOf(base)>=0) return base;
-    return base+' · '+inner;
+    let label;
+    if(!m) label=nm;
+    else{
+      const base=m[1].trim(), inner=m[2].trim();
+      label=(base.indexOf(inner)>=0 || inner.indexOf(base)>=0)? base : base+' · '+inner;
+    }
+    // 상권 이름은 고유명사다. 뜻을 옮기지 않는다.
+    //   영어  국어의 로마자 표기법으로 소리를 옮긴다(logic/roman.js).
+    //   중국어 자치구·주요 상권처럼 한자 표기가 표준으로 굳은 것만 사전(@phrases)에 두고,
+    //         나머지 1,564곳은 한글 그대로 둔다 — 한자를 추측해 붙이면 지어낸 값이 된다.
+    return this.placeName(label);
+  },
+
+  // 자치구·행정동·상권 이름 공통
+  placeName(nm){
+    if(!nm) return nm;
+    const s=String(nm);
+    if(this.locale&&this.locale()==='en') return this.romanizeName(s);
+    return this.tr? this.tr(s) : s;
   },
 
   // 통계 코드명을 사람이 쓰는 말로. 조회는 원래 이름(raw)으로 한다.
@@ -115,11 +181,13 @@ globalThis.MysbizonParts.util = {
       '인테리어':'인테리어 가게','시계':'시계 가게','예술품':'화방','고인용품':'장례용품점',
       '전자상거래업':'온라인 판매','여관':'모텔','섬유제품 수선':'수선집','가정용세탁소':'세탁소'
     };
-    if(M[raw]) return M[raw];
+    // 업종 이름은 보통명사라 번역 대상이다. 사전(@phrases)을 거쳐 내보낸다.
+    if(M[raw]) return this.tr(M[raw]);
     // 남은 코드명은 군더더기만 덜어낸다
-    return String(raw||'')
+    const ko=String(raw||'')
       .replace(/전문점$/,'집').replace(/음식점$/,'당').replace(/판매$/,' 가게')
       .replace(/-/g,' ').trim();
+    return this.tr(ko);
   },
 
   // 받침에 따라 조사를 고른다. 이/가 · 은/는 · 라면/이라면
@@ -138,6 +206,8 @@ globalThis.MysbizonParts.util = {
     const S=this.state;
     const own=(S.zgu&&S.zgu[id])||'';
     const b=S.zbd&&S.zbd[id];
-    return (own&&b&&b[1])? own+'·'+b[1]+' 경계' : own;
+    return (own&&b&&b[1])
+      ? this.t('gu.border',{a:this.placeName(own), b:this.placeName(b[1])})
+      : this.placeName(own);
   }
 };

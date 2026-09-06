@@ -10,7 +10,7 @@ globalThis.MysbizonParts.chat = {
     if(!t) return null;
     if(!r) return {text:'아직 데이터를 불러오지 못했습니다. 잠시 후 다시 물어봐 주세요.'};
     const L=r.list, top=L[0];
-    const monthly=v=>this.fmt(v/3)+'원';
+    const monthly=v=>this.won(v/3);
     if(/어디|추천|자리|후보/.test(t)) return {
       text:this.indName(S.ind)+this.josa(this.indName(S.ind),'ramyeon')+' '+top.name+this.josa(top.name,'eul')+' 먼저 보시면 좋아요.',
       facts:[{label:'기회점수',value:Math.round(top.score)+'점'},
@@ -44,7 +44,7 @@ globalThis.MysbizonParts.chat = {
         text:this.indName(S.ind)+'에 돈을 쓰는 사람은 '+AL[hi]+'가 가장 많아요.',
         facts:[{label:AL[hi],value:I.age[hi].toFixed(1)+'%'},
                {label:'여성',value:I.gender[1]+'%'},
-               {label:'손님 1명이 쓰는 돈',value:I.unit.toLocaleString()+'원'}],
+               {label:'손님 1명이 쓰는 돈',value:this.wonRaw(I.unit)}],
         source:'서울 전체 '+this.indName(S.ind)+' 카드 결제 기준이에요. 동네별 성별·연령은 공개되지 않아요.'
       };
     }

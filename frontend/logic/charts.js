@@ -38,15 +38,32 @@ globalThis.MysbizonParts.charts = {
   chartTick(v, unit){
     if (v == null || !isFinite(v)) return '';
     const a = Math.abs(v);
+    const L = this.locale ? this.locale() : 'ko';
     if (unit === '원') {
-      // '40000억'은 읽는 데 시간이 걸린다 — 1조를 넘으면 조 단위로 적는다
+      // 축 눈금도 언어를 따른다. '40000억'은 읽는 데 시간이 걸려 큰 단위로 접는다.
+      if (L === 'en') {
+        if (a >= 1e9) return (v / 1e9).toFixed(a >= 1e10 ? 0 : 1) + 'B';
+        if (a >= 1e6) return (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M';
+        if (a >= 1e3) return Math.round(v / 1e3).toLocaleString('en') + 'K';
+        return Math.round(v).toLocaleString('en');
+      }
+      if (L === 'zh-CN') {
+        if (a >= 1e12) return (v / 1e12).toFixed(a >= 1e13 ? 0 : 1) + '万亿';
+        if (a >= 1e8) return (v / 1e8).toFixed(a >= 1e9 ? 0 : 1) + '亿';
+        if (a >= 1e4) return Math.round(v / 1e4).toLocaleString('zh-CN') + '万';
+        return Math.round(v).toLocaleString('zh-CN');
+      }
       if (a >= 1e12) return (v / 1e12).toFixed(a >= 1e13 ? 0 : 1) + '조';
       if (a >= 1e8) return (v / 1e8).toFixed(a >= 1e9 ? 0 : 1) + '억';
       if (a >= 1e4) return Math.round(v / 1e4).toLocaleString() + '만';
       return Math.round(v).toLocaleString();
     }
-    if (a >= 1e4) return Math.round(v / 1e4).toLocaleString() + '만';
-    return (Math.round(v * 10) / 10).toLocaleString();
+    if (a >= 1e4) {
+      const n = Math.round(v / 1e4);
+      if (L === 'en') return n.toLocaleString('en') + '0k';
+      return n.toLocaleString(L === 'ko' ? undefined : L) + (L === 'zh-CN' ? '万' : '만');
+    }
+    return (Math.round(v * 10) / 10).toLocaleString(L === 'ko' ? undefined : L);
   },
 
   // spec → Chart.js 설정
@@ -145,7 +162,7 @@ globalThis.MysbizonParts.charts = {
               label: (ctx) => {
                 const v = ctx.parsed[horizontal ? 'x' : 'y'] ?? ctx.parsed;
                 const n = (unit === '원')
-                  ? this.fmt(v) + '원'
+                  ? this.won(v)
                   : (Math.round(v * 10) / 10).toLocaleString() + unit;
                 return (ctx.dataset.label ? ctx.dataset.label + ' · ' : '') + n;
               }

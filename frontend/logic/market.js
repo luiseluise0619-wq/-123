@@ -179,15 +179,13 @@ globalThis.MysbizonParts.market.marketView = function(){
     selKey, selLabel:sel.label, selQuestion:sel.q, selSrc:sel.src,
     ready:!!sel.ready,
     waiting:!sel.ready,
-    waitTitle:sel.label+' — 데이터 준비 중',
-    waitText:sel.src+' 자료를 연결하면 여기에 그래프가 나타나요. '
-      +'아직 연결되지 않아서 지금은 값을 보여드리지 않아요 — 없는 숫자를 지어내지 않기 위해서예요.',
+    waitTitle:this.t('mk.waitTitle',{name:sel.label}),
+    waitText:this.t('mk.waitText',{src:sel.src}),
     empty:watch.length===0,
     emptyText:'관심지표를 하나도 담지 않으셨어요. 아래 [+ 관심지표 추가]에서 보고 싶은 걸 골라 보세요.',
     // 갈래를 골랐는데 그 갈래에 담아 둔 게 없을 때 — 빈 줄만 남기지 않는다
     catEmpty: watch.length>0 && chips.length===0,
-    catEmptyText:'‘'+(CATS.find(c=>c.k===cat)||{label:''}).label+'’에 담아 둔 지표가 없어요. '
-      +'[+ 관심지표 추가]에서 담거나, 위에서 ‘전체’를 눌러 보세요.'
+    catEmptyText:this.t('mk.catEmpty',{cat:(CATS.find(c=>c.k===cat)||{label:''}).label})
   };
   return out;
 };

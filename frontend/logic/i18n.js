@@ -36,7 +36,9 @@ globalThis.MysbizonParts.i18n = {
       if(l.k==='ko') return;
       fetch('./locales/'+l.k+'.json')
         .then(r=>r.ok?r.json():null)
-        .then(j=>{ if(j){ this._dict[l.k]=j; this.forceUpdate(); } })
+        .then(j=>{ if(j){ this._dict[l.k]=j;
+          // 사전이 도착하기 전에 그린 값들이 캐시에 '번역 안 됨'으로 남아 있다 — 비운다
+          this._trCache={}; this.forceUpdate(); } })
         .catch(()=>{});
     });
     let saved=null;
@@ -49,6 +51,7 @@ globalThis.MysbizonParts.i18n = {
   },
 
   setLocale(k){
+    this._trCache={};
     this.setState({locale:k});
     try{
       const cur=JSON.parse(localStorage.getItem('mysbizon.theme')||'{}');
@@ -159,6 +162,65 @@ globalThis.MysbizonParts.i18n = {
       'settings.primary':'포인트 색','settings.background':'배경색',
       'settings.i18nNote':'상권 이름·업종 이름과 자료에서 만들어지는 문장은 아직 한국어예요.',
 
+
+      // 이름·숫자가 들어가는 문장은 자리표시자를 둔 키로 관리한다(조사는 tn 이 고른다)
+      "mk.waitTitle": "{name} — 데이터 준비 중",
+      "mk.waitText": "{src} 자료를 연결하면 여기에 그래프가 나타나요. 아직 연결되지 않아서 지금은 값을 보여드리지 않아요 — 없는 숫자를 지어내지 않기 위해서예요.",
+      "mk.catEmpty": "‘{cat}’에 담아 둔 지표가 없어요. [+ 관심지표 추가]에서 담거나, 위에서 ‘전체’를 눌러 보세요.",
+      "sido.wait": "‘{region}’ 자료는 아직 없어요. 지금 쓰는 자료는 서울시 상권분석서비스라 서울 상권 1,564곳만 담고 있어요. 전국으로 넓히려면 소상공인시장진흥공단 상권정보로 갈아타야 하는데, 상권 구획과 업종 코드가 달라 맞춰 붙이는 작업이 필요해요.",
+      "sido.waitFind": "현재 {region} 지역의 상권·임대료 데이터는 준비 중이에요. 지금 쓰는 자료는 서울시 상권분석서비스라 서울 상권 1,564곳만 담고 있어요. 전국으로 넓히려면 소상공인시장진흥공단 상권정보로 갈아타야 하는데, 상권 구획과 업종 코드가 달라 맞춰 붙이는 작업이 필요해요.",
+      "zc.lead": "{ind}은(는) {gu}가 가게 한 곳당 가장 많이 팔아요.",
+      "cmp.verdictClear": "{name}이(가) {preset} 기준에서 종합 1위예요.",
+      "cmp.verdictClose": "{name}이(가) 근소하게 앞서요. {preset} 기준에서 1·2위 차이가 크지 않아요.",
+      "cmp.honesty": "같은 기간({q}) 같은 업종({ind})으로만 비교해요. 카드와 차트의 색은 상권을 구분하는 색이지 좋고 나쁨이 아니에요. 순위는 지금 고른 기준에서의 순위이고, 기준을 바꾸면 달라져요.",
+      "sim.verdict": "내가 입력한 조건에서는 {name}이(가) 가장 유리해요.",
+      "sim.tie": "입력한 조건에서는 이익이 같아요. 숫자를 조금 바꿔 보면 갈립니다.",
+      "mv.eyebrow": "{ind} · {zone}",
+      "mv.guWhere": "{gu} 안에서 여기는 어디쯤인가요?",
+      "mv.guPop": "{gu} 안에서 사람이 가장 많은 곳은?",
+      "mv.guComp": "{gu} 안에서 경쟁이 센 곳은?",
+      "mv.guSpend": "{gu} 사람들은 어디에 돈을 쓰나요?",
+      "mv.popNote": "유동인구는 {dong} 행정동 값이라 상권보다 넓어요. 시간대·요일 데이터는 아직 없어요.",
+      "fc.lead": "{gu}에서 {ind}이(가) 가장 잘 되는 곳은 {top}이에요.",
+      "fc.note": "{gu} 안에서 자료가 있는 상권 {n}곳을 가게 한 곳당 매출로 줄 세웠어요.",
+      "chat.hello": "안녕하세요. {ind} 기준으로 답해 드립니다. 궁금한 걸 물어보시거나 아래 버튼을 눌러 주세요.",
+      "rg.share": "{ind}은(는) 이 동네에서 손님이 쓴 돈의 {pct}%를 차지해요.",
+
+      "gu.border": "{a}·{b} 경계",
+      "rent.basis": "{name} 기준",
+      "rent.region": "권역 참고값 · 이 상권 값은 아니에요",
+      "pr.rentUnit": "㎡당 월 임대료",
+      "pr.vacancy": "빈 상가 비율",
+      "pr.vs2y": "2년 전 대비",
+      "pr.trendRent": "{name} 임대료 추이",
+      "pr.trendVac": "{name} 공실률 추이",
+      "pr.cmpRent": "상권별 임대료 비교",
+      "pr.cmpVac": "상권별 공실률 비교",
+      "pr.seoulRent": "서울 전체 임대료 추이",
+      "pr.seoulVac": "서울 전체 공실률 추이",
+      "diag.over": "예상 매출이 본전선을 {amt} 넘어요",
+      "diag.left": "월 {amt} 남습니다",
+      "diag.short": "월 {amt} 모자랍니다",
+      "diag.leftLabel": "남는 돈 {amt}",
+      "diag.cond": "{area}평 · 임대료 {rent} · 직원 {n}명",
+      "diag.fixed": "고정비 {amt}을 못 덮습니다",
+      "mv.title": "{zone} × {ind}",
+      "mv.head": "{ind} · {zone}",
+      "mv.stamp": "{ind} · {zone} · {q}",
+      "find.rank": "{ind} · {n}곳 중 {r}위",
+      "find.ok": "{zone}은(는) {ind} 후보로 괜찮아요.",
+      "rentPer": "{amt}/월",
+
+      "mv.popLabel": "{dong} 행정동 하루 유동인구",
+      "mv.noPop": "유동인구 자료가 없어요",
+      "mv.estMedian": "(추정) · 서울 중앙값 {amt}",
+      "sim.full": "3곳까지 견줄 수 있어요",
+      "sim.addMore": "견줄 곳 더하기",
+      "fc.none": "{gu}에는 {ind} 자료가 있는 상권이 없어요.",
+      "fc.pickOther": "다른 자치구를 골라 보세요.",
+
+      "mv.question": "{zone}에서 {ind}을(를) 시작해도 괜찮을까요?",
+
       'chart.salesTrend':'이 장사, 시장이 크고 있나요?',
       'chart.age':'어떤 연령대가 가장 많이 오나요?',
       'chart.rentTrend':'임대료는 오르고 있나요?',
@@ -166,4 +228,129 @@ globalThis.MysbizonParts.i18n = {
       'chart.compare':'어디가 더 많이 파나요?'
     };
   }
+};
+
+// ── 본문 문장 번역 (translation memory) ─────────────────────────
+//
+// 왜 키가 아니라 한국어 원문으로 찾나
+//   UI 뼈대(메뉴·버튼·설정)는 키로 관리한다 — 위 KO_BASE.
+//   그런데 화면 문장은 대부분 자료에서 만들어진다:
+//     '서울 중앙값보다 114% 높아요' / '중앙값보다 1,476곳 많아요'
+//   이런 문장이 1,200개가 넘고, 숫자만 다른 같은 문장이 수없이 나온다.
+//   그래서 '한국어 원문 → 번역' 표를 두고, 숫자는 자리표시자로 일반화해 찾는다.
+//   locales/*.json 의 "@phrases" 가 그 표다.
+//
+// 무엇을 건드리지 않나
+//   표에 없는 문장은 한국어 그대로 둔다. 억지로 바꾸지 않는다.
+//   상권 이름·자치구 이름 같은 고유명사는 표에 넣지 않는다.
+//   영어에서는 상권 이름만 국어의 로마자 표기법으로 옮긴다(zoneLabelOf).
+//
+// 빠진 번역을 조용히 넘기지 않으려고
+//   tests/i18n.test.js 가 실제 화면 값을 훑어 '번역 안 된 한글'을 세고,
+//   기준치를 넘으면 실패한다. 문구를 고치고 번역을 안 넣으면 테스트가 잡는다.
+globalThis.MysbizonParts.i18n.trTable = function(){
+  const L=this.locale();
+  if(L==='ko') return null;
+  const d=this._dict&&this._dict[L];
+  return (d&&d['@phrases'])||null;
+};
+
+// 숫자를 자리표시자로 바꾼 꼴. '중앙값보다 1,476곳 많아요' → '중앙값보다 {0}곳 많아요'
+globalThis.MysbizonParts.i18n.trNorm = function(s){
+  const nums=[];
+  const key=String(s).replace(/-?\d[\d,]*(\.\d+)?/g, m=>{ nums.push(m); return '{'+(nums.length-1)+'}'; });
+  return {key:key, nums:nums};
+};
+
+globalThis.MysbizonParts.i18n.tr = function(s){
+  if(typeof s!=='string' || !s) return s;
+  if(!/[가-힣]/.test(s)) return s;                 // 한글이 없으면 볼 것도 없다
+  const table=this.trTable();
+  if(!table) return s;
+  this._trCache = this._trCache || {};
+  const ck=this.locale()+' '+s;
+  if(this._trCache[ck]!==undefined) return this._trCache[ck];
+  let out=s;
+  if(table[s]!=null) out=table[s];
+  else{
+    const n=this.trNorm(s);
+    const hit=table[n.key];
+    if(hit!=null) out=n.nums.reduce(function(acc,v,i){ return acc.split('{'+i+'}').join(v); }, hit);
+  }
+  this._trCache[ck]=out;
+  return out;
+};
+
+// 화면에 나가는 값 전체를 한 번 훑어 번역한다.
+// 스타일 문자열에는 한글이 없어 그대로 지나간다 — 따로 걸러낼 필요가 없다.
+globalThis.MysbizonParts.i18n.trDeep = function(v, depth){
+  if(this.locale()==='ko') return v;
+  const d=depth||0;
+  if(d>8) return v;
+  if(typeof v==='string') return this.tr(v);
+  if(Array.isArray(v)) return v.map(x=>this.trDeep(x,d+1));
+  if(v && typeof v==='object' && v.constructor===Object){
+    const out={};
+    for(const k in v) out[k]=this.trDeep(v[k],d+1);
+    return out;
+  }
+  return v;                                        // 함수·숫자·null 은 그대로
+};
+
+// 조사가 들어가는 문장용. 사전에는 '{ind}은(는) {gu}가 …' 처럼 두 형태를 다 적어 두고,
+// 채워 넣은 뒤 앞 글자 받침을 보고 하나를 고른다.
+// 영어·중국어 문장에는 조사가 없으니 이 단계가 아무 일도 하지 않는다.
+globalThis.MysbizonParts.i18n.tn = function(key, vars){
+  const s=this.t(key, vars);
+  if(this.locale()!=='ko') return s;
+  return String(s).replace(/(.)(은\(는\)|는\(은\)|이\(가\)|가\(이\)|을\(를\)|를\(을\))/g,
+    (m, prev, pair)=>{
+      const c=prev.charCodeAt(0)-0xAC00;
+      const bat=(c>=0&&c<11172)? c%28!==0 : /[013678lmnr]$/i.test(prev);
+      if(pair.indexOf('은')===0||pair.indexOf('는')===0) return prev+(bat?'은':'는');
+      if(pair.indexOf('이')===0||pair.indexOf('가')===0) return prev+(bat?'이':'가');
+      return prev+(bat?'을':'를');
+    });
+};
+
+// 화면 조각(screens/*.html)에 그대로 적힌 한국어까지 옮긴다.
+//
+// 왜 DOM 을 훑나
+//   문구의 절반은 화면(view model)에서 오지만, 나머지 절반은 마크업에 그대로 적혀 있다.
+//     <div class="u-h">비교할 상권 검색</div>
+//   이걸 전부 바인딩으로 바꾸면 수백 군데를 손대야 하고, 한 곳만 빠뜨려도 조용히 한국어로 남는다.
+//   그래서 그린 뒤에 한 번 훑어 같은 표(@phrases)로 바꾼다.
+//   React 는 자기 가상 DOM 을 기준으로 그리므로, 우리가 그린 뒤 글자를 바꿔도 충돌하지 않는다.
+//   다시 그릴 때마다 한 번 더 훑을 뿐이고, 이미 옮긴 글자에는 한글이 없어 그냥 지나간다.
+//
+// 한국어일 때는 아무 일도 하지 않는다.
+globalThis.MysbizonParts.i18n.trDom = function(){
+  if(typeof document==='undefined') return;
+  if(this.locale()==='ko') return;
+  if(!this.trTable()) return;                       // 사전이 아직 안 왔으면 다음 렌더에
+  const SKIP={SCRIPT:1, STYLE:1, CANVAS:1, SVG:1, PATH:1};
+  const walk=(node)=>{
+    for(let n=node.firstChild; n; n=n.nextSibling){
+      if(n.nodeType===3){
+        const t=n.nodeValue;
+        if(t && /[가-힣]/.test(t)){
+          const trimmed=t.trim();
+          const out=this.tr(trimmed);
+          if(out!==trimmed) n.nodeValue=t.replace(trimmed,out);
+        }
+        continue;
+      }
+      if(n.nodeType!==1) continue;
+      if(SKIP[n.tagName]) continue;
+      for(const a of ['placeholder','aria-label','title']){
+        const v=n.getAttribute && n.getAttribute(a);
+        if(v && /[가-힣]/.test(v)){
+          const out=this.tr(v.trim());
+          if(out!==v.trim()) n.setAttribute(a,out);
+        }
+      }
+      walk(n);
+    }
+  };
+  try{ walk(document.body); }catch(e){}
 };
