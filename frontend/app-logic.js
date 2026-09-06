@@ -181,6 +181,114 @@ class Component extends DCLogic {
     return b==='mobile'?mobile:(b==='tablet'?tablet:desktop);
   }
 
+  // ── 디자인 시스템 ────────────────────────────────────────────────
+  // 카드·제목·숫자 스타일을 한 곳에서만 정한다. 화면마다 조금씩 다른 값을
+  // 쓰다 보니 같은 정보가 화면마다 다르게 보였다.
+  ds(kind){
+    const CARD='background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card);';
+    const M={
+      card:      CARD+'border-radius:var(--r-md);padding:20px',
+      cardLg:    CARD+'border-radius:var(--r-lg);padding:'+this.L('22px','26px','28px'),
+      // 중요한 카드는 회색 배경이 아니라 민트 테두리로 구분한다
+      cardHi:    'background:var(--accent-3);border:1px solid var(--accent-2);'
+                 +'border-radius:var(--r-lg);padding:'+this.L('22px','26px','28px'),
+      h1:        'font-size:'+this.L('27px','32px','36px')+';font-weight:700;letter-spacing:-.03em;line-height:1.18;margin:0;text-wrap:pretty',
+      h2:        'font-size:'+this.L('20px','22px','24px')+';font-weight:700;letter-spacing:-.02em;line-height:1.3;margin:0',
+      h3:        'font-size:17px;font-weight:700;letter-spacing:-.01em;margin:0',
+      num:       'font-size:'+this.L('30px','34px','38px')+';font-weight:700;letter-spacing:-.03em;'
+                 +'line-height:1.08;font-variant-numeric:tabular-nums',
+      numSm:     'font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15',
+      body:      'font-size:'+this.L('15px','15.5px','16px')+';line-height:1.6;color:var(--ink2);margin:0;text-wrap:pretty',
+      sub:       'font-size:13.5px;line-height:1.55;color:var(--ink3);margin:0;text-wrap:pretty',
+      // 화면마다 강한 버튼은 하나뿐이다
+      cta:       'font-size:16px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;'
+                 +'border-radius:var(--r-sm);padding:0 26px;height:52px;cursor:pointer;'
+                 +'box-shadow:0 6px 16px -8px rgba(8,127,107,.6);transition:filter .16s,transform .18s',
+      ctaGhost:  'font-size:15px;font-weight:600;color:var(--accent);background:var(--accent-3);border:none;'
+                 +'border-radius:var(--r-sm);padding:0 20px;height:48px;cursor:pointer;transition:filter .16s',
+      input:     'width:100%;font-size:16px;font-weight:500;color:var(--ink);background:var(--surface);'
+                 +'border:1px solid transparent;border-radius:var(--r-sm);padding:0 16px;height:52px;outline:none'
+    };
+    return M[kind]||'';
+  }
+
+  // ── 임대료 ────────────────────────────────────────────────────
+  // 상권 1,564곳 단위 임대료는 아직 없다. 있는 건 한국부동산원 임대동향조사
+  // (서울 63개 상권 · 권역 · 서울 전체)뿐이라, 이름이 정확히 맞는 상권만
+  // 그 값을 쓰고 나머지는 서울 평균을 '이 상권 값이 아니다'라고 밝혀 보여준다.
+  // 지어내지 않되 '데이터 없음'으로 비워 두지도 않는다.
+  // ※ 상권 단위 정확도는 서울시 상권분석서비스의 환산임대료가 들어와야 얻어진다
+  //   (backend/collect_zone_rent.py — 승인 대기).
+  rentRef(zoneName){
+    const R=this.state.rentStats;
+    if(!R||!R.zones) return null;
+    const zr=this.state.zoneRent;                    // 상권 단위 실측(있으면 최우선)
+    const id=this.state.sel||this.state.zoneId;
+    if(zr&&id&&zr[id]&&Number.isFinite(zr[id].rent)){
+      return {value:zr[id].rent.toFixed(1)+'만원', per:'㎡당 월',
+              note:'서울시 상권분석서비스 환산임대료', exact:true};
+    }
+    const norm=t=>String(t||'').replace(/\s|·|\(.*?\)/g,'');
+    const target=norm(zoneName);
+    const list=Object.values(R.zones);
+    const hit=target && list.find(z=>{
+      const n=norm(z.nm);
+      return n && (n===target || target.indexOf(n)>=0);
+    });
+    if(hit&&Number.isFinite(hit.rent)){
+      return {value:hit.rent.toFixed(1)+'만원', per:'㎡당 월',
+              note:hit.nm+' 기준 (한국부동산원)', exact:true};
+    }
+    if(R.seoul&&Number.isFinite(R.seoul.rent)){
+      return {value:R.seoul.rent.toFixed(1)+'만원', per:'㎡당 월',
+              note:'서울 평균 · 이 상권만의 값은 아니에요', exact:false};
+    }
+    return null;
+  }
+
+  // 숫자 하나를 '지표 → 값 → 의미' 3단으로 만든다.
+  // tone 은 부호가 아니라 '사장님에게 좋은지'로 정한다 —
+  // 경쟁 점포가 30% 많은 건 + 지만 좋은 값이 아니다.
+  mx(label, value, meaning, tone){
+    const C={good:'var(--good)', warn:'var(--warn)', bad:'var(--err)', flat:'var(--ink3)'};
+    return {
+      label:label, value:value, meaning:meaning||'', hasMeaning:!!meaning,
+      labelStyle:'font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis',
+      valueStyle:'font-size:'+this.L('22px','24px','26px')+';font-weight:700;letter-spacing:-.02em;'
+        +'font-variant-numeric:tabular-nums;line-height:1.15;margin-top:6px;'
+        +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis',
+      meaningStyle:'font-size:12.5px;font-weight:600;line-height:1.45;margin-top:6px;text-wrap:pretty;'
+        +'color:'+(C[tone]||C.flat)
+    };
+  }
+
+  // 매출처럼 한쪽으로 크게 쏠린 값은 '중앙값 대비 1107% 많아요'가 나온다.
+  // 숫자는 맞지만 사람이 못 읽는다. 이런 지표는 백분위로 말한다.
+  pctRank(v, all, moreIsBetter){
+    const a=all.filter(x=>isFinite(x)).sort((x,y)=>x-y);
+    if(!a.length||!isFinite(v)) return {text:'', tone:'flat'};
+    const below=a.filter(x=>x<v).length;
+    const p=Math.round(below/a.length*100);          // 0=최하위, 100=최상위
+    const top=moreIsBetter? (100-p) : p;             // '상위 N%'
+    const shown=Math.max(top,1);
+    const good=moreIsBetter? p>=60 : p<=40;
+    const mid=p>=35&&p<=65;
+    return {text:'서울 상권 중 상위 '+shown+'%', tone:mid?'flat':(good?'good':'warn')};
+  }
+
+  // 서울 중앙값과 견준 한 줄. good 이 true 면 '많을수록 좋은' 지표다.
+  vs(v, med, unit, opt){
+    const o=opt||{};
+    if(v==null||med==null||!isFinite(v)||!isFinite(med)||med===0) return {text:'', tone:'flat'};
+    const d=Math.round((v-med)/med*100);
+    if(Math.abs(d)<5) return {text:'서울 평균과 비슷해요', tone:'flat'};
+    const more=d>0;
+    const goodDir=o.moreIsBetter!==false;      // 기본은 '많을수록 좋다'
+    const tone=(more===goodDir)?'good':(o.badIsRed?'bad':'warn');
+    const word=o.moreWord||'많아요', less=o.lessWord||'적어요';
+    return {text:'서울 평균보다 '+Math.abs(d)+'% '+(more?word:less), tone:tone, diff:d};
+  }
+
   componentDidMount(){
     try{const raw=sessionStorage.getItem('mysbizon.return');sessionStorage.removeItem('mysbizon.return');if(raw){const saved=JSON.parse(raw),restore={screen:'report'};for(const k of ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen']){if(saved[k]===null||typeof saved[k]==='string'||typeof saved[k]==='number')restore[k]=saved[k];}if(Array.isArray(saved.picks))restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);this.setState(restore);}}catch{}
 
@@ -231,10 +339,11 @@ class Component extends DCLogic {
       this.loadData('data/v3/zone_border.json').then(r=>r.json()).then(d=>d.border).catch(()=>({})),
       this.loadData('data/v3/seoul_map.json').then(r=>r.json()).catch(()=>null),
       this.loadData('data/v3/zone_livepop.json').then(r=>r.json()).then(d=>d.zone).catch(()=>({})),
+      this.loadData('zone_rent.json').then(r=>r.json()).then(d=>(d&&d.available!==false&&d.zones)||null).catch(()=>null),
       this.loadData('data/v3/rent.json').then(r=>r.json()).catch(()=>null),
       this.loadData('data/v3/sales_history.json').then(r=>r.json()).catch(()=>null),
       this.loadData('data/v3/income.json').then(r=>r.json()).catch(()=>null)
-    ]).then(([zi,sbi,sti,zgu,zbd,smap,zlp,rent,hist,income])=>this.setState({zi,sbi,sti,zgu,zbd,smap,zlp:Object.fromEntries(Object.entries(zlp||{}).filter(([,v])=>v&&Number.isFinite(v.tot)&&v.tot>0&&Array.isArray(v.age)&&v.age.length===6&&v.age.every(Number.isFinite))),rentStats:rent,salesHistory:hist,income}))
+    ]).then(([zi,sbi,sti,zgu,zbd,smap,zlp,zoneRent,rent,hist,income])=>this.setState({zi,sbi,sti,zgu,zbd,smap,zoneRent,zlp:Object.fromEntries(Object.entries(zlp||{}).filter(([,v])=>v&&Number.isFinite(v.tot)&&v.tot>0&&Array.isArray(v.age)&&v.age.length===6&&v.age.every(Number.isFinite))),rentStats:rent,salesHistory:hist,income}))
       .catch(()=>this.setState({err:'분석 자료를 불러오지 못했어요. 연결을 확인한 뒤 다시 시도해 주세요.'}));
     try{ const r=JSON.parse(localStorage.getItem('mysbizon.recentZones')||'[]');
       if(Array.isArray(r)&&r.length) this.setState({recent:r}); }catch(e){}
@@ -748,12 +857,13 @@ class Component extends DCLogic {
       pick:()=>{ const has=ON.indexOf(cat)>=0;
         const next=has? ON.filter(x=>x!==cat) : [...ON, cat];
         this.setState({prOn: next.length? next : ON, prCat:cat, prPick:has?S.prPick:null}); },
-      chipStyle:'display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;'
-        +'font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;'
-        +'transition:background .14s,color .14s,box-shadow .14s;'
+      // 세로 메뉴 한 줄. 켜 둔 항목은 민트로 표시한다.
+      chipStyle:'display:block;padding:12px 14px;border-radius:var(--r-sm);'
+        +'font-size:14.5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+        +'transition:background .14s,color .14s;'
         +(ON.indexOf(cat)>=0
-          ? 'background:var(--accent-3);color:var(--accent);font-weight:600'
-          : 'background:var(--surface);color:var(--ink2)'),
+          ? 'background:var(--accent-3);color:var(--accent);font-weight:700'
+          : 'color:var(--ink2)'),
       cardStyle:'display:flex;flex-direction:column;padding:22px 20px;border-radius:18px;'
         +'background:var(--bg);box-shadow:0 0 0 1px var(--line)',
       whenStyle:'flex:none;align-self:flex-start;font-size:10.5px;font-weight:600;letter-spacing:.02em;'
@@ -933,13 +1043,13 @@ class Component extends DCLogic {
     if(lp){
       const mxA=Math.max(...lp.age,1);
       lp.age.forEach((v,i)=>dBars.push({label:AL[i], value:Math.round(v).toLocaleString()+'명', bar:bar(v/mxA*100)}));
-      dRows.push({label:'추정 객단가', value:Math.round(sel.unit).toLocaleString()+'원', tag:'원자료 · 결제 1건당'});
-      dRows.push({label:'여성 / 남성', value:Math.round(lp.f/lp.tot*100)+'% / '+Math.round(lp.m/lp.tot*100)+'%', tag:'공공 집계'});
+      dRows.push({label:'추정 객단가', value:Math.round(sel.unit).toLocaleString()+'원', tag:'(추정)'});
+      dRows.push({label:'여성 / 남성', value:Math.round(lp.f/lp.tot*100)+'% / '+Math.round(lp.m/lp.tot*100)+'%', tag:''});
     }
     out.push({key:'demand', title:'수요 · 누가 오나요',
       q:'하루에 사람이 얼마나 오나요?',
       big: lp? Math.round(lp.tot).toLocaleString()+'명' : '데이터 없음',
-      bigLabel: lp? lp.dong+' 행정동 하루 유동인구 · 공공 집계' : '유동인구 데이터가 없어요',
+      bigLabel: lp? lp.dong+' 행정동 하루 유동인구' : '유동인구 자료가 없어요',
       verdict:(()=>{
         if(!lp) return '유동인구 데이터가 없어서 수요는 판단하지 못했어요.';
         const t=L.map(o=>{ const l=S.zlp&&S.zlp[o.id]; return l?l.tot:null; }).filter(v=>v!=null).sort((a,b)=>a-b);
@@ -950,7 +1060,7 @@ class Component extends DCLogic {
       note: lp? '유동인구는 '+lp.dong+' 행정동 값이라 상권보다 넓어요. 시간대·요일 데이터는 아직 없어요.' : ''});
 
     // 경쟁
-    const cRows=[{label:'같은 장사 수', value:sel.stores.toLocaleString()+'곳', tag:'공공 집계'},
+    const cRows=[{label:'같은 장사 수', value:sel.stores.toLocaleString()+'곳', tag:''},
       {label:'서울 중앙값', value:Math.round(med('stores')).toLocaleString()+'곳', tag:'이 장사 동네들의 중앙값'}];
     let satWord='';
     if(lp){
@@ -958,7 +1068,7 @@ class Component extends DCLogic {
       const sats=L.map(o=>{ const l=S.zlp&&S.zlp[o.id]; return l&&l.tot?o.stores/(l.tot/10000):null; })
         .filter(v=>v!=null).sort((a,b)=>a-b);
       const sm=sats[Math.floor(sats.length/2)];
-      cRows.push({label:'사람 1만 명당 가게', value:sat.toFixed(1)+'개', tag:'계산값 · 가게 ÷ 유동인구'});
+      cRows.push({label:'사람 1만 명당 가게', value:sat.toFixed(1)+'개', tag:'사람 수 대비'});
       cRows.push({label:'서울 중앙값', value:sm.toFixed(1)+'개', tag:'포화도 기준선'});
       satWord = sat<=sm*0.7? '사람 수에 비해 가게가 적어요.' : (sat<=sm*1.3? '경쟁은 보통 수준이에요.' : '사람 수에 비해 가게가 많은 편이에요.');
     }
@@ -972,9 +1082,9 @@ class Component extends DCLogic {
 
     // 매출
     const mp=med('per'), diff=Math.round((sel.per-mp)/mp*100);
-    const sRows=[{label:'가게 한 곳당 월매출', value:this.fmt(sel.per/3)+'원', tag:'추정 · 매출 ÷ 가게 수'},
+    const sRows=[{label:'가게 한 곳당 월매출', value:this.fmt(sel.per/3)+'원', tag:'(추정)'},
       {label:'서울 중앙값', value:this.fmt(mp/3)+'원', tag:'이 장사 동네들의 중앙값'},
-      {label:'손님이 쓴 돈 (3개월)', value:this.fmt(sel.sales)+'원', tag:'공공 집계 · 카드 결제'}];
+      {label:'손님이 쓴 돈 (3개월)', value:this.fmt(sel.sales)+'원', tag:''}];
     let trend=null;
     if(HI&&HI.ind[S.ind]){
       const series=HI.ind[S.ind];
@@ -1006,23 +1116,28 @@ class Component extends DCLogic {
       const zs=Object.values(RENT.zones);
       const rr=zs.map(o=>o.rent).sort((a,b)=>a-b);
       const vv=zs.map(o=>o.vacancy).sort((a,b)=>a-b);
-      kRows.push({label:'서울 권역 ㎡당 월 임대료 중앙값', value:rr[Math.floor(rr.length/2)].toFixed(1)+'만원', tag:'한국부동산원 · 참고값'});
-      kRows.push({label:'서울 권역 빈 상가 비율 중앙값', value:vv[Math.floor(vv.length/2)].toFixed(1)+'%', tag:'한국부동산원 · 참고값'});
+      kRows.push({label:'서울 권역 ㎡당 월 임대료 중앙값', value:rr[Math.floor(rr.length/2)].toFixed(1)+'만원', tag:'서울 평균'});
+      kRows.push({label:'서울 권역 빈 상가 비율 중앙값', value:vv[Math.floor(vv.length/2)].toFixed(1)+'%', tag:'서울 평균'});
     }
-    kRows.push({label:'권리금 · 인테리어', value:'데이터 없음', tag:'현재 자료에 없어요'});
+    kRows.push({label:'권리금 · 인테리어', value:'자료 없음', tag:'공개 통계에 없어요'});
+    // 임대료를 '데이터 없음'으로 비워 두면 이 칸이 늘 죽어 있다.
+    // 있는 자료(한국부동산원)를 쓰되, 이 상권 값인지 서울 평균인지 분명히 밝힌다.
+    const rf=this.rentRef(sel.name);
     out.push({key:'cost', title:'비용 · 얼마가 나가나요',
       q:'임대료는 얼마인가요?',
-      big:'데이터 없음',
-      bigLabel:'동네별 임대료는 공개되지 않아요',
-      verdict:'중개인에게 확인한 금액을 본전 계산에 직접 넣으셔야 해요.',
+      big: rf? rf.value : '자료 없음',
+      bigLabel: rf? (rf.per+' · '+rf.note) : '상가 임대료 자료를 아직 불러오지 못했어요',
+      verdict: rf&&rf.exact
+        ? '이 값은 조사 기준 상권 평균이에요. 실제 계약은 층·면적·위치로 크게 달라져요.'
+        : '상권 단위 임대료는 아직 없어요. 중개인에게 확인한 금액을 본전 계산에 직접 넣으세요.',
       rows:kRows, bars:[],
-      note:'위 값은 한국부동산원의 넓은 권역 중앙값이라 이 자리 값이 아니에요.'});
+      note:'한국부동산원 상업용부동산 임대동향조사(중대형 상가) 기준이에요. 조사 상권 구획이 이 앱의 상권 1,564곳과 달라, 이름이 정확히 맞는 곳만 그 상권 값을 쓰고 나머지는 서울 평균을 보여드려요.'});
 
     // 시장 구조
     const kk=[];
     if(R){
       const rate=R.stores? R.closed/R.stores*100 : 0;
-      kk.push({label:'프랜차이즈 비중', value:R.fr_share+'%', tag:'서울 전체 · 공공 집계'});
+      kk.push({label:'프랜차이즈 비중', value:R.fr_share+'%', tag:'서울 전체'});
       kk.push({label:'새로 연 곳 / 문 닫은 곳', value:R.opened.toLocaleString()+'곳 / '+R.closed.toLocaleString()+'곳', tag:'서울 전체 · 3개월'});
       kk.push({label:'폐업률', value:rate.toFixed(1)+'%', tag:'서울 전체 · 폐업 ÷ 전체'});
     } else kk.push({label:'개·폐업', value:'데이터 없음', tag:''});
@@ -1046,7 +1161,7 @@ class Component extends DCLogic {
       };
     })();
     if(nb){
-      const nRows=[{label:'이 자리 장사 종류', value:nb.total+'가지', tag:'공공 집계'}];
+      const nRows=[{label:'이 자리 장사 종류', value:nb.total+'가지', tag:''}];
       if(nb.mine) nRows.push({label:'내 장사 순위', value:nb.rank+'위 / '+nb.total+'가지', tag:'가게 한 곳당 매출 기준'});
       out.push({key:'nearby', title:'이 자리 · 다른 장사는 어떤가요',
         q:'이 자리에서 뭐가 가장 잘 팔리나요?',
@@ -1068,7 +1183,7 @@ class Component extends DCLogic {
       tips.push({label:'여성 비율', value:fw+'%', tag:fw>=55?'여성 손님이 많아요':(fw<=45?'남성 손님이 많아요':'비슷해요')});
       const perHead=sel.unit;
       tips.push({label:'추정 객단가', value:Math.round(perHead).toLocaleString()+'원',
-        tag:'원자료 · 결제 1건당'});
+        tag:'(추정)'});
     }
     if(nb&&nb.bars.length>1) tips.push({label:'같이 잘 되는 장사', value:nb.bars.slice(0,2).map(b=>b.label).join(' · '), tag:'이 자리 매출 상위'});
     if(tips.length) out.push({key:'grow', title:'늘리기 · 무엇을 해볼까요',
@@ -1093,6 +1208,11 @@ class Component extends DCLogic {
       rows:kk, bars:[],
       note:'모두 서울 전체 이 장사 기준이라 자리를 바꿔도 변하지 않아요.'});
 
+    // 메뉴는 6개까지. 순서는 '매출 → 수요 → 경쟁 → 비용 → 이 자리 → 시장 구조'.
+    // '늘리기'는 숫자가 아니라 조언이라 메뉴에서 빼고 대시보드 아래에 따로 둔다.
+    const ORDER=['sales','demand','comp','cost','nearby','market'];
+    const rk=k=>{ const i=ORDER.indexOf(k); return i<0?99:i; };
+    out.sort((a,b)=>rk(a.key)-rk(b.key));
     return out;
   }
 
@@ -1236,35 +1356,60 @@ class Component extends DCLogic {
       pop:pop[a.gu]?pop[a.gu].sum:null}));
     if(!list.length) return {rows:[], cards:[], ind:this.indName(S.ind), lead:'', note:'', maxPer:1};
     const maxPer=Math.max(...list.map(o=>o.per));
-    const maxSales=Math.max(...list.map(o=>o.sales));
     list.sort((a,b)=>b.per-a.per);
     const top=list[0];
+    // 중앙값들 — 막대와 회색 글자가 '무엇에 견준 값인지' 말할 수 있게 미리 구한다
+    const med=arr=>{ const v=arr.filter(x=>x!=null).sort((a,b)=>a-b);
+      return v.length? v[Math.floor(v.length/2)] : null; };
+    const perMed=med(list.map(x=>x.per));
+    const storeMed=med(list.map(x=>x.stores));
+    const satOf=o=>o.pop? o.stores/(o.pop/10000) : null;
+    const satMed=med(list.map(satOf));
+    // 막대는 최고값 대비 길이다. 그것만 두면 1등은 늘 꽉 차서 '길다'가 무슨 뜻인지 알 수 없다.
+    // 서울 중앙값 자리에 눈금을 하나 세워, 막대가 그 선을 넘었는지로 읽히게 한다.
+    const medPct=Math.min(perMed/maxPer*100,100);
     return {
       ind:this.indName(S.ind),
       lead:this.indName(S.ind)+this.josa(this.indName(S.ind),'eun')+' '+top.gu+'가 가게 한 곳당 가장 많이 팔아요.',
+      medLine:'position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;'
+        +'background:var(--ink3);opacity:.55;left:'+medPct.toFixed(1)+'%',
+      medNote:'가운데 눈금이 서울 자치구 중앙값이에요',
+      // 데스크톱은 그리드로 폭을 채우고, 좁은 화면에서만 옆으로 넘긴다
+      cardsWrap:this.L(
+        'display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin-top:12px;padding:2px 2px 8px',
+        'display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;margin-top:12px;padding:2px 2px 8px',
+        'display:grid;gap:18px;margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))'),
       // 자치구 카드 — 옆으로 넘기며 본다
       cards:list.map((o,i)=>{
         const perM=o.per/3;
-        const sat=o.pop? o.stores/(o.pop/10000) : null;
-        const sats=list.map(x=>x.pop? x.stores/(x.pop/10000):null).filter(v=>v!=null).sort((a,b)=>a-b);
-        const satMed=sats.length?sats[Math.floor(sats.length/2)]:null;
-        const perAll=list.map(x=>x.per).sort((a,b)=>a-b);
-        const perMed=perAll[Math.floor(perAll.length/2)];
+        const sat=satOf(o);
         const diff=Math.round((o.per-perMed)/perMed*100);
+        const dStore=storeMed!=null? o.stores-storeMed : null;
+        // 회색 글자는 '출처'가 아니라 '서울과 견주면 어떤가'를 말한다.
+        const facts=[
+          {label:'경쟁 점포', value:o.stores.toLocaleString()+'곳',
+           tag: dStore==null? '' : (Math.abs(dStore)<1? '서울 자치구 중앙값과 비슷'
+                : '서울 중앙값보다 '+Math.abs(dStore).toLocaleString()+'곳 '+(dStore>0?'많아요':'적어요'))},
+          {label:'분석 가능한 상권', value:o.zones+'곳', tag:''},
+          {label:'상권 소비 규모', value:this.fmt(o.sales)+'원', tag:'최근 3개월'}
+        ];
+        // '사람 1만 명당 몇 개'는 그 자체로는 판단이 안 되는 숫자였다.
+        // 여유/보통/과밀로 결론을 앞에 두고, 근거가 된 값은 회색으로 뒤에 남긴다.
+        if(sat!=null && satMed!=null){
+          facts.push({label:'경쟁 강도',
+            value: sat<=satMed*0.7? '여유' : (sat<=satMed*1.3? '보통' : '과밀'),
+            tag:'사람 1만 명당 '+sat.toFixed(1)+'곳'});
+        }
         return {
-          style:'flex:0 0 '+this.L('86%','300px','320px')+';scroll-snap-align:start;min-width:0;padding:20px;border-radius:20px;background:'+(i===0?'var(--accent-3)':'#F9FAFB'),
+          style:'min-width:0;padding:20px;border-radius:var(--r-lg);'
+            +this.L('flex:0 0 86%;scroll-snap-align:start;','flex:0 0 300px;scroll-snap-align:start;','')
+            +(i===0?'background:var(--accent-3);border:1px solid var(--accent-2)'
+                   :'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card)'),
           rank:String(i+1).padStart(2,'0'), gu:o.gu,
           per:this.fmt(perM)+'원',
           verdict:(diff>=10? '서울 중앙값보다 '+diff+'% 높아요' : (diff<=-10? '중앙값보다 '+Math.abs(diff)+'% 낮아요' : '중앙값과 비슷해요')),
-          facts:[
-            {label:'가게 수', value:o.stores.toLocaleString()+'개', tag:'공공 집계'},
-            {label:'데이터 있는 동네', value:o.zones+'곳', tag:'공공 집계'},
-            {label:'손님이 쓴 돈 (3개월)', value:this.fmt(o.sales)+'원', tag:'공공 집계 · 카드'},
-            (sat!=null
-              ? {label:'사람 1만 명당 가게', value:sat.toFixed(1)+'개', tag:satMed!=null?(sat<=satMed*0.7?'여유':(sat<=satMed*1.3?'보통':'과밀')):'계산값'}
-              : {label:'사람 1만 명당 가게', value:'데이터 없음', tag:'유동인구 미연결'})
-          ],
-          bar:'display:block;width:'+Math.max(o.per/Math.max(...list.map(x=>x.per))*100,3).toFixed(1)+'%;height:100%;border-radius:3px;background:var(--accent);opacity:'+(0.45+0.55*(o.per/Math.max(...list.map(x=>x.per)))).toFixed(2)
+          facts:facts,
+          bar:'display:block;width:'+Math.max(o.per/maxPer*100,3).toFixed(1)+'%;height:100%;border-radius:3px;background:var(--accent);opacity:'+(0.45+0.55*(o.per/maxPer)).toFixed(2)
         };
       }),
       rows:list.map((o,i)=>({
@@ -1275,7 +1420,7 @@ class Component extends DCLogic {
         bar:'display:block;width:'+Math.max(o.per/maxPer*100,2).toFixed(1)+'%;height:100%;border-radius:3px;background:var(--accent);opacity:'+(0.35+0.65*(o.per/maxPer)).toFixed(2),
         row:'display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line)'
       })),
-      note:'막대는 가게 한 곳이 한 달에 파는 돈이에요. 자치구는 동네 좌표를 서울시 행정구역 경계와 대조해 붙였어요. 이 자료에는 동네별 매출 상위 15개 업종만 포함하니, 이 장사 데이터가 있는 동네만 합산했어요.'
+      note:'막대는 가게 한 곳이 한 달에 파는 돈이에요. 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적은 아니에요. 자료가 있는 상권만 합산했습니다.'
     };
   }
 
@@ -1299,9 +1444,9 @@ class Component extends DCLogic {
         name:this.indName(S.regPick),
         lead:this.indName(S.regPick)+this.josa(this.indName(S.regPick),'eun')+' 이 동네에서 손님이 쓴 돈의 '+share.toFixed(1)+'%를 차지해요.',
         facts:[
-          {label:'가게 한 곳이 한 달에 파는 돈', value:this.fmt(per/3)+'원', tag:'나눠서 낸 값 · 참고용'},
-          {label:'가게 수', value:stores.toLocaleString()+'곳', tag:'실제 집계'},
-          {label:'손님이 쓴 돈 (3개월)', value:this.fmt(sales)+'원', tag:'카드 결제 실제 집계'},
+          {label:'가게 한 곳이 한 달에 파는 돈', value:this.fmt(per/3)+'원', tag:'(추정)'},
+          {label:'가게 수', value:stores.toLocaleString()+'곳', tag:''},
+          {label:'손님이 쓴 돈 (3개월)', value:this.fmt(sales)+'원', tag:''},
           {label:'결제 1건당 추정 금액', value:unit? unit.toLocaleString()+'원':'데이터 없음', tag:unit?'실제 집계':'정부 자료에 없어 점수에 넣지 않았습니다'}
         ],
         confirm:()=>this.setState({ind:S.regPick,sel:S.zoneId,screen:'find',openWhy:false,fromRegion:true,regPick:null}),
@@ -1318,9 +1463,9 @@ class Component extends DCLogic {
       name:z.nm,
       sub:'이 동네에서 확인된 장사가 '+rows.length+'가지예요. 하나를 고르면 본전까지 계산해 드려요.',
       stats:[
-        {label:'가게', value:totalStores.toLocaleString()+'곳', tag:'실제 집계'},
-        {label:'손님이 쓴 돈 (3개월)', value:this.fmt(totalSales)+'원', tag:'카드 결제 실제 집계'},
-        {label:'확인된 장사', value:rows.length+'가지', tag:'스냅샷에 포함된 상위 업종'}
+        {label:'가게', value:totalStores.toLocaleString()+'곳', tag:''},
+        {label:'손님이 쓴 돈 (3개월)', value:this.fmt(totalSales)+'원', tag:''},
+        {label:'확인된 장사', value:rows.length+'가지', tag:''}
       ],
       inds:rows.sort((a,b)=>b[2]-a[2]).map(r=>{
         const name=zi.inds[r[0]], per=r[2]/r[1];
@@ -1393,7 +1538,7 @@ class Component extends DCLogic {
       facts:[{label:'기회점수',value:Math.round(top.score)+'점'},
              {label:'경쟁 가게',value:top.stores.toLocaleString()+'곳'},
              {label:'한 집당 월매출',value:monthly(top.per)}],
-      source:'서울시 상권분석서비스 '+this.qtr(r.quarter)+' 공공 집계에서 계산했어요. 기회점수는 저희가 만든 값이에요.',
+      source:'서울시 상권분석서비스 '+this.qtr(r.quarter)+' 자료로 계산했어요. 기회점수는 저희가 만든 값이에요.',
       cta:'후보지에서 전체 순위 보기', go:'find'
     };
     if(/임대료|월세|보증금|권리금/.test(t)) return {
@@ -1490,8 +1635,9 @@ class Component extends DCLogic {
       // 정밀분석에 있던 탓에, 목록에도 없는 항목 때문에 정밀분석 탭만 켜져 혼란스러웠다.
       {label:'상권분석', keys:['hubZone','zone','find','cmp','region'], hub:'hubZone',
        items:[['zone','지역비교'],['find','후보지'],['cmp','비교분석']]},
-      {label:'정밀분석', keys:['hubFine','fineIntro','map','fineCmp'], hub:'hubFine',
-       items:[['fineIntro','정밀분석 소개'],['map','지도분석'],['fineCmp','정밀비교']]},
+      // 지도는 '어디인지', 정밀분석은 '왜 좋은지/나쁜지'. 역할이 겹치지 않게 나눈다.
+      {label:'정밀분석', keys:['hubFine','fineIntro','map','fineDetail','fineCmp'], hub:'hubFine',
+       items:[['map','지도'],['fineDetail','정밀분석'],['fineCmp','정밀비교']]},
       {label:'시세분석', keys:['price'], hub:'price', items:[['price','시세분석']]},
       {label:'리포트', keys:['report'], hub:'report', items:[['report','리포트']]},
 
@@ -1549,11 +1695,11 @@ class Component extends DCLogic {
         {tab:'지도분석', body:'상위 후보를 지도에 놓고 서로의 위치를 봅니다.'},
         {tab:'정밀비교', body:'한 자치구 안의 동네를 전부 표로 펼쳐 훑습니다.'},
         {tab:'시세분석', body:'상가 임대료·빈 상가 비율·장사별 매출 추이를 분기별로 봅니다.'},
-        {tab:'AI 도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
+        {tab:'도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
       ],
       aboutRows:[
         {title:'장사를 먼저 골라요',
-         body:'보통은 동네를 고르고 그 동네가 어떤지 봐요. 여기는 거꾸로예요. 무슨 장사를 할지 말해 주시면 서울 동네를 좋은 순서대로 줄 세워 드려요.'},
+         body:'보통은 동네를 고르고 그 동네가 어떤지 봐요. 여기는 거꾸로예요. 업종을 말해 주시면 서울 동네를 좋은 순서대로 줄 세워 드려요.'},
         {title:'점수가 어떻게 나왔는지 보여드려요',
          body:'손님이 얼마나 쓰는지, 같은 가게가 몇 곳인지, 한 곳당 얼마 버는지. 이 세 가지를 합쳐 점수를 내요. 어느 항목 때문에 점수가 높은지 그 자리에서 보실 수 있어요.'},
         {title:'모르는 건 모른다고 써요',
@@ -1591,7 +1737,7 @@ class Component extends DCLogic {
               lead:t?t.headline:null,
               parts:parts,
               bep:c?[
-                {label:'월 본전선 (이만큼 팔면 본전)', value:this.man(c.bep), tag:'계산값'},
+                {label:'월 본전선 (이만큼 팔면 본전)', value:this.man(c.bep), tag:''},
                 {label:'월매출 가정 ('+S.scen+')', value:this.man(c.rev), tag:'평균 추정치 × '+c.mult},
                 {label:'월 임대료', value:(S.rent||0).toLocaleString()+'만원', tag:'입력값 또는 기본 가정'},
                 {label:'평수', value:(S.area||0)+'평', tag:'입력값 또는 기본 가정'},
@@ -1599,8 +1745,8 @@ class Component extends DCLogic {
                 {label:'원가율', value:(S.cogs||0)+'%', tag:'기본 가정 · 수정 가능'}
               ]:null,
               survey:[
-                ['가진 돈',S.rp_cash],['대출 비중',S.rp_loan],['버틸 기간',S.rp_runway],
-                ['경험',S.rp_exp],['개업 시기',S.rp_when]
+                ['창업 단계',S.rp_stage],['나이',S.rp_age],['사업자등록',S.rp_biz],
+                ['개업 시기',S.rp_when],['필요한 지원',S.rp_need]
               ].filter(([,v])=>!!v).map(([label,value])=>({label,value})),
               // 돈이 어디로 나가는지 — 매출 대비 비중
               money:c?(()=>{
@@ -1693,6 +1839,16 @@ class Component extends DCLogic {
               return [...mine, ...rest].slice(0,8);
             };
 
+            // 주소를 치면 어느 상권으로 잡혔는지 확인해 준다.
+            // 사장님이 내부 상권 이름을 몰라도 되게 하는 것이 이 단계의 목적이다.
+            const selZoneId=S.sel||S.zoneId||'';
+            const matchedZone=(()=>{
+              if(!selZoneId||!zi||!zi.zones[selZoneId]) return null;
+              const g=guOf(selZoneId), d=(zlp[selZoneId]&&zlp[selZoneId].dong)||'';
+              return {name:nameOf(selZoneId),
+                      where:['서울특별시',g,d].filter(Boolean).join(' ')};
+            })();
+
             const SIDO=['서울특별시','부산광역시','대구광역시','인천광역시','광주광역시','대전광역시',
               '울산광역시','세종특별자치시','경기도','강원특별자치도','충청북도','충청남도',
               '전북특별자치도','전라남도','경상북도','경상남도','제주특별자치도'];
@@ -1702,73 +1858,67 @@ class Component extends DCLogic {
 
             // 각 단계: q(질문) · hint(왜 묻는지) · opts([{v,label,off}]) · val(고른 값) · set(고르면 바뀔 상태)
             // multi:true 면 여러 개를 고르고 '다음'으로 넘어간다.
+            // ── 리포트 설문 ─────────────────────────────────────────────
+            // 이 설문의 목적은 본전 계산이 아니라 '신청할 수 있는 정부 창업지원사업'을
+            // 찾아 주는 것이다. 그래서 매칭에 쓰지 않는 질문(자금·대출·버틸 기간)은 뺐다.
+            // 남은 것은 전부 공고 자격 요건에 실제로 등장하는 조건이다.
             const STEPS=[
-              {k:'sido', q:'어느 지역에서 시작하시나요?',
-               hint:'지금 자료가 있는 곳은 서울이에요. 다른 지역은 준비 중이라 비워 둡니다.',
-               opts:SIDO.map(v=>({v, label:v+(v==='서울특별시'?'':' · 준비 중')})),
-               val:sido, set:v=>({sido:v, rp_gu:'', zoneId:null, sel:null, picks:null})},
-
-              // 구는 25개다. 사장님이 답을 이미 알고 있으니 버튼을 늘어놓지 않고 치게 한다.
-              // blank:true — 아무것도 치기 전에는 후보를 한 줄도 안 띄운다(버튼 벽 방지).
-              {k:'gu', q:'서울 어느 구인가요?',
-               hint:'구 이름을 치면 아래에 뜹니다. ‘강’만 쳐도 강남구·강동구가 나와요.',
-               opts:GU.map(v=>({v, label:v})), val:gu,
-               search:'구 이름을 쳐보세요 (예: 강남)', blank:true,
-               set:v=>({rp_gu:v, zoneId:null, sel:null, picks:null}), only:seoul},
-
-              // 동네(상권)는 반대다 — 사장님이 이름을 모른다. 그래서 후보를 먼저 보여주고,
-              // 각 줄에 '몇 위인지·가게당 얼마 파는지'를 같이 적어 고를 수 있게 한다.
-              // 가게를 낼 자리를 '주소처럼' 친다. 동 이름을 치면 그 동의 상권이 나온다.
-              {k:'zone', q:'가게를 낼 자리가 어디쯤인가요?',
-               hint: q0
-                 ? '동 이름·상권 이름으로 찾은 결과예요. 줄마다 어느 구 어느 동인지 적어 뒀어요.'
-                 : (zonesOfGu.length
-                   ? gu+'에서 '+this.indName(S.ind)+' 가게가 잘 되는 순서예요. 동 이름(예: 역삼동)을 쳐서 찾아도 돼요.'
-                   : (gu||'서울')+'에는 아직 '+this.indName(S.ind)+' 자료가 없어요. 동 이름을 쳐서 다른 곳을 찾아보세요.'),
-               opts: q0
-                 ? findZones(zonesOfGu).map(z=>({v:z.id, label:z.name, sub:zoneWhere(z)}))
-                 : zonesOfGu.map(z=>({v:z.id, label:z.name, sub:zoneSub(z)})),
-               search:'동 이름이나 상권 이름 (예: 역삼동)', preFiltered:true,
+              // ① 창업 예정 위치 — 주소나 동 이름을 치면 상권을 자동으로 붙인다.
+              //    사장님이 '국기원'·'강남 마이스 관광특구' 같은 내부 상권명을 알 필요가 없다.
+              {k:'zone', q:'어디에서 창업할 예정이세요?',
+               hint: matchedZone
+                 ? ''
+                 : '주소나 동 이름을 치면 해당 상권을 찾아 드려요. (예: 서울 강남구 역삼동)',
+               opts: q0 ? findZones(allZones).map(z=>({v:z.id, label:z.name, sub:zoneWhere(z)})) : [],
+               search:'주소 또는 동 이름 (예: 서울 강남구 역삼동)', preFiltered:true, blank:true,
                val:S.sel||S.zoneId||'',
-               // 다른 구가 검색으로 걸렸을 수 있으니 자치구도 같이 맞춰 준다
-               set:v=>({rp_gu:guOf(v)||gu, sel:v, zoneId:v, homeZoneName:nameOf(v)}),
-               only:seoul, isZone:true},
+               // stay:true — 고르자마자 넘기지 않는다. 어느 상권으로 잡혔는지 먼저 보여 준다.
+               stay:true,
+               set:v=>({rp_gu:guOf(v), sel:v, zoneId:v, homeZoneName:nameOf(v), rp_q:''}),
+               isZone:true},
 
-              {k:'more', q:'견줘 보고 싶은 자리가 또 있나요?',
-               hint:'여기도 동 이름으로 찾을 수 있어요. 고른 자리가 리포트에 나란히 들어갑니다. 없으면 아래 ‘안 고르고 다음’을 누르세요.',
-               multi:true,
-               opts:(q0
-                 ? findZones(zonesOfGu).map(z=>({v:z.id, label:z.name, sub:zoneWhere(z)}))
-                 : zonesOfGu.map(z=>({v:z.id, label:z.name, sub:zoneSub(z)})))
-                 .filter(o=>o.v!==(S.sel||S.zoneId)),
-               search:'동 이름이나 상권 이름 (예: 역삼동)', preFiltered:true,
-               val:PICKS, only:seoul, isZone:true},
+              // ② 업종
+              {k:'ind', q:'어떤 업종으로 시작하세요?',
+               hint:'공고마다 지원 업종이 정해져 있어요.',
+               opts:(zi?[...['커피-음료','한식음식점','치킨전문점','호프-간이주점','분식전문점','제과점','미용실','편의점']
+                          .filter(n=>zi.inds.indexOf(n)>=0)]:[]).map(v=>({v,label:this.indName(v)})),
+               search:'업종 이름 (예: 카페)', preFiltered:true,
+               val:S.rp_ind,
+               set:v=>({ind:v, rp_ind:v})},
 
-              {k:'cash', q:'창업에 쓸 수 있는 돈은 얼마인가요?',
-               hint:'권리금·보증금·인테리어를 다 합친 금액이에요.',
-               opts:['5천만원 미만','5천만~2억','2억 이상'].map(v=>({v,label:v})),
-               val:S.rp_cash, set:v=>({rp_cash:v})},
-              {k:'loan', q:'그중 대출은 얼마나 되나요?',
-               hint:'매달 나가는 이자가 본전선을 올려요.',
-               opts:['없음','절반 미만','절반 이상'].map(v=>({v,label:v})),
-               val:S.rp_loan, set:v=>({rp_loan:v})},
-              {k:'runway', q:'장사가 안 될 때 몇 달을 버틸 수 있나요?',
-               hint:'매출 없이 월세·인건비를 낼 수 있는 기간이에요.',
-               opts:['6개월 미만','6개월~1년','1년 이상'].map(v=>({v,label:v})),
-               val:S.rp_runway, set:v=>({rp_runway:v})},
-              {k:'exp', q:'이 장사를 해본 적 있나요?',
-               hint:'처음이면 지원사업 중 예비창업 쪽이 맞아요.',
-               opts:['처음','해본 적 있음'].map(v=>({v,label:v})),
-               val:S.rp_exp, set:v=>({rp_exp:v})},
+              // ③ 창업 단계 — '예비창업자' 전용 공고가 가장 많다
+              {k:'stage', q:'지금 어느 단계에 계세요?',
+               hint:'예비창업자만 신청할 수 있는 공고가 따로 있어요.',
+               opts:['아직 준비 중이에요 (예비창업자)','문 연 지 1년 안 됐어요','1~3년 됐어요','3년 넘었어요'].map(v=>({v,label:v})),
+               val:S.rp_stage, set:v=>({rp_stage:v})},
+
+              // ④ 나이 — 청년 창업 지원의 기준선
+              {k:'age', q:'나이가 어떻게 되세요?',
+               hint:'청년 창업 지원은 보통 만 39세 이하가 대상이에요.',
+               opts:['만 39세 이하','만 40세 이상'].map(v=>({v,label:v})),
+               val:S.rp_age, set:v=>({rp_age:v})},
+
+              // ⑤ 사업자등록 여부
+              {k:'biz', q:'사업자등록을 하셨나요?',
+               hint:'등록 전이면 예비창업 공고, 등록 후면 소상공인 공고 쪽이에요.',
+               opts:['아직 안 했어요','했어요'].map(v=>({v,label:v})),
+               val:S.rp_biz, set:v=>({rp_biz:v})},
+
+              // ⑥ 창업 시기 — 마감이 그 안에 있는 공고를 앞으로 끌어온다
               {k:'when', q:'언제 문을 열 계획이세요?',
-               hint:'공고 마감이 그 안에 있는지 봐 드려요.',
-               opts:['6개월 안','1년 안','아직 미정'].map(v=>({v,label:v})),
+               hint:'그 안에 마감인 공고를 먼저 보여드려요.',
+               opts:['3개월 안','6개월 안','1년 안','아직 미정'].map(v=>({v,label:v})),
                val:S.rp_when, set:v=>({rp_when:v})},
 
-              // 이메일도 같은 카드 안에서 마지막 질문으로 묻는다.
-              // 아래에 따로 떨어져 있으면 '설문 끝나고 또 뭔가 시키는' 느낌이라 거부감이 생긴다.
-              {k:'email', q:'다 만든 리포트를 어디로 보낼까요?',
-               hint:'메일로 한 장짜리 리포트를 보내 드려요. 화면에서만 보실 거면 건너뛰셔도 됩니다.',
+              // ⑦ 필요한 지원 — 공고의 '지원 분야'와 바로 이어진다
+              {k:'need', q:'어떤 지원이 가장 필요하세요?',
+               hint:'고른 분야의 공고를 위로 올려 드려요.',
+               opts:['사업화 자금','시설·임차 비용','교육·멘토링','융자·대출'].map(v=>({v,label:v})),
+               val:S.rp_need, set:v=>({rp_need:v})},
+
+              // 이메일 — 리포트를 보낼 곳. 건너뛸 수 없다.
+              {k:'email', q:'결과를 어디로 보내 드릴까요?',
+               hint:'찾은 지원사업과 상권 분석을 한 장으로 묶어 보내 드려요.',
                input:'email', opts:[], val:S.rp_email||''}
             ].filter(s=>s.only!==false);
 
@@ -1811,6 +1961,11 @@ class Component extends DCLogic {
               // 치는 대로 걸러 6개만 보여준다. '강'만 쳐도 강남구·강동구가 뜬다.
               // 후보가 0개면 목록 칸 자체를 안 그린다 — 안 그러면 빈 여백만 22px 뜬다
               hasOpts: visible.length>0,
+              // 주소 → 상권 매칭 확인. '강남역 상권으로 확인했어요' 처럼 말해 준다.
+              matched: !!(matchedZone && cur && cur.k==='zone'),
+              matchedName: matchedZone? matchedZone.name+' 상권으로 확인했어요' : '',
+              matchedWhere: matchedZone? matchedZone.where : '',
+              matchedNext: ()=>this.setState({rp_step:step+1, rp_q:''}),
               isSearch: !!(cur&&cur.search),
               searchHint: cur&&cur.search?cur.search:'',
               searchQ: S.rp_q||'',
@@ -1826,7 +1981,9 @@ class Component extends DCLogic {
                     ? ()=>{ const has=PICKS.indexOf(o.v)>=0;
                         const next=has?PICKS.filter(x=>x!==o.v):(PICKS.length>=5?PICKS:[...PICKS,o.v]);
                         this.setState({picks:next, rp_sent:false}); }
-                    : ()=>this.setState({...cur.set(o.v), rp_step:step+1, rp_q:'', rp_sent:false, rp_error:''})
+                    : ()=>this.setState(cur.stay
+                        ? {...cur.set(o.v), rp_step:step, rp_sent:false, rp_error:''}
+                        : {...cur.set(o.v), rp_step:step+1, rp_q:'', rp_sent:false, rp_error:''})
                 };
               }),
               // 여러 개 고르는 단계에서만 '다음'이 필요하다 — 하나 고르는 단계는 누르면 바로 넘어간다
@@ -1865,8 +2022,10 @@ class Component extends DCLogic {
               hasBack: step>0,
               qsAllDone: !cur,
               // 다 답한 뒤엔 카드가 사라진다. 답을 다시 볼 수 있게 한 줄만 남긴다.
-              doneLine: STEPS.map(s=>shown(s.val, s.isZone))
-                .filter(v=>v&&v!=='건너뜀'&&v!=='없음').join(' · '),
+              doneLine: STEPS.map(st=>{
+                  const v=shown(st.val, st.isZone);
+                  return st.k==='ind'? (st.val? this.indName(st.val) : '') : v;
+                }).filter(v=>v&&v!=='건너뜀'&&v!=='없음').join(' · '),
               editAgain: ()=>this.setState({rp_step:0, rp_q:''}),
               // 리포트가 몇 칸까지 열렸는지 — rv 가 이 값으로 한 칸씩 연다
               qsN:N, qsStepNum:step
@@ -1893,68 +2052,98 @@ class Component extends DCLogic {
           // 자격은 판정하지 않는다(CLAUDE.md §17: 법률 판단은 확정적으로 말하지 않는다).
           sp:(()=>{
             const d=S.sp;
-            const kw=[];
-            if(S.rp_exp==='처음') kw.push('예비','창업','신규','초기');
-            if(S.rp_loan&&S.rp_loan!=='없음') kw.push('융자','자금','대출','정책자금');
-            const hit=it=>{
-              if(!kw.length) return false;
-              const t=((it.title||'')+' '+(it.target||'')+' '+(it.kind||'')).toLowerCase();
-              return kw.some(k=>t.indexOf(k.toLowerCase())>=0);
+            // ── 조건 → 공고 매칭 ────────────────────────────────────────
+            // 자격을 '판정'하지 않는다(§17). 답한 조건과 겹치는 말이 공고에 있으면
+            // 위로 올리고, 왜 올렸는지를 그대로 보여 준다. 최종 확인은 원문에서.
+            const RULES=[];
+            if(S.rp_stage==='아직 준비 중이에요 (예비창업자)')
+              RULES.push({why:'예비창업자 조건', kw:['예비','창업 준비','신규','초기','스타트']});
+            else if(S.rp_stage) RULES.push({why:'기존 사업자 대상', kw:['소상공인','기존','재도전','성장','스케일']});
+            if(S.rp_age==='만 39세 이하') RULES.push({why:'청년 연령 조건', kw:['청년','39세','만 39','2030']});
+            if(S.rp_biz==='아직 안 했어요') RULES.push({why:'사업자등록 전', kw:['예비','미등록','창업 전']});
+            if(S.rp_biz==='했어요') RULES.push({why:'사업자등록 완료', kw:['소상공인','사업자','업력']});
+            if(S.rp_need==='사업화 자금') RULES.push({why:'사업화 자금 지원', kw:['사업화','자금','바우처','보조']});
+            if(S.rp_need==='시설·임차 비용') RULES.push({why:'시설·임차 지원', kw:['시설','임차','임대','공간','인테리어']});
+            if(S.rp_need==='교육·멘토링') RULES.push({why:'교육·멘토링', kw:['교육','멘토','컨설팅','아카데미','사관학교']});
+            if(S.rp_need==='융자·대출') RULES.push({why:'융자·정책자금', kw:['융자','대출','정책자금','보증']});
+            if(S.ind) RULES.push({why:'업종 조건', kw:[this.indName(S.ind), S.ind]});
+            const guNow=S.rp_gu||'';
+            if(guNow) RULES.push({why:'지역 조건', kw:[guNow, '서울']});
+
+            const reasonsOf=it=>{
+              const t=((it.title||'')+' '+(it.target||'')+' '+(it.kind||'')+' '+(it.content||'')+' '+(it.region||'')).toLowerCase();
+              return RULES.filter(r=>r.kw.some(k=>k&&t.indexOf(String(k).toLowerCase())>=0)).map(r=>r.why);
             };
             const all=(d&&Array.isArray(d.items))?d.items:[];
-            const matched=all.filter(hit), rest=all.filter(it=>!hit(it));
+            const scored=all.map(it=>({it, why:reasonsOf(it)}));
+            const matched=scored.filter(o=>o.why.length>0).sort((a,b)=>b.why.length-a.why.length);
+            const rest=scored.filter(o=>o.why.length===0);
+
             const today=new Date(); today.setHours(0,0,0,0);
-            const row=it=>{
-              const dd=it.deadline?Math.round((new Date(it.deadline+'T00:00:00')-today)/86400000):null;
-              const soon=dd!=null&&dd<=7;
+            const ddOf=it=>it.deadline?Math.round((new Date(it.deadline+'T00:00:00')-today)/86400000):null;
+            // 창업 시기를 고르면 그 안에 마감인 공고를 먼저 본다
+            const horizon={'3개월 안':90,'6개월 안':180,'1년 안':365}[S.rp_when]||null;
+
+            const card=(o)=>{
+              const it=o.it, dd=ddOf(it);
+              const soon=dd!=null&&dd<=14;
               return {
                 title:it.title,
-                // 분야를 왼쪽 표식으로 세운다. 없으면 '지원' — 지어내지 않고 중립어를 쓴다.
-                kind:(it.kind||'지원').slice(0,4),
-                kindStyle:'flex:none;display:inline-flex;align-items:center;justify-content:center;'
-                  +'min-width:46px;height:46px;padding:0 8px;border-radius:14px;background:var(--accent-3);'
-                  +'color:var(--accent);font-size:11.5px;font-weight:700;white-space:nowrap;text-align:center',
-                sub:[it.org,it.region].filter(Boolean).join(' · '),
-                hasSub:!![it.org,it.region].filter(Boolean).length,
-                dday:dd==null?'상시':(dd===0?'오늘 마감':'D-'+dd),
-                ddayStyle:'flex:none;font-size:12.5px;font-weight:700;white-space:nowrap;'
-                  +'font-variant-numeric:tabular-nums;color:'
-                  +(dd==null?'var(--ink3)':(soon?'var(--warn)':'var(--ink2)')),
-                url:it.url||'',
-                hasUrl:!!it.url,
-                style:'display:flex;align-items:center;gap:14px;padding:14px 16px;'
-                  +'border-radius:16px;background:var(--surface);transition:background .14s'
+                org:it.org||'',
+                hasOrg:!!it.org,
+                amount:it.amount||'',
+                hasAmount:!!it.amount,
+                content:(it.content||'').slice(0,140),
+                hasContent:!!it.content,
+                target:it.target||'',
+                hasTarget:!!it.target,
+                dday: dd==null? '상시 모집' : (dd===0? '오늘 마감' : 'D-'+dd),
+                ddayStyle:'flex:none;font-size:13px;font-weight:700;white-space:nowrap;'
+                  +'padding:5px 11px;border-radius:999px;font-variant-numeric:tabular-nums;'
+                  +(dd==null?'background:var(--surface);color:var(--ink2)'
+                    :(soon?'background:var(--err);color:#FFFFFF':'background:var(--accent-3);color:var(--accent)')),
+                period:[it.start,it.deadline].filter(Boolean).join(' ~ ')||'',
+                hasPeriod:!!(it.start||it.deadline),
+                why:o.why.map(w=>({text:w})),
+                hasWhy:o.why.length>0,
+                url:it.url||'', hasUrl:!!it.url,
+                style:'display:flex;flex-direction:column;gap:0;padding:22px;border-radius:var(--r-lg);'
+                  +'background:var(--bg);border:1px solid '+(soon?'var(--accent-2)':'var(--line)')
+                  +';box-shadow:var(--shadow-card);min-width:0'
               };
             };
+            const top=matched.filter(o=>{ const dd=ddOf(o.it); return horizon==null||dd==null||dd<=horizon; });
+            const list=(top.length?top:matched).slice(0,12).map(card);
+            const nearest=(top.length?top:matched).map(o=>ddOf(o.it)).filter(v=>v!=null).sort((a,b)=>a-b)[0];
+
             return {
               loading:!d,
               notConfigured:!!d&&d.configured===false,
               failed:!!d&&d.configured!==false&&!d.ok,
               ready:!!d&&!!d.ok,
-              message:d?(d.error||''):'',
+              // 사용자용 문구만. 환경변수 이름 같은 개발자 메시지는 내보내지 않는다.
+              message: (!!d&&d.configured===false)
+                ? '지원사업 정보를 준비 중이에요. 준비되면 이 자리에 신청 가능한 공고가 나타납니다.'
+                : '지원사업 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
               retry:()=>{this._spLoading=false;this.setState({sp:null});},
-              // 조건을 아직 안 골랐으면 '추린 목록'이라고 하지 않는다
-              ask:this.indName(S.ind)+'를 시작하는 분이\n신청할 수 있는 지원사업이에요',
-              bigNum:(kw.length?matched.length:all.length)+'건',
-              bigLabel:kw.length?'고른 조건에 해당할 수 있는 제도':'지금 접수 중인 공고',
-              subline:kw.length
-                ? '마감이 지난 공고는 빼고 마감이 가까운 순으로 놓았어요.'
-                : '위에서 조건을 고르면 해당할 수 있는 것부터 보여드려요.',
-              matched:matched.slice(0,20).map(row),
-              hasMatched:kw.length>0&&matched.length>0,
-              noMatch:kw.length>0&&matched.length===0,
-              rest:(kw.length?rest:all).slice(0,50).map(row),
-              hasRest:(kw.length?rest.length:all.length)>0,
-              restLabel:kw.length
-                ? '조건에 안 걸린 나머지 '+rest.length+'건도 보기'
-                : '전체 목록 보기',
+              count:list.length,
+              countLabel:list.length+'개',
+              nearest: nearest==null? '—' : (nearest===0?'오늘':'D-'+nearest),
+              hasNearest: nearest!=null,
+              items:list,
+              hasItems:list.length>0,
               empty:!!d&&!!d.ok&&all.length===0,
-              // 자격 판정이 아니라는 것을 매번 붙인다. 이 화면은 돈을 다룬다.
-              warn:'자격을 판정한 목록이 아니에요. 실제 신청 자격은 업력·매출·지역·업종·소상공인 여부에 따라 다르고 '
-                +'공고마다 조건이 달라요. 여기 있는 건 조건에 해당할 수 있는 공고이고, '
-                +'신청 가능 여부는 반드시 원문에서 확인해 주세요.'
-                +((d&&d.undated)?' 마감일을 읽지 못한 공고 '+d.undated+'건이 섞여 있어요(상시 모집일 수 있어요).':'')
-                +((d&&d.expired)?' 마감이 지난 '+d.expired+'건은 뺐어요.':'')
+              noMatch:!!d&&!!d.ok&&all.length>0&&list.length===0,
+              restCount:rest.length,
+              hasRest:rest.length>0,
+              rest:rest.slice(0,20).map(card),
+              restLabel:'조건에 걸리지 않은 공고 '+rest.length+'개도 보기',
+              showRest:!!S.spRest,
+              toggleRest:()=>this.setState({spRest:!S.spRest}),
+              warn:'자격을 판정한 목록이 아니에요. 실제 신청 자격은 업력·매출·지역·업종·소상공인 여부에 따라 달라요. '
+                +'여기 있는 건 답하신 조건과 겹치는 공고이고, 신청 가능 여부는 반드시 원문에서 확인해 주세요.'
+                +((d&&d.undated)?' 마감일을 읽지 못한 공고 '+d.undated+'개가 섞여 있어요(상시 모집일 수 있어요).':'')
+                +((d&&d.expired)?' 마감이 지난 '+d.expired+'개는 뺐어요.':'')
             };
           })(),
 
@@ -1990,7 +2179,7 @@ class Component extends DCLogic {
             // 종이가 한 칸씩 채워진다. 단계 번호가 아니라 '무엇을 답했는가'로 연다 —
             // 단계 수가 지역 선택 때문에 달라져도 흔들리지 않는다.
             const gotZone=!!(S.sel||S.zoneId);
-            const opened=[gotZone, !!S.rp_cash, !!S.rp_runway];
+            const opened=[gotZone, !!S.rp_stage, !!S.rp_need];
             const nOpen=opened.filter(Boolean).length;
             // 방금 열린 칸만 흘러내리게 한다
             const grow=i=>opened[i]&&nOpen===i+1
@@ -2107,92 +2296,73 @@ class Component extends DCLogic {
       onRegion:S.screen==='region',
       rg:this.region(),
       onMapScreen:S.screen==='map',
+      onFineDetail:S.screen==='fineDetail',
+      goFineDetail:()=>this.setState({screen:'fineDetail',menu:null}),
       onHub:S.screen==='hubZone'||S.screen==='hubFine',
       hub:(()=>{
         const zone = S.screen==='hubZone';
         const g = MENU.find(m=>m.hub===S.screen);
-        const DESC={
-          zone:'어디가 좋은지 찾는 단계예요. 동네를 넓게 훑고 후보를 골라요.',
-          fine:'고른 후보에 실제로 들어가도 되는지 확인하는 단계예요.'
+        const k = zone?'zone':'fine';
+        // 이 화면이 답해야 하는 질문은 하나다 — '나는 무엇을 할 수 있지?'
+        // 그래서 숫자 KPI 를 걷어내고 '무엇을 하는 곳인지 + 바로 가기'만 남긴다.
+        const HEAD={
+          zone:{t:'어디에서 시작할까요?', d:'내 업종에 맞는 지역을 찾고 상권을 비교해 보세요.'},
+          fine:{t:'이 자리, 정말 괜찮을까요?', d:'고른 상권 하나를 매출·수요·경쟁·비용으로 뜯어봅니다.'}
         };
         const CARD={
-          zone:{'지역비교':'자치구로 묶어 넓게 봐요','후보지':'장사를 고르면 좋은 순서로 줄 세워요','비교분석':'최대 5곳을 항목별로 나란히 놓아요'},
-          fine:{'정밀분석 소개':'후보지 분석과 무엇이 다른지 알려드려요','지도분석':'고른 후보를 수요·경쟁·매출로 검증해요','정밀비교':'한 자치구 안의 동네를 전부 훑어요'}
+          zone:{
+            '지역비교':{d:'여러 지역의 매출·수요·경쟁을 나란히 비교해요', cta:'비교하기'},
+            '후보지'  :{d:'업종에 맞는 상권을 좋은 순서로 추천해요',      cta:'후보 찾기'},
+            '비교분석':{d:'관심 있는 상권을 직접 골라 견줘 봐요',          cta:'비교 시작'}
+          },
+          fine:{
+            '지도'      :{d:'고른 상권이 정확히 어디인지 위치로 확인해요', cta:'지도 열기'},
+            '정밀분석'  :{d:'매출·수요·경쟁·비용을 뜯어보고 왜 그런지 읽어요', cta:'분석 보기'},
+            '정밀비교'  :{d:'한 자치구 안의 상권을 빠짐없이 훑어요',       cta:'훑어보기'}
+          }
         };
-        const k = zone?'zone':'fine';
-
-        // ── 지금 무엇을 보고 있는지 ──────────────────────────────
-        // 허브가 어느 상황에서나 똑같은 안내문만 띄우면 '거쳐 가는 화면'이 된다.
-        // 고른 업종·자리를 적어 주면 이 단계가 내 얘기가 된다.
+        const ART={
+          '지역비교':['M6 32 h7 v10 h-7 z','M17 24 h7 v18 h-7 z','M28 28 h7 v14 h-7 z','M39 14 h7 v28 h-7 z'],
+          '후보지':['M26 8 a10 10 0 0 1 10 10 c0 8 -10 20 -10 20 s-10 -12 -10 -20 a10 10 0 0 1 10 -10 z','M26 18 h.01'],
+          '비교분석':['M6 12 h16 v28 h-16 z','M30 12 h16 v28 h-16 z','M10 21 h8','M34 21 h8','M10 29 h8','M34 29 h8'],
+          '지도':['M6 14 l13 -5 l13 5 l13 -5 v28 l-13 5 l-13 -5 l-13 5 z','M19 9 v28','M32 14 v28'],
+          '정밀분석':['M8 40 v-12','M18 40 v-22','M28 40 v-16','M38 40 v-28','M6 44 h40'],
+          '정밀비교':['M22 10 a13 13 0 1 1 0 26 a13 13 0 1 1 0 -26 z','M33 33 l9 9']
+        };
         const selId = S.sel || S.zoneId;
         const selNm = (selId && S.zi && S.zi.zones[selId]) ? this.zoneLabelOf(S.zi.zones[selId].nm) : null;
-        const lp = (selId && S.zlp) ? S.zlp[selId] : null;
         const nPicks = (S.picks||[]).length;
-
-        // 정밀비교가 훑을 자치구와 그 안에서 이 장사 데이터가 있는 동네 수
-        const fcGu = S.fcGu || (selId && S.zgu && S.zgu[selId]) || '강남구';
-        let fcN = 0;
-        if (S.zi && S.zgu) {
-          const ii = S.zi.inds.indexOf(S.ind);
-          if (ii >= 0) for (const kk in S.zi.zones) {
-            if (S.zgu[kk] !== fcGu) continue;
-            if ((S.zi.zones[kk].rows||[]).some(r => r[0]===ii && r[1] && r[2])) fcN++;
-          }
-        }
-        const r = this.rank();
-
-        // 카드마다 '지금 값'을 하나씩. 값이 없으면 지어내지 않고 무엇을 하면 되는지 적는다.
-        const STAT = {
-          '지역비교':  r ? {v:'25개', t:'서울 자치구를 '+this.indName(S.ind)+' 기준으로 견줘요'}
-                         : {v:'—', t:'데이터를 불러오는 중이에요'},
-          '후보지':    r ? {v:r.covered.toLocaleString()+'곳', t:'이 장사 데이터가 있는 동네 (전체 '+r.total.toLocaleString()+'곳 중)'}
-                         : {v:'—', t:'데이터를 불러오는 중이에요'},
-          '비교분석':  nPicks ? {v:nPicks+'곳', t:'담아 둔 자리 · 최대 5곳까지 나란히 놓아요'}
-                             : {v:'0곳', t:'아직 담은 자리가 없어요. 후보지에서 담아 보세요'},
-          '정밀분석 소개': {v:'', t:'후보지 분석과 무엇이 다른지 알려드려요'},
-          '지도분석':  lp ? {v:Math.round(lp.tot).toLocaleString()+'명', t:(selNm||'고른 자리')+' 하루 유동인구 · 여기서 수요·경쟁·매출을 검증해요'}
-                          : {v:selNm?'데이터 없음':'자리 미선택', t:selNm?(selNm+'의 유동인구 자료가 없어요'):'후보지에서 자리를 고르면 그 자리를 검증해요'},
-          '정밀비교':  fcN ? {v:fcN+'곳', t:fcGu+' 안에서 '+this.indName(S.ind)+' 데이터가 있는 동네를 전부 줄 세워요'}
-                          : {v:'0곳', t:fcGu+'에는 '+this.indName(S.ind)+' 데이터가 있는 동네가 없어요'}
-        };
-
-        // 다음에 눌러야 할 카드 하나만 강조한다. 셋 다 강조하면 아무것도 강조되지 않는다.
+        // 강조는 하나만. 셋 다 강조하면 아무것도 강조되지 않는다.
         const next = zone ? (nPicks ? '비교분석' : '후보지')
-                          : (selNm ? '지도분석' : '정밀비교');
-
+                          : (selNm ? '정밀분석' : '지도');
         return {
-          eyebrow: zone ? '1단계 · 넓게 훑기' : '2단계 · 좁혀서 검증',
-          title: zone?'상권분석':'정밀분석',
-          desc: DESC[k],
-          // 지금 조건 — 없으면 칩을 아예 안 그린다(빈 칩을 남기지 않는다)
-          hasCtx: true,
+          title: HEAD[k].t,
+          desc: HEAD[k].d,
           ctx: [
-            {label:'무슨 장사', value:this.indName(S.ind)},
-            ...(selNm ? [{label:'고른 자리', value:selNm}] : []),
-            ...(r ? [{label:'기준', value:this.qtr(S.zi&&S.zi.quarter)}] : [])
+            {label:'업종', value:this.indName(S.ind)},
+            ...(selNm ? [{label:'고른 상권', value:selNm}] : [])
           ].map(c=>({...c,
-            style:'display:inline-flex;align-items:baseline;gap:7px;padding:7px 13px;border-radius:999px;'
-              +'background:var(--bg);white-space:nowrap;min-width:0'})),
+            style:'display:inline-flex;align-items:baseline;gap:6px;padding:7px 12px;border-radius:999px;'
+              +'background:var(--surface);white-space:nowrap;min-width:0'})),
           cards:(g?g.items:[]).map(([key,label])=>{
-            const st=STAT[label]||{v:'',t:''};
             const on=label===next;
-            // '자리 미선택'·'데이터 없음'은 숫자가 아니다. 숫자 크기로 쓰면 값처럼 읽힌다.
-            const isNum=/\d/.test(st.v);
+            const c=CARD[k][label]||{d:'',cta:'열기'};
             return {
-              label:label, sub:CARD[k][label]||'',
-              stat:st.v, statNote:st.t, hasStat:!!st.v,
-              statStyle:isNum
-                ? 'font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1;'
-                  +'font-variant-numeric:tabular-nums;'+(on?'color:var(--accent)':'color:var(--ink)')
-                : 'font-size:15px;font-weight:500;line-height:1.3;color:var(--ink3)',
-              labelStyle:'font-size:15px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;'
-                +'overflow:hidden;text-overflow:ellipsis;'+(on?'color:var(--accent)':'color:var(--ink)'),
+              label:label, sub:c.d, cta:c.cta+' →',
+              art:(ART[label]||[]).map(d=>({d:d})),
+              artStyle:'flex:none;width:44px;height:44px;display:block;'
+                +(on?'color:var(--accent)':'color:var(--ink3)'),
+              labelStyle:'font-size:19px;font-weight:700;letter-spacing:-.02em;'
+                +(on?'color:var(--accent)':'color:var(--ink)'),
+              subStyle:'font-size:14px;line-height:1.55;text-wrap:pretty;margin-top:8px;color:var(--ink2)',
+              ctaStyle:'font-size:14px;font-weight:600;margin-top:auto;padding-top:18px;white-space:nowrap;'
+                +(on?'color:var(--accent)':'color:var(--ink2)'),
               go:()=>this.setState({screen:key,menu:null}),
-              style:'display:flex;flex-direction:column;gap:10px;min-height:158px;padding:22px;'
-                +'border-radius:18px;cursor:pointer;min-width:0;'
-                +'transition:transform .18s cubic-bezier(.2,.7,.3,1),background .18s;'
+              style:'display:flex;flex-direction:column;gap:16px;min-height:'+this.L('180px','208px','232px')+';'
+                +'padding:'+this.L('22px','24px','26px')+';border-radius:var(--r-lg);cursor:pointer;min-width:0;'
+                +'transition:transform .18s cubic-bezier(.2,.7,.3,1),box-shadow .18s;'
                 +(on?'background:var(--accent-3);border:1px solid var(--accent-2)'
-                    :'background:var(--surface);border:1px solid var(--line)')
+                    :'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card)')
             };
           })
         };
@@ -2230,6 +2400,69 @@ class Component extends DCLogic {
             : '많이 찾는 장사예요'+(names.length>5?' · ···를 누르면 더 보여요':'')))),
       // 데이터와 무관한 값 — 로딩 중과 실패 상태에서도 보여야 한다
 
+      // ── 후보지 3단계: 지역 → 구 → 업종 ─────────────────────────────
+      // 업종 검색창 하나만 있으면 '어디에서 찾는지'가 화면에 없다.
+      fd:(()=>{
+        const SIDO=[
+          {v:'서울특별시', label:'서울', on:true},
+          {v:'부산광역시', label:'부산', on:false},
+          {v:'인천광역시', label:'인천', on:false},
+          {v:'경기도',     label:'경기', on:false}
+        ];
+        const sido=S.sido||'서울특별시';
+        const ready=!!S.zi&&!!S.zgu;
+        // 이 업종 자료가 실제로 있는 구만, 자료가 많은 순으로. 없는 구를 눌러 빈 화면을 보게 하지 않는다.
+        const guCount={};
+        if(ready){
+          const ix=S.zi.inds.indexOf(S.ind);
+          if(ix>=0) for(const k in S.zi.zones){
+            const gg=S.zgu[k]; if(!gg) continue;
+            const row=(S.zi.zones[k].rows||[]).find(x=>x[0]===ix);
+            if(!row||!row[1]||!row[2]) continue;
+            guCount[gg]=(guCount[gg]||0)+1;
+          }
+        }
+        const gus=Object.keys(guCount).sort((a,b)=>a.localeCompare(b,'ko'));
+        const cur=S.findGu||'';
+        const chip=on=>'display:inline-flex;align-items:center;justify-content:center;gap:6px;'
+          +'padding:10px 16px;border-radius:999px;font-size:14px;cursor:pointer;white-space:nowrap;'
+          +'transition:background .14s,color .14s;'
+          +(on?'background:var(--accent);color:#FFFFFF;font-weight:600'
+              :'background:var(--surface);color:var(--ink2)');
+        return {
+          sido:SIDO.map(o=>({
+            label:o.label+(o.on?'':' · 준비 중'),
+            pick:o.on? (()=>this.setState({sido:o.v, findGu:''})) : (()=>{}),
+            style:chip(o.on&&sido===o.v)
+              +(o.on?'':';opacity:.45;cursor:default')})),
+          // 구는 25개라 접어 둔다. 편 상태에서는 스크롤이 생기게 높이를 묶는다.
+          guOpen:!!S.findGuOpen,
+          guToggle:()=>this.setState({findGuOpen:!S.findGuOpen}),
+          guToggleLabel:(S.findGuOpen?'접기':'구 전체 보기')+' ('+gus.length+')',
+          guBoxStyle:'margin-top:12px;display:grid;gap:8px;'
+            +'grid-template-columns:repeat(auto-fill,minmax('+this.L('92px','108px','116px')+',1fr));'
+            // 펼치면 스크롤이 생긴다. 스크롤 막대가 보이도록 오른쪽 여백을 둔다.
+            +(S.findGuOpen? 'max-height:'+this.L('200px','240px','280px')+';overflow-y:auto;padding-right:8px' : ''),
+          // 접었을 때는 앞 6개만 그린다 — 반 잘린 줄을 남기면 '아래를 못 본다'가 된다
+          gu:(S.findGuOpen
+                ? [{label:'전체', v:''}, ...gus.map(g=>({label:g, v:g}))]
+                : [{label:'전체', v:''}, ...gus.map(g=>({label:g, v:g}))].slice(0,6)
+             ).map(o=>({
+            label:o.label,
+            pick:()=>this.setState({findGu:o.v, sel:null}),
+            style:'display:flex;align-items:center;justify-content:center;padding:11px 8px;'
+              +'border-radius:var(--r-sm);font-size:13.5px;cursor:pointer;white-space:nowrap;'
+              +'overflow:hidden;text-overflow:ellipsis;transition:background .14s,color .14s;'
+              +(cur===o.v?'background:var(--accent-3);color:var(--accent);font-weight:700'
+                         :'background:var(--surface);color:var(--ink2)')})),
+          guNote: cur? cur+'에서 자료가 있는 상권 '+(guCount[cur]||0)+'곳' : '서울 전체에서 찾습니다',
+          hasGu: gus.length>0,
+          indValue:S.ind,
+          indName:this.indName(S.ind),
+          scope: cur || '서울 전체'
+        };
+      })(),
+
       // 지역 화면에서 업종을 이미 골라 왔으면 질문이 아니라 확인으로 말한다
       findTitle: S.fromRegion
         ? this.indName(S.ind)+' 기준으로 보고 있습니다'
@@ -2243,12 +2476,26 @@ class Component extends DCLogic {
       headerStyle:'position:sticky;top:0;z-index:50;height:'+this.L('56px','60px','64px')+';display:flex;align-items:center;'
         +'background:var(--bg-blur);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);'
         +'border-bottom:1px solid rgba(0,0,0,.05);transition:all .2s ease-in-out',
-      headerInner:'width:100%;max-width:'+this.L('100%','720px','760px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+';display:flex;align-items:center;gap:'+this.L('12px','20px','28px'),
+      headerInner:'width:100%;max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+';display:flex;align-items:center;gap:'+this.L('12px','20px','28px'),
       // 칸을 1080 으로 잡아 놨는데 안의 내용은 전부 600~660 으로 묶여 있어
       // 오른쪽 400px 이 늘 비어 있었다("왜 다 왼쪽에 있어"). 칸을 내용에 맞춘다.
       // 넓히는 쪽이 아니라 좁히는 쪽으로 맞춘 이유: 620px 짜리 본문을 1080 으로 늘리면
       // 한 줄이 너무 길어져 읽기 어려워진다.
-      mainStyle:'max-width:'+this.L('100%','720px','760px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+' '+this.L('80px','110px','130px'),
+      // 데스크톱 1280 / 좌우 32. 넓힌 만큼 각 화면의 내용도 그리드로 폭을 채운다.
+      mainStyle:'max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+' '+this.L('80px','110px','120px'),
+      ds1:this.ds('h1'), ds2:this.ds('h2'), ds3:this.ds('h3'),
+      // 모바일에서는 전부 1열. 세로 메뉴도 위쪽 가로 목록이 된다.
+      mapCols:this.L('1fr','1fr','minmax(0,1.35fr) minmax(300px,1fr)'),
+      dashCols:this.L('1fr','1fr','minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr)'),
+      navCols:this.L('1fr','1fr','200px minmax(0,1fr)'),
+      dsCard:this.ds('card'), dsCardLg:this.ds('cardLg'), dsCardHi:this.ds('cardHi'),
+      dsNum:this.ds('num'), dsNumSm:this.ds('numSm'),
+      dsBody:this.ds('body'), dsSub:this.ds('sub'),
+      dsCta:this.ds('cta'), dsGhost:this.ds('ctaGhost'), dsInput:this.ds('input'),
+      // 섹션 간격 72~96 · 카드 간격 16~20
+      dsSection:'padding:'+this.L('48px','64px','80px')+' 0 0',
+      dsGrid3:'display:grid;gap:'+this.L('14px','16px','20px')+';grid-template-columns:repeat(auto-fit,minmax('+this.L('100%','260px','300px')+',1fr))',
+      dsGrid4:'display:grid;gap:'+this.L('12px','16px','18px')+';grid-template-columns:repeat(auto-fit,minmax('+this.L('150px','200px','220px')+',1fr))',
       dataError:S.err, retryData:()=>location.reload(),
       ...this.home(),
       ai:this.chat(),
@@ -2310,20 +2557,26 @@ class Component extends DCLogic {
       return out;
     }
 
-    const L=r.list;
+    // 후보지는 '지역 → 구 → 업종' 순으로 좁힌다. 구를 고르면 그 안에서만 줄 세운다.
+    const findGu = S.findGu || '';
+    const Lall = r.list;
+    const Lgu = findGu ? Lall.filter(o=>(S.zgu||{})[o.id]===findGu) : Lall;
+    const L = Lgu.length ? Lgu : Lall;
     // 홈에서 고른 지역이 이 업종에 기록이 있으면 그 자리를 먼저 보여준다
     const fromHome = (!S.sel && S.homeZone) ? L.find(o=>o.name===S.homeZone) : null;
     const sel = S.sel ? (L.find(o=>o.id===S.sel)||L[0]) : (fromHome||L[0]);
-    const PICKS = S.picks || L.slice(0,3).map(o=>o.id);
+    // 비교분석은 빈 화면에서 시작한다. 임의로 3곳을 담아 두면
+    // '내가 고른 것'과 '앱이 고른 것'이 구분되지 않는다.
+    const PICKS = S.picks || [];
     // 비교 담기 — 빼기만 가능하면 되돌릴 수 없으므로 목록·결론 양쪽에 토글을 둔다
     const pickToggle=o=>()=>{
       const p=[...PICKS], i=p.indexOf(o.id);
-      if(i>=0) p.splice(i,1); else if(p.length<5) p.push(o.id);
+      if(i>=0) p.splice(i,1); else if(p.length<3) p.push(o.id);
       this.setState({picks:p});
     };
     const pickLabelOf=o=>{
       const inP=PICKS.indexOf(o.id)>=0;
-      return inP? '비교에서 빼기' : (PICKS.length>=5? '비교 5곳 꽉 찼음' : '비교에 담기 ('+PICKS.length+'/5)');
+      return inP? '비교에서 빼기' : (PICKS.length>=3? '비교 3곳 꽉 찼어요' : '비교에 담기 ('+PICKS.length+'/3)');
     };
     const monthly=v=>this.fmt(v/3)+'원';
     const grade=sc=>sc>=75?['매우 유망','var(--good)']:(sc>=60?['괜찮음','var(--good)']:(sc>=45?['보통','var(--ink2)']:['조심','var(--warn)']));
@@ -2384,6 +2637,44 @@ class Component extends DCLogic {
         const med=s[Math.floor(s.length/2)], mx=Math.max(...L.map(o=>o.score),1);
         return 'position:absolute;top:-5px;bottom:-5px;left:'+(med/mx*100).toFixed(1)+'%;width:2px;background:var(--ink);border-radius:1px';
       })(),
+      // 지표 → 숫자 → 의미. 숫자만 던지지 않는다.
+      metrics:(()=>{
+        const medOf=k=>{ const v=L.map(o=>o[k]).sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; };
+        const lp=S.zlp&&S.zlp[sel.id];
+        const pops=L.map(o=>(S.zlp&&S.zlp[o.id])?S.zlp[o.id].tot:null).filter(v=>v!=null).sort((a,b)=>a-b);
+        const popMed=pops.length?pops[Math.floor(pops.length/2)]:null;
+        const M=[];
+        // 매출·소비 규모는 쏠림이 커서 '중앙값 대비 %'가 1000% 를 넘는다 → 백분위로 말한다
+        const vSales=this.pctRank(sel.per, L.map(o=>o.per), true);
+        M.push(this.mx('예상 매출 (추정)', this.fmt(sel.per/3)+'원', vSales.text, vSales.tone));
+        // 경쟁은 '적을수록 좋다' — 부호가 아니라 의미로 색을 정한다
+        const vComp=this.vs(sel.stores, medOf('stores'), '', {moreIsBetter:false, moreWord:'많아요', lessWord:'적어요'});
+        M.push(this.mx('경쟁 점포', sel.stores.toLocaleString()+'곳', vComp.text, vComp.tone));
+        if(lp){
+          const vPop=this.vs(lp.tot, popMed, '', {moreIsBetter:true});
+          M.push(this.mx('유동인구', Math.round(lp.tot).toLocaleString()+'명', vPop.text, vPop.tone));
+        } else {
+          M.push(this.mx('유동인구', '자료 없음', '이 상권은 아직 집계되지 않았어요', 'flat'));
+        }
+        const vSpend=this.pctRank(sel.sales, L.map(o=>o.sales), true);
+        M.push(this.mx('상권 소비 규모', this.fmt(sel.sales)+'원', vSpend.text, vSpend.tone));
+        return M;
+      })(),
+      // 점수만 던지면 '왜 87점인지'를 알 수 없다. 근거 세 줄을 함께 둔다.
+      why:(()=>{
+        const out=[];
+        if(sel._sales>=55) out.push('상권 전체 매출이 서울 평균보다 높아요');
+        else if(sel._sales<=35) out.push('상권 전체 매출은 서울 평균보다 낮아요');
+        if(sel._stores>=55) out.push('같은 업종 경쟁이 서울 평균보다 적어요');
+        else if(sel._stores<=35) out.push('같은 업종 경쟁이 서울 평균보다 많아요');
+        if(sel._per>=55) out.push('가게 한 곳당 매출이 높은 편이에요');
+        const lp=S.zlp&&S.zlp[sel.id];
+        if(lp) out.push(lp.dong+' 하루 유동인구가 '+Math.round(lp.tot).toLocaleString()+'명이에요');
+        if(sel.stores<10) out.push('다만 표본이 '+sel.stores+'곳뿐이라 참고용이에요');
+        return out.slice(0,3).map(t=>({
+          text:t,
+          style:'display:flex;align-items:flex-start;gap:9px;font-size:14.5px;line-height:1.55;color:var(--ink2)'}));
+      })(),
       // 해석 먼저, 숫자 나중, 표본 수 함께
       reasons:(()=>{
         const R=S.sti&&S.sti.ind?S.sti.ind[S.ind]:null;
@@ -2433,7 +2724,7 @@ class Component extends DCLogic {
         +(o.id===sel.id
           ? 'background:var(--accent-3);box-shadow:inset 0 0 0 1.5px var(--accent)'
           : 'background:var(--surface)'),
-      pickLabel: PICKS.indexOf(o.id)>=0 ? '비교에서 빼기' : (PICKS.length>=5? '비교 5곳 꽉 찼어요' : '비교에 담기'),
+      pickLabel: PICKS.indexOf(o.id)>=0 ? '비교에서 빼기' : (PICKS.length>=3? '비교 3곳 꽉 찼어요' : '비교에 담기'),
       pickStyle: PICKS.indexOf(o.id)>=0
         ? 'font-size:12.5px;color:var(--accent);cursor:pointer;white-space:nowrap;font-weight:600'
         : (PICKS.length>=5
@@ -2577,10 +2868,10 @@ class Component extends DCLogic {
     const R=S.sti&&S.sti.ind?S.sti.ind[S.ind]:null;
     const bigv='font-size:24px;font-weight:500;letter-spacing:-0.02em;margin-top:5px;font-variant-numeric:tabular-nums';
     out.riskStats = R? [
-      {label:'서울 가게 수', value:R.stores.toLocaleString()+'곳', tag:'공공 집계', valStyle:bigv},
+      {label:'서울 가게 수', value:R.stores.toLocaleString()+'곳', tag:'', valStyle:bigv},
       {label:'문 닫은 곳', value:R.closed.toLocaleString()+'곳', tag:'3개월', valStyle:bigv+';color:var(--warn)'},
       {label:'새로 연 곳', value:R.opened.toLocaleString()+'곳', tag:'3개월', valStyle:bigv},
-      {label:'프랜차이즈', value:R.fr_share+'%', tag:'공공 집계', valStyle:bigv}
+      {label:'프랜차이즈', value:R.fr_share+'%', tag:'', valStyle:bigv}
     ] : [];
     // 포화도 — 가게 수를 사람 수로 나눈다. 서울 중위값이 기준선이라 우리 판단이 끼지 않는다.
     out.sat=(()=>{
@@ -2619,10 +2910,10 @@ class Component extends DCLogic {
         has:true,
         lead: '이 동네에 하루 '+Math.round(lp.tot).toLocaleString()+'명이 오갑니다.',
         stats:[
-          {label:'하루 오가는 사람', value:Math.round(lp.tot).toLocaleString()+'명', tag:'공공 집계 · '+lp.dong},
-          {label:'추정 객단가', value:Math.round(perHead).toLocaleString()+'원', tag:'원자료 · 결제 1건당'},
-          {label:'가장 많은 나이', value:AL[hi], tag:'공공 집계'},
-          {label:'여성 비율', value:Math.round(lp.f/lp.tot*100)+'%', tag:'공공 집계'}
+          {label:'하루 오가는 사람', value:Math.round(lp.tot).toLocaleString()+'명', tag:lp.dong},
+          {label:'추정 객단가', value:Math.round(perHead).toLocaleString()+'원', tag:'(추정)'},
+          {label:'가장 많은 나이', value:AL[hi], tag:''},
+          {label:'여성 비율', value:Math.round(lp.f/lp.tot*100)+'%', tag:''}
         ],
         note:'유동인구는 '+lp.dong+' 행정동 값입니다. 동네(상권)보다 넓은 단위라 이 자리만의 값은 아닙니다. 상권 좌표를 행정동 경계와 대조해 붙였습니다.'
       };
@@ -2758,29 +3049,119 @@ class Component extends DCLogic {
           if(R.opened>=R.closed) good.push('이 장사는 서울에서 가게가 늘고 있어요.');
           else care.push('이 장사는 서울에서 가게가 줄고 있어요.');
         }
-        care.push('임대료는 동네별로 공개되지 않아서 직접 확인해야 해요.');
+        care.push('상권 단위 임대료 자료가 없어 중개인에게 직접 확인해야 해요.');
         return {good:good.slice(0,4), care:care.slice(0,4)};
       })(),
       // 이 상권은 서울과 얼마나 다를까 — 상대값까지 계산해 준다
       vs:(()=>{
         const lp=S.zlp&&S.zlp[sel.id];
         const med=key=>{ const v=L.map(o=>o[key]).sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; };
-        const row=(label,mine,seoul,fmt)=>{
+        // '+'가 곧 좋은 게 아니다. 경쟁 점포가 30% 많은 건 나쁜 값이다.
+        // 그리고 매출처럼 쏠린 값은 '+1107%'가 나와 읽히지 않으므로 백분위로 바꾼다.
+        const row=(label,mine,seoul,fmt,opt)=>{
+          const o=opt||{};
           const d=seoul? (mine-seoul)/seoul*100 : null;
-          return {label:label, mine:fmt(mine), seoul:fmt(seoul),
-            delta:d==null?'—':((d>0?'+':'')+Math.round(d)+'%'),
-            deltaStyle:'font-size:13px;font-weight:600;white-space:nowrap;color:'+(d==null?'var(--ink3)':(d>0?'var(--good)':'var(--warn)'))};
+          const moreIsBetter=o.moreIsBetter!==false;
+          let text, tone;
+          if(d==null){ text='—'; tone='var(--ink3)'; }
+          else if(o.skewed && Math.abs(d)>=200){
+            const pr=this.pctRank(mine, o.all||[], moreIsBetter);
+            text=pr.text||'—';
+            tone=({good:'var(--good)',warn:'var(--warn)',flat:'var(--ink3)'})[pr.tone];
+          } else {
+            text=(d>0?'+':'')+Math.round(d)+'%';
+            const helpful=(d>0)===moreIsBetter;
+            tone=Math.abs(d)<5? 'var(--ink3)' : (helpful?'var(--good)':'var(--warn)');
+          }
+          return {label:label, mine:fmt(mine), med:fmt(seoul), seoul:fmt(seoul),
+            delta:text,
+            deltaStyle:'font-size:13px;font-weight:600;white-space:nowrap;color:'+tone};
         };
         const rows=[
-          row('가게 한 곳당 월매출', sel.per/3, med('per')/3, v=>this.fmt(v)+'원'),
-          row('같은 장사 수', sel.stores, med('stores'), v=>Math.round(v).toLocaleString()+'곳'),
-          row('손님이 쓴 돈 (3개월)', sel.sales, med('sales'), v=>this.fmt(v)+'원')
+          row('가게 한 곳당 월매출', sel.per/3, med('per')/3, v=>this.fmt(v)+'원',
+              {skewed:true, all:L.map(o=>o.per/3), moreIsBetter:true}),
+          row('같은 업종 점포 수', sel.stores, med('stores'), v=>Math.round(v).toLocaleString()+'곳',
+              {moreIsBetter:false}),
+          row('상권 소비 규모 (3개월)', sel.sales, med('sales'), v=>this.fmt(v)+'원',
+              {skewed:true, all:L.map(o=>o.sales), moreIsBetter:true})
         ];
         if(lp){
           const tots=L.map(o=>{ const l=S.zlp&&S.zlp[o.id]; return l?l.tot:null; }).filter(v=>v!=null).sort((a,b)=>a-b);
-          rows.unshift(row('하루 오가는 사람', lp.tot, tots[Math.floor(tots.length/2)], v=>Math.round(v).toLocaleString()+'명'));
+          rows.unshift(row('하루 오가는 사람', lp.tot, tots[Math.floor(tots.length/2)], v=>Math.round(v).toLocaleString()+'명', {moreIsBetter:true}));
         }
         return {rows:rows, note:'서울 값은 이 장사 데이터가 있는 동네들의 중앙값이에요. 평균이 아니라 중앙값이라 몇 곳의 큰 값에 끌려가지 않아요.'};
+      })(),
+      // ── 정밀분석 대시보드 ────────────────────────────────────────
+      // 들어가자마자 차트를 던지지 않는다. '좋은가/나쁜가'와 그 이유 먼저.
+      dash:(()=>{
+        const A=this._mvA||this.mvSections(sel,L);
+        const med=k=>{ const v=L.map(o=>o[k]).sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; };
+        const lp=S.zlp&&S.zlp[sel.id];
+        const fit=(()=>{
+          if(sel.stores<10) return {word:'판단 보류', tone:'flat',
+            why:'표본이 '+sel.stores+'곳뿐이라 단정할 수 없어요'};
+          if(sel.score>=70) return {word:'좋음', tone:'good', why:''};
+          if(sel.score>=50) return {word:'보통', tone:'flat', why:''};
+          return {word:'주의', tone:'warn', why:''};
+        })();
+        const good=[], care=[];
+        const push=(arr,label,text)=>arr.push({label:label, text:text});
+        const vSales=this.pctRank(sel.per, L.map(o=>o.per), true);
+        if(sel._per>=55) push(good,'예상 매출', vSales.text);
+        else if(sel._per<=35) push(care,'예상 매출', vSales.text);
+        const vComp=this.vs(sel.stores, med('stores'), '', {moreIsBetter:false});
+        if(sel._stores>=55) push(good,'경쟁 강도', vComp.text);
+        else if(sel._stores<=35) push(care,'경쟁 강도', vComp.text);
+        if(lp){
+          const tots=L.map(o=>{const l=S.zlp&&S.zlp[o.id];return l?l.tot:null;}).filter(v=>v!=null).sort((a,b)=>a-b);
+          const vPop=this.vs(lp.tot, tots[Math.floor(tots.length/2)], '', {moreIsBetter:true});
+          (vPop.tone==='good'?good:care).push({label:'유동인구', text:vPop.text});
+        }
+        const rf=this.rentRef(sel.name);
+        if(rf&&rf.exact) push(care,'임대료', rf.value+'/㎡ · '+rf.note);
+        if(sel.stores<10) push(care,'표본', '가게가 '+sel.stores+'곳뿐이라 평균이 흔들려요');
+        const style=t=>'display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:var(--r-md);'
+          +'background:var(--bg);min-width:0';
+        return {
+          zone:this.zoneLabelOf(sel.name), ind:this.indName(S.ind),
+          fit:fit.word, fitWhy:fit.why, hasFitWhy:!!fit.why,
+          fitStyle:'font-size:'+this.L('30px','34px','38px')+';font-weight:700;letter-spacing:-.03em;line-height:1.1;'
+            +'color:'+({good:'var(--good)',warn:'var(--warn)',flat:'var(--ink)'}[fit.tone]),
+          tips:(()=>{ const g=A.find(x=>x.key==='grow');
+            return g? (g.rows||[]).slice(0,3).map(r=>({text:r.label+(r.value?' · '+r.value:'')})) : []; })(),
+          hasTips:!!A.find(x=>x.key==='grow'),
+          good:good.slice(0,3).map(o=>({...o, style:style(), tone:'color:var(--good);font-weight:600;font-size:13px'})),
+          care:care.slice(0,3).map(o=>({...o, style:style(), tone:'color:var(--warn);font-weight:600;font-size:13px'})),
+          hasGood:good.length>0, hasCare:care.length>0
+        };
+      })(),
+      // 세로 메뉴 — 가로 칩이 7~10개면 어디를 눌러야 할지 모른다
+      nav:(()=>{
+        const A=(this._mvA||this.mvSections(sel,L)).filter(x=>x.key!=='grow');
+        const cur=S.mvTab||A[0].key;
+        return A.map(x=>({
+          label:x.title.split(' · ')[0],
+          pick:()=>this.setState({mvTab:x.key}),
+          style:'display:block;padding:12px 14px;border-radius:var(--r-sm);cursor:pointer;'
+            +'font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+            +'transition:background .14s,color .14s;'
+            +(x.key===cur?'background:var(--accent-3);color:var(--accent);font-weight:700'
+                         :'color:var(--ink2)')}));
+      })(),
+      // 지금 고른 섹션 하나만 오른쪽에 크게
+      now:(()=>{
+        const A=(this._mvA||this.mvSections(sel,L)).filter(x=>x.key!=='grow');
+        const cur=A.find(x=>x.key===(S.mvTab||A[0].key))||A[0];
+        return {
+          title:cur.title, q:cur.q||'', big:cur.big||'', bigLabel:cur.bigLabel||'',
+          verdict:cur.verdict||'', hasVerdict:!!cur.verdict,
+          rows:(cur.rows||[]).map(r=>({...r, hasTag:!!r.tag})),
+          bars:cur.bars||[], hasBars:!!(cur.bars&&cur.bars.length),
+          note:cur.note||'', hasNote:!!cur.note,
+          bigStyle:'font-size:'+this.L('30px','34px','40px')+';font-weight:700;letter-spacing:-.03em;'
+            +'line-height:1.08;font-variant-numeric:tabular-nums;margin-top:10px;'
+            +((cur.big&&cur.big!=='데이터 없음'&&cur.big!=='자료 없음')?'':'font-size:19px;color:var(--ink3)')
+        };
       })(),
       // 탭 — 스타일만 만든다. 내용은 card 하나가 그린다.
       sections:(()=>{
@@ -2811,6 +3192,19 @@ class Component extends DCLogic {
             style:'display:flex;flex-direction:column;padding:16px 18px;border-radius:14px;'
               +'background:var(--surface);cursor:pointer;min-width:0;transition:background .14s'
           };
+        });
+      })(),
+      // 지도 옆 요약은 세 개만. 지도는 '어디인지'를 답하는 화면이다.
+      summary3:(()=>{
+        const A=this._mvA||this.mvSections(sel,L);
+        const want=['sales','demand','comp'];
+        const pick=want.map(k=>A.find(x=>x.key===k)).filter(Boolean);
+        return (pick.length?pick:A.slice(0,3)).map(x=>{
+          const has=x.big&&x.big!=='데이터 없음'&&x.big!=='자료 없음';
+          return {label:x.title.split(' · ')[0], big:x.big||'자료 없음', note:x.bigLabel||'',
+            bigStyle:'font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.15;'
+              +'font-variant-numeric:tabular-nums;margin-top:4px;'
+              +(has?'':'font-size:17px;color:var(--ink3);font-weight:600')};
         });
       })(),
       summaryGrid:'display:grid;gap:10px;margin-top:18px;grid-template-columns:'
@@ -2868,16 +3262,16 @@ class Component extends DCLogic {
         const here=[];
         if(lp){
           here.push({label:'사람 1만 명당 가게', value:(sel.stores/(lp.tot/10000)).toFixed(1)+'개', tag:'가게 ÷ 유동인구'});
-          here.push({label:'추정 객단가', value:Math.round(sel.unit).toLocaleString()+'원', tag:'원자료 · 결제 1건당'});
+          here.push({label:'추정 객단가', value:Math.round(sel.unit).toLocaleString()+'원', tag:'(추정)'});
         }
-        here.push({label:'같은 가게 수', value:sel.stores.toLocaleString()+'곳', tag:'공공 집계'});
-        here.push({label:'가게 한 곳당 월매출', value:this.fmt(sel.per/3)+'원', tag:'추정 · 매출 ÷ 가게 수'});
+        here.push({label:'같은 가게 수', value:sel.stores.toLocaleString()+'곳', tag:''});
+        here.push({label:'가게 한 곳당 월매출', value:this.fmt(sel.per/3)+'원', tag:'(추정)'});
         // 장사 전체(서울) 상수 — 자리를 바꿔도 변하지 않는다
         const seoul=[
           {label:'폐업률', value:myRate.toFixed(1)+'%', tag:'서울 전체 · 폐업 ÷ 전체 × 100'},
           {label:'폐업률 T점수', value:T+'점 · '+risk.t, tag:'서울 전체 · z×10+50', color:risk.c},
           {label:'62가지 평균 폐업률', value:mean.toFixed(1)+'%', tag:'서울 전체'},
-          {label:'프랜차이즈 비중', value:me.fr_share+'%', tag:'서울 전체 · 공공 집계'},
+          {label:'프랜차이즈 비중', value:me.fr_share+'%', tag:'서울 전체'},
           {label:'가게 순증감', value:(me.opened-me.closed>0?'+':'')+(me.opened-me.closed).toLocaleString()+'곳', tag:'서울 전체 · 3개월'},
           {label:'가게 회전율', value:((me.opened+me.closed)/me.stores*100).toFixed(1)+'%', tag:'서울 전체 · (개업+폐업) ÷ 전체'}
         ];
@@ -2913,9 +3307,9 @@ class Component extends DCLogic {
           dong:lp?lp.dong+' 행정동 · 하루 '+Math.round(lp.tot).toLocaleString()+'명':'',
           rows:rows,
           facts:lp?[
-            {label:'추정 객단가', value:Math.round(perHead).toLocaleString()+'원', tag:'추정'},
-            {label:'여성', value:Math.round(lp.f/lp.tot*100)+'%', tag:'공공 집계'},
-            {label:'남성', value:Math.round(lp.m/lp.tot*100)+'%', tag:'공공 집계'},
+            {label:'추정 객단가', value:Math.round(perHead).toLocaleString()+'원', tag:'(추정)'},
+            {label:'여성', value:Math.round(lp.f/lp.tot*100)+'%', tag:''},
+            {label:'남성', value:Math.round(lp.m/lp.tot*100)+'%', tag:''},
             {label:'자치구', value:this.guLabel(mv0.id)||'—', tag:'좌표로 계산'}
           ]:[],
           note:lp?'유동인구는 '+lp.dong+' 행정동 값이에요. 상권보다 넓은 단위라 이 자리만의 값은 아니에요.':'이 자리의 유동인구 데이터가 없어요.'
@@ -2936,7 +3330,12 @@ class Component extends DCLogic {
     // ── 비교
     const picks=PICKS.map(id=>L.find(o=>o.id===id)).filter(Boolean);
     if(picks.length<2){
-      out.c={headline:'두 곳 이상 담아 주세요.', sub:'자리 찾기에서 ‘비교에 담기’를 누르세요.', cols:[], diffs:[], honesty:'', empty:true, on:false};
+      out.c={
+        headline:'상권을 비교해 보세요',
+        sub:'관심 있는 상권을 최대 3곳까지 나란히 놓고 볼 수 있어요.',
+        emptyCount: picks.length===1? '지금 1곳을 담았어요. 한 곳만 더 담으면 비교가 시작돼요.' : '',
+        cols:[], diffs:[], honesty:'', empty:true, on:false,
+        verdict:'', verdictWhy:[], hasVerdict:false};
       out.openMap=false; out.mapPins=[]; out.mapNote='';
       out.cmpMap={ready:false,gus:[],pins:[],vb:'0 0 100 100',stroke:'0.5',legend:[],legendNote:''};
       out.addZoneOptions=[{id:'',label:'동네 더하기'}]; out.addZoneFull=false; out.onAddZone=()=>{};
@@ -2965,21 +3364,58 @@ class Component extends DCLogic {
     const MX={score:Math.max(...picks.map(o=>o.score)),per:Math.max(...picks.map(o=>o.per)),sales:Math.max(...picks.map(o=>o.sales)),stores:Math.max(...picks.map(o=>o.stores))};
     const bigc='font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums';
     const rel=(v,k,col)=>'width:'+Math.max(Math.min(v/MX[k],1)*100,2).toFixed(1)+'%;height:100%;background:'+col+';border-radius:2px';
+    // 숫자 스무 개를 늘어놓고 사장님더러 판단하라고 하면 안 된다. 결론을 먼저 말한다.
+    const winner = bS || bP || null;
+    const whyWin = (()=>{
+      if(!winner) return [];
+      const w=[];
+      if(winner===bD) w.push('상권 전체 매출이 가장 커요');
+      if(winner===bP) w.push('가게 한 곳당 매출이 가장 높아요');
+      if(winner===bF) w.push('같은 업종 경쟁이 가장 적어요');
+      const lp=S.zlp&&S.zlp[winner.id];
+      if(lp) w.push('하루 유동인구가 '+Math.round(lp.tot).toLocaleString()+'명이에요');
+      if(winner.stores<10) w.push('다만 표본이 '+winner.stores+'곳뿐이라 참고용이에요');
+      return w.slice(0,3);
+    })();
     out.c={
       headline:'담아 둔 '+picks.length+'곳, 어디로 할까요?',
-      sub:'서로 다른 동네를 내가 고른 것만 견줘요.',
-      empty:false, on:true,
-      cols:picks.map(o=>({
-        name:o.name, rank:S.ind+' '+(L.indexOf(o)+1)+'위',
+      sub:'내가 고른 상권만 나란히 놓고 봅니다.',
+      empty:false, on:true, emptyCount:'',
+      hasVerdict: !!winner,
+      verdict: winner
+        ? '종합적으로는 '+this.zoneLabelOf(winner.name)+ga(winner.name)+' '+this.indName(S.ind)+' 창업에 더 유리해 보여요.'
+        : '지금 담은 곳들은 항목마다 앞서는 곳이 달라요. 아래에서 무엇을 더 중요하게 볼지 정해 보세요.',
+      verdictWhy: whyWin.map(t=>({text:t,
+        style:'display:flex;align-items:flex-start;gap:9px;font-size:14.5px;line-height:1.55;color:var(--ink2)'})),
+      cols:picks.map(o=>{
+        const lp=S.zlp&&S.zlp[o.id];
+        // 회색 글자는 '계산값'·'공공 집계' 같은 출처가 아니라, 이 값이 어떤 뜻인지만 적는다
+        return {
+        name:this.zoneLabelOf(o.name), rank:(S.zgu&&S.zgu[o.id])||'',
         diag:()=>this.setState({sel:o.id,screen:'diag'}),
         drop:()=>this.setState({picks:PICKS.filter(x=>x!==o.id)}),
+        best:o===bS,
+        cardStyle:(o===bS
+          ? 'background:var(--accent-3);border:1px solid var(--accent-2)'
+          : 'background:var(--bg);border:1px solid var(--line);box-shadow:var(--shadow-card)')
+          +';border-radius:var(--r-lg);padding:20px;min-width:0;position:relative',
         cells:[
-          {label:'기회점수', value:Math.round(o.score), note:o===bS?'가장 높음':(bS?'계산값':tieWord), valStyle:bigc+(o===bS?';color:var(--accent)':''), bar:rel(o.score,'score',o===bS?'var(--accent)':'var(--line-strong)')},
-          {label:'한 집당 월매출', value:monthly(o.per), note:o===bP?'가장 높음 · 추정':(bP?'추정':tieWord+' · 추정'), valStyle:bigc+(o===bP?';color:var(--accent)':''), bar:rel(o.per,'per',o===bP?'var(--accent)':'var(--line-strong)')},
-          {label:'경쟁 가게', value:o.stores.toLocaleString()+'곳', note:(o===bF?'가장 적음':(bF?'공공 집계':tieWord))+' · 적을수록 길다', valStyle:bigc+(o===bF?';color:var(--accent)':''), bar:'width:'+Math.max((1-(o.stores/(MX.stores*1.15)))*100,2).toFixed(1)+'%;height:100%;background:'+(o===bF?'var(--accent)':'var(--line-strong)')+';border-radius:2px'},
-          {label:'임대료', value:'데이터 없음', note:'동네별로 공표되지 않습니다', valStyle:'font-size:17px;font-weight:600;margin-top:3px;color:var(--ink3)', bar:null}
-        ]
-      })),
+          {label:'예상 매출 (추정)', value:monthly(o.per),
+           note:o===bP?'담은 곳 중 가장 높아요':'',
+           valStyle:bigc+(o===bP?';color:var(--accent)':''),
+           bar:rel(o.per,'per',o===bP?'var(--accent)':'var(--line-strong)')},
+          {label:'경쟁 점포', value:o.stores.toLocaleString()+'곳',
+           note:o===bF?'담은 곳 중 경쟁이 가장 적어요':'',
+           valStyle:bigc+(o===bF?';color:var(--accent)':''),
+           bar:'width:'+Math.max((1-(o.stores/(MX.stores*1.15)))*100,2).toFixed(1)+'%;height:100%;background:'+(o===bF?'var(--accent)':'var(--line-strong)')+';border-radius:2px'},
+          {label:'유동인구', value:lp? Math.round(lp.tot).toLocaleString()+'명':'자료 없음',
+           note:'', valStyle:bigc+(lp?'':';color:var(--ink3)'), bar:null},
+          {label:'상권 소비 규모', value:this.fmt(o.sales)+'원',
+           note:o===bD?'담은 곳 중 가장 커요':'',
+           valStyle:bigc+(o===bD?';color:var(--accent)':''),
+           bar:rel(o.sales,'sales',o===bD?'var(--accent)':'var(--line-strong)')}
+        ]};
+      }),
       diffs:[
         {dot:'width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none;margin-top:9px',
          text: (bD&&bF&&bD!==bF)? '상권 전체 매출이 가장 큰 곳은 '+bD.name+', 경쟁이 가장 적은 곳은 '+bF.name+'입니다.'
@@ -2991,7 +3427,7 @@ class Component extends DCLogic {
          text: bP? '한 집당 월매출은 '+bP.name+ga(bP.name)+' '+monthly(bP.per)+'으로 가장 높습니다.'
                  : '한 집당 월매출은 '+tieSent+'. 이 항목으로는 구분되지 않습니다.'},
         {dot:'width:5px;height:5px;border-radius:50%;background:var(--warn);flex:none;margin-top:9px',
-         text:'임대료는 '+countWord+' 모두 미확인입니다. 중개인에게 확인한 금액을 본전 계산에 직접 넣어 비교하세요.'}
+         text:'임대료는 상권 단위 자료가 없어요. 중개인에게 확인한 금액을 본전 계산에 직접 넣어 견주세요.'}
       ],
       honesty:''
     };

@@ -33,6 +33,10 @@ const FIELDS = {
   kind:     ['sprtRealmNm', 'supportType', '지원분야'],
   region:   ['areaNm', 'region', '지역'],
   target:   ['trgetNm', 'target', '지원대상'],
+  // 카드에 '무엇을 얼마나 주는지'가 없으면 신청으로 이어지지 않는다.
+  content:  ['bizIntrcn', 'sprtCn', 'pblancCn', 'bizCn', '지원내용', '사업개요'],
+  amount:   ['sprtAmt', 'bdgtAmt', 'sportAmount', '지원금액', '지원규모'],
+  start:    ['reqstBeginDe', 'pbancRcptBgngDt', 'startDate', '접수시작일'],
 };
 
 function pickField(row, names) {
@@ -57,7 +61,9 @@ export default async function handler(req, res) {
   if (!key || !base) {
     return res.status(200).json({
       ok: false, configured: false, items: [],
-      error: '지원사업 공고가 아직 연결되지 않았습니다. 공공데이터포털에서 창업지원사업 공고 서비스를 신청한 뒤 DATA_GO_KR_KEY 와 SUPPORT_API_URL 을 설정해 주세요.',
+      // 사용자에게는 환경변수 이름 같은 개발자 메시지를 노출하지 않는다.
+      // 운영자용 안내는 서버 로그로만 남긴다.
+      error: '지원사업 정보를 준비 중이에요. 준비되면 이 자리에 신청 가능한 공고가 나타납니다.',
     });
   }
 
@@ -91,6 +97,9 @@ export default async function handler(req, res) {
         kind: pickField(row, FIELDS.kind),
         region: pickField(row, FIELDS.region),
         target: pickField(row, FIELDS.target),
+        content: pickField(row, FIELDS.content).slice(0, 300),
+        amount: pickField(row, FIELDS.amount),
+        start: (function () { const d = parseDate(pickField(row, FIELDS.start)); return d ? ymdLocal(d) : null; })(),
       });
     }
     // 마감 임박순. 마감 없는 것은 뒤로.
