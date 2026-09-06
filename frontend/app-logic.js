@@ -161,7 +161,7 @@ class Component extends DCLogic {
     if(this._rz) window.removeEventListener('resize',this._rz);
     if(this._raf) cancelAnimationFrame(this._raf);
     if(this._ro) this._ro.disconnect();
-    clearTimeout(this._sc);clearTimeout(this._autoT);clearTimeout(this._panelT);this._dragCleanup?.();
+    clearTimeout(this._sc);clearTimeout(this._autoT);clearTimeout(this._panelT);
   }
 
   // 미디어 쿼리를 쓸 수 없으므로 폭을 재서 분기한다
@@ -1210,7 +1210,8 @@ class Component extends DCLogic {
       ...this.home(),
       ai:this.chat(),
       // 오른쪽 아래에서 접었다 폈다 — 어느 화면에서나 쓸 수 있다
-      botOpen:!!S.bot, botClosed:!S.bot,
+      // 홈에서 지역·업종 목록이 열려 있으면 도우미 버튼은 비켜 준다 — 목록 오른쪽 아래를 가린다
+      botOpen:!!S.bot, botClosed:!S.bot && !S.pickOpen,
       botToggle:()=>this.setState({bot:!S.bot},()=>{ if(!S.bot) this.scrollBot(); }),
       botPanel:'position:fixed;z-index:70;display:flex;flex-direction:column;background:var(--bg);'
         +'border-radius:'+this.L('20px 20px 0 0','20px','20px')+';box-shadow:0 24px 60px rgba(0,0,0,.22);'

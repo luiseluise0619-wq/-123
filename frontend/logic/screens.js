@@ -121,6 +121,20 @@ globalThis.MysbizonParts.screens = {
     // 자치구 목록과 선택된 구의 동네 (좌표로 계산한 zone_gu.json)
     const GU_LIST=['종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구','강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구','금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
     const guTab=S.guTab||'강남구';
+    // 시·도 — ready 는 '이 서비스가 그 지역 상권 자료를 실제로 갖고 있는가'다.
+    // 지금은 서울뿐이라 나머지는 눌러도 '아직 없어요'로 안내한다.
+    const SIDO_ALL=[
+      {v:'서울특별시',label:'서울',ready:true},{v:'부산광역시',label:'부산'},
+      {v:'대구광역시',label:'대구'},{v:'인천광역시',label:'인천'},
+      {v:'광주광역시',label:'광주'},{v:'대전광역시',label:'대전'},
+      {v:'울산광역시',label:'울산'},{v:'세종특별자치시',label:'세종'},
+      {v:'경기도',label:'경기'},{v:'강원특별자치도',label:'강원'},
+      {v:'충청북도',label:'충북'},{v:'충청남도',label:'충남'},
+      {v:'전북특별자치도',label:'전북'},{v:'전라남도',label:'전남'},
+      {v:'경상북도',label:'경북'},{v:'경상남도',label:'경남'},
+      {v:'제주특별자치도',label:'제주'}
+    ];
+    const homeSido=S.sido||'서울특별시';
     const guZoneList=(()=>{
       if(!S.zi||!S.zgu) return [];
       const out=[];
@@ -307,41 +321,41 @@ globalThis.MysbizonParts.screens = {
       // 검색 중이면 결과 목록, 아니면 자치구 2단
       zoneSearching: open==='zone' && !!pq,
       zoneBrowsing: open==='zone' && !pq,
+
+      // ── 시·도 ──────────────────────────────────────────────────
+      // 자료가 있는 곳은 서울뿐이다(서울시 상권분석서비스 1,564곳).
+      // 그렇다고 다른 시·도를 숨기면 '이 서비스는 서울만 되는구나'를 알 수 없다.
+      // 그래서 전부 보여 주되, 누르면 '아직 없어요'라고 정직하게 말한다.
+      sidoRow:'flex:none;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;'
+        +'padding:0 0 12px;margin-bottom:12px;border-bottom:1px solid var(--line)',
+      sidoChips:SIDO_ALL.map(o=>({
+        label:o.label,
+        pick:()=>this.setState({sido:o.v}),
+        style:'flex:none;padding:8px 13px;border-radius:999px;font-size:13px;cursor:pointer;'
+          +'white-space:nowrap;transition:background .14s,color .14s;'
+          +(o.v===homeSido
+            ? 'background:var(--accent);color:#FFFFFF;font-weight:600'
+            : 'background:var(--surface);color:var(--ink2)'+(o.ready?'':';opacity:.6'))
+      })),
+      sidoReadyHome: homeSido==='서울특별시',
+      sidoWaiting:   homeSido!=='서울특별시',
+      sidoWaitText:'‘'+homeSido+'’ 자료는 아직 없어요. 지금 쓰는 자료는 서울시 상권분석서비스라 서울 상권 1,564곳만 담고 있어요. 전국으로 넓히려면 소상공인시장진흥공단 상권정보로 갈아타야 하는데, 상권 구획과 업종 코드가 달라 맞춰 붙이는 작업이 필요해요.',
+      backToSeoulHome:()=>this.setState({sido:'서울특별시'}),
+      // 패널은 높이가 묶여 있다(화면 밖으로 나가지 않게). 안쪽이 넘치면 여기서 스크롤된다
+      // — 예전에는 패널이 overflow:hidden 이라 구 25개 중 첫 줄만 보이고 잘려 있었다.
+      panelBodyStyle:'flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:4px',
       allCardStyle:'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:12px;background:var(--surface);cursor:pointer;transition:background .14s'
         +(S.homeZoneName?'':';box-shadow:inset 0 0 0 1.5px var(--accent)'),
       pickAll:()=>this.setState({homeZoneName:null,zoneId:null,sel:null,zq:'',pickOpen:null}),
-      // 목록 높이를 끌어서 늘릴 수 있다. 최소 150 / 최대 420px로 묶는다.
-      // 구 25개를 세로 한 줄로 세우면 옆이 텅 비고 스크롤이 생긴다.
-      // ㄱㄴㄷ 순으로 여러 열에 깔면 25개가 한 화면에 다 들어와 스크롤이 없어진다.
-      guGridStyle:'flex:none;display:grid;gap:4px;margin-top:14px;padding-top:14px;'
+      // 구 25개를 세로 한 줄로 세우면 옆이 텅 빈다. ㄱㄴㄷ 순으로 여러 열에 깐다.
+      guGridStyle:'display:grid;gap:4px;margin-top:14px;padding-top:14px;'
         +'border-top:1px solid var(--line);'
         +'grid-template-columns:repeat('+this.L(3,4,5)+',minmax(0,1fr))',
-      // 상권 목록도 같은 이유로 폭을 채운다. 끌어서 높이를 조절하는 건 그대로.
-      colsStyle:'flex:none;height:'+(S.colsH||190)+'px;overflow-y:auto;margin-top:12px;padding-right:6px',
+      // 스크롤은 패널 본문(panelBodyStyle) 한 곳에서만 한다.
+      // 여기서 또 스크롤하면 상자 안 상자가 되어 어느 쪽이 움직이는지 알 수 없다.
+      colsStyle:'margin-top:12px',
       zoneGridStyle:'display:grid;gap:4px;'
         +'grid-template-columns:repeat(auto-fill,minmax('+this.L(140,180,200)+'px,1fr))',
-      onResize:e=>{
-        const startY=(e.touches?e.touches[0].clientY:e.clientY);
-        const startH=S.colsH||190;
-        const move=ev=>{
-          const y=(ev.touches?ev.touches[0].clientY:ev.clientY);
-          const h=Math.min(Math.max(startH+(y-startY),150),420);
-          this.setState({colsH:h});
-        };
-        const up=()=>{
-          window.removeEventListener('mousemove',move);
-          window.removeEventListener('mouseup',up);
-          window.removeEventListener('touchmove',move);
-          window.removeEventListener('touchend',up);
-          window.removeEventListener('touchcancel',up);
-        };
-        this._dragCleanup?.();this._dragCleanup=up;
-        window.addEventListener('touchcancel',up);
-        window.addEventListener('mousemove',move);
-        window.addEventListener('mouseup',up);
-        window.addEventListener('touchmove',move,{passive:false});
-        window.addEventListener('touchend',up);
-      },
       hasRecent:(S.recent||[]).length>0,
       recentChips:(S.recent||[]).map(nm=>zoneAll.find(z=>z.name===nm)).filter(Boolean).slice(0,4).map(z=>({
         name:this.zoneLabelOf(z.name), meta:guOf(z.id),
