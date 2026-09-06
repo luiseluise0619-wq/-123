@@ -1746,7 +1746,23 @@ class Component extends DCLogic {
               +(on?'background:var(--accent);color:#FFFFFF;font-weight:600'
                  :'background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-strong)');
             const cur=step<QS.length?QS[step]:null;
+            const answered=QS.filter(q=>val(q.k)).length;
             return {
+              // 창을 열고 닫는다. 리포트 화면에 그대로 펼쳐 두면 화면이 길어지고
+              // '답하는 일'과 '결과 보는 일'이 섞인다 — 물을 때는 물음에만 집중하게 한다.
+              qsOpen:!!S.rp_qsOpen,
+              qsShut:!S.rp_qsOpen,
+              openQs:()=>this.setState({rp_qsOpen:true,
+                // 다 답한 뒤 다시 열면 마지막 요약부터 보여준다
+                rp_step:(S.rp_step!=null?S.rp_step:(firstOpen<0?QS.length:firstOpen))}),
+              closeQs:()=>this.setState({rp_qsOpen:false}),
+              stopQs:e=>e.stopPropagation(),
+              // 닫혀 있을 때 보이는 한 줄 — 몇 개 답했는지
+              qsSummary:answered? '조건 '+answered+'/'+QS.length+'개 입력함' : '아직 입력 안 함',
+              qsCta:answered? '고치기' : '조건 입력하기',
+              qsCard:'width:100%;max-width:'+this.L('100%','440px','460px')+';max-height:86vh;overflow-y:auto;'
+                +'background:var(--bg);border-radius:24px;padding:26px 24px 24px;'
+                +'box-shadow:0 24px 60px rgba(0,0,0,.24)',
               qsTitle: cur?'몇 가지만 여쭤볼게요':'조건을 다 알려주셨어요',
               qsSub: cur
                 ? '리포트의 본전 계산과 아래 지원사업 추천에 씁니다. 건너뛰어도 돼요.'
@@ -2750,7 +2766,11 @@ class Component extends DCLogic {
           trend:s.trend||{label:'',delta:'',deltaStyle:'display:none',bars:[],full:''},
           trendStyle:s.trend? 'margin-top:22px;padding:16px 18px;border-radius:14px;background:var(--surface)' : 'display:none',
           barsStyle:(s.bars||[]).length? 'display:flex;flex-direction:column;gap:9px;margin-top:22px;max-width:480px' : 'display:none',
-          cardStyle:'flex:0 0 100%;scroll-snap-align:start;min-width:0;padding:24px 0 8px',
+          // 세로 flex 로 둔다 — 아래 점·화살표 줄이 margin-top:auto 로 카드 바닥에 붙게 하려고.
+          // 트랙은 align-items 기본값(stretch)이라 카드 높이는 가장 긴 카드에 맞춰 같아진다.
+          // 그래야 옆으로 넘길 때 화살표가 위아래로 튀지 않는다.
+          cardStyle:'flex:0 0 100%;scroll-snap-align:start;min-width:0;padding:24px 0 8px;'
+            +'display:flex;flex-direction:column',
           // 경쟁 카드에서만 배치도를 보여준다
           mapStyle:s.key==='comp'? 'display:block;margin-top:22px' : 'display:none',
           prevStyle:i>0? 'font-size:14.5px;color:var(--accent);cursor:pointer;white-space:nowrap' : 'display:none',
