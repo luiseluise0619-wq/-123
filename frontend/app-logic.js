@@ -447,6 +447,8 @@ class Component extends DCLogic {
                 {label:'원가율', value:(S.cogs||0)+'%', tag:'기본 가정 · 수정 가능'}
               ]:null,
               survey:[
+                ['지역',[S.rp_sido,S.rp_gu&&S.rp_gu!=='아직 안 정했어요'?S.rp_gu:''].filter(Boolean).join(' ')],
+                ['업종',S.rp_ind?this.indName(S.rp_ind):''],
                 ['창업 단계',S.rp_stage],['나이',S.rp_age],['사업자등록',S.rp_biz],
                 ['개업 시기',S.rp_when],['필요한 지원',S.rp_need]
               ].filter(([,v])=>!!v).map(([label,value])=>({label,value})),
@@ -527,97 +529,38 @@ class Component extends DCLogic {
             const zoneSub=z=>z.rank+'위 · 가게당 월 '+this.won(z.per/3)
               +(z.stores<=2?' · 가게 '+z.stores+'곳뿐':'');
             // 쳐서 찾을 때는 순위 대신 '어디인지'를 먼저 알려준다 — 다른 구가 나올 수 있어서다
-            const zoneWhere=z=>[z.gu, z.dong].filter(Boolean).join(' ')
-              +' · 가게당 월 '+this.won(z.per/3)
-              +(z.stores<=2?' · 가게 '+z.stores+'곳뿐':'');
-            // 상권 이름·행정동·자치구 아무거나로 찾는다. '역삼'을 치면 역삼역·역삼1동이 다 걸린다.
-            // 진짜 도로명 주소(테헤란로 152)는 아직 못 읽는다 — 지오코딩 키가 없다.
-            // '서울 강남구 역삼동'처럼 여러 단어를 치면 단어마다 다 걸려야 한다.
-            // 통째로 붙여 비교하면 '서울강남구역삼동' 이라는 문자열을 찾게 돼 하나도 안 걸린다.
-            const STOP=['서울','서울시','서울특별시'];
-            const tokens=(S.rp_q||'').trim().split(/\s+/)
-              .map(t=>t.replace(/\s/g,'')).filter(t=>t && STOP.indexOf(t)<0);
-            // 행정동은 '역삼1동'처럼 숫자가 붙어 있어 '역삼동'을 그대로 찾으면 하나도 안 걸린다.
-            // 숫자를 뺀 형태('역삼동')도 같이 두고 찾는다.
-            const nsp=s=>String(s||'').replace(/\s/g,'');
-            const findZones=(pool)=>{
-              if(!tokens.length) return [];
-              // 어디에서 걸렸는지에 따라 점수를 달리 준다 —
-              // 자치구는 25곳 중 하나라 변별력이 없고, 상권명·행정동이 진짜 단서다.
-              const score=z=>{
-                const dong=nsp(z.dong)+'|'+nsp(z.dong).replace(/\d+/g,'');
-                const name=nsp(z.name), gu=nsp(z.gu);
-                let hit=0, s=0;
-                for(const t of tokens){
-                  // '역삼동'이라고 치면 '역삼역' 상권도 같은 뜻으로 본다
-                  const stem=(t.length>=3 && /[동가]$/.test(t))? t.slice(0,-1) : '';
-                  let w=0;
-                  if(name.indexOf(t)>=0) w=4;      // 상권 이름에 그 말이 있으면 가장 정확하다
-                  else if(stem && name.indexOf(stem)>=0) w=3.5;
-                  else if(dong.indexOf(t)>=0) w=3;
-                  else if(gu.indexOf(t)>=0) w=1;
-                  if(w){ hit++; s+=w; }
-                }
-                return {hit:hit, s:s};
-              };
-              // 고른 구 안이면 살짝 앞세운다 — 구를 잘못 골랐을 수도 있어 밖도 함께 보여준다
-              const inGu={}; pool.forEach(z=>{ inGu[z.id]=1; });
-              const scored=allZones.map(z=>{
-                const r=score(z);
-                return {z:z, hit:r.hit, s:r.s+(inGu[z.id]?0.5:0)};
-              }).filter(o=>o.hit>0);
-              // 모든 단어가 걸린 상권이 있으면 그것만 보여준다. 없을 때만 일부 일치로 넓힌다.
-              const full=scored.filter(o=>o.hit===tokens.length);
-              const use=full.length? full
-                : scored.filter(o=>o.hit>0 && tokens.some(t=>t.length>=2));
-              use.sort((a,b)=> b.hit-a.hit || b.s-a.s || b.z.per-a.z.per);
-              return use.slice(0,8).map(o=>o.z);
-            };
-
-            // 주소를 치면 어느 상권으로 잡혔는지 확인해 준다.
-            // 사장님이 내부 상권 이름을 몰라도 되게 하는 것이 이 단계의 목적이다.
-            const selZoneId=S.sel||S.zoneId||'';
-            const matchedZone=(()=>{
-              if(!selZoneId||!zi||!zi.zones[selZoneId]) return null;
-              const g=guOf(selZoneId), d=(zlp[selZoneId]&&zlp[selZoneId].dong)||'';
-              return {name:nameOf(selZoneId),
-                      where:['서울특별시',g,d].filter(Boolean).join(' ')};
-            })();
-
-            const SIDO=['서울특별시','부산광역시','대구광역시','인천광역시','광주광역시','대전광역시',
-              '울산광역시','세종특별자치시','경기도','강원특별자치도','충청북도','충청남도',
-              '전북특별자치도','전라남도','경상북도','경상남도','제주특별자치도'];
-            const GU=['종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구','강북구',
-              '도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구','금천구',
-              '영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
-
-            // 각 단계: q(질문) · hint(왜 묻는지) · opts([{v,label,off}]) · val(고른 값) · set(고르면 바뀔 상태)
-            // multi:true 면 여러 개를 고르고 '다음'으로 넘어간다.
             // ── 리포트 설문 ─────────────────────────────────────────────
+            // 지역은 시·도 → 구 두 걸음으로 묻는다. 지자체 공고가 지역별로 따로 있어서다.
+            const RP_SIDO=['서울','부산','대구','인천','광주','대전','울산','세종',
+                           '경기','강원','충북','충남','전북','전남','경북','경남','제주'];
+            const RP_GU_SEOUL=['종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구',
+                               '강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구',
+                               '구로구','금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
+            const RP_GU_NONE='아직 안 정했어요';
             // 이 설문의 목적은 본전 계산이 아니라 '신청할 수 있는 정부 창업지원사업'을
             // 찾아 주는 것이다. 그래서 매칭에 쓰지 않는 질문(자금·대출·버틸 기간)은 뺐다.
             // 남은 것은 전부 공고 자격 요건에 실제로 등장하는 조건이다.
             const STEPS=[
-              // ① 창업 예정 위치 — 주소나 동 이름을 치면 상권을 자동으로 붙인다.
-              //    사장님이 '국기원'·'강남 마이스 관광특구' 같은 내부 상권명을 알 필요가 없다.
-              {k:'zone', q:'어디에서 창업할 예정이세요?',
-               hint: matchedZone
-                 ? ''
-                 : '주소나 동 이름을 치면 해당 상권을 찾아 드려요. (예: 서울 강남구 역삼동)',
-               opts: q0 ? findZones(allZones).map(z=>({v:z.id, label:z.name, sub:zoneWhere(z)})) : [],
-               search:'주소 또는 동 이름 (예: 서울 강남구 역삼동)', preFiltered:true, blank:true,
-               val:S.sel||S.zoneId||'',
-               // stay:true — 고르자마자 넘기지 않는다. 어느 상권으로 잡혔는지 먼저 보여 준다.
-               stay:true,
-               set:v=>({rp_gu:guOf(v), sel:v, zoneId:v, homeZoneName:nameOf(v), rp_q:''}),
-               isZone:true},
+              // ① 시·도 — 지자체 공고는 지역별로 따로 있다. 자료가 서울뿐이어도 지역은 다 묻는다.
+              {k:'sido', q:'어느 지역에서 창업하세요?',
+               hint:'지자체마다 따로 있는 공고를 함께 찾아 드려요.',
+               opts:RP_SIDO.map(v=>({v,label:v})), grid:true,
+               val:S.rp_sido, set:v=>({rp_sido:v, rp_gu:''})},
 
-              // ② 업종
+              // ② 구 — 서울만 구 목록을 갖고 있다. 다른 시·도는 이 단계를 건너뛴다.
+              {k:'gu', q:'서울 어느 구인가요?',
+               hint:'아직 안 정하셨으면 건너뛰어도 돼요.',
+               opts:[{v:RP_GU_NONE,label:RP_GU_NONE}, ...RP_GU_SEOUL.map(v=>({v,label:v}))], grid:true,
+               val:S.rp_gu, set:v=>({rp_gu:v}),
+               only: S.rp_sido==='서울'},
+
+              // ③ 업종 — 공고마다 지원 업종이 정해져 있다. 많이 찾는 것부터, 나머지는 검색.
               {k:'ind', q:'어떤 업종으로 시작하세요?',
                hint:'공고마다 지원 업종이 정해져 있어요.',
-               opts:(zi?[...['커피-음료','한식음식점','치킨전문점','호프-간이주점','분식전문점','제과점','미용실','편의점']
-                          .filter(n=>zi.inds.indexOf(n)>=0)]:[]).map(v=>({v,label:this.indName(v)})),
-               search:'업종 이름 (예: 카페)', preFiltered:true,
+               opts:(zi?zi.inds:[]).map(v=>({v,label:this.indName(v)})),
+               defaultOpts:(zi?['커피-음료','한식음식점','치킨전문점','호프-간이주점','분식전문점','제과점','미용실','편의점']
+                          .filter(n=>zi.inds.indexOf(n)>=0):[]).map(v=>({v,label:this.indName(v)})),
+               search:'업종 이름 (예: 카페)', grid:true,
                val:S.rp_ind,
                set:v=>({ind:v, rp_ind:v})},
 
@@ -667,8 +610,9 @@ class Component extends DCLogic {
             // 구 단계는 치기 전까지 한 줄도 안 띄운다(blank).
             const visible = !cur ? []
               : cur.preFiltered ? cur.opts
-              : cur.search ? (cur.blank&&!q ? []
-                  : cur.opts.filter(o=>o.label.replace(/\s/g,'').indexOf(q.replace(/\s/g,''))>=0).slice(0,6))
+              : cur.search ? (q
+                  ? cur.opts.filter(o=>o.label.replace(/\s/g,'').indexOf(q.replace(/\s/g,''))>=0).slice(0,8)
+                  : (cur.defaultOpts || (cur.blank? [] : cur.opts.slice(0,6))))
               : cur.opts;
 
             const optStyle=on=>'display:flex;align-items:center;justify-content:space-between;gap:12px;'
@@ -676,6 +620,13 @@ class Component extends DCLogic {
               +'font-size:15.5px;line-height:1.4;text-align:left;'
               +'transition:background .14s,color .14s;'
               +(on?'background:var(--accent-3);color:var(--accent);font-weight:600'
+                 :'background:var(--surface);color:var(--ink)');
+            // 지역·업종처럼 항목이 많은 단계는 격자로 깐다 — 세로로 세우면 버튼 벽이 된다(§29)
+            const optStyleGrid=on=>'display:flex;align-items:center;justify-content:center;'
+              +'padding:13px 10px;border-radius:12px;cursor:pointer;min-width:0;'
+              +'font-size:14.5px;line-height:1.3;text-align:center;white-space:nowrap;'
+              +'overflow:hidden;text-overflow:ellipsis;transition:background .14s,color .14s;'
+              +(on?'background:var(--accent-3);color:var(--accent);font-weight:700'
                  :'background:var(--surface);color:var(--ink)');
 
             // 요약에 적을 말. 상권 단계는 코드(3001496)가 아니라 동네 이름으로 적는다.
@@ -695,12 +646,12 @@ class Component extends DCLogic {
               // 구 25개·동네 99개를 버튼으로 늘어놓으면 화면이 버튼 벽이 된다.
               // 치는 대로 걸러 6개만 보여준다. '강'만 쳐도 강남구·강동구가 뜬다.
               // 후보가 0개면 목록 칸 자체를 안 그린다 — 안 그러면 빈 여백만 22px 뜬다
-              hasOpts: visible.length>0,
+              hasOpts: visible.length>0 && !(cur&&cur.grid),
+              // 격자로 그릴지, 한 줄씩 그릴지
+              hasGridOpts: visible.length>0 && !!(cur&&cur.grid),
+              optsGridStyle:'display:grid;gap:8px;margin-top:22px;'
+                +'grid-template-columns:repeat('+this.L(3,4,4)+',minmax(0,1fr))',
               // 주소 → 상권 매칭 확인. '강남역 상권으로 확인했어요' 처럼 말해 준다.
-              matched: !!(matchedZone && cur && cur.k==='zone'),
-              matchedName: matchedZone? matchedZone.name+' 상권으로 확인했어요' : '',
-              matchedWhere: matchedZone? matchedZone.where : '',
-              matchedNext: ()=>this.setState({rp_step:step+1, rp_q:''}),
               isSearch: !!(cur&&cur.search),
               searchHint: cur&&cur.search?cur.search:'',
               searchQ: S.rp_q||'',
@@ -719,7 +670,7 @@ class Component extends DCLogic {
               curOpts: visible.map(o=>{
                 const on=cur.multi? (PICKS.indexOf(o.v)>=0) : (cur.val===o.v);
                 return {
-                  label:o.label, on:on, style:optStyle(on),
+                  label:o.label, on:on, style:(cur.grid?optStyleGrid:optStyle)(on),
                   sub:o.sub||'', hasSub:!!o.sub,
                   pick: cur.multi
                     ? ()=>{ const has=PICKS.indexOf(o.v)>=0;
@@ -811,8 +762,9 @@ class Component extends DCLogic {
             if(S.rp_need==='교육·멘토링') RULES.push({why:'교육·멘토링', kw:['교육','멘토','컨설팅','아카데미','사관학교']});
             if(S.rp_need==='융자·대출') RULES.push({why:'융자·정책자금', kw:['융자','대출','정책자금','보증']});
             if(S.ind) RULES.push({why:'업종 조건', kw:[this.indName(S.ind), S.ind]});
-            const guNow=S.rp_gu||'';
-            if(guNow) RULES.push({why:'지역 조건', kw:[guNow, '서울']});
+            const sidoNow=S.rp_sido||'';
+            const guNow=(S.rp_gu && S.rp_gu!=='아직 안 정했어요')? S.rp_gu : '';
+            if(sidoNow||guNow) RULES.push({why:'지역 조건', kw:[guNow, sidoNow].filter(Boolean)});
 
             const reasonsOf=it=>{
               const t=((it.title||'')+' '+(it.target||'')+' '+(it.kind||'')+' '+(it.content||'')+' '+(it.region||'')).toLowerCase();

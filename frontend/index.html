@@ -719,18 +719,12 @@
                     <div style="margin-top:12px;padding:16px 18px;border-radius:var(--r-sm);background:var(--surface);font-size:14px;color:var(--ink3)">{{ rp.searchEmptyText }}</div>
                   </sc-if>
                 </sc-if>
-                <!-- 주소 → 상권 자동 매칭 결과 -->
-                <sc-if value="{{ rp.matched }}">
-                  <div style="margin-top:16px;padding:16px 0 0;border-top:1px solid var(--line)">
-                    <div style="display:flex;align-items:flex-start;gap:9px">
-                      <span class="u-check">✓</span>
-                      <span class="u-fill">
-                        <span style="display:block;font-size:15px;font-weight:700;color:var(--accent)">{{ rp.matchedName }}</span>
-                        <span style="display:block;font-size:13px;color:var(--ink2);margin-top:3px">{{ rp.matchedWhere }}</span>
-                      </span>
-                    </div>
-                    <button onClick="{{ rp.matchedNext }}" style="width:100%;margin-top:14px;font-size:15.5px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;border-radius:var(--r-sm);height:48px;cursor:pointer">다음</button>
-                  </div>
+                <sc-if value="{{ rp.hasGridOpts }}">
+                <div style="{{ rp.optsGridStyle }}">
+                  <sc-for list="{{ rp.curOpts }}" as="o">
+                    <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">{{ o.label }}</div>
+                  </sc-for>
+                </div>
                 </sc-if>
                 <sc-if value="{{ rp.hasOpts }}">
                 <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
@@ -783,65 +777,8 @@
             </div>
           </sc-if>
 
-          <!-- 화면 안 리포트 — 결론 하나를 크게, 근거는 아래로 -->
-          <sc-if value="{{ rp.rv.started }}">
-            <div style="margin-top:10px;padding:30px 26px;border-radius:22px;background:var(--surface)">
-              <div style="font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rp.rv.eyebrow }}</div>
-              <sc-if value="{{ rp.rv.showBep }}">
-                <div style="{{ rp.rv.bepStyle }}">
-                  <div style="font-size:clamp(38px,7vw,54px);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-top:14px;font-variant-numeric:tabular-nums">{{ rp.rv.bep }}</div>
-                  <div style="font-size:15.5px;color:var(--ink2);margin-top:8px;text-wrap:pretty">{{ rp.rv.bepNote }}</div>
-                  <div style="{{ rp.rv.verdictStyle }}">{{ rp.rv.verdict }}</div>
-                </div>
-              </sc-if>
-
-              <sc-if value="{{ rp.rv.showBars }}">
-              <div style="{{ rp.rv.barsStyle }}">
-              <div style="display:flex;flex-direction:column;gap:16px">
-                <sc-for list="{{ rp.rv.bars }}" as="b">
-                  <div>
-                    <div class="u-between">
-                      <span style="font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.label }}</span>
-                      <span style="flex:none;font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ b.value }}</span>
-                    </div>
-                    <span style="display:block;height:10px;border-radius:5px;background:var(--bg);overflow:hidden;margin-top:8px">
-                      <span style="{{ b.bar }}"></span>
-                    </span>
-                  </div>
-                </sc-for>
-              </div>
-              </div>
-              </sc-if>
-
-              <sc-if value="{{ rp.rv.showCosts }}">
-              <div style="{{ rp.rv.costsStyle }}">
-              <div style="font-size:13.5px;font-weight:700">매달 나가는 돈</div>
-              <div style="margin-top:4px">
-                <sc-for list="{{ rp.rv.costs }}" as="c">
-                  <div style="{{ rp.rv.rowStyle }}">
-                    <span style="flex:1;min-width:0;font-size:14.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.label }}</span>
-                    <span style="flex:none;display:flex;align-items:baseline;gap:9px">
-                      <span class="u-note">{{ c.tag }}</span>
-                      <span style="font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ c.value }}</span>
-                    </span>
-                  </div>
-                </sc-for>
-              </div>
-              </div>
-              </sc-if>
-            </div>
-          </sc-if>
-
         </div>
 
-        <sc-if value="{{ rp.qsAllDone }}">
-        <div style="margin-top:26px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-          <button disabled="{{ rp.sendDisabled }}" onClick="{{ rp.submit }}" style="{{ rp.sendStyle }}">{{ rp.sendLabel }}</button>
-          <button onClick="{{ rp.preview }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--accent);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">미리보기 · PDF 저장</button>
-          <button onClick="{{ rp.csv }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--ink2);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">CSV 저장</button>
-        </div>
-        <div style="margin-top:18px"><p role="status" aria-live="polite" style="{{ dsSub }}">{{ rp.note }}</p><a href="privacy.html" style="font-size:13px;color:var(--accent)">개인정보 안내</a></div>
-        </sc-if>
       </section>
 
       <!-- 여기가 이 서비스의 결론이다 — 설문의 목적은 이 목록을 찾는 것이었다 -->
@@ -973,6 +910,16 @@
 
           <p style="{{ dsSub }}; margin-top:24px;max-width:860px">{{ rp.sp.warn }}</p>
         </sc-if>
+      </section>
+
+      <!-- 리포트로 받기 — 결과(지원사업) 다음에 둔다 -->
+      <section style="padding:36px 0 0">
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <button disabled="{{ rp.sendDisabled }}" onClick="{{ rp.submit }}" style="{{ rp.sendStyle }}">{{ rp.sendLabel }}</button>
+          <button onClick="{{ rp.preview }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--accent);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">미리보기 · PDF 저장</button>
+          <button onClick="{{ rp.csv }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--ink2);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">CSV 저장</button>
+        </div>
+        <div style="margin-top:18px"><p role="status" aria-live="polite" style="{{ dsSub }}">{{ rp.note }}</p><a href="privacy.html" style="font-size:13px;color:var(--accent)">개인정보 안내</a></div>
       </section>
       </sc-if>
     </sc-if>
