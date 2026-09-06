@@ -12,6 +12,8 @@
 <!-- 로직은 책임별로 나눠 둔다. app-logic.js 가 마지막에 이들을 프로토타입에 합친다. -->
 <script src="./vendor/chart.umd.js"></script>
 <script src="./logic/const.js"></script>
+<script src="./logic/i18n.js"></script>
+<script src="./logic/theme.js"></script>
 <script src="./logic/util.js"></script>
 <script src="./logic/design.js"></script>
 <script src="./logic/rank.js"></script>
@@ -228,7 +230,10 @@
           </div>
         </sc-for>
       </nav>
-      <span role="button" tabIndex="0" onClick="{{ toggleTheme }}" style="cursor:pointer;font-size:12px;color:var(--ink3);flex:none;white-space:nowrap">{{ themeLabel }}</span>
+      <span style="flex:none;display:flex;align-items:center;gap:7px">
+        <span role="button" tabIndex="0" aria-label="언어" onClick="{{ openSettings }}" style="{{ localeBtn }}">{{ localeShort }}</span>
+        <span role="button" tabIndex="0" aria-label="설정" onClick="{{ openSettings }}" style="{{ settingsBtn }}">⚙</span>
+      </span>
     </div>
   </header>
 
@@ -240,19 +245,19 @@
 
         <!-- 제목 · 검색 -->
         <div style="{{ heroInner }}">
-          <div class="hero-eyebrow">내 장사의 시작, 데이터로 한 걸음 더</div>
-          <h1 class="hero-title" style="{{ titleStyle }}">어떤 동네에서 시작해 볼까요?</h1>
-          <p style="{{ subStyle }}">업종을 고르면 동네를 비교하고,<br>내 조건에 맞는 본전선을 확인할 수 있어요.</p>
+          <div class="hero-eyebrow">{{ heroEyebrow }}</div>
+          <h1 class="hero-title" style="{{ titleStyle }}">{{ heroTitle }}</h1>
+          <p style="{{ subStyle }}">{{ heroSub }}</p>
 
           <div class="hero-search" data-search="1" style="{{ searchWrap }}">
             <div data-fl-ref="1" style="{{ pickerRow }}">
               <div onClick="{{ openZone }}" style="{{ zoneBtn }}">
                 <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:2px">
                   <span style="display:flex;align-items:baseline;gap:6px;min-width:0">
-                    <span style="font-size:13px;font-weight:500;color:var(--ink3);white-space:nowrap">위치</span>
+                    <span style="font-size:13px;font-weight:500;color:var(--ink3);white-space:nowrap">{{ labLocation }}</span>
                     <span style="font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ zoneHint }}</span>
                   </span>
-                  <input maxLength="200" value="{{ zq }}" onChange="{{ onZoneQ }}" onFocus="{{ openZone }}" onKeyDown="{{ onZoneKey }}" aria-label="찾을 지역" placeholder="서울 전체" style="{{ segInput }}">
+                  <input maxLength="200" value="{{ zq }}" onChange="{{ onZoneQ }}" onFocus="{{ openZone }}" onKeyDown="{{ onZoneKey }}" aria-label="{{ labLocation }}" placeholder="{{ phLocationAny }}" style="{{ segInput }}">
                 </div>
                 <sc-if value="{{ hasZone }}">
                   <span role="button" tabIndex="0" aria-label="지역 지우기" onClick="{{ clearZone }}" style="{{ clearStyle }}" style-hover="background:var(--line-strong)">
@@ -265,8 +270,8 @@
               <div style="{{ dividerStyle }}"></div>
               <div onClick="{{ openInd }}" style="{{ indBtn }}">
                 <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:2px">
-                  <span style="font-size:13px;font-weight:500;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">어떤 장사를 생각하시나요?</span>
-                  <input maxLength="200" value="{{ iq }}" onChange="{{ onIndQ }}" onFocus="{{ openInd }}" onKeyDown="{{ onIndKey }}" aria-label="창업할 업종" placeholder="예: 카페, 편의점" style="{{ segInput }}">
+                  <span style="font-size:13px;font-weight:500;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ labIndustry }}</span>
+                  <input maxLength="200" value="{{ iq }}" onChange="{{ onIndQ }}" onFocus="{{ openInd }}" onKeyDown="{{ onIndKey }}" aria-label="{{ labIndustry }}" placeholder="{{ phIndustry }}" style="{{ segInput }}">
                 </div>
                 <sc-if value="{{ hasIndVal }}">
                   <span role="button" tabIndex="0" aria-label="업종 지우기" onClick="{{ clearInd }}" style="{{ clearStyle }}" style-hover="background:var(--line-strong)">
@@ -281,7 +286,7 @@
                   <span style="display:block;width:19px;height:19px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#FFFFFF;animation:spin .7s linear infinite"></span>
                 </sc-if>
                 <sc-if value="{{ notStarting }}">
-                  <span class="u-nowrap">동네 찾아보기</span>
+                  <span class="u-nowrap">{{ labStart }}</span>
                 </sc-if>
               </button>
             </div>
@@ -396,7 +401,7 @@
             </sc-if>
 
             <div style="{{ tagRow }}">
-              <span style="font-size:12.5px;color:var(--ink3);flex:none;white-space:nowrap">인기 검색</span>
+              <span style="font-size:12.5px;color:var(--ink3);flex:none;white-space:nowrap">{{ labPopular }}</span>
               <sc-for list="{{ tags }}" as="t">
                 <span role="button" tabIndex="0" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</span>
               </sc-for>
@@ -534,6 +539,64 @@
             개인정보 · 리포트를 메일로 받을 때만 이메일을 받습니다. 그 외에는 아무것도 수집하지 않습니다.
           </div>
         </div>
+      </div>
+    </sc-if>
+    <!-- 설정 — 화면(밝게/어둡게/시스템) · 언어 · 테마 · 차트 색. 모바일은 아래에서 올라온다. -->
+    <sc-if value="{{ settingsOpen }}">
+      <div onClick="{{ closeSettings }}" style="position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.28)"></div>
+      <div role="dialog" aria-modal="true" aria-label="설정" style="{{ settingsCard }}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="flex:1;min-width:0;font-size:17px;font-weight:700">{{ settingsTitle }}</span>
+          <span role="button" tabIndex="0" aria-label="설정 닫기" onClick="{{ closeSettings }}" style="flex:none;width:28px;height:28px;border-radius:50%;background:var(--color-surface);color:var(--color-text-secondary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">×</span>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ appearanceLabel }}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <sc-for list="{{ appearances }}" as="a">
+            <span role="button" tabIndex="0" onClick="{{ a.pick }}" style="{{ a.style }}">{{ a.label }}</span>
+          </sc-for>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ languageLabel }}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <sc-for list="{{ locales }}" as="l">
+            <span role="button" tabIndex="0" onClick="{{ l.pick }}" style="{{ l.style }}">{{ l.label }}</span>
+          </sc-for>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ themeLabel2 }}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+          <sc-for list="{{ presets }}" as="t">
+            <span role="button" tabIndex="0" onClick="{{ t.pick }}" style="{{ t.style }}">
+              <span style="{{ t.swatch }}"></span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ customLabel }}</div>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-top:8px">
+          <sc-for list="{{ customs }}" as="c">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="flex:1;min-width:0;font-size:14px;color:var(--color-text-secondary)">{{ c.label }}</span>
+              <input type="color" value="{{ c.value }}" onChange="{{ c.onIn }}" aria-label="{{ c.label }}" style="{{ c.style }}">
+            </div>
+          </sc-for>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ chartLabel }}</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+          <sc-for list="{{ chartColors }}" as="c">
+            <input type="color" value="{{ c.value }}" onChange="{{ c.onIn }}" aria-label="차트 색상 {{ c.label }}" style="{{ c.style }}">
+          </sc-for>
+        </div>
+
+        <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--color-border)">
+          <span role="button" tabIndex="0" onClick="{{ doReset }}" style="{{ ctaText }}">{{ resetLabel }}</span>
+        </div>
+        <sc-if value="{{ i18nNote }}">
+          <p style="{{ dsSub }}; margin-top:14px">{{ i18nNote }}</p>
+        </sc-if>
       </div>
     </sc-if>
     <!-- 허브 (상권분석 · 정밀분석) -->

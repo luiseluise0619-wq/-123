@@ -183,6 +183,15 @@ globalThis.MysbizonParts.screens = {
     return {
       badgeStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);background:var(--surface);border-radius:999px;padding:7px 14px;margin:0 auto 26px;'
         +(S.skip?'opacity:1':'opacity:0;animation:lateIn .7s cubic-bezier(.22,.7,.25,1) .5s forwards'),
+      heroEyebrow:this.t('home.eyebrow'),
+      heroTitle:this.t('home.title'),
+      heroSub:this.t('home.sub'),
+      labLocation:this.t('home.location'),
+      phLocationAny:this.t('home.locationAny'),
+      labIndustry:this.t('home.industry'),
+      phIndustry:this.t('home.industryHint'),
+      labStart:this.t('home.start'),
+      labPopular:this.t('home.popular'),
       titleStyle:'font-size:'+this.L('23px','44px','52px')+';font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin:0;white-space:nowrap',
       tagRow:'display:flex;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;justify-content:center;'
         +(S.skip?'opacity:1':'opacity:0;animation:lateIn .8s cubic-bezier(.22,.7,.25,1) 2.7s forwards'),

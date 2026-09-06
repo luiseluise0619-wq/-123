@@ -28,6 +28,7 @@ export const ORDER = [
   '00-data-error',
   '01-home',
   '02-overlay',
+  '03-settings',
   '05-hub',
   '10-report',
   '20-price',

@@ -1,0 +1,58 @@
+    <!-- 설정 — 화면(밝게/어둡게/시스템) · 언어 · 테마 · 차트 색. 모바일은 아래에서 올라온다. -->
+    <sc-if value="{{ settingsOpen }}">
+      <div onClick="{{ closeSettings }}" style="position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.28)"></div>
+      <div role="dialog" aria-modal="true" aria-label="설정" style="{{ settingsCard }}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="flex:1;min-width:0;font-size:17px;font-weight:700">{{ settingsTitle }}</span>
+          <span role="button" tabIndex="0" aria-label="설정 닫기" onClick="{{ closeSettings }}" style="flex:none;width:28px;height:28px;border-radius:50%;background:var(--color-surface);color:var(--color-text-secondary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">×</span>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ appearanceLabel }}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <sc-for list="{{ appearances }}" as="a">
+            <span role="button" tabIndex="0" onClick="{{ a.pick }}" style="{{ a.style }}">{{ a.label }}</span>
+          </sc-for>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ languageLabel }}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <sc-for list="{{ locales }}" as="l">
+            <span role="button" tabIndex="0" onClick="{{ l.pick }}" style="{{ l.style }}">{{ l.label }}</span>
+          </sc-for>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ themeLabel2 }}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+          <sc-for list="{{ presets }}" as="t">
+            <span role="button" tabIndex="0" onClick="{{ t.pick }}" style="{{ t.style }}">
+              <span style="{{ t.swatch }}"></span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ customLabel }}</div>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-top:8px">
+          <sc-for list="{{ customs }}" as="c">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="flex:1;min-width:0;font-size:14px;color:var(--color-text-secondary)">{{ c.label }}</span>
+              <input type="color" value="{{ c.value }}" onChange="{{ c.onIn }}" aria-label="{{ c.label }}" style="{{ c.style }}">
+            </div>
+          </sc-for>
+        </div>
+
+        <div class="u-lab" style="margin-top:20px">{{ chartLabel }}</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+          <sc-for list="{{ chartColors }}" as="c">
+            <input type="color" value="{{ c.value }}" onChange="{{ c.onIn }}" aria-label="차트 색상 {{ c.label }}" style="{{ c.style }}">
+          </sc-for>
+        </div>
+
+        <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--color-border)">
+          <span role="button" tabIndex="0" onClick="{{ doReset }}" style="{{ ctaText }}">{{ resetLabel }}</span>
+        </div>
+        <sc-if value="{{ i18nNote }}">
+          <p style="{{ dsSub }}; margin-top:14px">{{ i18nNote }}</p>
+        </sc-if>
+      </div>
+    </sc-if>

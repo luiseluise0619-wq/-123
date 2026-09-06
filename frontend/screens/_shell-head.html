@@ -12,6 +12,8 @@
 <!-- 로직은 책임별로 나눠 둔다. app-logic.js 가 마지막에 이들을 프로토타입에 합친다. -->
 <script src="./vendor/chart.umd.js"></script>
 <script src="./logic/const.js"></script>
+<script src="./logic/i18n.js"></script>
+<script src="./logic/theme.js"></script>
 <script src="./logic/util.js"></script>
 <script src="./logic/design.js"></script>
 <script src="./logic/rank.js"></script>
@@ -228,7 +230,10 @@
           </div>
         </sc-for>
       </nav>
-      <span role="button" tabIndex="0" onClick="{{ toggleTheme }}" style="cursor:pointer;font-size:12px;color:var(--ink3);flex:none;white-space:nowrap">{{ themeLabel }}</span>
+      <span style="flex:none;display:flex;align-items:center;gap:7px">
+        <span role="button" tabIndex="0" aria-label="언어" onClick="{{ openSettings }}" style="{{ localeBtn }}">{{ localeShort }}</span>
+        <span role="button" tabIndex="0" aria-label="설정" onClick="{{ openSettings }}" style="{{ settingsBtn }}">⚙</span>
+      </span>
     </div>
   </header>
 

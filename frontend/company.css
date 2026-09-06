@@ -31,7 +31,11 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
   header { height:auto !important;min-height:84px; }
   header > div { flex-wrap:wrap;gap:0 12px !important;padding-top:4px !important;padding-bottom:4px !important; }
   header > div > [role=button] { min-height:32px !important; }
-  header nav { order:3;flex:0 0 100% !important;width:100%;justify-content:space-between; }
+  header nav { order:3;flex:0 0 100% !important;width:100%;justify-content:space-between;gap:4px; }
+  /* 메뉴 글자가 잘리면 안 된다. 영어·중국어는 한국어보다 길어서, 칸을 줄이는 대신
+     자연스러운 폭을 유지하고 넘치면 가로로 스크롤되게 한다. */
+  header nav > div { flex:none !important;overflow:visible !important; }
+  header nav:has(> div:nth-child(6)) { justify-content:flex-start; }
   /* 메뉴는 가로로 넓어 손가락으로 누르기 충분하다 — 높이만 줄인다 */
   header nav [role=button] { min-height:38px !important;padding:6px 7px !important;font-size:13px !important; }
   header > div > [role=button]:last-child { margin-left:auto; }

@@ -188,6 +188,10 @@ class Component extends DCLogic {
   // 서울 중앙값과 견준 한 줄. good 이 true 면 '많을수록 좋은' 지표다.
 
   componentDidMount(){
+    // 저장해 둔 화면 설정(밝기·테마·색)과 언어를 먼저 얹는다 — 얹기 전에 그리면 한 번 번쩍인다
+    try{ this.loadTheme(); this.loadLocales(); }catch(e){}
+    try{ const w=JSON.parse(localStorage.getItem('mysbizon.mkWatch')||'null');
+         if(Array.isArray(w)) this.setState({mkWatch:w}); }catch(e){}
     // 첫 그림 뒤에도 한 번 — componentDidUpdate 는 첫 렌더에서 안 불린다
     setTimeout(()=>{ try{ this.paintCharts(); this.bindRails(); }catch(e){} },0);
     try{const raw=sessionStorage.getItem('mysbizon.return');sessionStorage.removeItem('mysbizon.return');if(raw){const saved=JSON.parse(raw),restore={screen:'report'};for(const k of ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen']){if(saved[k]===null||typeof saved[k]==='string'||typeof saved[k]==='number')restore[k]=saved[k];}if(Array.isArray(saved.picks))restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);this.setState(restore);}}catch{}
@@ -302,18 +306,21 @@ class Component extends DCLogic {
     //   정밀비교 "내 조건이면 얼마 남지?" — 내가 넣은 숫자로 수익성 비교
     //   시장동향 "장사 환경은 어떤가?"  — 임대료·환율·원자재 같은 바깥 사정
     //   리포트   "어떤 지원을 받지?"    — 조건에 맞는 정부 창업지원사업
+    // 문구는 사전(logic/i18n.js · locales/*.json)에서 가져온다 — 여기 한국어를 박지 않는다
+    const T=k=>this.t(k);
     const MENU=[
       // region(동네 개요)·fineCmp(자치구 훑기)는 둘 다 '여러 곳을 훑는' 화면이라 여기 둔다.
-      {label:'상권분석', keys:['hubZone','zone','find','cmp','region','fineCmp'], hub:'hubZone',
-       items:[['zone','지역비교'],['find','후보지'],['cmp','비교분석'],['fineCmp','자치구 훑기']]},
+      {label:T('nav.zone'), keys:['hubZone','zone','find','cmp','region','fineCmp'], hub:'hubZone',
+       items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],
+              ['cmp',T('menu.compare')],['fineCmp',T('menu.sweep')]]},
       // 지도는 '어디인지', 정밀분석은 '왜 좋은지/나쁜지'. 역할이 겹치지 않게 나눈다.
-      {label:'정밀분석', keys:['hubFine','fineIntro','map','fineDetail'], hub:'hubFine',
-       items:[['map','지도'],['fineDetail','정밀분석']]},
+      {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail'], hub:'hubFine',
+       items:[['map',T('menu.map')],['fineDetail',T('menu.detail')]]},
       // 정밀비교는 상권 점수 비교가 아니라 '내가 넣은 숫자'로 도는 계산기다.
-      {label:'정밀비교', keys:['sim','diag'], hub:'sim',
-       items:[['sim','정밀비교'],['diag','본전 계산']]},
-      {label:'시장동향', keys:['price'], hub:'price', items:[['price','시장동향']]},
-      {label:'리포트', keys:['report'], hub:'report', items:[['report','리포트']]},
+      {label:T('nav.sim'), keys:['sim','diag'], hub:'sim',
+       items:[['sim',T('menu.sim')],['diag',T('menu.bep')]]},
+      {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
+      {label:T('nav.report'), keys:['report'], hub:'report', items:[['report',T('nav.report')]]},
 
     ];
 
@@ -1092,9 +1099,8 @@ class Component extends DCLogic {
       goFineCmp:go('fineCmp'),
       // 다시 열면 보낸 상태가 남아 있지 않게 초기화한다
       openReport:()=>this.setState({screen:'report',rp_sent:false}),
-      themeLabel: (typeof document!=='undefined' && document.documentElement.getAttribute('data-theme')==='dark')?'밝게':'어둡게',
-      toggleTheme:()=>{ const h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
-        h.setAttribute('data-theme',d?'light':'dark'); this.forceUpdate(); },
+      // 헤더 오른쪽 — 언어 칩 + 설정(⚙). '어둡게' 하나만 있던 자리를 설정으로 키웠다(§44)
+      ...this.settingsView(),
       q:S.q, onQ:e=>this.setState({q:e.target.value,openMore:false}),
       chips:names.slice(0,5).map(n=>({name:this.indName(n), pick:()=>this.setState({ind:n,sel:null,picks:null,openWhy:false,openMore:false,fromRegion:false}),
         style:chipBase+'flex:none;'+(n===S.ind?'background:var(--ink);color:var(--bg);font-weight:500':'background:var(--surface);color:var(--ink)')})),
@@ -1313,7 +1319,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['util','design','rank','analysis','screens','chat','charts','carousel','sim','market','views']) {
+for (const name of ['i18n','theme','util','design','rank','analysis','screens','chat','charts','carousel','sim','market','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {
