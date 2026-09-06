@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test",
-    "check:data": "node scripts/validate-data.mjs"
+    "check:data": "node scripts/validate-data.mjs",
+    "build:html": "node scripts/build-html.mjs",
+    "check:html": "node scripts/build-html.mjs --check"
   },
   "engines": {
     "node": ">=22 <25"

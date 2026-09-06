@@ -1,0 +1,150 @@
+    <!-- 후보지 — ① 지역 ② 구 ③ 업종 -->
+    <sc-if value="{{ onFind }}">
+      <section class="u-sec">
+        <h1 style="{{ ds1 }}">어디에서 창업하고 싶으세요?</h1>
+        <p style="{{ dsBody }}; margin-top:10px;max-width:640px">{{ findSub }}</p>
+
+        <div style="{{ dsCard }}; margin-top:26px;max-width:840px">
+          <div style="font-size:12.5px;font-weight:700;color:var(--ink3);letter-spacing:.04em">① 지역</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <sc-for list="{{ fd.sido }}" as="o">
+              <span role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</span>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ fd.hasGu }}">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:24px">
+              <span style="font-size:12.5px;font-weight:700;color:var(--ink3);letter-spacing:.04em">② 구·군</span>
+              <span role="button" tabIndex="0" onClick="{{ fd.guToggle }}" style="font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;white-space:nowrap">{{ fd.guToggleLabel }}</span>
+            </div>
+            <div style="{{ fd.guBoxStyle }}">
+              <sc-for list="{{ fd.gu }}" as="o">
+                <span role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</span>
+              </sc-for>
+            </div>
+            <div style="{{ dsSub }}; margin-top:10px">{{ fd.guNote }}</div>
+          </sc-if>
+
+          <div style="font-size:12.5px;font-weight:700;color:var(--ink3);letter-spacing:.04em;margin-top:24px">③ 업종</div>
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+              <sc-for list="{{ indOptions }}" as="o">
+                <option value="{{ o.raw }}">{{ o.label }}</option>
+              </sc-for>
+            </select>
+            <input maxLength="200" value="{{ q }}" onChange="{{ onQ }}" aria-label="업종 검색" placeholder="업종 검색 — 예: 커피" style="flex:1;min-width:180px;max-width:280px;font-size:15px;color:var(--ink);background:var(--surface);border:none;border-radius:var(--r-sm);padding:0 14px;height:46px;outline:none">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">
+            <sc-for list="{{ chips }}" as="c">
+              <span role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.name }}</span>
+            </sc-for>
+            <sc-if value="{{ hasMore }}">
+              <span style="position:relative;flex:none">
+                <span role="button" tabIndex="0" onClick="{{ toggleMore }}" style="{{ moreStyle }}">{{ moreLabel }}</span>
+                <sc-if value="{{ openMore }}">
+                  <span style="position:absolute;left:0;top:calc(100% + 8px);z-index:20;display:block;width:min(300px,86vw);max-height:320px;overflow-y:auto;background:var(--bg);border-radius:var(--r-md);box-shadow:var(--shadow-pop);padding:8px">
+                    <sc-for list="{{ moreList }}" as="m">
+                      <span role="button" tabIndex="0" onClick="{{ m.pick }}" style="{{ m.style }}">{{ m.name }}</span>
+                    </sc-for>
+                  </span>
+                </sc-if>
+              </span>
+            </sc-if>
+          </div>
+          <div style="{{ dsSub }}; margin-top:12px">{{ chipNote }}</div>
+        </div>
+      </section>
+
+      <!-- 결과: 결론 → 지표 → 추천 이유 → 다음 행동 -->
+      <sc-if value="{{ ready }}">
+        <section style="padding:44px 0 0;animation:riseIn .28s cubic-bezier(.2,.7,.3,1) both">
+          <h2 style="{{ ds2 }}">{{ fd.indName }} 추천 상권 · {{ fd.scope }}</h2>
+
+          <div style="{{ dsCardHi }}; margin-top:18px">
+            <div style="{{ dsSub }}">{{ t.eyebrow }}</div>
+            <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-top:8px">
+              <h3 style="font-size:clamp(24px,3vw,32px);font-weight:700;letter-spacing:-.03em;margin:0">{{ t.name }}</h3>
+              <span style="font-size:15px;font-weight:700;color:var(--accent);white-space:nowrap">{{ t.pctFine }}</span>
+            </div>
+            <div style="font-size:17px;font-weight:600;margin-top:10px;text-wrap:pretty">{{ t.verdict }}</div>
+            <sc-if value="{{ t.thin }}">
+              <div style="display:flex;align-items:flex-start;gap:9px;margin-top:12px;padding:11px 14px;border-radius:var(--r-sm);background:var(--bg)">
+                <span style="flex:none;font-size:11px;font-weight:700;color:var(--warn);white-space:nowrap">{{ t.thinBadge }}</span>
+                <span style="flex:1;min-width:0;font-size:13px;color:var(--ink2);line-height:1.55;text-wrap:pretty">{{ t.thinWarn }}</span>
+              </div>
+            </sc-if>
+
+            <div style="{{ dsGrid4 }}; margin-top:22px">
+              <sc-for list="{{ t.metrics }}" as="m">
+                <div style="background:var(--bg);border-radius:var(--r-md);padding:16px 16px 14px;min-width:0">
+                  <div style="{{ m.labelStyle }}">{{ m.label }}</div>
+                  <div style="{{ m.valueStyle }}">{{ m.value }}</div>
+                  <sc-if value="{{ m.hasMeaning }}">
+                    <div style="{{ m.meaningStyle }}">{{ m.meaning }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+
+            <div class="u-mt">
+              <div style="font-size:13.5px;font-weight:700">왜 추천하나요?</div>
+              <div class="u-stack">
+                <sc-for list="{{ t.why }}" as="w">
+                  <div style="{{ w.style }}"><span class="u-check">✓</span><span class="u-fill">{{ w.text }}</span></div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px">
+              <button onClick="{{ goMap }}" style="{{ dsCta }}" style-hover="filter:brightness(1.06)">이 상권 정밀분석</button>
+              <span role="button" tabIndex="0" onClick="{{ t.togglePick }}" style="{{ dsGhost }}; display:inline-flex;align-items:center">{{ t.pickLabel }}</span>
+              <span role="button" tabIndex="0" onClick="{{ toggleWhy }}" style="{{ ctaText }}">{{ whyLabel }}</span>
+            </div>
+          </div>
+
+          <div style="margin-top:34px">
+            <div style="font-size:15px;font-weight:700">다른 후보도 볼까요?</div>
+            <div style="{{ dsGrid3 }}; margin-top:14px">
+              <sc-for list="{{ rows }}" as="r">
+                <div style="{{ dsCard }}; min-width:0">
+                  <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="cursor:pointer">
+                    <div style="display:flex;align-items:baseline;gap:8px">
+                      <span style="font-size:11.5px;font-weight:700;color:var(--ink3);font-variant-numeric:tabular-nums">{{ r.no }}</span>
+                      <span style="flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
+                    </div>
+                    <div style="font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.5;text-wrap:pretty">{{ r.meaning }}</div>
+                    <div style="{{ dsSub }}; margin-top:6px">{{ r.gu }}</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px;margin-top:14px">
+                    <span role="button" tabIndex="0" onClick="{{ r.togglePick }}" style="{{ r.pickStyle }}">{{ r.pickLabel }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+
+        <sc-if value="{{ openWhy }}">
+          <section style="padding:48px 0 0;animation:riseIn .22s cubic-bezier(.2,.7,.3,1) both">
+            <div style="font-size:15px;font-weight:500">{{ t.score }}점은 이렇게 나왔어요</div>
+            <div style="margin-top:20px;display:flex;flex-direction:column;gap:18px;max-width:620px">
+              <sc-for list="{{ t.parts }}" as="p">
+                <div>
+                  <div class="u-between">
+                    <span style="font-size:15px;white-space:nowrap">{{ p.label }}</span>
+                    <span style="font-size:13.5px;color:var(--ink2);white-space:nowrap">{{ p.meaning }}</span>
+                  </div>
+                  <div style="height:5px;border-radius:3px;background:var(--surface);margin-top:8px;overflow:hidden">
+                    <div style="{{ p.bar }}"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+        </sc-if>
+
+        <section style="padding:32px 0 0">
+            <p style="{{ dsSub }}; max-width:760px">{{ honesty }}</p>
+        </section>
+      </sc-if>
+    </sc-if>

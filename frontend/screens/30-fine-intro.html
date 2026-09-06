@@ -1,0 +1,21 @@
+    <!-- 정밀분석 소개 -->
+    <sc-if value="{{ onFineIntro }}">
+      <section style="padding:64px 0 0;max-width:680px">
+        <div class="u-lab">정밀분석</div>
+        <h1 style="font-size:clamp(22px,3.6vw,36px);font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin:10px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">고른 동네 안에서 무엇이 다른지 봅니다</h1>
+
+        <div style="margin-top:40px;display:flex;flex-direction:column;gap:28px">
+          <sc-for list="{{ fi.rows }}" as="r">
+            <div>
+              <div style="font-size:16.5px;font-weight:600;letter-spacing:-0.015em;text-wrap:pretty">{{ r.title }}</div>
+              <p style="font-size:15px;color:var(--ink2);line-height:1.7;margin:7px 0 0;text-wrap:pretty">{{ r.body }}</p>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="margin-top:40px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <button onClick="{{ goMap }}" style="{{ ctaPrimary }}">지도분석 보기</button>
+          <span role="button" tabIndex="0" onClick="{{ goFineCmp }}" style="font-size:15px;color:var(--accent);cursor:pointer;white-space:nowrap">정밀비교 보기</span>
+        </div>
+      </section>
+    </sc-if>

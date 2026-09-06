@@ -1,0 +1,30 @@
+    <!-- 허브 (상권분석 · 정밀분석) -->
+    <sc-if value="{{ onHub }}">
+      <section style="padding:56px 0 56px">
+        <h1 style="{{ ds1 }}">{{ hub.title }}</h1>
+        <p style="{{ dsBody }}; margin-top:10px;max-width:620px">{{ hub.desc }}</p>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:16px">
+          <sc-for list="{{ hub.ctx }}" as="c">
+            <span style="{{ c.style }}">
+              <span style="font-size:11.5px;color:var(--ink3)">{{ c.label }}</span>
+              <span style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis">{{ c.value }}</span>
+            </span>
+          </sc-for>
+        </div>
+
+        <div style="{{ dsGrid3 }}; margin-top:32px">
+          <sc-for list="{{ hub.cards }}" as="c">
+            <div role="button" tabIndex="0" onClick="{{ c.go }}" style="{{ c.style }}" style-hover="transform:translateY(-3px);box-shadow:var(--shadow-pop)">
+              <svg viewBox="0 0 52 52" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="{{ c.artStyle }}" aria-hidden="true">
+                <sc-for list="{{ c.art }}" as="a"><path d="{{ a.d }}"></path></sc-for>
+              </svg>
+              <div class="u-min">
+                <div style="{{ c.labelStyle }}">{{ c.label }}</div>
+                <div style="{{ c.subStyle }}">{{ c.sub }}</div>
+              </div>
+              <div style="{{ c.ctaStyle }}">{{ c.cta }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>

@@ -1,0 +1,165 @@
+    <!-- HOME -->
+    <sc-if value="{{ onHome }}">
+      <section class="home-hero" onClick="{{ skipAnim }}" style="{{ heroSection }}">
+
+        <!-- 제목 · 검색 -->
+        <div style="{{ heroInner }}">
+          <div class="hero-eyebrow">내 장사의 시작, 데이터로 한 걸음 더</div>
+          <h1 class="hero-title" style="{{ titleStyle }}">어떤 동네에서 시작해 볼까요?</h1>
+          <p style="{{ subStyle }}">업종을 고르면 동네를 비교하고,<br>내 조건에 맞는 본전선을 확인할 수 있어요.</p>
+
+          <div class="hero-search" data-search="1" style="{{ searchWrap }}">
+            <div data-fl-ref="1" style="{{ pickerRow }}">
+              <div onClick="{{ openZone }}" style="{{ zoneBtn }}">
+                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:2px">
+                  <span style="display:flex;align-items:baseline;gap:6px;min-width:0">
+                    <span style="font-size:13px;font-weight:500;color:var(--ink3);white-space:nowrap">위치</span>
+                    <span style="font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ zoneHint }}</span>
+                  </span>
+                  <input maxLength="200" value="{{ zq }}" onChange="{{ onZoneQ }}" onFocus="{{ openZone }}" onKeyDown="{{ onZoneKey }}" aria-label="찾을 지역" placeholder="서울 전체" style="{{ segInput }}">
+                </div>
+                <sc-if value="{{ hasZone }}">
+                  <span role="button" tabIndex="0" aria-label="지역 지우기" onClick="{{ clearZone }}" style="{{ clearStyle }}" style-hover="background:var(--line-strong)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:11px;height:11px;display:block">
+                      <sc-for list="{{ icoX }}" as="p"><path d="{{ p.d }}"></path></sc-for>
+                    </svg>
+                  </span>
+                </sc-if>
+              </div>
+              <div style="{{ dividerStyle }}"></div>
+              <div onClick="{{ openInd }}" style="{{ indBtn }}">
+                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:2px">
+                  <span style="font-size:13px;font-weight:500;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">어떤 장사를 생각하시나요?</span>
+                  <input maxLength="200" value="{{ iq }}" onChange="{{ onIndQ }}" onFocus="{{ openInd }}" onKeyDown="{{ onIndKey }}" aria-label="창업할 업종" placeholder="예: 카페, 편의점" style="{{ segInput }}">
+                </div>
+                <sc-if value="{{ hasIndVal }}">
+                  <span role="button" tabIndex="0" aria-label="업종 지우기" onClick="{{ clearInd }}" style="{{ clearStyle }}" style-hover="background:var(--line-strong)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:11px;height:11px;display:block">
+                      <sc-for list="{{ icoX }}" as="p"><path d="{{ p.d }}"></path></sc-for>
+                    </svg>
+                  </span>
+                </sc-if>
+              </div>
+              <button onClick="{{ start }}" disabled="{{ startDisabled }}" style="{{ startStyle }}" style-active="{{ startActive }}" style-hover="{{ startHover }}">
+                <sc-if value="{{ starting }}">
+                  <span style="display:block;width:19px;height:19px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#FFFFFF;animation:spin .7s linear infinite"></span>
+                </sc-if>
+                <sc-if value="{{ notStarting }}">
+                  <span class="u-nowrap">동네 찾아보기</span>
+                </sc-if>
+              </button>
+            </div>
+
+            <!-- 업종 고르기 -->
+            <sc-if value="{{ indPanel }}">
+              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--bg);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
+                <div data-anim="1" style="flex:none;display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{ hotInds }}" as="h">
+                    <span role="button" tabIndex="0" onClick="{{ h.pick }}" style="{{ h.style }}">{{ h.label }}</span>
+                  </sc-for>
+                </div>
+
+                <div style="flex:1 1 auto;min-height:0;display:flex;gap:14px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)">
+                  <div style="flex:0 0 92px;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:2px">
+                    <sc-for list="{{ indCats }}" as="c">
+                      <span role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</span>
+                    </sc-for>
+                  </div>
+                  <div style="flex:1;min-width:0;min-height:0;overflow-y:auto;padding-right:6px">
+                    <div style="{{ indGridStyle }}">
+                      <sc-for list="{{ indCards }}" as="i">
+                        <div role="button" tabIndex="0" onClick="{{ i.pick }}" style="{{ i.style }}" style-hover="background:var(--line)">
+                          <span style="font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ i.name }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <sc-if value="{{ indEmpty }}">
+                      <div style="padding:16px 4px;font-size:14px;color:var(--ink3);white-space:nowrap">{{ indEmptyText }}</div>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- 위치 고르기 -->
+            <sc-if value="{{ zonePanel }}">
+              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--bg);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
+                <sc-if value="{{ zoneSearching }}">
+                  <div data-anim="1" data-fl-inner="1" style="max-height:300px;overflow-y:auto;padding-right:6px">
+                    <sc-for list="{{ pickList }}" as="p">
+                      <sc-if value="{{ p.isRow }}">
+                        <div role="button" tabIndex="0" onClick="{{ p.pick }}" style="{{ p.style }}">
+                          <span class="u-fill-e">{{ p.name }}</span>
+                          <span class="u-note-f">{{ p.meta }}</span>
+                        </div>
+                      </sc-if>
+                    </sc-for>
+                    <sc-if value="{{ pickEmpty }}">
+                      <div style="padding:14px;font-size:14px;color:var(--ink3);white-space:nowrap">{{ pickEmptyText }}</div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ zoneBrowsing }}">
+                  <div style="display:flex;flex-direction:column;min-height:0;flex:1 1 auto">
+                    <div role="button" tabIndex="0" onClick="{{ pickAll }}" style="{{ allCardStyle }}" style-hover="background:var(--line)">
+                      <span style="font-size:15.5px;font-weight:600;white-space:nowrap">서울 전체</span>
+                      <span style="font-size:12px;color:var(--ink3);white-space:nowrap">아직 안 정함</span>
+                    </div>
+
+                    <sc-if value="{{ hasRecent }}">
+                      <div style="flex:none;font-size:11.5px;font-weight:600;color:var(--ink3);padding:14px 2px 8px;white-space:nowrap">⏱️ 최근 본 동네</div>
+                      <div data-anim="1" style="flex:none;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px">
+                        <sc-for list="{{ recentChips }}" as="c">
+                          <div role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="background:var(--line)">
+                            <span style="font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap">{{ c.name }}</span>
+                            <span class="u-note">{{ c.meta }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <!-- 구 25개 — ㄱㄴㄷ 순으로 여러 열에 깔아 한 화면에 다 보이게 -->
+                    <div style="{{ guGridStyle }}">
+                      <sc-for list="{{ guTabs }}" as="t">
+                        <span role="button" tabIndex="0" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</span>
+                      </sc-for>
+                    </div>
+                    <div style="{{ colsStyle }}">
+                      <div data-anim="1" style="{{ zoneGridStyle }}">
+                        <sc-for list="{{ guZones }}" as="z">
+                          <div role="button" tabIndex="0" onClick="{{ z.pick }}" style="{{ z.style }}">
+                            <span class="u-fill-e">{{ z.name }}</span>
+                            <span class="u-note-f">{{ z.meta }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div onMouseDown="{{ onResize }}" onTouchStart="{{ onResize }}" style="flex:none;margin:8px -6px -4px;height:18px;display:flex;align-items:center;justify-content:center;cursor:ns-resize">
+                      <span style="width:36px;height:4px;border-radius:2px;background:var(--line-strong)"></span>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <div style="{{ tagRow }}">
+              <span style="font-size:12.5px;color:var(--ink3);flex:none;white-space:nowrap">인기 검색</span>
+              <sc-for list="{{ tags }}" as="t">
+                <span role="button" tabIndex="0" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- 선택 상태 -->
+        <sc-if value="{{ picking }}">
+          <div style="position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:var(--bg-blur);backdrop-filter:blur(6px);animation:riseIn .3s cubic-bezier(.22,.7,.25,1) both">
+            <div style="text-align:center">
+              <div style="width:44px;height:44px;margin:0 auto;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite"></div>
+              <div style="font-size:19px;font-weight:600;letter-spacing:-0.025em;margin-top:22px;white-space:nowrap">{{ pickingText }}</div>
+            </div>
+          </div>
+        </sc-if>
+      </section>
+    </sc-if>

@@ -1,0 +1,99 @@
+    <!-- 비교 -->
+    <sc-if value="{{ onCmp }}">
+      <section class="u-sec">
+        <h1 style="{{ ds1 }}">{{ c.headline }}</h1>
+        <p style="{{ dsBody }}; margin-top:10px;max-width:640px">{{ c.sub }}</p>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:22px">
+          <span class="u-lab">업종</span>
+          <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+            <sc-for list="{{ indOptions }}" as="o">
+              <option value="{{ o.raw }}">{{ o.label }}</option>
+            </sc-for>
+          </select>
+          <select value="" onChange="{{ onAddZone }}" disabled="{{ addZoneFull }}" style="{{ selectStyle }}">
+            <sc-for list="{{ addZoneOptions }}" as="z">
+              <option value="{{ z.id }}">{{ z.label }}</option>
+            </sc-for>
+          </select>
+        </div>
+      </section>
+
+      <!-- 빈 화면 — 정상 화면과 같은 수준으로 만든다 -->
+      <sc-if value="{{ c.empty }}">
+        <section style="padding:28px 0 0">
+          <div style="{{ dsCard }}; padding:56px 28px;text-align:center;border-style:dashed">
+            <svg viewBox="0 0 52 52" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px;display:block;margin:0 auto" aria-hidden="true">
+              <path d="M6 12 h16 v28 h-16 z"></path><path d="M30 12 h16 v28 h-16 z"></path>
+              <path d="M10 21 h8"></path><path d="M34 21 h8"></path>
+            </svg>
+            <div style="font-size:17px;font-weight:700;margin-top:18px">아직 비교한 상권이 없어요</div>
+            <p style="{{ dsSub }}; margin-top:8px">관심 있는 상권을 추가해 차이를 확인해 보세요.</p>
+            <sc-if value="{{ c.emptyCount }}">
+              <p style="font-size:13.5px;font-weight:600;color:var(--accent);margin-top:10px">{{ c.emptyCount }}</p>
+            </sc-if>
+            <button onClick="{{ goFind }}" style="{{ dsCta }}; margin-top:22px" style-hover="filter:brightness(1.06)">+ 상권 추가</button>
+          </div>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ c.on }}">
+        <!-- 결론 먼저 -->
+        <sc-if value="{{ c.hasVerdict }}">
+          <section style="padding:26px 0 0">
+            <div style="{{ dsCardHi }}">
+              <div style="font-size:18px;font-weight:700;line-height:1.45;text-wrap:pretty">{{ c.verdict }}</div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+                <sc-for list="{{ c.verdictWhy }}" as="w">
+                  <div style="{{ w.style }}"><span class="u-check">✓</span><span class="u-fill">{{ w.text }}</span></div>
+                </sc-for>
+              </div>
+            </div>
+          </section>
+        </sc-if>
+
+        <section style="padding:24px 0 0">
+          <div style="{{ dsGrid3 }}">
+            <sc-for list="{{ c.cols }}" as="col">
+              <div style="{{ col.cardStyle }}">
+                <span role="button" tabIndex="0" aria-label="비교에서 빼기" onClick="{{ col.drop }}" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--bg);color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;transition:background .14s,color .14s" style-hover="background:var(--line-strong);color:var(--ink)">×</span>
+                <div style="font-size:19px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:34px">{{ col.name }}</div>
+                <div style="{{ dsSub }}; margin-top:4px">{{ col.rank }}</div>
+                <div style="margin-top:20px;display:flex;flex-direction:column;gap:16px">
+                  <sc-for list="{{ col.cells }}" as="x">
+                    <div>
+                      <div class="u-lab-sm">{{ x.label }}</div>
+                      <div style="{{ x.valStyle }}">{{ x.value }}</div>
+                      <sc-if value="{{ x.bar }}">
+                        <div style="height:4px;border-radius:2px;background:var(--surface);margin-top:8px;overflow:hidden">
+                          <div style="{{ x.bar }}"></div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ x.note }}">
+                        <div style="font-size:11.5px;font-weight:600;color:var(--accent);margin-top:6px;text-wrap:pretty">{{ x.note }}</div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-top:20px">
+                  <span role="button" tabIndex="0" onClick="{{ col.diag }}" style="{{ ctaText }}">본전 계산 보기 →</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="padding:44px 0 0">
+          <h2 style="{{ ds3 }}">무엇이 다른가요?</h2>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ c.diffs }}" as="x">
+              <div style="display:flex;gap:11px;align-items:baseline;font-size:15.5px;max-width:760px">
+                <span style="{{ x.dot }}"></span>
+                <span style="text-wrap:pretty">{{ x.text }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <p style="{{ dsSub }}; margin-top:28px;max-width:760px">{{ c.honesty }}</p>
+        </section>
+      </sc-if>
+    </sc-if>

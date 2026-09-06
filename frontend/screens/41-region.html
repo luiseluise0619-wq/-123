@@ -1,0 +1,71 @@
+    <!-- 고른 지역 -->
+    <sc-if value="{{ onRegion }}">
+      <section style="padding:64px 0 0;animation:riseIn .5s cubic-bezier(.22,.7,.25,1) both">
+        <div class="u-lab">고른 지역</div>
+        <h1 style="font-size:clamp(28px,4.6vw,46px);font-weight:600;letter-spacing:-0.04em;line-height:1.02;margin:10px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rg.name }}</h1>
+
+        <div style="display:flex;gap:36px;flex-wrap:wrap;margin-top:32px">
+          <sc-for list="{{ rg.stats }}" as="s">
+            <div>
+              <div style="font-size:24px;font-weight:600;letter-spacing:-0.025em;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.value }}</div>
+              <div style="font-size:13px;color:var(--ink2);margin-top:5px;white-space:nowrap">{{ s.label }}</div>
+              <div style="font-size:11.5px;color:var(--ink3);margin-top:3px;white-space:nowrap">{{ s.tag }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="padding:56px 0 0;overflow:hidden">
+        <div style="{{ rg.trackStyle }}">
+
+          <!-- 1단: 업종 목록 -->
+          <div style="{{ rg.paneStyle }}">
+            <div style="font-size:20px;font-weight:600;letter-spacing:-0.03em;white-space:nowrap">어떤 업종을 보실까요?</div>
+            <p style="font-size:14px;color:var(--ink3);margin:10px 0 0;text-wrap:pretty">{{ rg.sub }}</p>
+            <div data-anim="1" class="u-mt">
+              <sc-for list="{{ rg.inds }}" as="i">
+                <div role="button" tabIndex="0" onClick="{{ i.pick }}" style="{{ i.row }}">
+                  <span style="flex:1;min-width:0;font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ i.name }}</span>
+                  <span style="flex:0 1 140px;min-width:40px;height:5px;border-radius:3px;background:var(--surface);overflow:hidden;display:block">
+                    <span style="{{ i.bar }}"></span>
+                  </span>
+                  <span style="flex:none;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap">{{ i.per }}</span>
+                  <span style="flex:none;width:56px;text-align:right;font-size:13px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap">{{ i.stores }}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:16px;height:16px;color:var(--ink3);display:block">
+                    <sc-for list="{{ icoChevron }}" as="p"><path d="{{ p.d }}"></path></sc-for>
+                  </svg>
+                </div>
+              </sc-for>
+            </div>
+            <p style="font-size:12.5px;color:var(--ink3);margin:24px 0 0;max-width:640px;text-wrap:pretty">막대는 가게 한 곳이 한 달에 파는 돈이에요. 목록에 없는 장사는 안 되는 게 아니라 데이터가 없어서 알 수 없는 거예요. 이 자료에는 동네별 매출 상위 15개 업종만 포함해요.</p>
+          </div>
+
+          <!-- 2단: 고른 업종 -->
+          <div style="{{ rg.paneStyle }}">
+            <span role="button" tabIndex="0" onClick="{{ rg.detail.back }}" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--accent);cursor:pointer;white-space:nowrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;display:block">
+                <sc-for list="{{ icoBack }}" as="p"><path d="{{ p.d }}"></path></sc-for>
+              </svg>목록으로
+            </span>
+            <div style="font-size:clamp(22px,3.4vw,32px);font-weight:600;letter-spacing:-0.03em;margin-top:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rg.detail.name }}</div>
+            <p style="font-size:15.5px;color:var(--ink2);margin:12px 0 0;text-wrap:pretty">{{ rg.detail.lead }}</p>
+
+            <div style="margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:28px;max-width:620px">
+              <sc-for list="{{ rg.detail.facts }}" as="f">
+                <div>
+                  <div class="u-lab">{{ f.label }}</div>
+                  <div style="font-size:24px;font-weight:600;letter-spacing:-0.025em;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ f.value }}</div>
+                  <div class="u-note-t">{{ f.tag }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="margin-top:44px;display:flex;align-items:center;gap:22px;flex-wrap:wrap">
+              <button onClick="{{ rg.detail.confirm }}" style="font-size:16px;font-weight:500;color:#FFFFFF;background:var(--accent);border:none;border-radius:999px;padding:0 30px;height:52px;cursor:pointer;transition:opacity .16s" style-hover="opacity:.86">이 업종으로 분석하기</button>
+              <span role="button" tabIndex="0" onClick="{{ rg.detail.back }}" style="font-size:15px;color:var(--accent);cursor:pointer;white-space:nowrap">다시 고르기</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </sc-if>

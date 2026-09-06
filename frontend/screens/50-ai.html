@@ -1,0 +1,46 @@
+    <sc-if value="{{ onAi }}">
+      <section style="padding:56px 0 0;display:flex;flex-direction:column;min-height:calc(100vh - 176px)">
+        <div style="flex:none">
+          <h1 style="font-size:clamp(24px,3.6vw,34px);font-weight:600;letter-spacing:-0.03em;line-height:1.06;margin:0;white-space:nowrap">무엇이 궁금한가요?</h1>
+          <p style="font-size:14px;color:var(--ink3);margin:12px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">계산한 값만 근거로 답해요. 없는 값은 없다고 말해요.</p>
+        </div>
+
+        <div style="flex:1;display:flex;flex-direction:column;gap:16px;padding:36px 0 24px">
+          <sc-for list="{{ ai.msgs }}" as="m">
+            <div style="{{ m.row }}">
+              <div style="{{ m.bubble }}">
+                <div style="{{ m.textStyle }}">{{ m.text }}</div>
+                <sc-if value="{{ m.hasFacts }}">
+                  <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+                    <sc-for list="{{ m.facts }}" as="f">
+                      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px">
+                        <span class="u-lab">{{ f.label }}</span>
+                        <span style="font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ f.value }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ m.hasSource }}">
+                  <div style="font-size:11.5px;color:var(--ink3);margin-top:12px;text-wrap:pretty">{{ m.source }}</div>
+                </sc-if>
+                <sc-if value="{{ m.hasCta }}">
+                  <div role="button" tabIndex="0" onClick="{{ m.ctaGo }}" style="font-size:14px;color:var(--accent);cursor:pointer;margin-top:14px;white-space:nowrap">{{ m.cta }}</div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="flex:none;position:sticky;bottom:0;background:var(--bg);padding-bottom:28px">
+          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:14px">
+            <sc-for list="{{ ai.chips }}" as="c">
+              <span role="button" tabIndex="0" onClick="{{ c.ask }}" style="{{ c.style }}">{{ c.label }}</span>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:16px;padding:0 8px 0 20px">
+            <input maxLength="200" value="{{ ai.draft }}" onChange="{{ ai.onDraft }}" onKeyDown="{{ ai.onKey }}" placeholder="예: 커피 3천만원으로 어디가 좋아요?" style="flex:1;min-width:0;font-size:16px;color:var(--ink);background:transparent;border:none;height:56px;outline:none;letter-spacing:-0.015em">
+            <button onClick="{{ ai.send }}" style="{{ ai.sendStyle }}">보내기</button>
+          </div>
+        </div>
+      </section>
+    </sc-if>

@@ -335,4 +335,31 @@ DB index · query optimization · caching · pagination · rate limit · backgro
   자리표시자를 그리면서 생기는 것으로, 화면·기능에는 영향이 없다.
   `support.js` 는 벤더 코드라 수정하지 않는다는 방침(`index.html` 머리말)에 따라 그대로 둔다.
 
+### 사장님이 해주셔야 하는 것 (2026-09-06 추가)
+
+- [ ] 🟡 **서울시 상권분석서비스 '점포·임대시세' 오퍼레이션명 확인**
+      상권 1,564곳 단위 임대료(환산임대료)를 가져오는 수집기를 붙였다
+      (`backend/collect_zone_rent.py` · 워크플로 단계 포함). 지금 화면은 한국부동산원
+      임대동향조사(서울 63개 상권·서울 평균)를 쓰고 있어서, 이름이 정확히 맞는
+      상권만 그 값을 쓰고 나머지는 '서울 평균 · 이 상권 값은 아니에요'로 나온다.
+      → 서울 열린데이터광장에서 해당 서비스의 **오퍼레이션명**을 확인해
+        GitHub → Settings → Variables 에 `ZONE_RENT_SERVICE` 로 넣을 것.
+        기본값은 `VwsmTrdarStorQq` 로 두었지만 **실제 응답으로 확인하지 못했다**
+        (이 작업 환경에서 openapi.seoul.go.kr 접속이 막혀 있다).
+      ※ 필드명도 기관마다 다르다. 스크립트의 `RENT_TAGS` 가 흔한 이름들을 훑지만,
+        키를 넣고 한 번 돌린 뒤 로그를 보고 맞춰야 정확하다.
+        못 읽으면 `available:false` 로 남고 화면은 지금처럼 서울 평균으로 내려간다.
+      ※ 환산임대료는 `보증금×12%÷12 + 월세` 로 환산한 **추정값**이다(서울신용보증재단
+        보증 고객 통계 기반). 화면에 '추정'으로 표시하고 있으니 그대로 둘 것.
+
+- [ ] 🟢 전국 확장 시 임대료는 **한국부동산원 R-ONE** 상업용부동산 임대동향조사를 쓴다.
+      지금 `frontend/data/v3/rent.json` 이 그 계열 자료(서울분)다.
+
+**구조 (2026-09-06)**
+- `frontend/index.html` 은 **`frontend/screens/*.html` 을 모아 만든 결과물**이다.
+  직접 고치지 말고 조각을 고친 뒤 `npm run build:html`. 어긋나면 `npm test` 가 잡는다.
+- 로직은 `frontend/logic/{const,util,design,analysis,screens,chat,views}.js` 로 나뉘어 있고
+  `frontend/app-logic.js` 가 마지막에 프로토타입으로 합친다. 자세한 건
+  `frontend/screens/README.md`.
+
 - _새 항목은 발견 즉시 여기에 추가_

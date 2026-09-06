@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<!-- 이 파일은 frontend/screens/*.html 을 모아 만든 결과물입니다.
+     직접 고치지 말고 조각을 고친 뒤 `npm run build:html` 을 실행하세요. -->
+<html lang="ko">
+<head>
+<title>MYSBIZON · 내 장사를 시작할 동네</title>
+<meta name="description" content="서울 상권 데이터를 비교하고 내 조건으로 손익분기를 확인하세요. 추천 근거와 데이터의 한계까지 함께 보여드립니다.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./vendor/react.production.min.js"></script>
+<script src="./vendor/react-dom.production.min.js"></script>
+<!-- 로직은 책임별로 나눠 둔다. app-logic.js 가 마지막에 이들을 프로토타입에 합친다. -->
+<script src="./logic/const.js"></script>
+<script src="./logic/util.js"></script>
+<script src="./logic/design.js"></script>
+<script src="./logic/analysis.js"></script>
+<script src="./logic/screens.js"></script>
+<script src="./logic/chat.js"></script>
+<script src="./logic/views.js"></script>
+<script src="./app-logic.js"></script>
+<script src="./dc-runtime.js?v=2"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+    <rect width="240" height="240" rx="36" fill="#3182F6"></rect>
+    <g fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round">
+      <path d="M78 168V96l34-22 34 22v72"></path>
+      <path d="M60 168h120"></path>
+      <path d="M112 168v-30h20v30"></path>
+    </g>
+  </svg>
+</template>
+
+<link rel="stylesheet" href="company.css">
+<script src="company-accessibility.js" defer></script>
+<style>
+  :root{
+    --bg:#FFFFFF; --bg-blur:rgba(255,255,255,.8);
+    --ink:#191F28; --ink2:#4E5968; --ink3:#687583;
+    --line:#EAECEC; --line-strong:#D2D2D7; --surface:#F5F5F7;
+    --accent:#087F6B; --accent-hover:#0F6B59;
+    --accent-2:#7FBCAE; --accent-3:#E8F5F1; --selection:#D6EBE4;
+    /* 의미 색 — '+' 라서 초록이 아니라, 사장님에게 좋은 값일 때만 초록이다.
+       경쟁 점포가 +30% 인 건 나쁜 값이라 주황/빨강으로 쓴다. */
+    --good:#1F7A4D; --warn:#A8620F; --err:#D93025;
+    /* 카드 그림자 — 회색 배경 대신 흰 카드 + 얇은 테두리 + 아주 옅은 그림자 */
+    --shadow-card:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.03);
+    --shadow-pop:0 12px 32px -12px rgba(16,24,40,.18);
+    --r-lg:20px; --r-md:16px; --r-sm:12px;
+  }
+  html[data-theme="dark"]{
+    --bg:#000000; --bg-blur:rgba(0,0,0,.72);
+    /* ink3 는 --surface 위에서는 5.4:1 로 충분했지만 --accent-3(선택된 카드) 위에서
+       3.98:1 로 떨어져 설명 글자가 흐리게 보였다. 두 배경 모두에서 4.5:1 을 넘기게 올린다. */
+    --ink:#F5F5F7; --ink2:#A8A8AE; --ink3:#9A9AA0;
+    --line:#1F1F22; --line-strong:#3A3A3E; --surface:#121214;
+    --accent:#3FA88F; --accent-hover:#6FC4AE;
+    --accent-2:#2E7565; --accent-3:#12332C; --selection:#12332C;
+    --good:#4E9E6A; --warn:#C88A3A; --err:#FF6B60;
+    --shadow-card:0 1px 2px rgba(0,0,0,.5);
+    --shadow-pop:0 12px 32px -12px rgba(0,0,0,.7);
+    color-scheme:dark;
+  }
+
+  /* 여러 화면에서 되풀이되던 인라인 style 을 이름으로 묶었다. 값은 그대로다. */
+  .u-lab{font-size:13px;color:var(--ink2);white-space:nowrap}
+  .u-lab-sm{font-size:12.5px;color:var(--ink2);white-space:nowrap}
+  .u-lab-p{font-size:13px;color:var(--ink2)}
+  .u-note{font-size:11.5px;color:var(--ink3);white-space:nowrap}
+  .u-note-t{font-size:11.5px;color:var(--ink3);margin-top:4px;white-space:nowrap}
+  .u-note-f{flex:none;font-size:12px;color:var(--ink3);white-space:nowrap}
+  .u-lab-f{flex:none;font-size:13px;color:var(--ink2);white-space:nowrap}
+  .u-h{font-size:15px;font-weight:600}
+  .u-min{min-width:0}
+  .u-fill{flex:1;min-width:0}
+  .u-fill-e{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .u-fill-n{flex:1;min-width:0;font-size:15.5px;font-weight:500;white-space:nowrap}
+  .u-nowrap{white-space:nowrap}
+  .u-between{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .u-tap{display:flex;align-items:center;gap:12px;padding:19px 0;cursor:pointer}
+  .u-stack{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .u-check{flex:none;color:var(--accent);font-weight:700}
+  .u-rule{border-top:1px solid var(--line)}
+  .u-sec{padding:56px 0 0}
+  .u-sec-lg{padding:64px 0 0}
+  .u-sec-b{padding:0 0 30px}
+  .u-mt{margin-top:22px}
+  html,body{margin:0;padding:0;background:var(--bg);-webkit-font-smoothing:antialiased}
+  *{scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px}
+  ::-webkit-scrollbar-button{display:none;width:0;height:0}
+  ::-webkit-scrollbar-button:start:decrement,::-webkit-scrollbar-button:end:increment{display:none}
+  ::-webkit-scrollbar-corner{background:transparent}
+  html[data-theme="dark"] *{scrollbar-color:rgba(255,255,255,.2) transparent}
+  html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2)}
+  body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all}
+  *{box-sizing:border-box}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{color:var(--accent-hover)}
+  input,button,select{font-family:inherit}
+  ::selection{background:var(--selection)}
+  @keyframes riseIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes gridIn{to{opacity:1}}
+  @keyframes roadX{to{transform:scaleX(1)}}
+  @keyframes roadY{to{transform:scaleY(1)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* 도시가 계속 지어지고 사라진다 — 요소마다 duration·delay가 달라 같은 장면이 반복되지 않는다 */
+  /* 완전히 사라지지 않는다 — 빈 칸이 생기면 간격이 들쭉날쭉해 보인다 */
+  @keyframes buildLoop{
+    0%{opacity:.22;transform:translateY(8px) scale(.9)}
+    16%{opacity:1;transform:translateY(0) scale(1)}
+    62%{opacity:1;transform:translateY(0) scale(1)}
+    80%{opacity:.22;transform:translateY(7px) scale(.93)}
+    100%{opacity:.22;transform:translateY(8px) scale(.9)}
+  }
+  @keyframes dotLoop{
+    0%{opacity:0;transform:scale(.35)}
+    16%{opacity:1;transform:scale(1)}
+    62%{opacity:1;transform:scale(1)}
+    82%{opacity:0;transform:scale(.4)}
+    100%{opacity:0;transform:scale(.35)}
+  }
+  @keyframes driftA{0%{transform:translate3d(0,0,0)}50%{transform:translate3d(16px,-12px,0)}100%{transform:translate3d(0,0,0)}}
+  @keyframes driftB{0%{transform:translate3d(0,0,0)}50%{transform:translate3d(-14px,10px,0)}100%{transform:translate3d(0,0,0)}}
+  @keyframes driftC{0%{transform:translate3d(0,0,0)}50%{transform:translate3d(10px,14px,0)}100%{transform:translate3d(0,0,0)}}
+  @keyframes areaBreathe{0%{opacity:.04}50%{opacity:.09}100%{opacity:.04}}
+  /* 가운데에서 나타나 잠시 머물고 제자리로 올라간다 */
+  @keyframes heroRise{
+    0%{opacity:0;transform:translateY(21vh) scale(.985)}
+    22%{opacity:1;transform:translateY(21vh) scale(1)}
+    52%{opacity:1;transform:translateY(21vh) scale(1)}
+    100%{opacity:1;transform:translateY(0) scale(1)}
+  }
+  @keyframes lateIn{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
+  @keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+  /* 안 채우고 넘어가려 하면 입력칸이 좌우로 흔들린다.
+     같은 이름이면 두 번째 누를 때 다시 안 뛰어서, 번갈아 쓰는 쌍으로 둔다. */
+  @keyframes shakeA{0%,100%{transform:none}15%{transform:translateX(-7px)}30%{transform:translateX(6px)}45%{transform:translateX(-4px)}60%{transform:translateX(3px)}75%{transform:translateX(-2px)}}
+  @keyframes shakeB{0%,100%{transform:none}15%{transform:translateX(-7px)}30%{transform:translateX(6px)}45%{transform:translateX(-4px)}60%{transform:translateX(3px)}75%{transform:translateX(-2px)}}
+  @media (prefers-reduced-motion:reduce){
+    @keyframes shakeA{0%,100%{transform:none}}
+    @keyframes shakeB{0%,100%{transform:none}}
+  }
+  @keyframes botIn{0%{opacity:0;transform:translateY(16px) scale(.98)}100%{opacity:1;transform:none}}
+  @keyframes gridBreathe{0%{opacity:.55}50%{opacity:.9}100%{opacity:.55}}
+  @media (prefers-reduced-motion:reduce){[aria-hidden="true"] *{animation:none!important;opacity:1!important;transform:none!important}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6;letter-spacing:-0.011em">
+
+  <a class="skip-link" href="#main-content">본문으로 바로가기</a>
+  <header style="{{ headerStyle }}">
+    <div style="{{ headerInner }}">
+      <div role="button" tabIndex="0" onClick="{{ goHome }}" style="font-size:15px;font-weight:700;letter-spacing:-0.02em;flex:none;cursor:pointer;white-space:nowrap">MYSBIZON</div>
+      <nav style="display:flex;gap:2px;align-items:center;flex:1 1 auto;min-width:0">
+        <sc-for list="{{ nav }}" as="n">
+          <div style="position:relative;flex:0 1 auto;min-width:0;overflow:hidden">
+            <span role="button" tabIndex="0" onClick="{{ n.open }}" style="{{ n.style }}">{{ n.label }}</span>
+            <sc-if value="{{ n.isOpen }}">
+              <div style="position:absolute;left:0;top:40px;z-index:30;min-width:184px;background:var(--bg);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.12);padding:6px">
+                <sc-for list="{{ n.items }}" as="i">
+                  <div role="button" tabIndex="0" onClick="{{ i.go }}" style="{{ i.style }}">{{ i.label }}</div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </nav>
+      <span role="button" tabIndex="0" onClick="{{ toggleTheme }}" style="cursor:pointer;font-size:12px;color:var(--ink3);flex:none;white-space:nowrap">{{ themeLabel }}</span>
+    </div>
+  </header>
+
+  <main id="main-content" style="{{ mainStyle }}">

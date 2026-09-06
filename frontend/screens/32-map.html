@@ -1,0 +1,66 @@
+    <!-- 지도분석 -->
+    <!-- 지도 — 어디인지만. 해석은 정밀분석에서. -->
+    <sc-if value="{{ onMapScreen }}">
+      <section class="u-sec">
+        <h1 style="{{ ds1 }}">{{ mv.target }}</h1>
+        <p style="{{ dsBody }}; margin-top:10px">이 상권이 정확히 어디인지 위치로 확인해요.</p>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:20px">
+          <select value="{{ sidoSel }}" onChange="{{ onSido }}" style="{{ selectStyle }}">
+            <sc-for list="{{ sidoOptions }}" as="o"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+          </select>
+          <select value="{{ mv.gu }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
+            <sc-for list="{{ mv.guOptions }}" as="g"><option value="{{ g }}">{{ g }}</option></sc-for>
+          </select>
+          <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+            <sc-for list="{{ indOptions }}" as="o"><option value="{{ o.raw }}">{{ o.label }}</option></sc-for>
+          </select>
+        </div>
+      </section>
+
+      <sc-if value="{{ sidoReady }}">
+      <section style="padding:28px 0 0">
+        <div style="display:grid;gap:20px;grid-template-columns:{{ mapCols }}">
+          <div class="u-min">
+            <div style="width:100%;aspect-ratio:16/12;border-radius:var(--r-lg);background:var(--surface);overflow:hidden">
+              <svg aria-label="상권 위치 지도" role="img" viewBox="{{ mv.map.vb }}" style="width:100%;height:100%;display:block">
+                <sc-for list="{{ mv.map.gus }}" as="g"><path d="{{ g.d }}" fill="{{ g.fill }}" fill-opacity="{{ g.op }}" stroke="{{ g.sc }}" stroke-width="{{ g.sw }}"></path></sc-for>
+                <sc-for list="{{ mv.map.pins }}" as="p"><g><circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="{{ p.fill }}"></circle><text x="{{ p.x }}" y="{{ p.ty }}" text-anchor="middle" font-size="{{ p.fs }}" font-weight="700" fill="white">{{ p.n }}</text></g></sc-for>
+              </svg>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ mv.map.pins }}" as="p">
+                <span role="button" tabIndex="0" onClick="{{ p.pick }}" style="{{ p.chip }}">{{ p.n }} {{ p.name }}</span>
+              </sc-for>
+            </div>
+            <p style="{{ dsSub }}; margin-top:12px">번호를 누르면 그 상권으로 바뀝니다. 핀은 상권 중심 좌표예요.</p>
+          </div>
+
+          <div style="{{ dsCardLg }}; min-width:0;align-self:start">
+            <div style="font-size:19px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ mv.dash.zone }}</div>
+            <div style="{{ dsSub }}; margin-top:4px">{{ mv.dash.ind }}</div>
+            <div style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
+              <sc-for list="{{ mv.summary3 }}" as="s">
+                <div>
+                  <div class="u-lab">{{ s.label }}</div>
+                  <div style="{{ s.bigStyle }}">{{ s.big }}</div>
+                  <div style="{{ dsSub }}; margin-top:4px">{{ s.note }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <button onClick="{{ goFineDetail }}" style="{{ dsCta }}; width:100%;margin-top:22px" style-hover="filter:brightness(1.06)">정밀 분석</button>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ sidoWait }}">
+        <section style="padding:36px 0 0;max-width:640px">
+          <div style="{{ dsCard }}">
+            <div style="font-size:16px;font-weight:700">아직 이 지역 자료가 없어요</div>
+            <p style="{{ dsBody }}; margin-top:8px">{{ sidoNote }}</p>
+            <button onClick="{{ backToSeoul }}" style="{{ dsGhost }}; margin-top:16px">서울로 돌아가기</button>
+          </div>
+        </section>
+      </sc-if>
+    </sc-if>

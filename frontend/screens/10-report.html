@@ -1,0 +1,291 @@
+    <!-- 리포트 -->
+    <sc-if value="{{ onReport }}">
+      <section style="padding:64px 0 0;max-width:640px">
+        <h1 style="font-size:clamp(24px,3.8vw,36px);font-weight:700;letter-spacing:-0.025em;line-height:1.14;margin:0;white-space:normal">리포트로 정리해 드려요</h1>
+        <p style="font-size:15px;color:var(--ink2);margin:10px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rp.target }}</p>
+
+        <div style="margin-top:28px;display:flex;flex-direction:column;gap:18px">
+          <!-- 창업 조건 — 답할 때마다 아래 리포트가 한 칸씩 자란다. 다 답하면 카드째 사라진다 -->
+          <sc-if value="{{ rp.hasCur }}">
+          <div data-rp-card="1" style="padding:24px 22px;border-radius:20px;background:var(--bg);box-shadow:0 0 0 1px var(--line)">
+            <div style="display:flex;align-items:center;gap:10px">
+              <sc-if value="{{ rp.hasBack }}">
+                <span role="button" tabIndex="0" aria-label="이전 질문" onClick="{{ rp.curBack }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .14s" style-hover="background:var(--line-strong)">←</span>
+              </sc-if>
+              <span style="flex:1"></span>
+              <sc-if value="{{ rp.hasStep }}">
+                <span style="flex:none;font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap">{{ rp.qsStep }}</span>
+              </sc-if>
+            </div>
+
+            <div style="height:3px;border-radius:2px;background:var(--surface);overflow:hidden;margin-top:14px">
+              <span style="{{ rp.qsBar }}"></span>
+            </div>
+
+            <!-- 질문 하나 — 한 화면에 이것만 -->
+            <sc-if value="{{ rp.hasCur }}">
+              <div data-anim="1">
+                <div style="font-size:21px;font-weight:700;letter-spacing:-0.025em;line-height:1.35;margin-top:24px;text-wrap:pretty">{{ rp.curQ }}</div>
+                <div style="font-size:13.5px;color:var(--ink2);margin-top:8px;text-wrap:pretty">{{ rp.curHint }}</div>
+                <sc-if value="{{ rp.isSearch }}">
+                  <input value="{{ rp.searchQ }}" onChange="{{ rp.onSearchQ }}" maxLength="40" aria-label="{{ rp.searchHint }}" placeholder="{{ rp.searchHint }}" style="{{ dsInput }}; margin-top:18px">
+                  <sc-if value="{{ rp.searchEmpty }}">
+                    <div style="margin-top:12px;padding:16px 18px;border-radius:var(--r-sm);background:var(--surface);font-size:14px;color:var(--ink3)">{{ rp.searchEmptyText }}</div>
+                  </sc-if>
+                </sc-if>
+                <!-- 주소 → 상권 자동 매칭 결과 -->
+                <sc-if value="{{ rp.matched }}">
+                  <div style="margin-top:16px;padding:16px 18px;border-radius:var(--r-sm);background:var(--accent-3)">
+                    <div style="display:flex;align-items:flex-start;gap:9px">
+                      <span class="u-check">✓</span>
+                      <span class="u-fill">
+                        <span style="display:block;font-size:15px;font-weight:700;color:var(--accent)">{{ rp.matchedName }}</span>
+                        <span style="display:block;font-size:13px;color:var(--ink2);margin-top:3px">{{ rp.matchedWhere }}</span>
+                      </span>
+                    </div>
+                    <button onClick="{{ rp.matchedNext }}" style="width:100%;margin-top:14px;font-size:15.5px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;border-radius:var(--r-sm);height:48px;cursor:pointer">다음</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ rp.hasOpts }}">
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
+                  <sc-for list="{{ rp.curOpts }}" as="o">
+                    <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">
+                      <span class="u-fill">
+                        <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span>
+                        <sc-if value="{{ o.hasSub }}">
+                          <span style="display:block;margin-top:3px;font-size:12.5px;font-weight:500;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.sub }}</span>
+                        </sc-if>
+                      </span>
+                      <sc-if value="{{ o.on }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:16px;height:16px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+                </sc-if>
+
+                <!-- 마지막 질문 — 이메일도 이 카드 안에서 끝낸다 -->
+                <sc-if value="{{ rp.isEmail }}">
+                  <input value="{{ rp.email }}" onChange="{{ rp.onEmail }}" aria-label="리포트를 받을 이메일" maxLength="254" type="email" inputMode="email" placeholder="name@example.com" style="{{ rp.emailInputStyle }}">
+                  <sc-if value="{{ rp.hasEmailErr }}">
+                    <div role="alert" style="margin-top:8px;font-size:13px;font-weight:500;color:var(--err);text-wrap:pretty">{{ rp.emailErr }}</div>
+                  </sc-if>
+                  <div role="button" tabIndex="0" onClick="{{ rp.toggleAgree }}" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:14px">
+                    <span style="{{ rp.checkStyle }}">
+                      <sc-if value="{{ rp.agreed }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:block"><path d="m5 12 5 5L20 7"></path></svg>
+                      </sc-if>
+                    </span>
+                    <span style="flex:1;min-width:0;font-size:12.5px;color:var(--ink2);line-height:1.6;text-wrap:pretty">{{ rp.agreeText }}</span>
+                  </div>
+                  <button onClick="{{ rp.emailNext }}" style="{{ rp.emailNextStyle }}" style-hover="filter:brightness(.97)">{{ rp.emailNextLabel }}</button>
+                </sc-if>
+
+                <sc-if value="{{ rp.isMulti }}">
+                  <button onClick="{{ rp.multiNext }}" style="width:100%;margin-top:14px;font-size:15.5px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;border-radius:14px;height:50px;cursor:pointer;transition:filter .16s" style-hover="filter:brightness(.97)">{{ rp.multiLabel }}</button>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+          </sc-if>
+
+          <!-- 다 답하면 카드는 사라지고 리포트만 남는다. 고칠 길만 한 줄로 남겨 둔다 -->
+          <sc-if value="{{ rp.qsAllDone }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <span style="flex:1;min-width:0;font-size:13px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ rp.doneLine }}</span>
+              <span role="button" tabIndex="0" onClick="{{ rp.editAgain }}" style="flex:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;white-space:nowrap">답 고치기</span>
+            </div>
+          </sc-if>
+
+          <!-- 화면 안 리포트 — 결론 하나를 크게, 근거는 아래로 -->
+          <sc-if value="{{ rp.rv.started }}">
+            <div style="margin-top:10px;padding:30px 26px;border-radius:22px;background:var(--surface)">
+              <div style="font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rp.rv.eyebrow }}</div>
+              <sc-if value="{{ rp.rv.showBep }}">
+                <div style="{{ rp.rv.bepStyle }}">
+                  <div style="font-size:clamp(38px,7vw,54px);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-top:14px;font-variant-numeric:tabular-nums">{{ rp.rv.bep }}</div>
+                  <div style="font-size:15.5px;color:var(--ink2);margin-top:8px;text-wrap:pretty">{{ rp.rv.bepNote }}</div>
+                  <div style="{{ rp.rv.verdictStyle }}">{{ rp.rv.verdict }}</div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ rp.rv.showBars }}">
+              <div style="{{ rp.rv.barsStyle }}">
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <sc-for list="{{ rp.rv.bars }}" as="b">
+                  <div>
+                    <div class="u-between">
+                      <span style="font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.label }}</span>
+                      <span style="flex:none;font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ b.value }}</span>
+                    </div>
+                    <span style="display:block;height:10px;border-radius:5px;background:var(--bg);overflow:hidden;margin-top:8px">
+                      <span style="{{ b.bar }}"></span>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+              </div>
+              </sc-if>
+
+              <sc-if value="{{ rp.rv.showCosts }}">
+              <div style="{{ rp.rv.costsStyle }}">
+              <div style="font-size:13.5px;font-weight:700">매달 나가는 돈</div>
+              <div style="margin-top:4px">
+                <sc-for list="{{ rp.rv.costs }}" as="c">
+                  <div style="{{ rp.rv.rowStyle }}">
+                    <span style="flex:1;min-width:0;font-size:14.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.label }}</span>
+                    <span style="flex:none;display:flex;align-items:baseline;gap:9px">
+                      <span class="u-note">{{ c.tag }}</span>
+                      <span style="font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ c.value }}</span>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+              </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+        </div>
+
+        <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap;max-width:520px">
+          <button disabled="{{ rp.sendDisabled }}" onClick="{{ rp.submit }}" style="{{ rp.sendStyle }}">{{ rp.sendLabel }}</button>
+          <button onClick="{{ rp.preview }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:15px;font-weight:500;color:var(--accent);background:var(--accent-3);border:none;border-radius:14px;height:50px;padding:0 18px;cursor:pointer;white-space:nowrap;transition:filter .16s" style-hover="filter:brightness(.97)">미리보기 · PDF 저장</button>
+          <button onClick="{{ rp.csv }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:15px;font-weight:500;color:var(--ink2);background:var(--surface);border:none;border-radius:14px;height:50px;padding:0 18px;cursor:pointer;white-space:nowrap;transition:background .16s" style-hover="background:var(--line-strong)">CSV 저장</button>
+        </div>
+        <p role="status" aria-live="polite" style="font-size:13px;color:var(--ink2);line-height:1.7;margin:18px 0 0">{{ rp.note }}</p><a href="privacy.html">개인정보 안내</a>
+
+        <!-- 여기가 이 서비스의 결론이다 — 설문의 목적은 이 목록을 찾는 것이었다 -->
+        <sc-if value="{{ rp.qsAllDone }}">
+        <section style="padding:48px 0 0">
+          <h2 style="{{ ds2 }}">나에게 맞는 지원사업</h2>
+
+          <sc-if value="{{ rp.sp.loading }}">
+            <div style="{{ dsCard }}; margin-top:16px">
+              <div class="u-h">지원사업을 찾고 있어요</div>
+              <p style="{{ dsSub }}; margin-top:6px">답하신 조건과 맞는 공고를 추리는 중입니다.</p>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+                <span style="display:block;height:14px;border-radius:7px;background:var(--surface);width:60%"></span>
+                <span style="display:block;height:14px;border-radius:7px;background:var(--surface);width:85%"></span>
+                <span style="display:block;height:14px;border-radius:7px;background:var(--surface);width:45%"></span>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ rp.sp.notConfigured }}">
+            <div style="{{ dsCard }}; margin-top:16px">
+              <div class="u-h">아직 준비 중이에요</div>
+              <p style="{{ dsBody }}; margin-top:6px">{{ rp.sp.message }}</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ rp.sp.failed }}">
+            <div style="{{ dsCard }}; margin-top:16px">
+              <div class="u-h">정보를 불러오지 못했어요</div>
+              <p style="{{ dsBody }}; margin-top:6px">{{ rp.sp.message }}</p>
+              <button onClick="{{ rp.sp.retry }}" style="{{ dsGhost }}; margin-top:14px">다시 시도</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ rp.sp.ready }}">
+            <!-- 결론 요약 -->
+            <div style="{{ dsCardHi }}; margin-top:16px">
+              <div style="{{ dsGrid4 }}">
+                <div>
+                  <div class="u-lab-p">신청 가능한 지원사업</div>
+                  <div style="{{ dsNum }}; color:var(--accent);margin-top:6px">{{ rp.sp.countLabel }}</div>
+                </div>
+                <sc-if value="{{ rp.sp.hasNearest }}">
+                  <div>
+                    <div class="u-lab-p">가장 가까운 마감</div>
+                    <div style="{{ dsNum }}; margin-top:6px">{{ rp.sp.nearest }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+
+            <sc-if value="{{ rp.sp.noMatch }}">
+              <div style="{{ dsCard }}; margin-top:16px">
+                <div class="u-h">조건에 딱 맞는 공고를 찾지 못했어요</div>
+                <p style="{{ dsBody }}; margin-top:6px">아래에서 접수 중인 전체 공고를 확인하실 수 있어요.</p>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ rp.sp.empty }}">
+              <div style="{{ dsCard }}; margin-top:16px">
+                <div class="u-h">지금은 접수 중인 공고가 없어요</div>
+                <p style="{{ dsBody }}; margin-top:6px">마감이 지난 공고는 보여드리지 않아요. 새 공고가 열리면 여기에 나타납니다.</p>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ rp.sp.hasItems }}">
+              <div style="{{ dsGrid3 }}; margin-top:18px">
+                <sc-for list="{{ rp.sp.items }}" as="s">
+                  <div style="{{ s.style }}">
+                    <div style="display:flex;align-items:flex-start;gap:12px">
+                      <span style="flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.4;text-wrap:pretty">{{ s.title }}</span>
+                      <span style="{{ s.ddayStyle }}">{{ s.dday }}</span>
+                    </div>
+                    <sc-if value="{{ s.hasAmount }}">
+                      <div style="font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--accent);margin-top:12px">{{ s.amount }}</div>
+                    </sc-if>
+                    <sc-if value="{{ s.hasContent }}">
+                      <p style="{{ dsSub }}; margin-top:10px">{{ s.content }}</p>
+                    </sc-if>
+                    <sc-if value="{{ s.hasWhy }}">
+                      <div style="margin-top:14px;padding:12px 14px;border-radius:var(--r-sm);background:var(--accent-3)">
+                        <div style="font-size:12.5px;font-weight:700;color:var(--accent)">내 조건과 겹치는 부분</div>
+                        <div style="display:flex;flex-direction:column;gap:5px;margin-top:7px">
+                          <sc-for list="{{ s.why }}" as="w">
+                            <span class="u-lab-p">✓ {{ w.text }}</span>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ s.hasTarget }}">
+                      <div style="{{ dsSub }}; margin-top:12px">대상 · {{ s.target }}</div>
+                    </sc-if>
+                    <sc-if value="{{ s.hasPeriod }}">
+                      <div style="{{ dsSub }}; margin-top:4px">접수 · {{ s.period }}</div>
+                    </sc-if>
+                    <sc-if value="{{ s.hasOrg }}">
+                      <div style="{{ dsSub }}; margin-top:4px">{{ s.org }}</div>
+                    </sc-if>
+                    <sc-if value="{{ s.hasUrl }}">
+                      <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;margin-top:16px;font-size:14.5px;font-weight:600;color:var(--accent);background:var(--accent-3);border-radius:var(--r-sm);height:44px;text-decoration:none">공고 보기 →</a>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ rp.sp.hasRest }}">
+              <div style="margin-top:20px">
+                <span role="button" tabIndex="0" onClick="{{ rp.sp.toggleRest }}" style="{{ ctaText }}">{{ rp.sp.restLabel }}</span>
+                <sc-if value="{{ rp.sp.showRest }}">
+                  <div style="{{ dsGrid3 }}; margin-top:14px">
+                    <sc-for list="{{ rp.sp.rest }}" as="s">
+                      <div style="{{ s.style }}">
+                        <div style="display:flex;align-items:flex-start;gap:12px">
+                          <span style="flex:1;min-width:0;font-size:15.5px;font-weight:700;line-height:1.4;text-wrap:pretty">{{ s.title }}</span>
+                          <span style="{{ s.ddayStyle }}">{{ s.dday }}</span>
+                        </div>
+                        <sc-if value="{{ s.hasOrg }}">
+                          <div style="{{ dsSub }}; margin-top:8px">{{ s.org }}</div>
+                        </sc-if>
+                        <sc-if value="{{ s.hasUrl }}">
+                          <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:12px;font-size:14px;font-weight:600;color:var(--accent);text-decoration:none">공고 보기 →</a>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <p style="{{ dsSub }}; margin-top:22px;padding:14px 16px;border-radius:var(--r-sm);background:var(--surface);max-width:860px">{{ rp.sp.warn }}</p>
+          </sc-if>
+        </section>
+        </sc-if>
+      </section>
+    </sc-if>
