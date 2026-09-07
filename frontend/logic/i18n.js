@@ -209,7 +209,7 @@ globalThis.MysbizonParts.i18n = {
       "mv.bepOf": "{name} 본전 계산",
       "mv.noGuData": "자료 없음",
       "mv.topPerStore": "가게 한 곳당 월매출 1위 · {value}",
-      "cmp.noZone": "‘{q}’와 맞는 상권이 없어요. 상권 이름이나 구 이름으로 찾아보세요.",
+      "cmp.noZone": "‘{q}’와(과) 맞는 상권이 없어요. 상권 이름이나 구 이름으로 찾아보세요.",
       "cmp.addOpt": "{name} · {score}점",
       "cmp.diffBoth": "손님이 가장 많은 곳은 {a}, 경쟁이 가장 적은 곳은 {b}이에요.",
       "cmp.diffSame": "{a}은(는) 손님이 가장 많으면서 경쟁도 가장 적어요.",
@@ -218,9 +218,9 @@ globalThis.MysbizonParts.i18n = {
       "cmp.diffTie": "손님 수도 경쟁 가게 수도 {tie}. 이것만으로는 우열을 가릴 수 없어요.",
       "cmp.diffPer": "한 집당 월매출은 {name}이(가) {amt}으로 가장 높아요.",
       "cmp.diffPerTie": "한 집당 월매출은 {tie}. 이 항목으로는 구분되지 않아요.",
-      "search.noZone": "‘{q}’와 맞는 동네가 없어요",
-      "search.noInd": "‘{q}’와 맞는 장사가 없어요",
-      "search.noHit": "‘{q}’와 맞는 게 없어요",
+      "search.noZone": "‘{q}’와(과) 맞는 동네가 없어요",
+      "search.noInd": "‘{q}’와(과) 맞는 장사가 없어요",
+      "search.noHit": "‘{q}’와(과) 맞는 게 없어요",
       "search.indHits": "‘{q}’ 검색 결과 {n}가지",
       "search.indMore": " · ···를 누르면 나머지 {n}가지",
       "sido.notYet": "‘{sido}’ 자료는 아직 없어요. 지금 쓰는 자료는 서울시 상권분석서비스라 서울 상권 1,564곳만 담고 있어요. 전국으로 넓히려면 소상공인시장진흥공단 상권정보로 갈아타야 하는데, 상권 구획과 업종 코드가 달라 맞춰 붙이는 작업이 필요해요.",
@@ -230,7 +230,7 @@ globalThis.MysbizonParts.i18n = {
       "bep.scenNote": "이 동네 {ind} 가게들의 평균만큼 팔린다고 보고 계산해요.",
       "bep.dayWhy": "본전 {bep} ÷ 30일 ÷ {src} {unit}원. 이 금액은 카드 1건당 결제액이라, 여러 명이 함께 결제하면 실제 손님 수와 결제 건수는 달라요. 시간대 비중은 서울 전체 {ind} 평균이에요.",
       "bep.short": "예상 매출이 본전선에 {amt} 모자라요",
-      "sat.lead": "사람 1만 명당 {ind}이 {v}개예요. 서울 중앙값은 {med}개라 {word}이에요.",
+      "sat.lead": "사람 1만 명당 {ind}이(가) {v}개예요. 서울 중앙값은 {med}개라 {word}이에요(예요).",
       "rent.perNote": "{per} · {note}",
       "find.noRecordIn": "{zone}은(는) 이 장사 기록이 없어 1위를 보여드립니다",
       "zc.pickedTitle": "{gu} 기준으로 견주기",
@@ -375,14 +375,22 @@ globalThis.MysbizonParts.i18n.trDeep = function(v, depth){
 globalThis.MysbizonParts.i18n.tn = function(key, vars){
   const s=this.t(key, vars);
   if(this.locale()!=='ko') return s;
-  return String(s).replace(/(.)(은\(는\)|는\(은\)|이\(가\)|가\(이\)|을\(를\)|를\(을\))/g,
-    (m, prev, pair)=>{
-      const c=prev.charCodeAt(0)-0xAC00;
-      const bat=(c>=0&&c<11172)? c%28!==0 : /[013678lmnr]$/i.test(prev);
-      if(pair.indexOf('은')===0||pair.indexOf('는')===0) return prev+(bat?'은':'는');
-      if(pair.indexOf('이')===0||pair.indexOf('가')===0) return prev+(bat?'이':'가');
-      return prev+(bat?'을':'를');
-    });
+  // 짝을 적어 두면 앞 글자 받침을 보고 고른다. '이에요(예요)' 를 '이(가)' 보다 먼저 둔다 —
+  // 뒤에 두면 '이(가)' 규칙이 '이에요(예요)' 의 앞부분만 먹는다.
+  const PAIR=/(은\(는\)|는\(은\)|이에요\(예요\)|예요\(이에요\)|와\(과\)|과\(와\)|이\(가\)|가\(이\)|을\(를\)|를\(을\))/g;
+  return String(s).replace(PAIR, (pair, _g, at, whole)=>{
+    // 따옴표·괄호는 건너뛰고 그 앞 글자를 본다 — ‘역삼’과 / ‘강남’와
+    let i=at-1;
+    while(i>=0 && /[’‘'"”“」』\)\]]/.test(whole[i])) i--;
+    const prev=i>=0? whole[i] : '';
+    const c=prev.charCodeAt(0)-0xAC00;
+    const bat=(c>=0&&c<11172)? c%28!==0 : /[013678lmnr]$/i.test(prev);
+    if(pair.indexOf('은')===0||pair.indexOf('는')===0) return bat?'은':'는';
+    if(pair.indexOf('이에요')===0||pair.indexOf('예요')===0) return bat?'이에요':'예요';
+    if(pair.indexOf('와')===0||pair.indexOf('과')===0) return bat?'과':'와';
+    if(pair.indexOf('이')===0||pair.indexOf('가')===0) return bat?'이':'가';
+    return bat?'을':'를';
+  });
 };
 
 // 화면 조각(screens/*.html)에 그대로 적힌 한국어까지 옮긴다.

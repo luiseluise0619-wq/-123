@@ -36,7 +36,7 @@ globalThis.MysbizonParts.screens = {
         // 검색은 사용자가 직접 친 말이므로 POI도 남기되 뒤로 보낸다
         list=hit.filter(z=>!POI.test(z.name)).concat(hit.filter(z=>POI.test(z.name))).slice(0,40);
         heading=list.length? '검색 결과 '+list.length+'곳' : '';
-        empty=!list.length; emptyText=this.t('search.noZone',{q:q});
+        empty=!list.length; emptyText=this.tn('search.noZone',{q:q});
       } else {
         const recent=(S.recent||[]);
         if(recent.length){
@@ -291,7 +291,7 @@ globalThis.MysbizonParts.screens = {
           +(n===S.homeInd?'background:var(--accent-3)'
             :(i===(S.cursor||0)&&open==='ind'?'background:var(--line)':'background:var(--surface)'))})),
       indEmpty:catList.length===0,
-      indEmptyText: pq? this.t('search.noInd',{q:pq}) : '이 분류에 해당하는 장사가 없어요',
+      indEmptyText: pq? this.tn('search.noInd',{q:pq}) : '이 분류에 해당하는 장사가 없어요',
       pickList: open==='zone'
         ? (()=>{
             const out=[{row:true, name:'서울 전체', meta:'아직 안 정함',
@@ -374,7 +374,7 @@ globalThis.MysbizonParts.screens = {
       // 고른 구를 한 번 더 누르라고 알려 준다 — 두 번 눌러야 하는 걸 알 방법이 없다
       guHint: guTab? guTab+'를 한 번 더 누르면 이 구에서 찾아요' : '구를 누르면 골라지고, 한 번 더 누르면 정해져요',
       pickEmpty: !!pq && (open==='zone'? zoneList.length===0 : indList.length===0),
-      pickEmptyText: open==='zone'? this.t('search.noZone',{q:pq}) : this.t('search.noInd',{q:pq}),
+      pickEmptyText: open==='zone'? this.tn('search.noZone',{q:pq}) : this.tn('search.noInd',{q:pq}),
       startDisabled:!!S.starting,
       starting:!!S.starting, notStarting:!S.starting,
       startStyle:this.L('flex:none;width:100%;margin-top:4px;','flex:none;','flex:none;')

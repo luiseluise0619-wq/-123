@@ -731,7 +731,7 @@ class Component extends DCLogic {
                   : {...cur.set(first.v), rp_step:step+1, rp_q:''});
               },
               searchEmpty: !!(cur&&cur.search&&q&&visible.length===0),
-              searchEmptyText: q? this.t('search.noHit',{q:q}) : '',
+              searchEmptyText: q? this.tn('search.noHit',{q:q}) : '',
               curOpts: visible.map(o=>{
                 const on=cur.multi? (PICKS.indexOf(o.v)>=0) : (cur.val===o.v);
                 return {
@@ -1169,7 +1169,7 @@ class Component extends DCLogic {
           ? (names.length
             ? this.t('search.indHits',{q:q, n:names.length})
               +(names.length>5? this.t('search.indMore',{n:names.length-5}) : '')
-            : this.t('search.noInd',{q:q}))
+            : this.tn('search.noInd',{q:q}))
           : (S.fromRegion
             ? '이 장사는 '+(S.homeZone||'고른 동네')+'에 데이터가 있어서 골랐어요'+(names.length>5?' · ···를 누르면 더 보여요':'')
             : '많이 찾는 장사예요'+(names.length>5?' · ···를 누르면 더 보여요':'')))),

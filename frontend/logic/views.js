@@ -369,7 +369,7 @@ globalThis.MysbizonParts.views = {
       const state=ratio<=0.7?{t:'여유',c:'var(--good)'}:(ratio<=1.3?{t:'보통',c:'var(--ink2)'}:{t:'과밀',c:'var(--warn)'});
       return {
         has:true,
-        lead:this.t('sat.lead',{ind:this.tr(this.indName(S.ind)), v:me.v.toFixed(1), med:med.toFixed(1), word:this.tr(state.t)}),
+        lead:this.tn('sat.lead',{ind:this.tr(this.indName(S.ind)), v:me.v.toFixed(1), med:med.toFixed(1), word:this.tr(state.t)}),
         mine:me.v.toFixed(1)+'개', medText:med.toFixed(1)+'개',
         badge:state.t,
         badgeStyle:'display:inline-block;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;white-space:nowrap;color:#FFFFFF;background:'+state.c,
@@ -899,7 +899,7 @@ globalThis.MysbizonParts.views = {
       searching:!!rawQ,
       found, hasFound:found.length>0,
       noResult: !!rawQ && found.length===0,
-      noResultText:this.t('cmp.noZone',{q:rawQ}),
+      noResultText:this.tn('cmp.noZone',{q:rawQ}),
       recent, hasRecent:recent.length>0,
       suggest, hasSuggest:!rawQ && suggest.length>0,
       full:PICKS.length>=3,
