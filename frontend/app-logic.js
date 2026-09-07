@@ -160,6 +160,8 @@ class Component extends DCLogic {
 
   componentWillUnmount(){
     if(this._out) document.removeEventListener('click',this._out,false);
+    if(this._noHover) document.removeEventListener('click',this._noHover,true);
+    if(this._yesHover) document.removeEventListener('pointermove',this._yesHover,true);
     if(this._rz) window.removeEventListener('resize',this._rz);
     if(this._raf) cancelAnimationFrame(this._raf);
     if(this._ro) this._ro.disconnect();
@@ -244,6 +246,21 @@ class Component extends DCLogic {
       if(this.state.menu||this.state.zFocus) this.setState({menu:null,zFocus:false});
     };
     document.addEventListener('click',this._out,false);
+
+    // '눌렀는데 방금 누른 자리가 회색으로 남는' 것을 막는다.
+    //   설문은 누르면 바로 다음 질문으로 넘어간다. 손은 그대로인데 새 항목이 커서 밑으로
+    //   들어오니 브라우저가 그 항목에 :hover 를 준다 — 사용자에겐 '전에 클릭한 게 남은'
+    //   것으로 보인다(실은 다음 질문의 엉뚱한 항목이다).
+    //   그래서 누른 직후에는 hover 를 끄고, 포인터가 실제로 움직이면 되살린다.
+    //   규칙은 company.css 의 `body:not(.dc-nohover) .pick-opt:hover`.
+    this._hoverOff=false;
+    this._noHover=()=>{ if(this._hoverOff) return;
+      this._hoverOff=true; document.body.classList.add('dc-nohover'); };
+    this._yesHover=()=>{ if(!this._hoverOff) return;
+      this._hoverOff=false; document.body.classList.remove('dc-nohover'); };
+    document.addEventListener('click',this._noHover,true);
+    document.addEventListener('pointermove',this._yesHover,true);
+
     Promise.all([
       this.loadData('data/v3/zone_industry.json').then(r=>r.json()),
       this.loadData('data/v3/sales_by_industry.json').then(r=>r.json()),
@@ -425,53 +442,25 @@ class Component extends DCLogic {
           ['one','선택한 동네 분석','고른 동네의 점수 근거와 본전 계산'],
           ['cmp','비교한 자리들','담아 둔 동네를 항목별로 나란히']
         ];
-        const partOn=k=>S['rp_p_'+k]!==false;
+        // 리포트(미리보기·CSV·메일)에 넣을 지원사업 목록.
+        // sp 를 그리면서 채우고, 내보내기 버튼을 눌렀을 때 buildReport 가 읽는다.
+        // (sp 는 renderVals 안에서 돌고 buildReport 는 그 뒤 클릭 때 불린다.)
+        let supportForReport=[];
         const buildReport=()=>{
             const sel=r?(r.list.find(o=>o.id===S.sel)||r.list.find(o=>o.id===S.zoneId)||r.list[0]):null;
-            const t=sel?{score:sel.score,scoreNum:sel.score,grade:'비교지수',headline:'선택한 상권의 비교 결과',parts:[{label:'수요',value:sel.c1.toFixed(1)+'점',pctText:String(sel._sales)},{label:'경쟁',value:sel.c2.toFixed(1)+'점',pctText:String(sel._stores)},{label:'점포당 매출',value:sel.c3.toFixed(1)+'점',pctText:String(sel._per)}]}:null;
-            const c=sel?this.calc(sel):null;
-            const parts=(t&&t.parts)?t.parts.map(p=>({
-              label:p.label, value:p.value,
-              pct:Number(String(p.pctText??'0').replace(/[^0-9.]/g,''))
-            })):null;
             const payload={
               ind:S.ind?this.tr(this.indName(S.ind)):'', zone:sel?this.zoneLabelOf(sel.name):this.tr('동네 미선택'),
               gu:sel?this.guLabel(sel.id):'',
               quarter:S.zi?this.qtr(S.zi.quarter):'',
-              score:t?Math.round(t.scoreNum??t.score):null,
-              grade:t?t.grade:null,
-              lead:t?t.headline:null,
-              parts:parts,
-              bep:c?[
-                {label:'월 본전선 (이만큼 팔면 본전)', value:this.man(c.bep), tag:''},
-                {label:'월매출 가정 ('+S.scen+')', value:this.man(c.rev), tag:'평균 추정치 × '+c.mult},
-                {label:'월 임대료', value:(S.rent||0).toLocaleString()+'만원', tag:'입력값 또는 기본 가정'},
-                {label:'평수', value:(S.area||0)+'평', tag:'입력값 또는 기본 가정'},
-                {label:'인건비', value:this.man(c.labor), tag:'평수로 추정'},
-                {label:'원가율', value:(S.cogs||0)+'%', tag:'기본 가정 · 수정 가능'}
-              ]:null,
+              // 리포트는 '답한 조건'과 '그 조건에 걸리는 지원사업' 둘만 담는다.
+              // 본전선·매출 가정·비용 구성은 여기 넣지 않는다 — 본전 계산은 ② 정밀분석 화면이다.
+              support:supportForReport,
               survey:[
                 ['지역',[S.rp_sido,S.rp_gu&&S.rp_gu!=='아직 안 정했어요'?S.rp_gu:''].filter(Boolean).join(' ')],
                 ['업종',S.rp_ind?this.indName(S.rp_ind):''],
                 ['창업 단계',S.rp_stage],['나이',S.rp_age],['사업자등록',S.rp_biz],
                 ['개업 시기',S.rp_when],['필요한 지원',S.rp_need]
               ].filter(([,v])=>!!v).map(([label,value])=>({label,value})),
-              // 돈이 어디로 나가는지 — 매출 대비 비중
-              money:c?(()=>{
-                const rev=c.rev||1;
-                const rows=[
-                  {label:'임대료', v:S.rent||0},
-                  {label:'인건비', v:c.labor||0},
-                  {label:'재료비', v:rev*(S.cogs||0)/100},
-                  {label:'그 밖의 운영비', v:c.etc||0}
-                ];
-                const mx=Math.max(...rows.map(o=>o.v),1);
-                return rows.filter(o=>o.v>0).map(o=>({
-                  label:o.label, value:this.man(o.v),
-                  pct:Math.round(o.v/mx*100),
-                  warn:o.v/rev>0.3
-                }));
-              })():null,
               // 비교에 담은 자리
               zones:(S.picks|| (r?r.list.slice(0,3).map(o=>o.id):[])).map(id=>r&&r.list?r.list.find(o=>o.id===id):null)
                 .filter(Boolean).map(o=>({
@@ -479,19 +468,16 @@ class Component extends DCLogic {
                   stores:o.stores.toLocaleString()+'곳'
                 }))
             };
-            if(!payload.money||!payload.money.length) delete payload.money;
             if(!payload.zones.length) delete payload.zones;
             if(!payload.survey.length) delete payload.survey;
-
-            if(!partOn('one')){delete payload.parts;delete payload.bep;delete payload.money;delete payload.score;delete payload.grade;delete payload.lead;}
-            if(!partOn('cmp'))delete payload.zones;
+            if(!payload.support.length) delete payload.support;
             return payload;
         };
         return {
           // 담을 항목 체크박스를 없앴으니 '고른 게 0개'인 상태도 없다 — 자리만 있으면 내보낼 수 있다
           exportDisabled:!reportSelection,
           title:'분석한 내용을 정리해 드립니다',
-          sub:'지금 보고 있는 동네와 장사, 본전 계산까지 한 장으로 묶습니다. 화면에 없는 것만 물어봅니다.',
+          sub:'몇 가지만 답하시면 조건에 해당할 수 있는 정부·지자체 창업지원사업을 찾아 한 장으로 묶어 드립니다.',
           // '담을 항목 N개'는 지운 체크박스를 가리키던 말이라 뺐다
           target:(S.ind?this.indName(S.ind):'장사 미선택')+' · '+reportZone,
           // ── 리포트에 담을 내용을 한 번에 하나씩 묻는다 ──────────────────
@@ -814,7 +800,17 @@ class Component extends DCLogic {
               };
             };
             const top=matched.filter(o=>{ const dd=ddOf(o.it); return horizon==null||dd==null||dd<=horizon; });
-            const list=(top.length?top:matched).slice(0,12).map(card);
+            const shownList=(top.length?top:matched).slice(0,12);
+            const list=shownList.map(card);
+            // 화면에 뜬 그대로를 리포트(미리보기·CSV·메일)에도 담는다 — 다시 고르지 않는다.
+            supportForReport=shownList.map(o=>({
+              title:o.it.title||'',
+              org:o.it.org||'',
+              amount:o.it.amount||'',
+              period:[o.it.start,o.it.deadline].filter(Boolean).join(' ~ '),
+              why:o.why.join(' · '),
+              url:o.it.url||''
+            }));
             const nearest=(top.length?top:matched).map(o=>ddOf(o.it)).filter(v=>v!=null).sort((a,b)=>a-b)[0];
 
             return {
@@ -852,7 +848,13 @@ class Component extends DCLogic {
           csv:()=>{
             
             const p=buildReport();
-            const rows=[['항목','값','비고'],['기준 분기',S.zi?this.qtr(S.zi.quarter):'','원자료 기준'],['장사',p.ind,''],['동네',p.zone,''],...(p.bep||[]).map(x=>[x.label,x.value,x.tag]),...(p.zones||[]).map(x=>[x.name,x.score+'점','비교 후보']),...(p.survey||[]).map(x=>[x.label,x.value,'입력'])];
+            const rows=[['항목','값','비고'],
+              ['기준 분기',S.zi?this.qtr(S.zi.quarter):'','원자료 기준'],
+              ['장사',p.ind,''],['동네',p.zone,''],
+              ...(p.survey||[]).map(x=>[x.label,x.value,'설문 답']),
+              ...(p.support||[]).map(x=>[x.title,[x.amount,x.period].filter(Boolean).join(' · '),
+                                         [x.org,x.why,x.url].filter(Boolean).join(' · ')]),
+              ...(p.zones||[]).map(x=>[x.name,x.score+'점','비교 후보'])];
             const q=v=>{let t=String(v==null?'':v);if(/^[\s]*[=+@-]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"';};
             const body=rows.map(r=>r.map(q).join(',')).join('\r\n');
             // 엑셀이 한글을 깨지 않게 BOM을 붙인다
@@ -863,69 +865,9 @@ class Component extends DCLogic {
             document.body.appendChild(a); a.click();
             setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },0);
           },
-          // 인쇄용 한 장으로 넘긴다. 값은 지금 화면에서 계산된 것만 담는다.
-          // ── 화면 안에서 바로 보는 리포트 ───────────────────────────────
-          // 예전에는 리포트를 보려면 다른 페이지(report-print.html)로 나가야 했다.
-          // 조건을 바꿀 때마다 나갔다 들어와야 하니 아무도 안 봤다.
-          // 결론(본전선) 하나를 크게 먼저 보여주고, 근거를 아래로 쌓는다.
-          rv:(()=>{
-            const sel=reportSelection;
-            if(!sel) return {has:false, empty:true};
-            const c=this.calc(sel);
-            const over=c.rev>=c.bep;                     // 예상 매출이 본전선을 넘나
-            const gap=Math.abs(c.rev-c.bep);
-            const mx=Math.max(c.rev,c.bep,1);
-            // 종이가 한 장씩 채워지는 느낌 — 질문에 답할수록 아래 칸이 하나씩 열린다.
-            // 답을 건너뛰어도 단계는 넘어가므로 결국 다 열린다(막히지 않는다).
-            // 종이가 한 칸씩 채워진다. 단계 번호가 아니라 '무엇을 답했는가'로 연다 —
-            // 단계 수가 지역 선택 때문에 달라져도 흔들리지 않는다.
-            const gotZone=!!(S.sel||S.zoneId);
-            const opened=[gotZone, !!S.rp_stage, !!S.rp_need];
-            const nOpen=opened.filter(Boolean).length;
-            // 방금 열린 칸만 흘러내리게 한다
-            const grow=i=>opened[i]&&nOpen===i+1
-              ? 'animation:lateIn .45s cubic-bezier(.22,.7,.25,1) both;' : '';
-            return {
-              has:true, empty:false,
-              // 아직 아무것도 안 물었으면 리포트 자체를 감춘다 — 빈 종이부터 보여준다
-              started:opened[0],
-              showBep:opened[0],   bepStyle:grow(0),
-              showBars:opened[1],  barsStyle:'margin-top:28px;'+grow(1),
-              showCosts:opened[2], costsStyle:'margin-top:30px;'+grow(2),
-              eyebrow:this.indName(S.ind)+' · '+this.zoneLabelOf(sel.name)
-                +(S.zi?' · '+this.qtr(S.zi.quarter):''),
-              // 결론 한 줄 — 큰 숫자는 '한 달에 얼마를 팔아야 하는가'다
-              bep:this.man(c.bep),
-              bepNote:'한 달에 이만큼 팔면 본전이에요',
-              // 판정 — 넘는지 모자라는지. 색으로 바로 읽히게.
-              verdict:over
-                ? this.t('diag.over',{amt:this.man(gap)})
-                : this.t('bep.short',{amt:this.man(gap)}),
-              verdictStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;'
-                +'padding:8px 14px;border-radius:999px;margin-top:16px;white-space:nowrap;'
-                +(over?'background:var(--strong-soft,var(--accent-3));color:var(--good)'
-                      :'background:var(--surface);color:var(--warn)'),
-              // 두 막대를 같은 자로 재서 나란히 — 길이 비교가 곧 판정이다
-              bars:[
-                {label:'월 본전선', value:this.man(c.bep),
-                 bar:'display:block;height:100%;border-radius:5px;background:var(--ink3);width:'
-                   +(c.bep/mx*100).toFixed(1)+'%'},
-                {label:'월매출 가정 ('+S.scen+')', value:this.man(c.rev),
-                 bar:'display:block;height:100%;border-radius:5px;width:'+(c.rev/mx*100).toFixed(1)+'%;'
-                   +'background:'+(over?'var(--good)':'var(--warn)')}
-              ],
-              // 고정비 내역 — 어디로 나가는지
-              costs:[
-                {label:'월 임대료', value:(S.rent||0).toLocaleString()+'만원', tag:c.rent?'입력값':'기본 가정'},
-                {label:'인건비',   value:this.man(c.labor), tag:c.staffAuto?'평수로 추정':'입력값'},
-                {label:'그 외 고정비', value:this.man(c.etc), tag:c.etcAuto?'평수로 추정':'입력값'},
-                {label:'원가율',   value:(S.cogs||0)+'%', tag:'기본 가정 · 수정 가능'}
-              ],
-              rowStyle:'display:flex;align-items:baseline;justify-content:space-between;gap:14px;'
-                +'padding:13px 0;border-bottom:1px solid var(--line)'
-            };
-          })(),
-
+          // 리포트에는 본전 계산을 넣지 않는다(사장님 지시 2026-09-07).
+          // 리포트 탭은 설문 → 찾은 지원사업, 딱 둘이다. 본전 계산은 ② 정밀분석 안에 따로 있다.
+          // 여기 있던 rv(화면 안 본전 리포트) 블록은 어느 조각도 참조하지 않는 죽은 코드라 지웠다.
           preview:()=>{try{const payload=buildReport();sessionStorage.setItem('mysbizon.report',JSON.stringify(payload));const restore=Object.fromEntries(['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen','picks'].map(k=>[k,S[k]]));sessionStorage.setItem('mysbizon.return',JSON.stringify(restore));location.href='report-print.html';}catch{this.setState({rp_error:'브라우저 저장 공간을 사용할 수 없습니다. CSV 저장을 이용해 주세요.'});}},
           submit:async()=>{
             if(!enabled||!ok||sent||sending||this._reportSending)return;
@@ -933,7 +875,11 @@ class Component extends DCLogic {
             this.setState({rp_sending:true,rp_error:''});
             try {
               const p=buildReport();
-              const body=JSON.stringify({email,agreed:S.rp_agree===true,headline:'상권 분석 리포트',sub:p.zone+' · '+p.ind,facts:p.bep||[],survey:p.survey||[],zones:(p.zones||[]).map(z=>({name:z.name,value:z.score+'점'})),honesty:'매출은 상권 집계에서 계산한 추정치입니다. 입력 조건은 사용자가 제공했으며 서버에서 재검증하지 않았습니다.'});
+              // facts 에 담던 본전 계산을 뺐다. 리포트는 설문 답과 찾은 지원사업만 담는다.
+              const body=JSON.stringify({email,agreed:S.rp_agree===true,headline:'창업 지원사업 리포트',sub:p.zone+' · '+p.ind,
+                facts:(p.support||[]).map(x=>({label:x.title, value:[x.amount,x.period].filter(Boolean).join(' · '), tag:x.org})),
+                survey:p.survey||[],zones:(p.zones||[]).map(z=>({name:z.name,value:z.score+'점'})),
+                honesty:'자격을 판정한 목록이 아닙니다. 답하신 조건과 겹치는 공고이며, 신청 가능 여부는 반드시 공고 원문에서 확인해 주세요.'});
               if(this._reportBody!==body){this._reportBody=body;this._reportKey=crypto.randomUUID();}
               const response=await fetch('/api/report',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':this._reportKey},body,signal:AbortSignal.timeout(15000)});
               const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'발송하지 못했습니다.');

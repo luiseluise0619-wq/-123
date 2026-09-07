@@ -51,3 +51,11 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
 }
 
 @media(max-width:599px){main>section{padding-top:32px !important} main h1{white-space:normal !important;overflow-wrap:anywhere} .home-hero{min-height:680px !important} }
+
+/* 리포트 설문처럼 '누르면 바로 다음 질문으로 넘어가는' 곳 —
+   손을 안 움직였는데 새로 그려진 항목이 커서 밑으로 들어와 :hover 로 칠해진다.
+   사용자 눈에는 '방금 누른 게 그대로 남은' 것처럼 보인다(실제로는 다음 질문의 다른 항목).
+   그래서 누른 직후에는 hover 를 끄고, 포인터가 실제로 움직이면 다시 켠다.
+   (dc-nohover 는 app-logic.js 가 click 에 붙이고 pointermove 에 뗀다.) */
+.pick-opt { transition:background .14s, color .14s; }
+body:not(.dc-nohover) .pick-opt:hover { background:var(--line-strong) !important; }

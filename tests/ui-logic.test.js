@@ -42,9 +42,16 @@ test('실데이터로 모든 화면 view model 생성과 미리보기 계산을 
   let payload;
   context.sessionStorage={setItem(k,v){if(k==='mysbizon.report')payload=JSON.parse(v);}};
   context.location={href:''};
+  // 리포트는 설문 답과 찾은 지원사업만 담는다. 본전 계산은 여기 들어가지 않는다
+  // (사장님 지시 2026-09-07 · 본전 계산은 ② 정밀분석 화면에 따로 있다).
+  Object.assign(c.state,{rp_sido:'서울',rp_gu:'마포구',rp_ind:'커피-음료',
+    rp_stage:'아직 준비 중이에요 (예비창업자)',rp_age:'만 39세 이하'});
   c.renderVals().rp.preview();
-  assert.ok(payload.bep.length);assert.ok(!payload.bep[1].value.startsWith('0만'));
   assert.equal(context.location.href,'report-print.html');
+  assert.ok(payload.survey.length,'설문 답이 담겨야 한다');
+  assert.equal(payload.survey[0].value,'서울 마포구');
+  for(const dead of ['bep','money','parts','score','grade'])
+    assert.equal(payload[dead],undefined,'리포트에 '+dead+' 가 남아 있다');
 });
 
 test('62개 업종·13개 화면을 실제 자료로 계산하며 비정상 숫자를 출력하지 않는다',()=>{

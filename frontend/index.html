@@ -722,14 +722,14 @@
                 <sc-if value="{{ rp.hasGridOpts }}">
                 <div style="{{ rp.optsGridStyle }}">
                   <sc-for list="{{ rp.curOpts }}" as="o">
-                    <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">{{ o.label }}</div>
+                    <div role="button" tabIndex="0" class="pick-opt" onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</div>
                   </sc-for>
                 </div>
                 </sc-if>
                 <sc-if value="{{ rp.hasOpts }}">
                 <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
                   <sc-for list="{{ rp.curOpts }}" as="o">
-                    <div role="button" tabIndex="0" onClick="{{ o.pick }}" style="{{ o.style }}" style-hover="background:var(--line-strong)">
+                    <div role="button" tabIndex="0" class="pick-opt" onClick="{{ o.pick }}" style="{{ o.style }}">
                       <span class="u-fill">
                         <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span>
                         <sc-if value="{{ o.hasSub }}">
