@@ -311,3 +311,25 @@ test('화면 문구가 해요체로 통일돼 있다', () => {
   const left = [...new Set(sweep('ko'))].filter(s => formal.test(s) && !ALLOW.test(s));
   assert.deepEqual(left, [], '합니다체가 남았다: ' + left.slice(0, 3).join(' / '));
 });
+
+// JSON 은 같은 키가 두 번 있어도 조용히 뒤엣것만 남긴다.
+// 한국어 문구를 짧게 고치다 이미 있는 키와 겹치면 번역 하나가 소리 없이 사라진다.
+test('사전에 같은 키가 두 번 나오지 않는다', () => {
+  for (const name of ['ko', 'en', 'zh-CN']) {
+    const raw = read('../frontend/locales/' + name + '.json');
+    const dup = [];
+    JSON.parse(raw, function () { return arguments[1]; });   // 형식 확인
+    const seen = new Set(), inPhrases = new Set();
+    // 최상위와 @phrases 를 따로 센다 — 두 곳에 같은 이름이 있는 건 문제가 아니다.
+    let depth = 0, key = null;
+    for (const m of raw.matchAll(/"((?:[^"\\]|\\.)*)"\s*:/g)) {
+      const before = raw.slice(0, m.index);
+      depth = (before.match(/(?<!\\)\{/g) || []).length - (before.match(/(?<!\\)\}/g) || []).length;
+      key = m[1];
+      const set = depth > 1 ? inPhrases : seen;
+      if (set.has(key)) dup.push(name + ' 의 ' + key);
+      set.add(key);
+    }
+    assert.deepEqual(dup, [], '사전에 겹치는 키: ' + dup.slice(0, 5).join(' / '));
+  }
+});

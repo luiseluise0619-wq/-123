@@ -703,7 +703,8 @@ class Component extends DCLogic {
               qsStep: cur? (step+1)+' / '+N : '',
               hasStep: !!cur,
               qsBar:'display:block;height:100%;border-radius:2px;background:var(--accent);'
-                +'transition:width .3s cubic-bezier(.22,.7,.25,1);width:'+Math.round(step/N*100)+'%',
+                // 옆 글자가 '1 / 9' 인데 막대는 step/N 이라 첫 질문에서 0% 였다 — 글자와 맞춘다
+                +'transition:width .3s cubic-bezier(.22,.7,.25,1);width:'+Math.round((step+1)/N*100)+'%',
 
               hasCur: !!cur,
               curQ: cur?cur.q:'',

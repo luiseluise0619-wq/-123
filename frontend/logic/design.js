@@ -97,7 +97,7 @@ globalThis.MysbizonParts.design = {
     const shown=Math.max(top,1);
     const good=moreIsBetter? p>=60 : p<=40;
     const mid=p>=35&&p<=65;
-    return {text:'서울 상권 중 상위 '+shown+'%', tone:mid?'flat':(good?'good':'warn')};
+    return {text:'서울 상위 '+shown+'%', tone:mid?'flat':(good?'good':'warn')};
   },
 
   // 서울 중앙값과 견준 한 줄. good 이 true 면 '많을수록 좋은' 지표다.
