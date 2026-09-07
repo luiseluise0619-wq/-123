@@ -11,3 +11,8 @@ globalThis.MysbizonConst.PRICE_CATS=[
   {k:'churn', label:'문 열고 닫는 수', when:'타이밍 볼 때'},
   {k:'fr', label:'프랜차이즈 비중', when:'브랜드 정할 때'}
 ];
+
+// 본전 계산의 기본 가정. **한 곳에만** 둔다 —
+// 처음 state 와 calc()·size() 의 폴백이 따로 적혀 있어서, 칸을 비우면
+// 임대료가 400 이 아니라 0, 원가율이 35% 가 아니라 30% 로 계산됐다.
+globalThis.MysbizonConst.BEP_DEFAULT={ rent:400, cogs:35, area:15 };

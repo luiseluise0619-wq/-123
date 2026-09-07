@@ -75,3 +75,23 @@ test('매출 시나리오는 손익만 바꾸고 같은 고정비의 본전선�
   c.state.scen='보통일 때';const normal=c.calc(sample);c.state.scen='적게 팔릴 때';const low=c.calc(sample);c.state.scen='잘될 때';const high=c.calc(sample);
   assert.equal(low.rev,normal.rev*.7);assert.equal(high.rev,normal.rev*1.3);assert.equal(low.bep,normal.bep);assert.ok(low.profit<normal.profit&&normal.profit<high.profit);
 });
+
+// 칸을 비우면 '0' 이 아니라 기본 가정으로 돌아가야 한다.
+// 임대료를 비웠을 때 0 으로 치면 본전선이 1,523 → 908만원 으로 떨어지는데
+// 화면 꼬리표는 그대로 '기본 400만원' 이라, 값과 설명이 어긋난다.
+test('본전 계산 입력칸을 비우면 기본 가정으로 돌아간다',()=>{
+  const {instance:c}=component();
+  const sample={per:300000000,unit:5000};
+  const base=c.calc(sample);
+  for(const [k,read] of [['rent',r=>r.rent],['cogs',r=>r.cogs],['area',r=>r.area]]){
+    const keep=c.state[k];
+    c.state[k]='';                       // 칸을 비운 상태
+    assert.equal(read(c.calc(sample)),read(base), k+' 를 비웠더니 기본 가정과 달라졌다');
+    c.state[k]=null;
+    assert.equal(read(c.calc(sample)),read(base), k+' 가 null 일 때 기본 가정과 달라졌다');
+    c.state[k]=keep;
+  }
+  // 0 을 **직접 넣은** 것은 그대로 0 이어야 한다(비운 것과 다르다)
+  c.state.rent=0;
+  assert.equal(c.calc(sample).rent,0,'직접 넣은 0 이 기본값으로 바뀌면 안 된다');
+});

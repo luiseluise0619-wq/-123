@@ -80,7 +80,7 @@ globalThis.MysbizonParts.util = {
   },
 
   size(){
-    const S=this.state, a=this.bound(S.area,1,1000,15);
+    const S=this.state, a=this.bound(S.area,1,1000,globalThis.MysbizonConst.BEP_DEFAULT.area);
     return {
       area:a,
       staff: S.staffOv!=null? Math.round(this.bound(S.staffOv,0,100,0)) : Math.max(Math.round(a/10),1),
@@ -134,9 +134,12 @@ globalThis.MysbizonParts.util = {
 
   // 시세분석 — 임대료·공실률·업종 매출·소비 구성. 전부 공개 통계.
   calc(z){
-    const S=this.state, sz=this.size();
-    const rent=this.bound(S.rent,0,100000,0), etc=sz.etc, staff=sz.staff;
-    const cogs=this.bound(S.cogs,0,95,30)/100;
+    const S=this.state, sz=this.size(), D=globalThis.MysbizonConst.BEP_DEFAULT;
+    // 칸을 비우면 '0' 이 아니라 **기본 가정**으로 돌아간다.
+    // 비운 임대료를 0 으로 치면 본전선이 1,523 → 908만원 으로 떨어지는데,
+    // 화면 꼬리표는 그대로 '기본 400만원' 이라 거짓을 말하게 된다.
+    const rent=this.bound(S.rent,0,100000,D.rent), etc=sz.etc, staff=sz.staff;
+    const cogs=this.bound(S.cogs,0,95,D.cogs)/100;
     const labor=staff*250, fixed=rent+labor+etc, bep=fixed/(1-cogs);
     const mult=(S.scen==='적게 팔릴 때'?0.7:(S.scen==='잘될 때'?1.3:1));
     const avg=z? z.per/3/1e4 : 0;

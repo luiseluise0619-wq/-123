@@ -7,7 +7,7 @@ class Component extends DCLogic {
     zi:null, sbi:null, sti:null, rentStats:null, salesHistory:null, err:'',
     q:'', ind:'커피-음료', sel:null, picks:null, screen:'home', menu:null,
     openWhy:false, open:{cond:false,money:false,day:false,risk:false},
-    scen:'보통일 때', rent:400, cogs:35, area:15,
+    scen:'보통일 때', ...MysbizonConst.BEP_DEFAULT,
     staffOv:null, etcOv:null
   };
 

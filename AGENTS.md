@@ -36,7 +36,7 @@
 
 ```bash
 npm start          # http://localhost:3000  (node server.js)
-npm test           # 32개 — 반드시 통과해야 합니다
+npm test           # 33개 — 반드시 통과해야 합니다
 npm run check:data # frontend/data/v3/*.json 스키마 검사
 npm run build:html # frontend/screens/*.html → frontend/index.html
 npm run check:html # 커밋된 index.html 이 조각들과 같은지 (npm test 에 포함)
@@ -64,7 +64,7 @@ api/               서버 API 핸들러 (공개 폴더 밖. 브라우저가 직�
 server/            Node 표준 라이브러리만 쓴 정적+API 서버
 backend/*.py       공공데이터 수집기 → frontend/data/v3/*.json 을 만든다
 .github/workflows/ 수집기를 주기적으로 돌린다
-tests/             node:test 32개
+tests/             node:test 33개
 scripts/           build-html.mjs · validate-data.mjs
 ```
 
@@ -266,7 +266,7 @@ for (const name of ['i18n','theme','roman','util','design','rank','analysis',
 1. **목적** — 무엇을 바꾸는가?
 2. **영향범위** — 어떤 파일 / 데이터 / API 에 영향?
 3. **위험** — 무엇이 깨질 수 있는가? (🟢 낮음 / 🟡 주의 / 🔴 위험)
-4. **테스트** — `npm test` 32개가 그대로 통과하는가?
+4. **테스트** — `npm test` 33개가 그대로 통과하는가?
 5. **롤백** — 실패하면 어떻게 되돌리는가?
 
 작업이 끝나면 반드시:
