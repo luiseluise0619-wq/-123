@@ -53,15 +53,19 @@ globalThis.MysbizonParts.theme = {
   loadTheme(){
     let saved={};
     try{ saved=JSON.parse(localStorage.getItem('mysbizon.theme')||'{}')||{}; }catch(e){}
+    // 저장값은 사람이 고칠 수 있는 곳(localStorage)에서 온다. 아는 값만 받는다 —
+    // 예컨대 locale 에 숫자가 들어 있으면 사전을 못 찾아 화면이 반쯤 비어 보인다.
     const patch={};
-    if(saved.appearance) patch.appearance=saved.appearance;
-    if(saved.preset) patch.themeK=saved.preset;
-    if(saved.custom&&typeof saved.custom==='object') patch.themeCustom=saved.custom;
-    if(saved.locale) patch.locale=saved.locale;
+    const okAppearance=['system','light','dark'];
+    const okLocale=this.LOCALES().map(l=>l.k);
+    const okPreset=this.THEME_PRESETS().map(p=>p.k);
+    if(okAppearance.indexOf(saved.appearance)>=0) patch.appearance=saved.appearance;
+    if(okPreset.indexOf(saved.preset)>=0) patch.themeK=saved.preset;
+    if(saved.custom&&typeof saved.custom==='object'&&!Array.isArray(saved.custom)) patch.themeCustom=saved.custom;
+    if(okLocale.indexOf(saved.locale)>=0) patch.locale=saved.locale;
     if(Object.keys(patch).length) this.setState(patch);
-    this.applyTheme(patch.appearance||saved.appearance||'system',
-                    patch.themeK||saved.preset||'mint',
-                    patch.themeCustom||saved.custom||{});
+    // 걸러 낸 값(patch)만 쓴다 — saved 를 다시 끼워 넣으면 위 검사가 무의미해진다
+    this.applyTheme(patch.appearance||'system', patch.themeK||'mint', patch.themeCustom||{});
     // system 을 고른 사람은 OS 설정이 바뀌면 화면도 바뀌어야 한다
     if(typeof matchMedia==='function'){
       const mq=matchMedia('(prefers-color-scheme: dark)');
