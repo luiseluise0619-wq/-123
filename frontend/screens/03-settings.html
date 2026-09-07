@@ -4,7 +4,7 @@
       <div role="dialog" aria-modal="true" aria-label="설정" style="{{ settingsCard }}">
         <div style="display:flex;align-items:center;gap:12px">
           <span style="flex:1;min-width:0;font-size:17px;font-weight:700">{{ settingsTitle }}</span>
-          <span role="button" tabIndex="0" aria-label="설정 닫기" onClick="{{ closeSettings }}" style="flex:none;width:28px;height:28px;border-radius:50%;background:var(--color-surface);color:var(--color-text-secondary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">×</span>
+          <span role="button" tabIndex="0" aria-label="설정 닫기" data-dialog-close="1" onClick="{{ closeSettings }}" style="flex:none;width:28px;height:28px;border-radius:50%;background:var(--color-surface);color:var(--color-text-secondary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">×</span>
         </div>
 
         <!-- 테마 — 색 동그라미를 누르면 바로 바뀐다 -->

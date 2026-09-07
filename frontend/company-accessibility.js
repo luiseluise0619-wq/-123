@@ -36,6 +36,14 @@
         else if (!event.shiftKey && (document.activeElement === last || !activeDialog.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
       }
     }
+    // 모달이 아닌 '떠 있는 창'(AI 도우미)도 Esc 로 닫는다.
+    // aria-modal 을 거짓으로 붙이면 스크린리더에 없는 사실을 말하게 되므로,
+    // 대신 닫기 담당 요소에 data-esc-close 를 달아 두고 그것만 누른다.
+    if (event.key === 'Escape') {
+      const floating = document.querySelector('[data-esc-close]');
+      if (floating) { event.preventDefault(); floating.click(); return; }
+    }
+
     const control = event.target.closest?.('[role="button"]');
     if (!control || event.target !== control || !['Enter', ' '].includes(event.key)) return;
     event.preventDefault(); if (!event.repeat) control.click();
