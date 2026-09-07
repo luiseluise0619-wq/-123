@@ -628,9 +628,11 @@ class Component extends DCLogic {
               //   그때는 기본 가정으로 계산하고, 리포트에 '기본 가정'이라고 적는다(§1).
               {k:'cost', q:'가게 조건을 알려주시면 손익도 같이 계산해 드려요',
                hint:'리포트(PDF·메일)에만 들어가요. 모르시면 비워 두고 넘어가셔도 돼요.',
-               nums:[{label:'월 임대료 (만원)', key:'rent',    value:S.rent},
-                     {label:'평수 (평)',        key:'area',    value:S.area},
-                     {label:'직원 수 (명)',     key:'staffOv', value:S.staffOv}],
+               // blank = 비웠을 때 되돌아갈 값(= 이 서비스의 기본 가정). staffOv 는 null 이면
+               // 평수에서 자동으로 잡는다.
+               nums:[{label:'월 임대료 (만원)', key:'rent',    value:S.rent,    blank:400},
+                     {label:'평수 (평)',        key:'area',    value:S.area,    blank:15},
+                     {label:'직원 수 (명)',     key:'staffOv', value:S.staffOv, blank:null}],
                opts:[], val:S.rp_cost},
 
               // 이메일 — 리포트를 보낼 곳. 건너뛸 수 없다.
@@ -730,12 +732,16 @@ class Component extends DCLogic {
               numFields: (cur&&cur.nums||[]).map(f=>({
                 label:f.label,
                 value:(f.value==null?'':String(f.value)),
-                // 숫자만 받는다. 비우면 null 로 되돌려 '기본 가정'을 쓰게 한다.
-                // 어느 칸을 실제로 손댔는지 기억한다 — 임대료·평수는 기본값(400·15)이 미리 들어
-                // 있어서, 그냥 넘긴 값을 리포트에 '직접 넣으신 값'이라고 적으면 거짓말이 된다(§1).
+                // 숫자만 받는다.
+                //   비우면 '안 넣음'으로 되돌린다 — 값도 기본으로, 표시도 '기본 가정'으로.
+                //   (비운 걸 0 으로 두면 임대료 0원·평수 1평으로 계산돼 본전선이 통째로 어긋난다.)
+                //   어느 칸을 실제로 손댔는지 기억한다 — 임대료·평수는 기본값(400·15)이 미리 들어
+                //   있어서, 그냥 넘긴 값을 리포트에 '직접 넣으신 값'이라고 적으면 거짓말이 된다(§1).
                 onChange:e=>{ const raw=String(e.target.value||'').replace(/[^0-9]/g,'').slice(0,7);
-                  this.setState({[f.key]: raw===''? null : Number(raw), rp_sent:false,
-                    rp_touched:{...(S.rp_touched||{}), [f.key]:true}}); },
+                  const t={...(S.rp_touched||{})};
+                  if(raw===''){ delete t[f.key]; }
+                  else t[f.key]=true;
+                  this.setState({[f.key]: raw===''? f.blank : Number(raw), rp_sent:false, rp_touched:t}); },
                 style:'width:100%;font-size:16px;font-weight:500;color:var(--ink);background:var(--surface);'
                   +'border:none;border-radius:14px;padding:0 16px;height:52px;outline:none'
               })),

@@ -43,6 +43,10 @@
   </svg>
 </template>
 
+<!-- 파비콘을 두지 않는다. 선언이 없으면 브라우저가 /favicon.ico 를 스스로 찾아
+     매 접속마다 404 를 찍는다(화면에는 영향 없지만 콘솔이 지저분하다).
+     'data:,' 는 '아이콘 없음'을 명시해 그 요청 자체를 막는다 — 보이는 건 지금과 같다. -->
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="company.css">
 <script src="company-accessibility.js" defer></script>
 <style>

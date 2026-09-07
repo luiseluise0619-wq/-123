@@ -68,7 +68,16 @@ globalThis.MysbizonParts.util = {
     if(L==='zh-CN') return y+'年'+q4+'季度';
     return y+'년 '+q4+'분기'; },
 
-  bound(value,min,max,fallback){const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback;},
+  // 빈 값은 '0' 이 아니라 '안 넣음' 이다.
+  //   Number('') 도 Number(null) 도 0 이라 그냥 넘기면 비운 칸이 0 으로 계산된다.
+  //   실제로 평수를 비우면 15평(기본)이 아니라 **1평**(min 으로 잘림)으로 계산되고 있었다 —
+  //   그러면 인건비·기타 운영비가 통째로 어긋난다.
+  bound(value,min,max,fallback){
+    if(value===null || value===undefined) return fallback;
+    if(typeof value==='string' && value.trim()==='') return fallback;
+    const n=Number(value);
+    return Number.isFinite(n)? Math.min(max,Math.max(min,n)) : fallback;
+  },
 
   size(){
     const S=this.state, a=this.bound(S.area,1,1000,15);
