@@ -97,6 +97,14 @@ globalThis.MysbizonParts.roman = {
     let s=String(name||'').trim();
     if(!s || !/[가-힣]/.test(s)) return s;
     if(this.RR_EXCEPT()[s]) return this.RR_EXCEPT()[s];
+    // '숙대입구역 · 남영역, 남영동' 처럼 이름이 여럿 이어진 것은 조각마다 따로 옮긴다.
+    // 안 그러면 뒤에 붙는 말(역·시장·사거리…) 규칙이 맨 끝 조각에만 걸려
+    // 'Sukdaeipguyeok · Namyeongyeok' 처럼 소리만 옮긴 채로 남는다.
+    if(/[·,]/.test(s)){
+      return s.split(/(\s*[·,]\s*)/)
+        .map(seg=> /^\s*[·,]\s*$/.test(seg)? seg : this.romanizeName(seg))
+        .join('');
+    }
     let suffix='';
     // '역삼역 8번' 처럼 뒤에 붙는 출구 번호 · '도곡2동' 처럼 붙는 행정동 번호
     const exit=s.match(/\s*(\d+)\s*번$/);
