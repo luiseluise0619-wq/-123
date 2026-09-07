@@ -107,7 +107,7 @@ globalThis.MysbizonParts.market.marketView = function(){
   const catStyle=on=> mob
     ? 'flex:none;scroll-snap-align:start;padding:9px 15px;border-radius:999px;cursor:pointer;'
       +'font-size:14px;white-space:nowrap;transition:background .14s,color .14s;'
-      +(on?'background:var(--accent);color:#FFFFFF;font-weight:600'
+      +(on?'background:var(--accent);color:var(--on-accent);font-weight:600'
           :'background:var(--surface);color:var(--ink2)')
     : 'display:block;padding:11px 13px;border-radius:var(--r-sm);cursor:pointer;font-size:14.5px;'
       +'font-weight:700;letter-spacing:-.01em;transition:color .14s;'
@@ -119,7 +119,7 @@ globalThis.MysbizonParts.market.marketView = function(){
       +(on?'var(--accent);color:var(--ink);font-weight:700':'transparent;color:var(--ink3)')
     : 'display:block;margin-left:8px;padding:10px 13px;border-radius:var(--r-sm);cursor:pointer;'
       +'font-size:14.5px;transition:background .14s,color .14s;overflow:hidden;text-overflow:ellipsis;'
-      +(on?'background:var(--accent-3);color:var(--accent);font-weight:700':'color:var(--ink2)');
+      +(on?'background:var(--accent-3);color:var(--accent-hover);font-weight:700':'color:var(--ink2)');
 
   // 데스크톱 세로 목록 — 갈래를 누르면 그 갈래의 지표가 아래로 펼쳐진다
   const side=[];

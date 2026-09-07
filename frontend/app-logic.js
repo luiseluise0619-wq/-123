@@ -687,14 +687,14 @@ class Component extends DCLogic {
               +'width:100%;padding:17px 18px;border-radius:14px;cursor:pointer;'
               +'font-size:15.5px;line-height:1.4;text-align:left;'
               +'transition:background .14s,color .14s;'
-              +(on?'background:var(--accent-3);color:var(--accent);font-weight:600'
+              +(on?'background:var(--accent-3);color:var(--accent-hover);font-weight:600'
                  :'background:var(--surface);color:var(--ink)');
             // 지역·업종처럼 항목이 많은 단계는 격자로 깐다 — 세로로 세우면 버튼 벽이 된다(§29)
             const optStyleGrid=on=>'display:flex;align-items:center;justify-content:center;'
               +'padding:13px 10px;border-radius:12px;cursor:pointer;min-width:0;'
               +'font-size:14.5px;line-height:1.3;text-align:center;white-space:nowrap;'
               +'overflow:hidden;text-overflow:ellipsis;transition:background .14s,color .14s;'
-              +(on?'background:var(--accent-3);color:var(--accent);font-weight:700'
+              +(on?'background:var(--accent-3);color:var(--accent-hover);font-weight:700'
                  :'background:var(--surface);color:var(--ink)');
 
             // 요약에 적을 말. 상권 단계는 코드(3001496)가 아니라 동네 이름으로 적는다.
@@ -781,7 +781,7 @@ class Component extends DCLogic {
               numsLabel:'다음',
               numsNextStyle:'width:100%;margin-top:18px;font-size:15.5px;font-weight:600;border:none;'
                 +'border-radius:14px;height:50px;cursor:pointer;transition:filter .16s;'
-                +'background:var(--accent);color:#FFFFFF',
+                +'background:var(--accent);color:var(--on-accent)',
 
               // 이메일 단계 — 입력칸과 동의 체크가 이 카드 안에서 끝난다.
               // 여기는 건너뛸 수 없다. 주소가 있어야 리포트를 보내 드릴 수 있어서다.
@@ -794,7 +794,7 @@ class Component extends DCLogic {
               emailNextLabel:'리포트 받기',
               emailNextStyle:'width:100%;margin-top:16px;font-size:15.5px;font-weight:600;border:none;'
                 +'border-radius:14px;height:50px;cursor:pointer;transition:filter .16s;'
-                +'background:var(--accent);color:#FFFFFF',
+                +'background:var(--accent);color:var(--on-accent)',
               // 한 번이라도 그냥 누른 뒤에만 빨간 글자가 뜬다 — 처음부터 혼내지 않는다
               hasEmailErr: !!S.rp_shake && !ok,
               emailErr: !email ? '메일 주소를 입력해 주세요'
@@ -841,9 +841,9 @@ class Component extends DCLogic {
           sendLabel:sending?'발송 중…':sent?'발송 요청 완료':!enabled?'메일 발송 준비 중':(ok?'메일로 받기':'이메일과 동의가 필요해요'),
           sendStyle:'width:100%;font-size:15.5px;font-weight:600;border:none;border-radius:14px;height:50px;'
             +'transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1);'
-            +((ok&&!sent)?'cursor:pointer;background:var(--accent);color:#FFFFFF'
+            +((ok&&!sent)?'cursor:pointer;background:var(--accent);color:var(--on-accent)'
               :(sent?'cursor:default;background:var(--good);color:#FFFFFF'
-                :'cursor:pointer;background:var(--accent-3);color:var(--accent)')),
+                :'cursor:pointer;background:var(--accent-3);color:var(--accent-hover)')),
           // ── 정부·지자체 지원사업 ────────────────────────────────────────
           // 위 '내 창업 조건'의 답으로 해당할 수 있는 공고를 앞으로 끌어온다.
           // 거르지 않고 순서만 바꾼다 — 우리 분류와 공고의 표현이 달라서
@@ -901,7 +901,7 @@ class Component extends DCLogic {
                 ddayStyle:'flex:none;font-size:13px;font-weight:700;white-space:nowrap;'
                   +'padding:5px 11px;border-radius:999px;font-variant-numeric:tabular-nums;'
                   +(dd==null?'background:var(--surface);color:var(--ink2)'
-                    :(soon?'background:var(--err);color:#FFFFFF':'background:var(--accent-3);color:var(--accent)')),
+                    :(soon?'background:var(--err);color:#FFFFFF':'background:var(--accent-3);color:var(--accent-hover)')),
                 period:[it.start,it.deadline].filter(Boolean).join(' ~ ')||'',
                 hasPeriod:!!(it.start||it.deadline),
                 why:o.why.map(w=>({text:w})),
@@ -1246,7 +1246,7 @@ class Component extends DCLogic {
         const chip=on=>'display:inline-flex;align-items:center;justify-content:center;gap:6px;'
           +'padding:10px 16px;border-radius:999px;font-size:14px;cursor:pointer;white-space:nowrap;'
           +'transition:background .14s,color .14s;'
-          +(on?'background:var(--accent);color:#FFFFFF;font-weight:600'
+          +(on?'background:var(--accent);color:var(--on-accent);font-weight:600'
               :'background:var(--surface);color:var(--ink2)');
         return {
           // 누르면 바뀐다. 자료가 없는 곳은 눌러도 '아직 없어요'가 뜬다 — 죽은 칩을 두지 않는다.
@@ -1282,7 +1282,7 @@ class Component extends DCLogic {
             style:'display:flex;align-items:center;justify-content:center;padding:11px 8px;'
               +'border-radius:var(--r-sm);font-size:13.5px;cursor:pointer;white-space:nowrap;'
               +'overflow:hidden;text-overflow:ellipsis;transition:background .14s,color .14s;'
-              +(cur===o.v?'background:var(--accent-3);color:var(--accent);font-weight:700'
+              +(cur===o.v?'background:var(--accent-3);color:var(--accent-hover);font-weight:700'
                          :'background:var(--surface);color:var(--ink2)')})),
           guNote: cur? this.t('find.guCount',{gu:this.placeName(cur), n:(guCount[cur]||0)}) : '서울 전체에서 찾아요',
           hasGu: gus.length>0,
@@ -1356,7 +1356,7 @@ class Component extends DCLogic {
                 'right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));',
                 'right:28px;bottom:calc(28px + env(safe-area-inset-bottom,0px));'),
       // CTA 체계 — 주 행동 하나만 강조한다
-      ctaPrimary:'font-size:16px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
+      ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
       ctaText:'font-size:14.5px;color:var(--accent);cursor:pointer;white-space:nowrap',
       prosCols:this.L('1fr','1fr 1fr','1fr 1fr'),
       openWhy:S.openWhy, whyLabel:S.openWhy?'계산 방식 접기':'점수 계산 방식 보기',

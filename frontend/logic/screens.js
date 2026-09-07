@@ -290,7 +290,7 @@ globalThis.MysbizonParts.screens = {
         .map(([n,em])=>({label:em+' '+this.indName(n),
           pick:()=>this.setState({homeInd:n,ind:n,iq:this.indName(n),pickOpen:null}),
           style:'flex:none;font-size:13.5px;font-weight:500;padding:9px 15px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:38px;display:inline-flex;align-items:center;transition:background .14s,color .14s;'
-            +(n===S.homeInd?'background:var(--accent);color:#FFFFFF':'background:var(--surface);color:var(--ink2)')})),
+            +(n===S.homeInd?'background:var(--accent);color:var(--on-accent)':'background:var(--surface);color:var(--ink2)')})),
       indCats:CATS.map(c=>({label:c,
         pick:()=>this.setState({indCat:c}),
         style:'font-size:13.5px;font-weight:500;padding:11px 12px;border-radius:10px;cursor:pointer;white-space:nowrap;transition:background .14s,color .14s;'
@@ -343,7 +343,7 @@ globalThis.MysbizonParts.screens = {
         style:'flex:none;padding:8px 13px;border-radius:999px;font-size:13px;cursor:pointer;'
           +'white-space:nowrap;transition:background .14s,color .14s;'
           +(o.v===homeSido
-            ? 'background:var(--accent);color:#FFFFFF;font-weight:600'
+            ? 'background:var(--accent);color:var(--on-accent);font-weight:600'
             : 'background:var(--surface);color:var(--ink2)'+(o.ready?'':';opacity:.6'))
       })),
       sidoReadyHome: homeSido==='서울특별시',
@@ -379,7 +379,7 @@ globalThis.MysbizonParts.screens = {
         style:'font-size:13.5px;font-weight:500;padding:10px 6px;border-radius:9px;cursor:pointer;'
           +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;'
           +'transition:background .14s,color .14s;'
-          +(g===guTab?'background:var(--accent-3);color:var(--accent);font-weight:700'
+          +(g===guTab?'background:var(--accent-3);color:var(--accent-hover);font-weight:700'
                      :(g===S.homeGu?'color:var(--accent);font-weight:600':'color:var(--ink2)'))
       })),
       // 고른 구를 한 번 더 누르라고 알려 준다 — 두 번 눌러야 하는 걸 알 방법이 없다
@@ -395,8 +395,8 @@ globalThis.MysbizonParts.screens = {
         +'transition:transform .2s cubic-bezier(.2,0,0,1),background .18s,box-shadow .2s,filter .18s;'
         // 비활성이어도 브랜드 컬러 글자와 옅은 배경을 남겨 누를 수 있는 요소로 읽히게 한다
         +(hasInd
-          ? 'cursor:'+(S.starting?'default':'pointer')+';background:var(--accent);color:#FFFFFF;box-shadow:0 6px 16px -6px rgba(0,0,0,.2)'
-          : 'cursor:pointer;background:var(--accent-3);color:var(--accent)'),
+          ? 'cursor:'+(S.starting?'default':'pointer')+';background:var(--accent);color:var(--on-accent);box-shadow:0 6px 16px -6px rgba(0,0,0,.2)'
+          : 'cursor:pointer;background:var(--accent-3);color:var(--accent-hover)'),
       startActive:S.starting?'':'transform:scale(.96)',
       startHover:S.starting?'':(hasInd?'filter:brightness(1.05)':'filter:brightness(.97)'),
       start:()=>{

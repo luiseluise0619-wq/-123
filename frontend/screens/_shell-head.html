@@ -60,6 +60,10 @@
      사용자가 고른 테마는 <html> 의 인라인 스타일로 --color-* 만 덮어쓴다. */
   :root{
     --color-primary:#087F6B;
+    /* 민트 면 위에 얹는 글자색. 흰 글자가 늘 옳은 게 아니다 —
+       어두운 화면의 민트(#3FA88F)는 흰 글자와 2.91:1 밖에 안 나온다(AA 는 4.5).
+       theme.js 가 실제 --color-primary 밝기를 재서 이 값을 다시 정한다. */
+    --color-on-primary:#FFFFFF;
     --color-primary-hover:#0F6B59;
     --color-primary-mid:#7FBCAE;
     --color-primary-soft:#E8F5F1;
@@ -68,7 +72,9 @@
     --color-surface-secondary:#EAECEC;
     --color-text-primary:#191F28;
     --color-text-secondary:#4E5968;
-    --color-text-muted:#687583;
+    /* #687583 은 흰 바탕에서는 넉넉했지만 회색 바탕(--surface)에서 4.32:1 로
+       AA(4.5) 를 아슬아슬하게 못 넘었다. 두 바탕 모두에서 넘게 한 단계 내린다. */
+    --color-text-muted:#636F7C;
     --color-border:#EAECEC;
     --color-border-strong:#D2D2D7;
     /* 의미 색 — '+' 라서 초록이 아니라, 사장님에게 좋은 값일 때만 초록이다.
@@ -89,6 +95,7 @@
     --ink:var(--color-text-primary); --ink2:var(--color-text-secondary); --ink3:var(--color-text-muted);
     --line:var(--color-border); --line-strong:var(--color-border-strong); --surface:var(--color-surface);
     --accent:var(--color-primary); --accent-hover:var(--color-primary-hover);
+    --on-accent:var(--color-on-primary);
     --accent-2:var(--color-primary-mid); --accent-3:var(--color-primary-soft);
     --selection:var(--color-primary-soft);
     --good:var(--color-positive); --warn:var(--color-warning); --err:var(--color-negative);
@@ -100,6 +107,7 @@
   /* 다크는 색 반전이 아니다. 같은 뜻의 토큰을 어두운 화면에서 읽히는 값으로 다시 정한다. */
   html[data-theme="dark"]{
     --color-primary:#3FA88F;
+    --color-on-primary:#052620;
     --color-primary-hover:#6FC4AE;
     --color-primary-mid:#2E7565;
     --color-primary-soft:#12332C;

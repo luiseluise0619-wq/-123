@@ -28,10 +28,10 @@ globalThis.MysbizonParts.design = {
       body:      'font-size:'+this.L('15px','15.5px','16px')+';line-height:1.6;color:var(--ink2);margin:0;text-wrap:pretty',
       sub:       'font-size:13.5px;line-height:1.55;color:var(--ink3);margin:0;text-wrap:pretty',
       // 화면마다 강한 버튼은 하나뿐이다
-      cta:       'font-size:16px;font-weight:600;color:#FFFFFF;background:var(--accent);border:none;'
+      cta:       'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;'
                  +'border-radius:var(--r-sm);padding:0 26px;height:52px;cursor:pointer;'
                  +'box-shadow:0 6px 16px -8px rgba(8,127,107,.6);transition:filter .16s,transform .18s',
-      ctaGhost:  'font-size:15px;font-weight:600;color:var(--accent);background:var(--accent-3);border:none;'
+      ctaGhost:  'font-size:15px;font-weight:600;color:var(--accent-hover);background:var(--accent-3);border:none;'
                  +'border-radius:var(--r-sm);padding:0 20px;height:48px;cursor:pointer;transition:filter .16s',
       input:     'width:100%;font-size:16px;font-weight:500;color:var(--ink);background:var(--surface);'
                  +'border:1px solid transparent;border-radius:var(--r-sm);padding:0 16px;height:52px;outline:none'

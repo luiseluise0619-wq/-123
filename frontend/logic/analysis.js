@@ -266,7 +266,7 @@ globalThis.MysbizonParts.analysis = {
           r:rr.toFixed(2), ty:(p[1]+rr*0.36).toFixed(2), fs:(rr*1.05).toFixed(2),
           fill:on?'var(--accent)':'var(--ink3)',
           chip:'flex:none;display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:36px;transition:background .14s,color .14s;'
-            +(on?'background:var(--accent);color:#FFFFFF;font-weight:600':'background:var(--surface);color:var(--ink2)'),
+            +(on?'background:var(--accent);color:var(--on-accent);font-weight:600':'background:var(--surface);color:var(--ink2)'),
           pick:()=>this.setState({sel:o.id})};
       })
     };

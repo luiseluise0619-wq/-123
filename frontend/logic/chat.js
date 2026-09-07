@@ -83,7 +83,7 @@ globalThis.MysbizonParts.chat = {
         return {
           row:'display:flex;'+(me?'justify-content:flex-end':'justify-content:flex-start'),
           bubble:'max-width:min(78%,520px);padding:'+(me?'13px 18px':'17px 20px')+';border-radius:'+(me?'18px 18px 5px 18px':'18px 18px 18px 5px')+';'
-            +(me?'background:var(--accent);color:#FFFFFF':'background:var(--surface);color:var(--ink)'),
+            +(me?'background:var(--accent);color:var(--on-accent)':'background:var(--surface);color:var(--ink)'),
           textStyle:'font-size:15.5px;line-height:1.55;letter-spacing:-0.012em;text-wrap:pretty',
           text:m.text,
           hasFacts:!!(m.facts&&m.facts.length), facts:m.facts||[],
@@ -99,7 +99,7 @@ globalThis.MysbizonParts.chat = {
       onKey:e=>{ if(e.key==='Enter'&&(S.draft||'').trim()) ask(S.draft.trim()); },
       send:()=>{ if((S.draft||'').trim()) ask(S.draft.trim()); },
       sendStyle:'flex:none;font-size:14.5px;font-weight:500;border:none;border-radius:12px;padding:0 18px;height:42px;cursor:pointer;transition:opacity .16s;'
-        +((S.draft||'').trim()?'background:var(--accent);color:#FFFFFF':'background:transparent;color:var(--ink3)')
+        +((S.draft||'').trim()?'background:var(--accent);color:var(--on-accent)':'background:transparent;color:var(--ink3)')
     };
   }
 };

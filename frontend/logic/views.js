@@ -470,7 +470,7 @@ globalThis.MysbizonParts.views = {
             ty:(p[1]+rr*0.36).toFixed(2), fs:(rr*1.05).toFixed(2),
             fill:on?'var(--accent)':'var(--ink3)',
             chip:'flex:none;display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:36px;transition:background .14s,color .14s;'
-              +(on?'background:var(--accent);color:#FFFFFF;font-weight:600':'background:var(--surface);color:var(--ink2)'),
+              +(on?'background:var(--accent);color:var(--on-accent);font-weight:600':'background:var(--surface);color:var(--ink2)'),
             pick:()=>this.setState({sel:o.id})};
         })
       };
@@ -588,7 +588,11 @@ globalThis.MysbizonParts.views = {
           const tots=L.map(o=>{ const l=S.zlp&&S.zlp[o.id]; return l?l.tot:null; }).filter(v=>v!=null).sort((a,b)=>a-b);
           rows.unshift(row('하루 오가는 사람', lp.tot, tots[Math.floor(tots.length/2)], v=>Math.round(v).toLocaleString()+'명', {moreIsBetter:true}));
         }
-        return {rows:rows, note:'서울 값은 이 장사 데이터가 있는 동네들의 중앙값이에요. 평균이 아니라 중앙값이라 몇 곳의 큰 값에 끌려가지 않아요.'};
+        return {rows:rows,
+          // 4열 표라 좁은 화면에서는 가로로 스크롤한다(AGENTS.md §7).
+          // 영어는 항목 이름이 두 배쯤 길어 같은 폭에서 이름이 잘렸다 — 상자만 넓힌다.
+          boxStyle:'min-width:'+(this.locale()==='en'?'640px':'520px'),
+          note:'서울 값은 이 장사 데이터가 있는 동네들의 중앙값이에요. 평균이 아니라 중앙값이라 몇 곳의 큰 값에 끌려가지 않아요.'};
       })(),
       // ── 정밀분석 대시보드 ────────────────────────────────────────
       // 들어가자마자 차트를 던지지 않는다. '좋은가/나쁜가'와 그 이유 먼저.
@@ -658,7 +662,7 @@ globalThis.MysbizonParts.views = {
               : 'display:block;padding:12px 14px;border-radius:var(--r-sm);font-size:14.5px;')
             +'cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
             +'transition:background .14s,color .14s;'
-            +(x.key===cur?'background:var(--accent-3);color:var(--accent);font-weight:700'
+            +(x.key===cur?'background:var(--accent-3);color:var(--accent-hover);font-weight:700'
                          :(mob?'background:var(--surface);color:var(--ink2)':'color:var(--ink2)'))}));
       })(),
       // 지금 고른 섹션 하나만 오른쪽에 크게 — 관련 차트 2~4개와 함께

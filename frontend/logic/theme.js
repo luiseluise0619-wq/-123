@@ -84,6 +84,19 @@ globalThis.MysbizonParts.theme = {
   },
 
   // 실제로 <html> 에 값을 얹는 곳
+  // 배경색 위에서 대비가 큰 글자색(흰색 또는 아주 어두운 먹색)을 고른다.
+  // WCAG 상대휘도로 잰다 — 눈으로 고르면 프리셋마다 다시 틀린다.
+  onPrimary(hex){
+    const m=String(hex||'').trim().match(/^#?([0-9a-f]{6})$/i);
+    if(!m) return '#FFFFFF';
+    const v=m[1], ch=i=>parseInt(v.slice(i*2,i*2+2),16)/255;
+    const f=x=> x<=0.03928 ? x/12.92 : Math.pow((x+0.055)/1.055, 2.4);
+    const L=0.2126*f(ch(0))+0.7152*f(ch(1))+0.0722*f(ch(2));
+    const white=1.05/(L+0.05);          // 흰 글자와의 대비
+    const dark =(L+0.05)/(0.0223+0.05); // #052620 과의 대비
+    return white>=dark ? '#FFFFFF' : '#052620';
+  },
+
   applyTheme(appearance, presetK, custom){
     if(typeof document==='undefined') return;
     const root=document.documentElement;
@@ -122,6 +135,12 @@ globalThis.MysbizonParts.theme = {
       set('--chart-series-2',cst.c2);
       set('--chart-series-3',cst.c3);
     }
+    // ④ 민트 면 위 글자색 — 흰 글자가 늘 옳은 게 아니다.
+    //   어두운 화면의 기본 민트(#3FA88F)는 흰 글자와 2.91:1(AA 는 4.5:1 필요).
+    //   프리셋·직접 설정으로 어떤 색이 와도 맞도록, 실제 색의 밝기를 재서 고른다.
+    const primaryNow = (cst&&cst.primary) || c.primary;
+    set('--color-on-primary', this.onPrimary(primaryNow) );
+
     // 차트는 CSS 변수를 직접 못 읽는다 — 다시 그리게 표시만 바꿔 준다
     this._theme = (dark?'dark':'light')+'/'+key+'/'+JSON.stringify(cst||{});
   },

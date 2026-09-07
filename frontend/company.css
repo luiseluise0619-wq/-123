@@ -9,7 +9,7 @@ button:disabled { cursor:not-allowed !important; opacity:.6; }
 .hero-eyebrow { color:var(--accent);font-size:14px;letter-spacing:-.02em;font-weight:650;margin-bottom:20px; }
 .hero-title { font-weight:750 !important;letter-spacing:-.045em !important; }
 .hero-search > div:first-child { border:1px solid var(--line);box-shadow:0 10px 40px rgba(20,45,40,.07) !important;padding:12px !important; }
-.hero-search button { background:var(--accent) !important;color:white !important;box-shadow:none !important; }
+.hero-search button { background:var(--accent) !important;color:var(--on-accent) !important;box-shadow:none !important; }
 /* 상단 메뉴만 가로 스크롤. 화면 안의 세로 메뉴(시세분석·정밀분석)까지 걸리면 안 된다. */
 header nav { overflow-x:auto;scrollbar-width:none; }
 /* 44px 은 손가락 탭 최소 크기 — 상단 메뉴에만 필요하다.
