@@ -307,7 +307,7 @@ test('조사 짝은 따옴표를 건너뛰고 앞 글자를 본다', () => {
 // 동의 문구만 예외 — 동의는 합니다체가 맞다.
 test('화면 문구가 해요체로 통일돼 있다', () => {
   const ALLOW = /전달하는 데 동의합니다/;
-  const formal = /(습니다|입니다|합니다|됩니다)/;
+  const formal = /(니다|니까)/;   // '줍니다·봅니다·오갑니다' 까지 잡는다
   const left = [...new Set(sweep('ko'))].filter(s => formal.test(s) && !ALLOW.test(s));
   assert.deepEqual(left, [], '합니다체가 남았다: ' + left.slice(0, 3).join(' / '));
 });

@@ -389,7 +389,7 @@ globalThis.MysbizonParts.views = {
       let hi=0; lp.age.forEach((v,i)=>{ if(v>lp.age[hi]) hi=i; });
       return {
         has:true,
-        lead: '이 동네에 하루 '+Math.round(lp.tot).toLocaleString()+'명이 오갑니다.',
+        lead: '이 동네에 하루 '+Math.round(lp.tot).toLocaleString()+'명이 오가요.',
         stats:[
           {label:'하루 오가는 사람', value:Math.round(lp.tot).toLocaleString()+'명', tag:this.placeName(lp.dong)},
           {label:'추정 객단가', value:this.wonRaw(Math.round(perHead)), tag:'(추정)'},
@@ -850,7 +850,7 @@ globalThis.MysbizonParts.views = {
           +(o.id===sel.id?'background:var(--surface);margin:0 -14px;padding-left:14px;padding-right:14px;border-radius:12px;border-top-color:transparent':'')
       })),
       cta:this.t('mv.bepOf',{name:this.zoneLabelOf(sel.name)}),
-      honesty:'지도는 상권 중심 위치를 보여 줍니다. 도로·건물 지도는 아니며, 핀은 서울시가 공개한 동네 중심 좌표를 써요. 동네는 점이 아니라 면이라 핀 하나가 그 동네 전체를 뜻해요. 건물 단위 임대료와 공실은 공개 데이터에 없어서 보여드리지 못해요.'
+      honesty:'지도는 상권 중심 위치만 보여드려요. 도로·건물 지도가 아니고, 핀은 서울시가 공개한 동네 중심 좌표를 써요. 동네는 점이 아니라 면이라 핀 하나가 그 동네 전체를 뜻해요. 건물 단위 임대료와 공실은 공개 데이터에 없어서 보여드리지 못해요.'
     };
 
     // ── 비교
@@ -997,7 +997,7 @@ globalThis.MysbizonParts.views = {
 
     out.c={
       headline:'담아 둔 '+picks.length+'곳, 어디로 할까요?',
-      sub:'내가 고른 상권만 나란히 놓고 봅니다. 아래에서 무엇을 더 중요하게 볼지 바꿀 수 있어요.',
+      sub:'내가 고른 상권만 나란히 놓고 봐요. 아래에서 무엇을 더 중요하게 볼지 바꿀 수 있어요.',
       empty:false, on:true, emptyCount:'', add:addBox,
 
       // ── 기준 고르기 — 누르면 순위가 바로 바뀐다
