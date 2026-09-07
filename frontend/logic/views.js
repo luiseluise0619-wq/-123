@@ -1129,10 +1129,10 @@ globalThis.MysbizonParts.views = {
       }),
       diffs:[
         {dot:'width:5px;height:5px;border-radius:50%;background:var(--color-primary);flex:none;margin-top:9px',
-         text: (wSales&&wStore&&wSales!==wStore)? this.t('cmp.diffBoth',{a:wSales.name, b:wStore.name})
+         text: (wSales&&wStore&&wSales!==wStore)? this.tn('cmp.diffBoth',{a:wSales.name, b:wStore.name})
              : (wSales&&wSales===wStore)? this.tn('cmp.diffSame',{a:wSales.name})
-             : (wSales? this.t('cmp.diffSales',{a:wSales.name, tie:tieSent})
-                  : (wStore? this.t('cmp.diffStore',{b:wStore.name, tie:tieSent})
+             : (wSales? this.tn('cmp.diffSales',{a:wSales.name, tie:tieSent})
+                  : (wStore? this.tn('cmp.diffStore',{b:wStore.name, tie:tieSent})
                        : this.t('cmp.diffTie',{tie:tieSent})))},
         {dot:'width:5px;height:5px;border-radius:50%;background:var(--color-primary-mid);flex:none;margin-top:9px',
          text: wPer? this.tn('cmp.diffPer',{name:wPer.name, amt:monthly(wPer.src.per)})
