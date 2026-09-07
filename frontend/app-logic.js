@@ -205,7 +205,31 @@ class Component extends DCLogic {
     }catch(e){}
     // 첫 그림 뒤에도 한 번 — componentDidUpdate 는 첫 렌더에서 안 불린다
     setTimeout(()=>{ try{ this.paintCharts(); this.bindRails(); this.trDom(); }catch(e){} },0);
-    try{const raw=sessionStorage.getItem('mysbizon.return');sessionStorage.removeItem('mysbizon.return');if(raw){const saved=JSON.parse(raw),restore={screen:'report'};for(const k of ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen']){if(saved[k]===null||typeof saved[k]==='string'||typeof saved[k]==='number')restore[k]=saved[k];}if(Array.isArray(saved.picks))restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);this.setState(restore);}}catch{}
+    // 인쇄본(report-print.html)에서 '← 분석으로 돌아가기' 로 돌아왔을 때.
+    // 설문 답(rp_*)까지 되살린다 — 안 그러면 미리보기를 한 번 본 대가로
+    // 8문항을 처음부터 다시 답해야 했다.
+    try{
+      const raw=sessionStorage.getItem('mysbizon.return');
+      sessionStorage.removeItem('mysbizon.return');
+      if(raw){
+        const saved=JSON.parse(raw), restore={screen:'report'};
+        const KEYS=['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen',
+          'rp_sido','rp_gu','rp_ind','rp_stage','rp_age','rp_biz','rp_when','rp_need',
+          'rp_cost','rp_email','rp_agree','rp_step'];
+        for(const k of KEYS){
+          const v=saved[k];
+          if(v===null||typeof v==='string'||typeof v==='number'||typeof v==='boolean') restore[k]=v;
+        }
+        // 어느 칸을 직접 넣었는지도 되살린다(리포트가 '기본 가정'과 구분해 적는다)
+        if(saved.rp_touched && typeof saved.rp_touched==='object'){
+          const t={};
+          for(const k of ['rent','area','staffOv']) if(saved.rp_touched[k]===true) t[k]=true;
+          restore.rp_touched=t;
+        }
+        if(Array.isArray(saved.picks)) restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);
+        this.setState(restore);
+      }
+    }catch{}
 
     this._rz=()=>{
       const w=window.innerWidth;
@@ -947,7 +971,18 @@ class Component extends DCLogic {
           // 리포트에는 본전 계산을 넣지 않는다(사장님 지시 2026-09-07).
           // 리포트 탭은 설문 → 찾은 지원사업, 딱 둘이다. 본전 계산은 ② 정밀분석 안에 따로 있다.
           // 여기 있던 rv(화면 안 본전 리포트) 블록은 어느 조각도 참조하지 않는 죽은 코드라 지웠다.
-          preview:()=>{try{const payload=buildReport();sessionStorage.setItem('mysbizon.report',JSON.stringify(payload));const restore=Object.fromEntries(['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen','picks'].map(k=>[k,S[k]]));sessionStorage.setItem('mysbizon.return',JSON.stringify(restore));location.href='report-print.html';}catch{this.setState({rp_error:'브라우저 저장 공간을 사용할 수 없습니다. CSV 저장을 이용해 주세요.'});}},
+          // 인쇄본으로 넘어가기 전에 지금 상태를 담아 둔다.
+          // 설문 답(rp_*)도 같이 담아야 '돌아가기' 로 왔을 때 다시 안 물어본다.
+          preview:()=>{try{
+            const payload=buildReport();
+            sessionStorage.setItem('mysbizon.report',JSON.stringify(payload));
+            const restore=Object.fromEntries(
+              ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen','picks',
+               'rp_sido','rp_gu','rp_ind','rp_stage','rp_age','rp_biz','rp_when','rp_need',
+               'rp_cost','rp_email','rp_agree','rp_step','rp_touched'].map(k=>[k,S[k]]));
+            sessionStorage.setItem('mysbizon.return',JSON.stringify(restore));
+            location.href='report-print.html';
+          }catch{this.setState({rp_error:'브라우저 저장 공간을 사용할 수 없습니다. CSV 저장을 이용해 주세요.'});}},
           submit:async()=>{
             if(!enabled||!ok||sent||sending||this._reportSending)return;
             this._reportSending=true;

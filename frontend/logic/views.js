@@ -310,8 +310,11 @@ globalThis.MysbizonParts.views = {
     if(c.profit>0) parts.push(['남는 돈',c.profit,'var(--good)']);
     // 1만원 기준으로 바꿔 말한다 — 금액보다 비중이 바로 읽힌다
     const tot=parts.reduce((a,[,v])=>a+Math.max(v,0),0)||1;
+    // 몫을 먼저 계산하고 그 다음에 글자로 만든다.
+    //   wonRaw() 는 '10,000원' 같은 **글자**를 돌려준다. 그걸 곱셈 안에 넣고 있어서
+    //   화면에 값 대신 NaN 이 다섯 줄 떴다(본전 계산 › '돈이 어디로 나가나').
     out.stack=parts.map(([label,v,col])=>({label, amount:this.man(v),
-      won:Math.round(Math.max(v,0)/tot*this.wonRaw(10000)),
+      won:this.wonRaw(Math.round(Math.max(v,0)/tot*10000)),
       style:'flex:'+Math.max(v,0.01)+' 0 auto;background:'+col+';display:block',
       chip:'width:9px;height:9px;border-radius:2px;background:'+col+';display:inline-block'}));
     out.stackLead=(()=>{
