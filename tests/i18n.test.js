@@ -266,3 +266,48 @@ test('금액·분기 표기가 언어를 따른다', () => {
   assert.equal(en.qtr('20261'), 'Q1 2026');
   assert.equal(zh.qtr('20261'), '2026年1季度');
 });
+
+// ── 조사 ──────────────────────────────────────────────────────
+// '{ind}이' 처럼 조사를 박아 두면 모음으로 끝나는 값에서 '카페이' 가 된다.
+// 짝(`이(가)`)으로 적고 tn() 으로 불러야 한다. 실제로 여섯 곳이 그렇게 틀려 있었다.
+test('사전 문구에 조사를 박아 두지 않았다', () => {
+  // 금액(원·억)·자치구(구)처럼 끝 글자가 늘 같은 자리는 예외로 둔다.
+  const OK = new Set([
+    'cmp.diffPer:amt:으로',   // 금액은 늘 '원'·'억' 으로 끝난다
+    'diag.fixed:amt:을',      // 〃
+    'zc.lead:gu:가'           // 자치구는 늘 '구' 로 끝난다
+  ]);
+  // 짝으로 적은 것(`이(가)`)은 먼저 지운다 — 안 지우면 '이에요(예요)' 의 '이' 만 걸린다.
+  const PAIR = /(이에요|예요|은|는|이|가|을|를|와|과)\([^)]+\)/g;
+  // 뒤에 한글이 더 붙으면 조사가 아니다 — '{n}가지' 의 '가' 처럼.
+  const JOSA = /\{(\w+)\}(이에요|예요|으로|와|과|이|가|은|는|을|를)(?![가-힣])/g;
+  const bad = [];
+  for (const [k, v] of Object.entries(KO)) {
+    if (k === '@phrases') continue;
+    for (const m of String(v).replace(PAIR, '§').matchAll(JOSA)) {
+      if (!OK.has(k + ':' + m[1] + ':' + m[2])) bad.push(k + ' 의 {' + m[1] + '}' + m[2]);
+    }
+  }
+  assert.deepEqual(bad, [], '조사를 짝으로 적고 tn() 으로 부를 것: ' + bad.join(' / '));
+});
+
+test('조사 짝은 따옴표를 건너뛰고 앞 글자를 본다', () => {
+  const c = component('ko');
+  assert.equal(c.tn('search.noZone', { q: '역삼' }), '‘역삼’과 맞는 동네가 없어요');
+  assert.equal(c.tn('search.noZone', { q: '카페' }), '‘카페’와 맞는 동네가 없어요');
+  assert.match(c.tn('sat.lead', { ind: '카페', v: '3.0', med: '2.0', word: '여유' }),
+    /카페가 3.0개예요.*여유예요/);
+  assert.match(c.tn('sat.lead', { ind: '치킨집', v: '3.0', med: '2.0', word: '과밀' }),
+    /치킨집이 3.0개예요.*과밀이에요/);
+  assert.match(c.tn('cmp.diffStore', { b: '대치2동주민센터', tie: '—' }), /주민센터예요/);
+});
+
+// ── 말투 ──────────────────────────────────────────────────────
+// 화면 문구는 해요체로 통일한다. 한 문장 안에서 섞이던 곳이 여럿 있었다.
+// 동의 문구만 예외 — 동의는 합니다체가 맞다.
+test('화면 문구가 해요체로 통일돼 있다', () => {
+  const ALLOW = /전달하는 데 동의합니다/;
+  const formal = /(습니다|입니다|합니다|됩니다)/;
+  const left = [...new Set(sweep('ko'))].filter(s => formal.test(s) && !ALLOW.test(s));
+  assert.deepEqual(left, [], '합니다체가 남았다: ' + left.slice(0, 3).join(' / '));
+});
