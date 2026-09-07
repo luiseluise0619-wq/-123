@@ -73,12 +73,14 @@ globalThis.MysbizonParts.views = {
         : '',
       thinBadge: sel.stores<10? '점포 '+sel.stores.toLocaleString()+'곳' : '',
       // 결론 먼저 — 점수는 기준선과 함께
+      // 결론 자리에는 결론을 둔다. 표본이 적을 때 '개별 지표는 그대로 보셔도 돼요' 라는
+      // 단서를 제목 자리에 올려 두고 있었는데, 그건 아무도 안 물어본 답이었다.
+      // 얼마나 못 믿을지는 바로 아래 thinWarn 한 줄이 이미 말한다(§12).
       verdict:(()=>{
-        if(sel.stores<10) return '개별 지표는 그대로 보셔도 돼요.';
         const scores=L.map(o=>o.score).sort((a,b)=>a-b);
         const med=scores[Math.floor(scores.length/2)];
         const rank=L.indexOf(sel)+1, pct=Math.round(rank/L.length*100);
-        return sel.score>=med*1.15? this.tn('find.ok',{zone:this.zoneLabelOf(sel.name), ind:this.indName(S.ind)})
+        return sel.score>=med*1.15? this.tn('find.ok',{ind:this.indName(S.ind)})   // 이름은 바로 위 제목에 이미 있다
           : (sel.score>=med*0.9? '한 번 더 살펴볼 만해요.' : '서울 중앙값보다 아쉬운 자리예요.');
       })(),
       pctText:(()=>{ const rank=L.indexOf(sel)+1; return '서울 상위 '+Math.max(Math.round(rank/L.length*100),1)+'%'; })(),

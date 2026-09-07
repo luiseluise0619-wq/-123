@@ -283,7 +283,7 @@ globalThis.MysbizonParts.i18n = {
       "mv.head": "{ind} · {zone}",
       "mv.stamp": "{ind} · {zone} · {q}",
       "find.rank": "{ind} · {n}곳 중 {r}위",
-      "find.ok": "{zone}은(는) {ind} 후보로 괜찮아요.",
+      "find.ok": "{ind} 후보로는 괜찮은 자리예요.",
       "rentPer": "{amt}/월",
 
       "mv.popLabel": "{dong} 행정동 하루 유동인구",
