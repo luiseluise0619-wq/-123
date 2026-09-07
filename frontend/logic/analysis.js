@@ -376,8 +376,8 @@ globalThis.MysbizonParts.analysis = {
       const zs=Object.values(RENT.zones);
       const rr=zs.map(o=>o.rent).sort((a,b)=>a-b);
       const vv=zs.map(o=>o.vacancy).sort((a,b)=>a-b);
-      kRows.push({label:'서울 권역 ㎡당 월 임대료 중앙값', value:this.manF(rr[Math.floor(rr.length/2)],1), tag:'서울 평균'});
-      kRows.push({label:'서울 권역 빈 상가 비율 중앙값', value:vv[Math.floor(vv.length/2)].toFixed(1)+'%', tag:'서울 평균'});
+      kRows.push({label:'서울 권역 ㎡당 월 임대료 중앙값', value:this.manF(rr[Math.floor(rr.length/2)],1), tag:'서울 전체'});
+      kRows.push({label:'서울 권역 빈 상가 비율 중앙값', value:vv[Math.floor(vv.length/2)].toFixed(1)+'%', tag:'서울 전체'});
     }
     kRows.push({label:'권리금 · 인테리어', value:'자료 없음', tag:'공개 통계에 없어요'});
     // 임대료를 '데이터 없음'으로 비워 두면 이 칸이 늘 죽어 있다.

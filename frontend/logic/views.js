@@ -119,10 +119,10 @@ globalThis.MysbizonParts.views = {
       // 점수만 던지면 '왜 87점인지'를 알 수 없다. 근거 세 줄을 함께 둔다.
       why:(()=>{
         const out=[];
-        if(sel._sales>=55) out.push('상권 전체 매출이 서울 평균보다 높아요');
-        else if(sel._sales<=35) out.push('상권 전체 매출은 서울 평균보다 낮아요');
-        if(sel._stores>=55) out.push('같은 업종 경쟁이 서울 평균보다 적어요');
-        else if(sel._stores<=35) out.push('같은 업종 경쟁이 서울 평균보다 많아요');
+        if(sel._sales>=55) out.push('상권 전체 매출이 서울 중앙값보다 높아요');
+        else if(sel._sales<=35) out.push('상권 전체 매출은 서울 중앙값보다 낮아요');
+        if(sel._stores>=55) out.push('같은 업종 경쟁이 서울 중앙값보다 적어요');
+        else if(sel._stores<=35) out.push('같은 업종 경쟁이 서울 중앙값보다 많아요');
         if(sel._per>=55) out.push('가게 한 곳당 매출이 높은 편이에요');
         const lp=S.zlp&&S.zlp[sel.id];
         if(lp) out.push(this.t('fact.dongPop',{dong:this.placeName(lp.dong), n:Math.round(lp.tot).toLocaleString()}));
