@@ -33,11 +33,39 @@ for (let i=0;i<STEPS;i++) {
         const cutW = el.scrollWidth>el.clientWidth+1 && el.clientWidth>0;
         const cutH = clamp && el.scrollHeight>el.clientHeight+1;
         if (cutW||cutH) { const t=(el.textContent||'').trim();
-          if (t) res.push('CUT '+(cutW?(el.scrollWidth-el.clientWidth)+'px':'세로')+' (칸 '+el.clientWidth+'px) '+JSON.stringify(t.slice(0,70))); }
+          if (t) { let path=[],n=el; for(let k=0;k<4&&n&&n!==document.body;k++,n=n.parentElement) path.push(n.tagName+'.'+Math.round(n.getBoundingClientRect().width)); res.push('CUT '+(cutW?(el.scrollWidth-el.clientWidth)+'px':'세로')+' (칸 '+el.clientWidth+'px) '+JSON.stringify(t.slice(0,70))+' | '+path.join('<')+' | 화면='+(document.querySelector('h1')?document.querySelector('h1').textContent.trim().slice(0,20):'?')); } }
       }
       return [...new Set(res)];
     });
-    cut.forEach(c=>errs.push(c));
+    if (cut.length) {           // 애니메이션 도중일 수 있다 — 멈춘 뒤 다시 본다
+      await p.waitForTimeout(900);
+      const again = await p.evaluate(()=>{
+        const res=[];
+        for (const el of document.querySelectorAll('body *')) {
+          const cs=getComputedStyle(el);
+          if (cs.display==='none'||cs.visibility==='hidden') continue;
+          const clamp = cs.webkitLineClamp && cs.webkitLineClamp!=='none';
+          if (cs.textOverflow!=='ellipsis' && !clamp) continue;
+          const cutW = el.scrollWidth>el.clientWidth+1 && el.clientWidth>0;
+          const cutH = clamp && el.scrollHeight>el.clientHeight+1;
+          if (cutW||cutH) { const t=(el.textContent||'').trim();
+            if (t) res.push('CUT '+(cutW?(el.scrollWidth-el.clientWidth)+'px':'세로')+' (칸 '+el.clientWidth+'px) '+JSON.stringify(t.slice(0,70))); }
+        }
+        return [...new Set(res)];
+      });
+      again.forEach(c=>errs.push(c));
+      if (again.some(c=>/칸 [0-7]?\dpx/.test(c)) && !globalThis.__shot) {
+        globalThis.__shot=1;
+        await p.screenshot({path:'scratchpad/cut-small.png',fullPage:true});
+        const info=await p.evaluate(()=>{
+          const el=[...document.querySelectorAll('body *')].find(e=>getComputedStyle(e).textOverflow==='ellipsis'&&e.clientWidth>0&&e.clientWidth<80&&e.scrollWidth>e.clientWidth+1);
+          if(!el) return 'x';
+          let path=[],n=el; for(let k=0;k<6&&n&&n!==document.body;k++,n=n.parentElement) path.push(n.tagName+'['+Math.round(n.getBoundingClientRect().width)+'x'+Math.round(n.getBoundingClientRect().height)+'] style='+(n.getAttribute('style')||'').slice(0,120));
+          return '글자: '+JSON.stringify((el.textContent||'').trim())+'\n'+path.join('\n  ↑ ');
+        });
+        console.log('--- 찍음 ---\n'+info);
+      }
+    }
   }
   if (i % 10 === 0) {
     const bad = await p.evaluate(()=>{ const t=document.body.innerText; const m=t.match(/NaN|undefined|\[object Object\]|Infinity|null원|{{/g); return m? [...new Set(m)] : []; });
