@@ -715,8 +715,12 @@ class Component extends DCLogic {
               hasOpts: visible.length>0 && !(cur&&cur.grid),
               // 격자로 그릴지, 한 줄씩 그릴지
               hasGridOpts: visible.length>0 && !!(cur&&cur.grid),
+              // 칸 수는 언어를 따른다. 로마자 표기는 한글보다 두 배쯤 길어서
+              // 3칸으로 두면 영어 화면에서 자치구 17개 중 15개가 말줄임으로 잘린다.
               optsGridStyle:'display:grid;gap:8px;margin-top:22px;'
-                +'grid-template-columns:repeat('+this.L(3,4,4)+',minmax(0,1fr))',
+                +'grid-template-columns:repeat('
+                +(this.locale()==='en' ? this.L(2,3,3) : this.L(3,4,4))
+                +',minmax(0,1fr))',
               // 주소 → 상권 매칭 확인. '강남역 상권으로 확인했어요' 처럼 말해 준다.
               isSearch: !!(cur&&cur.search),
               searchHint: cur&&cur.search?cur.search:'',
