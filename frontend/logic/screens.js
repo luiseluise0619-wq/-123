@@ -36,7 +36,7 @@ globalThis.MysbizonParts.screens = {
         // 검색은 사용자가 직접 친 말이므로 POI도 남기되 뒤로 보낸다
         list=hit.filter(z=>!POI.test(z.name)).concat(hit.filter(z=>POI.test(z.name))).slice(0,40);
         heading=list.length? '검색 결과 '+list.length+'곳' : '';
-        empty=!list.length; emptyText='‘'+q+'’와 맞는 동네가 없어요';
+        empty=!list.length; emptyText=this.t('search.noZone',{q:q});
       } else {
         const recent=(S.recent||[]);
         if(recent.length){
@@ -291,7 +291,7 @@ globalThis.MysbizonParts.screens = {
           +(n===S.homeInd?'background:var(--accent-3)'
             :(i===(S.cursor||0)&&open==='ind'?'background:var(--line)':'background:var(--surface)'))})),
       indEmpty:catList.length===0,
-      indEmptyText: pq? '‘'+pq+'’와 맞는 장사가 없어요' : '이 분류에 해당하는 장사가 없어요',
+      indEmptyText: pq? this.t('search.noInd',{q:pq}) : '이 분류에 해당하는 장사가 없어요',
       pickList: open==='zone'
         ? (()=>{
             const out=[{row:true, name:'서울 전체', meta:'아직 안 정함',
@@ -338,7 +338,7 @@ globalThis.MysbizonParts.screens = {
       })),
       sidoReadyHome: homeSido==='서울특별시',
       sidoWaiting:   homeSido!=='서울특별시',
-      sidoWaitText:this.t('sido.wait',{region:homeSido}),
+      sidoWaitText:this.t('sido.wait',{region:this.placeName(homeSido)}),
       backToSeoulHome:()=>this.setState({sido:'서울특별시'}),
       // 패널은 높이가 묶여 있다(화면 밖으로 나가지 않게). 안쪽이 넘치면 여기서 스크롤된다
       // — 예전에는 패널이 overflow:hidden 이라 구 25개 중 첫 줄만 보이고 잘려 있었다.
@@ -360,7 +360,7 @@ globalThis.MysbizonParts.screens = {
       // 한 번 누르면 고르고, 같은 구를 한 번 더 누르면 그 구로 정하고 창을 닫는다.
       // 상권까지 고르지 않아도 '이 구에서 찾아 줘'로 넘어갈 수 있어야 한다.
       guTabs:GU_LIST.slice().sort((a,b)=>a.localeCompare(b,'ko')).map(g=>({
-        label:g,
+        label:this.placeName(g),
         pick:()=> g===guTab
           ? this.setState({homeGu:g, homeZoneName:null, zoneId:null, sel:null,
                            findGu:g, zq:g, pickOpen:null})
@@ -374,7 +374,7 @@ globalThis.MysbizonParts.screens = {
       // 고른 구를 한 번 더 누르라고 알려 준다 — 두 번 눌러야 하는 걸 알 방법이 없다
       guHint: guTab? guTab+'를 한 번 더 누르면 이 구로 찾습니다' : '구를 누르면 골라지고, 한 번 더 누르면 정해져요',
       pickEmpty: !!pq && (open==='zone'? zoneList.length===0 : indList.length===0),
-      pickEmptyText:'‘'+pq+'’와 맞는 '+(open==='zone'?'동네가':'장사가')+' 없어요',
+      pickEmptyText: open==='zone'? this.t('search.noZone',{q:pq}) : this.t('search.noInd',{q:pq}),
       startDisabled:!!S.starting,
       starting:!!S.starting, notStarting:!S.starting,
       startStyle:this.L('flex:none;width:100%;margin-top:4px;','flex:none;','flex:none;')
@@ -478,7 +478,7 @@ globalThis.MysbizonParts.screens = {
           tag:''});
       }
       return {
-        gu:o.gu, rank:String(i+1).padStart(2,'0'),
+        gu:this.placeName(o.gu), rank:String(i+1).padStart(2,'0'),
         per:this.won(perM),
         verdict:(diff>=10? '서울 중앙값보다 '+diff+'% 높아요'
                : (diff<=-10? '중앙값보다 '+Math.abs(diff)+'% 낮아요' : '중앙값과 비슷해요')),
@@ -499,26 +499,26 @@ globalThis.MysbizonParts.screens = {
     const q=this.qtr(zi.quarter);
     const byPer=list.slice(0,12);
     push('zc-per',{type:'hbar', title:'자치구별 예상 매출', sub:'가게 한 곳당 월매출 (추정) · 상위 12곳',
-      unit:'원', period:q+' 기준', height:300,
-      labels:byPer.map(o=>o.gu),
+      unit:'원', period:q, height:300,
+      labels:byPer.map(o=>this.placeName(o.gu)),
       datasets:[{label:'가게 한 곳당 월매출', data:byPer.map(o=>Math.round(o.per/3)),
         colors:byPer.map(o=>o.gu===picked?'on':'')}]});
     const byStore=list.slice().sort((a,b)=>b.stores-a.stores).slice(0,12);
     push('zc-store',{type:'hbar', title:'자치구별 경쟁 점포 수', sub:'같은 업종 점포가 많은 12곳',
-      unit:'곳', period:q+' 기준', height:300,
-      labels:byStore.map(o=>o.gu),
+      unit:'곳', period:q, height:300,
+      labels:byStore.map(o=>this.placeName(o.gu)),
       datasets:[{label:'같은 업종 점포 수', data:byStore.map(o=>o.stores),
         colors:byStore.map(o=>o.gu===picked?'on':'')}]});
     const byPop=list.filter(o=>o.pop).sort((a,b)=>b.pop-a.pop).slice(0,12);
     push('zc-pop',{type:'hbar', title:'자치구별 유동인구', sub:'상권이 속한 행정동 하루 유동인구 합계',
-      unit:'명', period:q+' 기준', height:300,
-      labels:byPop.map(o=>o.gu),
+      unit:'명', period:q, height:300,
+      labels:byPop.map(o=>this.placeName(o.gu)),
       datasets:[{label:'하루 유동인구', data:byPop.map(o=>Math.round(o.pop)),
         colors:byPop.map(o=>o.gu===picked?'on':'')}]});
     const bySales=list.slice().sort((a,b)=>b.sales-a.sales).slice(0,12);
     push('zc-sales',{type:'hbar', title:'자치구별 소비 규모', sub:'최근 3개월 상권 소비 합계',
-      unit:'원', period:q+' 기준', height:300,
-      labels:bySales.map(o=>o.gu),
+      unit:'원', period:q, height:300,
+      labels:bySales.map(o=>this.placeName(o.gu)),
       datasets:[{label:'3개월 소비 규모', data:bySales.map(o=>o.sales),
         colors:bySales.map(o=>o.gu===picked?'on':'')}]});
 
@@ -527,7 +527,8 @@ globalThis.MysbizonParts.screens = {
       ind:this.indName(S.ind),
       lead:this.tn('zc.lead',{ind:this.indName(S.ind), gu:this.placeName(top.gu)}),
       sub:'카드를 누르면 아래 차트에서 그 자치구가 강조돼요. 옆으로 넘겨 보세요.',
-      picked:picked,
+      picked:this.placeName(picked),
+      pickedTitle:this.t('zc.pickedTitle',{gu:this.placeName(picked)}),
       medLine:'position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;'
         +'background:var(--ink3);opacity:.55;left:'+medPct.toFixed(1)+'%',
       medNote:'가운데 눈금이 서울 자치구 중앙값이에요',
@@ -542,7 +543,7 @@ globalThis.MysbizonParts.screens = {
       toggleAll:()=>this.setState({zcAll:!allOpen}),
       hasList:allOpen,
       rows:list.map((o,i)=>({
-        rank:i+1, gu:o.gu,
+        rank:i+1, gu:this.placeName(o.gu),
         per:this.won(o.per/3),
         stores:o.stores.toLocaleString()+'개',
         zones:o.zones+'곳',
@@ -599,7 +600,7 @@ globalThis.MysbizonParts.screens = {
       trackStyle:'display:flex;width:200%;transition:transform .42s cubic-bezier(.22,.72,.24,1);'
         +'transform:translateX('+(S.regPick?'-50%':'0')+')',
       paneStyle:'width:50%;flex:none;padding-right:'+(S.regPick?'0':'0'),
-      name:z.nm,
+      name:this.zoneLabelOf(z.nm),
       sub:'이 동네에서 확인된 장사가 '+rows.length+'가지예요. 하나를 고르면 본전까지 계산해 드려요.',
       stats:[
         {label:'가게', value:totalStores.toLocaleString()+'곳', tag:''},
@@ -625,7 +626,10 @@ globalThis.MysbizonParts.screens = {
     const gu=S.fcGu|| (S.zoneId&&zgu&&zgu[S.zoneId]) || '강남구';
     // 정렬 기준은 하나로 고정한다 — 네 가지를 고르게 하면 무엇을 보는 화면인지 흐려진다
     const sort='per';
-    if(!zi||!zgu) return {gu:gu, guOptions:GU, onGu:()=>{}, ind:'', rows:[], lead:'', top:[],
+    // select 의 value 는 원래 이름이어야 한다 — 옮긴 이름을 value 로 쓰면 어느 항목과도 안 맞아
+    // 영어 화면에서 늘 첫 구가 골라진 것처럼 보인다. 보이는 글자만 옮긴다(sidoOptions 와 같은 꼴).
+    const guOpts=GU.map(g=>({v:g, label:this.placeName(g)}));
+    if(!zi||!zgu) return {guValue:gu, guOptions:guOpts, onGu:()=>{}, ind:'', rows:[], lead:'', top:[],
                           hasList:false, hasMore:false, hasMed:false,
                           topRail:this.rail('fcTop',{per:3}), note:this.dataNote('fc','',[])};
     const idx=zi.inds.indexOf(S.ind);
@@ -650,8 +654,8 @@ globalThis.MysbizonParts.screens = {
     const showAll=!!S.fcAll;
     const shown=showAll? list : list.slice(0,6);
     return {
-      gu:this.placeName(gu), ind:this.indName(S.ind),
-      guOptions:GU,
+      guValue:gu, ind:this.indName(S.ind),
+      guOptions:guOpts,
       onGu:e=>this.setState({fcGu:e.target.value, fcAll:false}),
       lead: list.length
         ? this.tn('fc.lead',{gu:this.placeName(gu), ind:this.indName(S.ind), top:top3[0].name})
@@ -762,7 +766,7 @@ globalThis.MysbizonParts.screens = {
 
       out.title=subjectName+' · '+this.t(isRent?'pr.rentUnit':'pr.vacancy');
       out.now=(val==null?'—':(isRent? this.manF(val,1) : val.toFixed(1)+'%'));
-      out.nowLabel=qs[qs.length-1]+' 기준';
+      out.nowLabel=qs[qs.length-1];
       if(d!=null){
         // 임차인에게 임대료 상승은 나쁜 값이다 — 부호가 아니라 뜻으로 색을 정한다
         const bad=isRent? d>0 : d>0;
@@ -781,7 +785,7 @@ globalThis.MysbizonParts.screens = {
       const rankBy=zones.slice().filter(o=>isFinite(isRent?o.rent:o.vacancy))
         .sort((a,b)=> (isRent? b.rent-a.rent : b.vacancy-a.vacancy)).slice(0,12);
       push('pr-zones',{type:'hbar', title:this.t(isRent?'pr.cmpRent':'pr.cmpVac'),
-        sub:'높은 순 12곳', unit:isRent?'만원':'%', period:qs[qs.length-1]+' 기준', height:300,
+        sub:'높은 순 12곳', unit:isRent?'만원':'%', period:qs[qs.length-1], height:300,
         labels:rankBy.map(o=>this.placeName(o.nm)),
         datasets:[{label:this.t(isRent?'pr.rentUnit':'pr.vacancy'),
           data:rankBy.map(o=>isRent?o.rent:o.vacancy),
@@ -831,7 +835,7 @@ globalThis.MysbizonParts.screens = {
       const prev=series.filter(v=>v!=null).slice(-5)[0];
       out.title=this.indName(pick)+' · 서울 전체 분기 매출';
       out.now=this.won(cur);
-      out.nowLabel=this.qtr(qs[qs.length-1])+' 기준';
+      out.nowLabel=this.qtr(qs[qs.length-1]);
       if(cur&&prev){
         const g=Math.round((cur-prev)/prev*100);
         out.delta=(g>0?'▲ ':'▼ ')+Math.abs(g)+'% · 1년 전 대비';
@@ -847,7 +851,7 @@ globalThis.MysbizonParts.screens = {
       const top=inds.map(n=>({n, v:HI.ind[n][lastQ]})).filter(o=>isFinite(o.v))
         .sort((a,b)=>b.v-a.v).slice(0,12);
       push('pr-sales-rank',{type:'hbar', title:'업종별 매출 비교', sub:'최근 분기 상위 12개',
-        unit:'원', period:this.qtr(lastQ)+' 기준', height:300,
+        unit:'원', period:this.qtr(lastQ), height:300,
         labels:top.map(o=>this.indName(o.n)),
         datasets:[{label:'분기 매출', data:top.map(o=>o.v),
           colors:top.map(o=>o.n===pick?'on':'')}]});
@@ -893,7 +897,7 @@ globalThis.MysbizonParts.screens = {
                   {label:'문 닫은 곳', data:byChurn.map(o=>o.closed)}]});
       const rate=rows.filter(o=>isFinite(o.close_rate)).sort((a,b)=>b.close_rate-a.close_rate).slice(0,12);
       push('pr-close-rate',{type:'hbar', title:'폐업률이 높은 업종', sub:'전체 점포 대비 폐업 비율',
-        unit:'%', period:this.qtr(ST.quarter)+' 기준', height:300,
+        unit:'%', period:this.qtr(ST.quarter), height:300,
         labels:rate.map(o=>o.name),
         datasets:[{label:'폐업률', data:rate.map(o=>o.close_rate),
           colors:rate.map(o=>o.raw===mine.raw?'on':'warn')}]});
@@ -917,15 +921,15 @@ globalThis.MysbizonParts.screens = {
       const top=rows.slice().sort((a,b)=>b.fr_share-a.fr_share).slice(0,14);
       out.title='업종별 프랜차이즈 비중';
       out.now=mine? mine.fr_share+'%' : (top[0].fr_share+'%');
-      out.nowLabel=mine? this.indName(mine.raw)+' 기준' : top[0].name+' 기준';
+      out.nowLabel=mine? this.indName(mine.raw) : top[0].name;
       push('pr-fr',{type:'hbar', title:'프랜차이즈 비중이 높은 업종', sub:'전체 점포 중 프랜차이즈 비율',
-        unit:'%', period:this.qtr(ST.quarter)+' 기준', height:340,
+        unit:'%', period:this.qtr(ST.quarter), height:340,
         labels:top.map(o=>o.name),
         datasets:[{label:'프랜차이즈 비중', data:top.map(o=>o.fr_share),
           colors:top.map(o=>o.raw===S.ind?'on':'')}]});
       const big=rows.slice().sort((a,b)=>b.stores-a.stores).slice(0,12);
       push('pr-fr-stores',{type:'hbar', title:'점포 수가 많은 업종', sub:'프랜차이즈 비중과 함께 보면 경쟁 성격이 보여요',
-        unit:'곳', period:this.qtr(ST.quarter)+' 기준', height:300,
+        unit:'곳', period:this.qtr(ST.quarter), height:300,
         labels:big.map(o=>o.name),
         datasets:[{label:'전체 점포 수', data:big.map(o=>o.stores),
           colors:big.map(o=>o.raw===S.ind?'on':'')}]});
@@ -943,7 +947,7 @@ globalThis.MysbizonParts.screens = {
       out.now=sorted.length? sorted[0].name : '—';
       out.nowLabel=sorted.length? '가장 큰 항목 '+sorted[0].pct+'%' : '';
       push('pr-spend',{type:'doughnut', title:pick+' 소비 구성', sub:'가구 지출에서 차지하는 비율',
-        unit:'%', period:this.qtr(IC.quarter)+' 기준', height:300,
+        unit:'%', period:this.qtr(IC.quarter), height:300,
         labels:sorted.map(o=>o.name), datasets:[{label:'비율', data:sorted.map(o=>o.pct)}]});
       // 같은 항목을 자치구끼리 견준다 — 다른 질문
       const key=sorted.length? sorted.find(o=>o.name==='음식')||sorted[0] : null;
@@ -952,8 +956,8 @@ globalThis.MysbizonParts.screens = {
           const it=((IC.gu[g]||{}).spend||[]).find(x=>x.name===key.name);
           return it? {g, v:it.pct} : null;
         }).filter(Boolean).sort((a,b)=>b.v-a.v);
-        push('pr-spend-gu',{type:'hbar', title:'자치구별 ‘'+key.name+'’ 지출 비중',
-          sub:'같은 항목을 자치구끼리 견줘요', unit:'%', period:this.qtr(IC.quarter)+' 기준', height:340,
+        push('pr-spend-gu',{type:'hbar', title:this.t('pr.spendByGu',{name:key.name}),
+          sub:'같은 항목을 자치구끼리 견줘요', unit:'%', period:this.qtr(IC.quarter), height:340,
           labels:cross.map(o=>o.g), datasets:[{label:key.name+' 비중', data:cross.map(o=>o.v),
             colors:cross.map(o=>o.g===pick?'on':'')}]});
       }

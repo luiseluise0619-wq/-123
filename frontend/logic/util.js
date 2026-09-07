@@ -162,11 +162,17 @@ globalThis.MysbizonParts.util = {
   },
 
   // 자치구·행정동·상권 이름 공통
+  //   ① 사전에 굳은 표기가 있으면 그걸 쓴다 — 서울특별시는 'Seoulteukbyeolsi' 가 아니라 'Seoul',
+  //      강남구는 'Gangnamgu' 가 아니라 'Gangnam-gu' 다. 소리로 옮기면 표지판과 달라진다.
+  //   ② 없으면 영어에서만 로마자로 옮긴다(logic/roman.js).
+  //   ③ 중국어는 그대로 둔다 — 한자 표기를 추측해 붙이면 지어낸 값이 된다.
   placeName(nm){
     if(!nm) return nm;
     const s=String(nm);
+    const known=this.tr? this.tr(s) : s;
+    if(known!==s) return known;
     if(this.locale&&this.locale()==='en') return this.romanizeName(s);
-    return this.tr? this.tr(s) : s;
+    return s;
   },
 
   // 통계 코드명을 사람이 쓰는 말로. 조회는 원래 이름(raw)으로 한다.

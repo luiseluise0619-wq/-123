@@ -230,8 +230,11 @@ globalThis.MysbizonParts.charts = {
       winDot: w ? 'flex:none;width:9px;height:9px;border-radius:50%;background:' + (w.color || 'var(--accent)') : '',
       winBadgeStyle: 'flex:none;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;'
         + 'white-space:nowrap;background:var(--color-primary-soft);color:var(--color-primary)',
-      // 화면에서 '기준 …'을 앞에 붙이므로 '2026년 1분기 기준 기준'이 되지 않게 꼬리를 뗀다
+      // '기준 …'을 화면 조각에서 앞에 붙이면 영어·중국어에서 어순이 깨진다.
+      // 한 문장으로 만들어 내려보낸다(asOf). 꼬리의 '기준'은 옛 호출부 대비용이다.
       period: (opt.period || '').replace(/\s*기준\s*$/, ''),
+      periodLabel: opt.period
+        ? this.t('asOf', {q: this.tr(String(opt.period).replace(/\s*기준\s*$/, ''))}) : '',
       hasPeriod: !!opt.period,
       height: (opt.height || 220) + 'px',
       // 차트는 카드 안에 넣지 않는다(§2 card-in-card 금지 · §7 차트가 주인공).

@@ -9,8 +9,8 @@
           <select value="{{ sidoSel }}" onChange="{{ onSido }}" style="{{ selectStyle }}">
             <sc-for list="{{ sidoOptions }}" as="o"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
           </select>
-          <select value="{{ mv.gu }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
-            <sc-for list="{{ mv.guOptions }}" as="g"><option value="{{ g }}">{{ g }}</option></sc-for>
+          <select value="{{ mv.guValue }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
+            <sc-for list="{{ mv.guOptions }}" as="g"><option value="{{ g.v }}">{{ g.label }}</option></sc-for>
           </select>
           <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o"><option value="{{ o.raw }}">{{ o.label }}</option></sc-for>

@@ -152,7 +152,7 @@ globalThis.MysbizonParts.market.marketView = function(){
     selKey, selLabel:sel.label, selQuestion:sel.q, selSrc:sel.src,
     ready:!!sel.ready,
     waiting:!sel.ready,
-    waitTitle:this.t('mk.waitTitle',{name:sel.label}),
-    waitText:this.t('mk.waitText',{src:sel.src})
+    waitTitle:this.t('mk.waitTitle',{name:this.tr(sel.label)}),
+    waitText:this.t('mk.waitText',{src:this.tr(sel.src)})
   };
 };

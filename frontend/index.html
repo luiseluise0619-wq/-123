@@ -993,7 +993,7 @@
                         <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
                       </div>
                       <sc-if value="{{ c.hasPeriod }}">
-                        <div class="u-note-w" style="margin-top:10px">기준 {{ c.period }}</div>
+                        <div class="u-note-w" style="margin-top:10px">{{ c.periodLabel }}</div>
                       </sc-if>
                     </div>
                   </div>
@@ -1068,9 +1068,9 @@
             </sc-for>
           </select>
           <span class="u-lab">자치구</span>
-          <select value="{{ fc.gu }}" onChange="{{ fc.onGu }}" style="{{ selectStyle }}">
+          <select value="{{ fc.guValue }}" onChange="{{ fc.onGu }}" style="{{ selectStyle }}">
             <sc-for list="{{ fc.guOptions }}" as="g">
-              <option value="{{ g }}">{{ g }}</option>
+              <option value="{{ g.v }}">{{ g.label }}</option>
             </sc-for>
           </select>
         </div>
@@ -1160,8 +1160,8 @@
           <select value="{{ sidoSel }}" onChange="{{ onSido }}" style="{{ selectStyle }}">
             <sc-for list="{{ sidoOptions }}" as="o"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
           </select>
-          <select value="{{ mv.gu }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
-            <sc-for list="{{ mv.guOptions }}" as="g"><option value="{{ g }}">{{ g }}</option></sc-for>
+          <select value="{{ mv.guValue }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
+            <sc-for list="{{ mv.guOptions }}" as="g"><option value="{{ g.v }}">{{ g.label }}</option></sc-for>
           </select>
           <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o"><option value="{{ o.raw }}">{{ o.label }}</option></sc-for>
@@ -1311,7 +1311,7 @@
                         <canvas data-chart="{{ ch.id }}" role="img" aria-label="{{ ch.title }}"></canvas>
                       </div>
                       <sc-if value="{{ ch.hasPeriod }}">
-                        <div class="u-note" style="margin-top:10px">기준 {{ ch.period }}</div>
+                        <div class="u-note" style="margin-top:10px">{{ ch.periodLabel }}</div>
                       </sc-if>
                     </div>
                   </div>
@@ -1471,7 +1471,7 @@
       <sc-if value="{{ zc.hasCharts }}">
         <section style="padding:32px 0 0">
           <div class="u-between">
-            <h2 style="{{ ds3 }}">{{ zc.picked }} 기준으로 견주기</h2>
+            <h2 style="{{ ds3 }}">{{ zc.pickedTitle }}</h2>
             <sc-if value="{{ zc.chartRail.arrows }}">
               <span style="display:flex;gap:8px">
                 <span role="button" tabIndex="0" aria-label="이전 차트" onClick="{{ zc.chartRail.prev }}" style="{{ zc.chartRail.arrowStyle }}" style-hover="background:var(--line-strong)">←</span>
@@ -1491,7 +1491,7 @@
                     <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
                   </div>
                   <sc-if value="{{ c.hasPeriod }}">
-                    <div class="u-note" style="margin-top:10px">기준 {{ c.period }}</div>
+                    <div class="u-note" style="margin-top:10px">{{ c.periodLabel }}</div>
                   </sc-if>
                 </div>
               </div>
@@ -2103,7 +2103,7 @@
                     <canvas data-chart="{{ ch.id }}" role="img" aria-label="{{ ch.title }}"></canvas>
                   </div>
                   <sc-if value="{{ ch.hasPeriod }}">
-                    <div class="u-note" style="margin-top:10px">기준 {{ ch.period }}</div>
+                    <div class="u-note" style="margin-top:10px">{{ ch.periodLabel }}</div>
                   </sc-if>
                 </div>
               </div>

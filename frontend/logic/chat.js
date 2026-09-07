@@ -69,7 +69,7 @@ globalThis.MysbizonParts.chat = {
     const S=this.state;
     const r=this.rank();
     const sel = r ? (S.sel? (r.list.find(o=>o.id===S.sel)||r.list[0]) : r.list[0]) : null;
-    const log = S.chat || [{who:'ai', text:'안녕하세요. '+this.indName(S.ind)+' 기준으로 답해 드립니다. 궁금한 걸 물어보시거나 아래 버튼을 눌러 주세요.'}];
+    const log = S.chat || [{who:'ai', text:this.t('chat.hello',{ind:this.tr(this.indName(S.ind))})}];
     const ask=q=>{
       const a=this.answer(q,r,sel);
       const next=[...log,{who:'me',text:q}];

@@ -413,7 +413,7 @@ class Component extends DCLogic {
         const chip=(k,v)=>'flex:none;font-size:13.5px;padding:9px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;transition:background .14s,color .14s;'
           +(S['rp_'+k]===v?'background:var(--ink);color:var(--bg);font-weight:500':'background:var(--surface);color:var(--ink2)');
         const reportSelection=r?(r.list.find(o=>o.id===S.sel)||r.list.find(o=>o.id===S.zoneId)||r.list[0]):null;
-        const reportZone=reportSelection?this.zoneLabelOf(reportSelection.name):'동네 미선택';
+        const reportZone=reportSelection?this.zoneLabelOf(reportSelection.name):this.tr('동네 미선택');
         const email=(S.rp_email||'').trim();
         const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !!S.rp_agree;
         const sent=!!S.rp_sent; const sending=!!S.rp_sending; const enabled=!!S.reportEmailEnabled;
@@ -431,7 +431,7 @@ class Component extends DCLogic {
               pct:Number(String(p.pctText??'0').replace(/[^0-9.]/g,''))
             })):null;
             const payload={
-              ind:S.ind?this.indName(S.ind):'', zone:sel?this.zoneLabelOf(sel.name):'동네 미선택',
+              ind:S.ind?this.tr(this.indName(S.ind)):'', zone:sel?this.zoneLabelOf(sel.name):this.tr('동네 미선택'),
               gu:sel?this.guLabel(sel.id):'',
               quarter:S.zi?this.qtr(S.zi.quarter):'',
               score:t?Math.round(t.scoreNum??t.score):null,
@@ -666,7 +666,7 @@ class Component extends DCLogic {
                   : {...cur.set(first.v), rp_step:step+1, rp_q:''});
               },
               searchEmpty: !!(cur&&cur.search&&q&&visible.length===0),
-              searchEmptyText: q? '‘'+q+'’와 맞는 게 없어요' : '',
+              searchEmptyText: q? this.t('search.noHit',{q:q}) : '',
               curOpts: visible.map(o=>{
                 const on=cur.multi? (PICKS.indexOf(o.v)>=0) : (cur.val===o.v);
                 return {
@@ -896,7 +896,7 @@ class Component extends DCLogic {
               // 판정 — 넘는지 모자라는지. 색으로 바로 읽히게.
               verdict:over
                 ? this.t('diag.over',{amt:this.man(gap)})
-                : '예상 매출이 본전선에 '+this.man(gap)+' 모자라요',
+                : this.t('bep.short',{amt:this.man(gap)}),
               verdictStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;'
                 +'padding:8px 14px;border-radius:999px;margin-top:16px;white-space:nowrap;'
                 +(over?'background:var(--strong-soft,var(--accent-3));color:var(--good)'
@@ -966,7 +966,7 @@ class Component extends DCLogic {
       sidoReady:(S.sido||'서울특별시')==='서울특별시',
       sidoWait:(S.sido||'서울특별시')!=='서울특별시',
       backToSeoul:()=>this.setState({sido:'서울특별시'}),
-      sidoNote:'‘'+(S.sido||'서울특별시')+'’ 자료는 아직 없습니다. 지금 계산에 쓰는 자료는 서울시 상권분석서비스라 서울 1,564곳만 담고 있습니다. 전국은 소상공인시장진흥공단 상권정보로 갈아타야 하고, 상권 구획과 업종 코드가 달라 매칭이 필요합니다.',
+      sidoNote:this.t('sido.notYet',{sido:this.placeName(S.sido||'서울특별시')}),
       onFind:S.screen==='find', onDiag:S.screen==='diag',
       onSim:S.screen==='sim',
       // 어느 장사를 보고 있는지 화면에서 바로 보이고 바꿀 수 있게 한다
@@ -1102,8 +1102,9 @@ class Component extends DCLogic {
       chipNote: S.err? S.err : (!S.zi? '장사 목록을 불러오는 중이에요…'
         : (q
           ? (names.length
-            ? '‘'+q+'’ 검색 결과 '+names.length+'가지'+(names.length>5?' · ···를 누르면 나머지 '+(names.length-5)+'가지':'')
-            : '‘'+q+'’와 맞는 장사가 없어요')
+            ? this.t('search.indHits',{q:q, n:names.length})
+              +(names.length>5? this.t('search.indMore',{n:names.length-5}) : '')
+            : this.t('search.noInd',{q:q}))
           : (S.fromRegion
             ? '이 장사는 '+(S.homeZone||'고른 동네')+'에 데이터가 있어서 골랐어요'+(names.length>5?' · ···를 누르면 더 보여요':'')
             : '많이 찾는 장사예요'+(names.length>5?' · ···를 누르면 더 보여요':'')))),
@@ -1156,8 +1157,8 @@ class Component extends DCLogic {
           // 서울 밖을 골랐을 때 — 목록·구·결과 대신 이 안내가 뜬다
           sidoWaiting: sido!=='서울특별시',
           sidoReady:  sido==='서울특별시',
-          sidoWaitTitle: this.t('mk.waitTitle',{name:sido}),
-          sidoWaitText: this.t('sido.waitFind',{region:sido}),
+          sidoWaitTitle: this.t('mk.waitTitle',{name:this.placeName(sido)}),
+          sidoWaitText: this.t('sido.waitFind',{region:this.placeName(sido)}),
           backToSeoulFind:()=>this.setState({sido:'서울특별시', findGu:''}),
           // 구는 25개라 접어 둔다. 편 상태에서는 스크롤이 생기게 높이를 묶는다.
           guOpen:!!S.findGuOpen,
@@ -1169,8 +1170,8 @@ class Component extends DCLogic {
             +(S.findGuOpen? 'max-height:'+this.L('200px','240px','280px')+';overflow-y:auto;padding-right:8px' : ''),
           // 접었을 때는 앞 6개만 그린다 — 반 잘린 줄을 남기면 '아래를 못 본다'가 된다
           gu:(S.findGuOpen
-                ? [{label:'전체', v:''}, ...gus.map(g=>({label:g, v:g}))]
-                : [{label:'전체', v:''}, ...gus.map(g=>({label:g, v:g}))].slice(0,6)
+                ? [{label:'전체', v:''}, ...gus.map(g=>({label:this.placeName(g), v:g}))]
+                : [{label:'전체', v:''}, ...gus.map(g=>({label:this.placeName(g), v:g}))].slice(0,6)
              ).map(o=>({
             label:o.label,
             pick:()=>this.setState({findGu:o.v, sel:null}),
@@ -1179,7 +1180,7 @@ class Component extends DCLogic {
               +'overflow:hidden;text-overflow:ellipsis;transition:background .14s,color .14s;'
               +(cur===o.v?'background:var(--accent-3);color:var(--accent);font-weight:700'
                          :'background:var(--surface);color:var(--ink2)')})),
-          guNote: cur? cur+'에서 자료가 있는 상권 '+(guCount[cur]||0)+'곳' : '서울 전체에서 찾습니다',
+          guNote: cur? this.t('find.guCount',{gu:this.placeName(cur), n:(guCount[cur]||0)}) : '서울 전체에서 찾습니다',
           hasGu: gus.length>0,
           indValue:S.ind,
           indName:this.indName(S.ind),
@@ -1307,7 +1308,7 @@ class Component extends DCLogic {
         nav:[],
         metrics:{has:false,rows:[],seoul:[],missing:[],note:''},
         pros:{good:[],care:[]}, vs:{rows:[],note:''}, sections:[],
-        gu:'서울 전체', guOptions:['서울 전체'], onGu:()=>{},
+        guValue:'서울 전체', guOptions:[{v:'서울 전체', label:this.t('pr.seoulAll')}], onGu:()=>{},
         list:[], cta:'후보지 찾기', note:this.dataNote('mv','',[])};
       return out;
     }

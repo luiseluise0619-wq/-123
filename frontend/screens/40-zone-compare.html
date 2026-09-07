@@ -66,7 +66,7 @@
       <sc-if value="{{ zc.hasCharts }}">
         <section style="padding:32px 0 0">
           <div class="u-between">
-            <h2 style="{{ ds3 }}">{{ zc.picked }} 기준으로 견주기</h2>
+            <h2 style="{{ ds3 }}">{{ zc.pickedTitle }}</h2>
             <sc-if value="{{ zc.chartRail.arrows }}">
               <span style="display:flex;gap:8px">
                 <span role="button" tabIndex="0" aria-label="이전 차트" onClick="{{ zc.chartRail.prev }}" style="{{ zc.chartRail.arrowStyle }}" style-hover="background:var(--line-strong)">←</span>
@@ -86,7 +86,7 @@
                     <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
                   </div>
                   <sc-if value="{{ c.hasPeriod }}">
-                    <div class="u-note" style="margin-top:10px">기준 {{ c.period }}</div>
+                    <div class="u-note" style="margin-top:10px">{{ c.periodLabel }}</div>
                   </sc-if>
                 </div>
               </div>

@@ -95,33 +95,130 @@ function component(locale) {
   return c;
 }
 
+// 자료를 붙인 상태. 화면 문장은 대부분 자료에서 만들어지므로,
+// 빈 상태만 훑으면 번역 구멍의 대부분을 못 본다(실제로 그렇게 오래 지나갔다).
+function loaded(locale) {
+  const c = component(locale);
+  const zlp = j('../frontend/data/v3/zone_livepop.json').zone;
+  Object.assign(c.state, {
+    zi: j('../frontend/data/v3/zone_industry.json'),
+    sbi: j('../frontend/data/v3/sales_by_industry.json'),
+    sti: j('../frontend/data/v3/stores_by_industry.json'),
+    zgu: j('../frontend/data/v3/zone_gu.json').gu,
+    zbd: j('../frontend/data/v3/zone_border.json').border,
+    smap: j('../frontend/data/v3/seoul_map.json'),
+    zlp: Object.fromEntries(Object.entries(zlp || {}).filter(([, v]) =>
+      v && Number.isFinite(v.tot) && v.tot > 0 && Array.isArray(v.age)
+      && v.age.length === 6 && v.age.every(Number.isFinite))),
+    rentStats: j('../frontend/data/v3/rent.json'),
+    salesHistory: j('../frontend/data/v3/sales_history.json'),
+    income: j('../frontend/data/v3/income.json')
+  });
+  return c;
+}
+
+const SCREEN_KEYS = ['home', 'hubZone', 'zone', 'find', 'region', 'fineCmp', 'hubFine',
+  'fineIntro', 'map', 'fineDetail', 'sim', 'diag', 'price', 'report'];
+
+// 화면·상권·업종을 바꿔 가며 화면 값을 모은다.
+function sweep(locale) {
+  const seed = loaded(locale);
+  const ids = Object.keys(seed.state.zi.zones || {});
+  const picks = [
+    c => { },
+    c => { c.state.sel = ids[0]; c.state.zoneId = ids[0]; c.state.picks = ids.slice(0, 3); },
+    c => { c.state.sel = ids[5]; c.state.zoneId = ids[5]; c.state.picks = ids.slice(2, 5); c.state.ind = '한식음식점'; }
+  ];
+  const found = new Set();
+  for (const screen of SCREEN_KEYS) {
+    for (const pick of picks) {
+      const c = loaded(locale);
+      c.state.screen = screen;
+      pick(c);
+      koreanIn(c.renderVals(), [], 0).forEach(s => found.add(s));
+    }
+  }
+  return [...found];
+}
+
+// 값이 '평범한 객체'인가.
+//   vm.createContext 로 만든 화면 값은 바깥 realm 의 Object 와 constructor 가 다르다.
+//   그래서 `v.constructor === Object` 로 재면 전부 false 가 되어 한 겹만 훑고 끝났고,
+//   이 시험이 오래 아무것도 못 잡은 채 통과했다. 이름으로 잰다.
+function isPlainObject(v) {
+  if (!v || typeof v !== 'object') return false;
+  const p = Object.getPrototypeOf(v);
+  return p === null || (p.constructor && p.constructor.name === 'Object');
+}
+
+// 화면에 안 보이는 값 — select 의 value, 통계 원본 코드명 같은 '고르는 값'.
+// 이것들은 한국어로 남아 있어야 옳다(옮기면 어느 항목과도 안 맞는다).
+const MACHINE_KEY = k => k === 'v' || k === 'raw' || /Value$/.test(k);
+
 function koreanIn(v, acc, d) {
-  if (d > 6 || acc.length > 40) return acc;
+  if (d > 9 || acc.length > 2000) return acc;
   if (typeof v === 'string') {
     // 스타일 문자열은 한글이 없어 걸리지 않는다
     if (/[가-힣]/.test(v)) acc.push(v);
     return acc;
   }
   if (Array.isArray(v)) { v.forEach(x => koreanIn(x, acc, d + 1)); return acc; }
-  if (v && typeof v === 'object' && v.constructor === Object) {
-    for (const k in v) koreanIn(v[k], acc, d + 1);
+  if (isPlainObject(v)) {
+    for (const k in v) if (!MACHINE_KEY(k)) koreanIn(v[k], acc, d + 1);
     return acc;
   }
   return acc;
 }
 
-test('영어 화면 값에 번역 안 된 한국어가 남지 않는다', () => {
-  const c = component('en');
-  const left = koreanIn(c.renderVals(), [], 0)
-    .filter(s => s !== '한국어');       // 언어 선택의 '한국어'는 일부러 한국어다
+// 언어 선택의 '한국어'는 일부러 한국어로 둔다.
+const ON_PURPOSE = s => s === '한국어';
+
+test('영어 화면 값에 번역 안 된 한국어가 남지 않는다 (자료 없는 상태)', () => {
+  const left = koreanIn(component('en').renderVals(), [], 0).filter(s => !ON_PURPOSE(s));
   assert.equal(left.length, 0, '남은 한국어: ' + left.slice(0, 5).join(' / '));
 });
 
-test('중국어 화면 값에는 고유명사(상권 이름)만 한글로 남는다', () => {
-  const c = component('zh-CN');
-  const left = koreanIn(c.renderVals(), [], 0).filter(s => s !== '한국어');
-  // 자료를 안 읽은 상태라 상권 이름도 안 나온다 — 아무것도 남으면 안 된다
-  assert.equal(left.length, 0, '남은 한국어: ' + left.slice(0, 5).join(' / '));
+test('영어 화면 값에 번역 안 된 한국어가 남지 않는다 (자료를 붙이고 화면을 훑어)', () => {
+  const left = sweep('en').filter(s => !ON_PURPOSE(s));
+  assert.equal(left.length, 0,
+    left.length + '개 남음: ' + left.slice(0, 8).map(s => JSON.stringify(s.slice(0, 50))).join(' / '));
+});
+
+// 중국어는 상권·행정동 이름을 한글 그대로 둔다(§ logic/roman.js).
+// 한자 표기를 우리가 만들어 내면 그건 지어낸 값이다.
+// 그래서 '고유명사만 남았는가'를 잰다 — 이름을 지우고도 한글이 남으면 문장이 안 옮겨진 것이다.
+function placeNames() {
+  const seed = loaded('zh-CN');
+  const names = new Set();
+  // zoneLabelOf 는 '장충동족발거리(남소영길)' 를 '장충동족발거리 · 남소영길' 로 바꿔 보여준다.
+  // 원본만 넣어 두면 그 변형이 '안 옮긴 문장'으로 잘못 잡힌다.
+  const add = s => {
+    if (!s || !/[가-힣]/.test(s)) return;
+    s = String(s); names.add(s);
+    const m = s.match(/^(.+?)\(([^()]+)\)$/);
+    if (!m) return;
+    const base = m[1].trim(), inner = m[2].trim();
+    names.add(base); names.add(inner);
+    names.add(base.indexOf(inner) >= 0 || inner.indexOf(base) >= 0 ? base : base + ' · ' + inner);
+  };
+  for (const z of Object.values(seed.state.zi.zones || {})) add(z && z.nm);
+  for (const v of Object.values(seed.state.zlp || {})) add(v && v.dong);
+  for (const g of Object.values(seed.state.zgu || {})) add(g);
+  for (const b of Object.values(seed.state.zbd || {})) if (Array.isArray(b)) b.forEach(add);
+  for (const z of Object.values((seed.state.rentStats || {}).zones || {})) { add(z && z.nm); add(z && z.gwon); }
+  for (const g of Object.keys((seed.state.income || {}).gu || {})) add(g);
+  return names;
+}
+
+test('중국어 화면 값에는 고유명사만 한글로 남는다', () => {
+  const names = [...placeNames()].sort((a, b) => b.length - a.length);
+  // 긴 이름부터 지운다 — '강남'이 '강남구'를 먼저 갉아먹지 않게.
+  const strip = s => { for (const n of names) if (s.indexOf(n) >= 0) s = s.split(n).join(''); return s; };
+  const left = sweep('zh-CN')
+    .filter(s => !ON_PURPOSE(s))
+    .filter(s => /[가-힣]/.test(strip(s)));
+  assert.equal(left.length, 0,
+    left.length + '개 남음: ' + left.slice(0, 8).map(s => JSON.stringify(s.slice(0, 50))).join(' / '));
 });
 
 test('한국어에서는 번역이 아무 일도 하지 않는다', () => {

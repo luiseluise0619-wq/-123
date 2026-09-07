@@ -76,7 +76,7 @@
                         <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
                       </div>
                       <sc-if value="{{ c.hasPeriod }}">
-                        <div class="u-note-w" style="margin-top:10px">기준 {{ c.period }}</div>
+                        <div class="u-note-w" style="margin-top:10px">{{ c.periodLabel }}</div>
                       </sc-if>
                     </div>
                   </div>

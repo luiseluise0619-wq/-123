@@ -137,7 +137,7 @@ globalThis.MysbizonParts.design = {
     });
     if(hit&&Number.isFinite(hit.rent)){
       return {value:this.manF(hit.rent,1), per:'㎡당 월',
-              note:hit.nm+' 기준 (한국부동산원)', exact:true};
+              note:this.t('rent.refOf',{name:this.placeName(hit.nm)}), exact:true};
     }
     if(R.seoul&&Number.isFinite(R.seoul.rent)){
       return {value:this.manF(R.seoul.rent,1), per:'㎡당 월',

@@ -12,9 +12,9 @@
             </sc-for>
           </select>
           <span class="u-lab">자치구</span>
-          <select value="{{ fc.gu }}" onChange="{{ fc.onGu }}" style="{{ selectStyle }}">
+          <select value="{{ fc.guValue }}" onChange="{{ fc.onGu }}" style="{{ selectStyle }}">
             <sc-for list="{{ fc.guOptions }}" as="g">
-              <option value="{{ g }}">{{ g }}</option>
+              <option value="{{ g.v }}">{{ g.label }}</option>
             </sc-for>
           </select>
         </div>

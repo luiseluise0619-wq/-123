@@ -60,7 +60,7 @@ globalThis.MysbizonParts.analysis = {
       if(inGu.length>1){
         const top=inGu.slice().sort((a,b)=>b.per-a.per).slice(0,12);
         push('mv-sales-gu',{type:'hbar', title:this.t('mv.guWhere',{gu:this.placeName(gu)}),
-          sub:'가게 한 곳당 월매출 (추정)', unit:'원', period:q+' 기준', height:280,
+          sub:'가게 한 곳당 월매출 (추정)', unit:'원', period:q, height:280,
           labels:top.map(nameOf),
           datasets:[{label:'가게 한 곳당 월매출', data:top.map(o=>Math.round(o.per/3)),
             colors:top.map(o=>o.id===sel.id?'on':'')}]});
@@ -71,7 +71,7 @@ globalThis.MysbizonParts.analysis = {
         const rows=z.rows.filter(r=>r[1]&&r[2]).map(r=>({n:S.zi.inds[r[0]], per:r[2]/r[1]}))
           .sort((a,b)=>b.per-a.per).slice(0,12);
         push('mv-sales-near',{type:'hbar', title:'이 자리에서 다른 장사는 얼마나 파나요?',
-          sub:'같은 자리 업종별 가게 한 곳당 매출', unit:'원', period:q+' 기준', height:280,
+          sub:'같은 자리 업종별 가게 한 곳당 매출', unit:'원', period:q, height:280,
           labels:rows.map(o=>this.indName(o.n)),
           datasets:[{label:'가게 한 곳당 월매출', data:rows.map(o=>Math.round(o.per/3)),
             colors:rows.map(o=>o.n===S.ind?'on':'')}]});
@@ -82,14 +82,14 @@ globalThis.MysbizonParts.analysis = {
     else if(key==='demand'){
       const lp=zlp[sel.id];
       if(lp&&Array.isArray(lp.age)&&lp.age.length===6){
-        push('mv-age',{type:'bar', title:'어떤 연령대가 가장 많이 오나요?', sub:lp.dong+' 행정동 하루 기준',
-          unit:'명', period:q+' 기준', height:230,
+        push('mv-age',{type:'bar', title:'어떤 연령대가 가장 많이 오나요?', sub:this.t('pop.dongDailyBasis',{dong:this.placeName(lp.dong)}),
+          unit:'명', period:q, height:230,
           labels:['10대','20대','30대','40대','50대','60대+'],
           datasets:[{label:'하루 유동인구', data:lp.age.map(v=>Math.round(v))}]});
       }
       if(lp&&isFinite(lp.m)&&isFinite(lp.f)){
-        push('mv-sex',{type:'doughnut', title:'남녀 중 누가 더 많이 오나요?', sub:lp.dong+' 행정동',
-          unit:'명', period:q+' 기준', height:230,
+        push('mv-sex',{type:'doughnut', title:'남녀 중 누가 더 많이 오나요?', sub:this.t('pop.dongOnly',{dong:this.placeName(lp.dong)}),
+          unit:'명', period:q, height:230,
           labels:['여성','남성'], datasets:[{label:'하루 유동인구', data:[Math.round(lp.f),Math.round(lp.m)]}]});
       }
       // 자치구 안 상권끼리 유동인구 견주기
@@ -97,7 +97,7 @@ globalThis.MysbizonParts.analysis = {
         .sort((a,b)=>b.v-a.v).slice(0,12);
       if(withPop.length>1){
         push('mv-pop-gu',{type:'hbar', title:this.t('mv.guPop',{gu:this.placeName(gu)}), sub:'상권별 하루 유동인구',
-          unit:'명', period:q+' 기준', height:280,
+          unit:'명', period:q, height:280,
           labels:withPop.map(x=>nameOf(x.o)),
           datasets:[{label:'하루 유동인구', data:withPop.map(x=>Math.round(x.v)),
             colors:withPop.map(x=>x.o.id===sel.id?'on':'')}]});
@@ -109,7 +109,7 @@ globalThis.MysbizonParts.analysis = {
       if(inGu.length>1){
         const top=inGu.slice().sort((a,b)=>b.stores-a.stores).slice(0,12);
         push('mv-comp-gu',{type:'hbar', title:this.t('mv.guComp',{gu:this.placeName(gu)}),
-          sub:'같은 업종 점포가 많은 순 · 적을수록 유리', unit:'곳', period:q+' 기준', height:280,
+          sub:'같은 업종 점포가 많은 순 · 적을수록 유리', unit:'곳', period:q, height:280,
           labels:top.map(nameOf),
           datasets:[{label:'같은 업종 점포 수', data:top.map(o=>o.stores),
             colors:top.map(o=>o.id===sel.id?'on':'warn')}]});
@@ -118,13 +118,13 @@ globalThis.MysbizonParts.analysis = {
       if(ST&&ST.ind&&ST.ind[S.ind]){
         const r=ST.ind[S.ind];
         push('mv-churn',{type:'bar', title:'새로 생기는 곳과 닫는 곳 중 어디가 많나요?',
-          sub:'서울 전체 3개월', unit:'곳', period:this.qtr(ST.quarter)+' 기준', height:230,
+          sub:'서울 전체 3개월', unit:'곳', period:this.qtr(ST.quarter), height:230,
           labels:['새로 연 곳','문 닫은 곳'],
           datasets:[{label:'점포 수', data:[r.opened, r.closed], colors:['on','warn']}]});
         const rows=Object.keys(ST.ind).map(n=>({n, v:ST.ind[n].close_rate}))
           .filter(o=>isFinite(o.v)).sort((a,b)=>b.v-a.v).slice(0,12);
         push('mv-close-rate',{type:'hbar', title:'어떤 장사가 많이 문을 닫나요?', sub:'전체 점포 대비 폐업 비율',
-          unit:'%', period:this.qtr(ST.quarter)+' 기준', height:280,
+          unit:'%', period:this.qtr(ST.quarter), height:280,
           labels:rows.map(o=>this.indName(o.n)),
           datasets:[{label:'폐업률', data:rows.map(o=>o.v),
             colors:rows.map(o=>o.n===S.ind?'on':'warn')}]});
@@ -155,7 +155,7 @@ globalThis.MysbizonParts.analysis = {
         }
         const rank=zs.filter(o=>isFinite(o.rent)).sort((a,b)=>b.rent-a.rent).slice(0,12);
         push('mv-rent-rank',{type:'hbar', title:'주변보다 비싼 편인가요?', sub:'조사 상권 중 높은 순 12곳',
-          unit:'만원', period:qs[qs.length-1]+' 기준', height:280,
+          unit:'만원', period:qs[qs.length-1], height:280,
           labels:rank.map(o=>o.nm),
           datasets:[{label:'㎡당 월 임대료', data:rank.map(o=>o.rent),
             colors:rank.map(o=>(hitZ&&o.nm===hitZ.nm)?'on':'')}]});
@@ -170,13 +170,13 @@ globalThis.MysbizonParts.analysis = {
         const rows=z.rows.filter(r=>r[1]&&r[2]).map(r=>({n:S.zi.inds[r[0]], st:r[1], per:r[2]/r[1]}));
         const byStore=rows.slice().sort((a,b)=>b.st-a.st).slice(0,12);
         push('mv-near-store',{type:'hbar', title:'이 자리에는 어떤 가게가 많나요?',
-          sub:'어떤 장사가 많은 자리인지', unit:'곳', period:q+' 기준', height:280,
+          sub:'어떤 장사가 많은 자리인지', unit:'곳', period:q, height:280,
           labels:byStore.map(o=>this.indName(o.n)),
           datasets:[{label:'점포 수', data:byStore.map(o=>o.st),
             colors:byStore.map(o=>o.n===S.ind?'on':'')}]});
         const byPer=rows.slice().sort((a,b)=>b.per-a.per).slice(0,12);
         push('mv-near-per',{type:'hbar', title:'이 자리에서 뭘 팔면 잘 팔리나요?',
-          sub:'가게 한 곳당 월매출 (추정)', unit:'원', period:q+' 기준', height:280,
+          sub:'가게 한 곳당 월매출 (추정)', unit:'원', period:q, height:280,
           labels:byPer.map(o=>this.indName(o.n)),
           datasets:[{label:'가게 한 곳당 월매출', data:byPer.map(o=>Math.round(o.per/3)),
             colors:byPer.map(o=>o.n===S.ind?'on':'')}]});
@@ -188,7 +188,7 @@ globalThis.MysbizonParts.analysis = {
       if(IC&&IC.gu&&IC.gu[gu]&&IC.gu[gu].spend){
         const sp=IC.gu[gu].spend.slice().sort((a,b)=>b.pct-a.pct);
         push('mv-spend',{type:'doughnut', title:this.t('mv.guSpend',{gu:this.placeName(gu)}), sub:'가구 지출에서 차지하는 비율',
-          unit:'%', period:this.qtr(IC.quarter)+' 기준', height:260,
+          unit:'%', period:this.qtr(IC.quarter), height:260,
           labels:sp.map(o=>o.name), datasets:[{label:'비율', data:sp.map(o=>o.pct)}]});
       }
       const ST=S.sti;
@@ -206,7 +206,7 @@ globalThis.MysbizonParts.analysis = {
           .filter(o=>isFinite(o.v)).sort((a,b)=>b.v-a.v).slice(0,12);
         push('mv-fr',{type:'hbar', title:'브랜드 가게가 얼마나 많나요?',
           sub:'개인 가게가 브랜드와 바로 부딪히는 정도', unit:'%',
-          period:this.qtr(ST.quarter)+' 기준', height:280,
+          period:this.qtr(ST.quarter), height:280,
           labels:fr.map(o=>this.indName(o.n)),
           datasets:[{label:'프랜차이즈 비중', data:fr.map(o=>o.v),
             colors:fr.map(o=>o.n===S.ind?'on':'')}]});
@@ -316,7 +316,7 @@ globalThis.MysbizonParts.analysis = {
         return lp.tot>=m*1.2? '사람이 많이 오는 편이에요.' : (lp.tot>=m*0.8? '사람은 보통 수준이에요.' : '사람이 적은 편이에요.');
       })(),
       rows:dRows, bars:dBars,
-      note: lp? '유동인구는 '+lp.dong+' 행정동 값이라 상권보다 넓어요. 시간대·요일 데이터는 아직 없어요.' : ''});
+      note: lp? this.t('pop.noteWide',{dong:this.placeName(lp.dong)}) : ''});
 
     // 경쟁
     const cRows=[{label:'같은 장사 수', value:sel.stores.toLocaleString()+'곳', tag:''},
@@ -386,7 +386,7 @@ globalThis.MysbizonParts.analysis = {
     out.push({key:'cost', title:'비용 · 얼마가 나가나요',
       q:'임대료는 얼마인가요?',
       big: rf? rf.value : '자료 없음',
-      bigLabel: rf? (rf.per+' · '+rf.note) : '상가 임대료 자료를 아직 불러오지 못했어요',
+      bigLabel: rf? this.t('rent.perNote',{per:this.tr(rf.per), note:this.tr(rf.note)}) : '상가 임대료 자료를 아직 불러오지 못했어요',
       verdict: rf&&rf.exact
         ? '이 값은 조사 기준 상권 평균이에요. 실제 계약은 층·면적·위치로 크게 달라져요.'
         : '상권 단위 임대료는 아직 없어요. 중개인에게 확인한 금액을 본전 계산에 직접 넣으세요.',
@@ -426,7 +426,7 @@ globalThis.MysbizonParts.analysis = {
       out.push({key:'nearby', title:'이 자리 · 다른 장사는 어떤가요',
         q:'이 자리에서 뭐가 가장 잘 팔리나요?',
         big:nb.bars[0].label,
-        bigLabel:'가게 한 곳당 월매출 1위 · '+nb.bars[0].value,
+        bigLabel:this.t('mv.topPerStore',{value:nb.bars[0].value}),
         verdict: nb.rank && nb.rank<=3
           ? '고른 장사가 이 자리에서 '+nb.rank+'번째로 잘 팔려요.'
           : (nb.rank? '이 자리에서는 다른 장사가 더 잘 팔려요. 위 목록을 보고 업종을 다시 볼 수도 있어요.' : '고른 장사는 이 자리에 아직 없어요.'),
@@ -445,7 +445,7 @@ globalThis.MysbizonParts.analysis = {
       tips.push({label:'추정 객단가', value:this.wonRaw(Math.round(perHead)),
         tag:'(추정)'});
     }
-    if(nb&&nb.bars.length>1) tips.push({label:'같이 잘 되는 장사', value:nb.bars.slice(0,2).map(b=>b.label).join(' · '), tag:'이 자리 매출 상위'});
+    if(nb&&nb.bars.length>1) tips.push({label:'같이 잘 되는 장사', value:nb.bars.slice(0,2).map(b=>this.tr(b.label)).join(' · '), tag:'이 자리 매출 상위'});
     if(tips.length) out.push({key:'grow', title:'늘리기 · 무엇을 해볼까요',
       q:'이 자리에서 매출을 어떻게 늘리나요?',
       big: lp? AL[(()=>{let h=0;lp.age.forEach((v,i)=>{if(v>lp.age[h])h=i;});return h;})()] : '데이터 없음',
