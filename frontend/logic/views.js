@@ -42,15 +42,15 @@ globalThis.MysbizonParts.views = {
     // 최상급은 진짜 1위 한 곳에만 쓴다. 백분위 99.9도 2위일 수 있다.
     const demandTop = sel.sales===Math.max(...L.map(o=>o.sales));
     const demandLine = sel._sales>=60
-      ? {sign:'↑', arrow:arrowUp, text:demandTop? '상권 전체 매출이 서울에서 가장 높습니다' : '상권 전체 매출이 높습니다 · 서울 상위 '+more+'%'}
+      ? {sign:'↑', arrow:arrowUp, text:demandTop? '상권 전체 매출이 서울에서 가장 높아요' : '상권 전체 매출이 높아요 · 서울 상위 '+more+'%'}
       : (sel._sales>=40
-        ? {sign:'↑', arrow:arrowUp, text:'상권 전체 매출은 중간 수준입니다 · 서울 상위 '+more+'%'}
-        : {sign:'↓', arrow:arrowDn, text:'손님이 적습니다 · 서울 상위 '+more+'%'});
+        ? {sign:'↑', arrow:arrowUp, text:'상권 전체 매출은 중간 수준이에요 · 서울 상위 '+more+'%'}
+        : {sign:'↓', arrow:arrowDn, text:'손님이 적어요 · 서울 상위 '+more+'%'});
     const compLine = sel._stores>=60
-      ? {sign:'↑', arrow:arrowUp, text:'경쟁이 적습니다 · 같은 가게 '+sel.stores.toLocaleString()+'곳'}
+      ? {sign:'↑', arrow:arrowUp, text:'경쟁이 적어요 · 같은 가게 '+sel.stores.toLocaleString()+'곳'}
       : (sel._stores>=40
-        ? {sign:'↑', arrow:arrowUp, text:'경쟁은 보통입니다 · 같은 가게 '+sel.stores.toLocaleString()+'곳'}
-        : {sign:'↓', arrow:arrowDn, text:'경쟁이 치열합니다 · 같은 가게 '+sel.stores.toLocaleString()+'곳'});
+        ? {sign:'↑', arrow:arrowUp, text:'경쟁은 보통이에요 · 같은 가게 '+sel.stores.toLocaleString()+'곳'}
+        : {sign:'↓', arrow:arrowDn, text:'경쟁이 치열해요 · 같은 가게 '+sel.stores.toLocaleString()+'곳'});
     out.t={
       eyebrow:this.t('find.rank',{ind:this.indName(S.ind), n:r.covered.toLocaleString(), r:(L.indexOf(sel)+1)})
         +((S.homeZone&&!S.sel)? (fromHome? ' · 홈에서 고른 지역'
@@ -62,8 +62,8 @@ globalThis.MysbizonParts.views = {
         demandLine,
         compLine,
         sel.stores<=5
-          ? {sign:'↓', arrow:arrowDn, text:'가게가 너무 적어 평균이 흔들립니다'}
-          : {sign:'↓', arrow:arrowDn, text:'임대료는 데이터 없음 · 직접 확인해야 합니다'}
+          ? {sign:'↓', arrow:arrowDn, text:'가게가 너무 적어 평균이 흔들려요'}
+          : {sign:'↓', arrow:arrowDn, text:'임대료는 데이터 없음 · 직접 확인해야 해요'}
       ],
       // 표본이 적으면 단정하지 않는다. 다만 '판단 보류'로 모든 값을 죽이지도 않는다(§12).
       thin:sel.stores<10,
@@ -215,7 +215,7 @@ globalThis.MysbizonParts.views = {
 
     out.d={
       eyebrow:this.t('mv.head',{ind:this.indName(S.ind), zone:this.zoneLabelOf(sel.name)}),
-      headline: over?'현재 가정에서는 본전을 넘어요.':'본전에 못 미칩니다.',
+      headline: over?'지금 조건에서는 본전을 넘어요.':'지금 조건에서는 본전에 못 미쳐요.',
       bep:this.man(c.bep), rev:this.man(c.rev), revName:revName,
       // 값이 작은 쪽이 왼쪽 — 라벨 순서를 막대 위치에서 끌어낸다
       gaugeLabels:[{v:c.rev,label:revName,value:this.man(c.rev)},{v:c.bep,label:'본전',value:this.man(c.bep)}]
@@ -227,25 +227,25 @@ globalThis.MysbizonParts.views = {
       gapStyle:'font-size:13px;margin-top:11px;font-weight:500;white-space:nowrap;color:'+(over?'var(--good)':'var(--warn)'),
       gap: this.t(over?'diag.left':'diag.short',{amt:this.man(Math.abs(c.profit))}),
       factors:[
-        over? {sign:'↑', arrow:arrowUp, text:'이 매출이면 인건비·임대료를 덮습니다'}
+        over? {sign:'↑', arrow:arrowUp, text:'이 매출이면 인건비·임대료를 덮어요'}
             : {sign:'↓', arrow:arrowDn, text:this.t('diag.fixed',{amt:this.man(c.fixed)})},
         over
-          ? {sign:'↑', arrow:arrowUp, text:'하루 '+(dailyCnt?dailyCnt.toLocaleString()+'건':'—')+'이 본전선이고 이 매출 가정에서는 넘습니다'}
-          : {sign:'↓', arrow:arrowDn, text:'하루 '+(dailyCnt?dailyCnt.toLocaleString()+'건':'—')+'까지 올려야 본전입니다'},
+          ? {sign:'↑', arrow:arrowUp, text:'하루 '+(dailyCnt?dailyCnt.toLocaleString()+'건':'—')+'이 본전선인데, 이 매출이면 넘어요'}
+          : {sign:'↓', arrow:arrowDn, text:'하루 '+(dailyCnt?dailyCnt.toLocaleString()+'건':'—')+'까지 올려야 본전이에요'},
         // 회수기간 = 초기투자 ÷ 월 영업이익. 안 넣으면 넣으라고만 말한다(지어내지 않는다).
         c.payback!=null
           ? {sign:'↑', arrow:arrowUp,
              text:'초기투자 '+this.man(c.invest)+'을 되찾는 데 약 '+Math.ceil(c.payback)+'개월'}
           : (c.invest>0
-            ? {sign:'↓', arrow:arrowDn, text:'지금 조건에서는 초기투자를 회수하지 못합니다'}
-            : {sign:'↓', arrow:arrowDn, text:'보증금·권리금·인테리어를 넣으면 회수기간도 계산합니다'})
+            ? {sign:'↓', arrow:arrowDn, text:'지금 조건에서는 초기투자를 회수하지 못해요'}
+            : {sign:'↓', arrow:arrowDn, text:'보증금·권리금·인테리어를 넣으면 회수기간도 계산해 드려요'})
       ],
       thinStyle: sel.stores<=5?'font-size:12.5px;color:var(--warn);margin-top:26px;max-width:600px;text-wrap:pretty':'display:none',
       thin: sel.stores>5 ? ''
-        : '계산의 출발점인 이 자리 '+this.indName(S.ind)+' 평균은 '+sel.stores+'곳만의 평균입니다. 잘되는 한 집이 평균을 끌어올리니, 아래 ‘내 조건 바꾸기’에서 ‘보수적’으로 낮춰 보세요.',
-      honesty:'본전 = 고정비 ÷ (1 − 원가율). 임대료와 평수는 입력값이며 처음에는 기본 가정이 들어 있습니다. 직원 수와 기타 운영비는 평수에서 자동으로 잡은 값이고(10평당 1명 · 평당 6만원, 우리 기준), 칸에 직접 넣으면 그 값을 씁니다. 원가율은 기본 가정 · 수정 가능입니다. '
-        +'매출은 이 자리에서 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아닙니다. 보수적 70%·낙관적 130%는 우리가 정한 배수입니다. '
-        +'세금·대출 이자는 넣지 않았습니다. 회수기간은 초기투자(보증금+권리금+인테리어) ÷ 월 영업이익이고, 보증금은 나갈 때 돌려받지만 묶이는 돈이라 포함했습니다.'
+        : '계산의 출발점인 이 자리 '+this.indName(S.ind)+' 평균은 '+sel.stores+'곳만의 평균이에요. 잘되는 한 집이 평균을 끌어올리니, 아래 ‘내 조건 바꾸기’에서 ‘보수적’으로 낮춰 보세요.',
+      honesty:'본전 = 고정비 ÷ (1 − 원가율). 임대료와 평수는 입력값이며 처음에는 기본 가정이 들어 있어요. 직원 수와 기타 운영비는 평수에서 자동으로 잡은 값이고(10평당 1명 · 평당 6만원, 우리 기준), 칸에 직접 넣으면 그 값을 써요. 원가율도 기본 가정이라 고칠 수 있어요. '
+        +'매출은 이 자리에서 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아니에요. 보수적 70%·낙관적 130%는 우리가 정한 배수예요. '
+        +'세금·대출 이자는 넣지 않았어요. 회수기간은 초기투자(보증금+권리금+인테리어) ÷ 월 영업이익이고, 보증금은 나갈 때 돌려받지만 묶이는 돈이라 포함했어요.'
     };
 
     const num=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?'':this.bound(v,0,k==='cogs'?95:100000,0)});};
@@ -262,7 +262,7 @@ globalThis.MysbizonParts.views = {
       {label:'기타 운영비', value:this.man(c.etc), tag:c.etcAuto?'평수 따라 자동':'직접 넣은 값'},
       {label:'평당 임대료', value:this.man(Math.round(c.rent/c.area)), tag:'임대료 ÷ 평수'}
     ];
-    out.linkNote='평수를 움직이면 직원 수와 기타 운영비가 같이 바뀝니다. 10평당 1명, 평당 6만원으로 잡은 우리 기준이라 실제와 다를 수 있고, 아래 칸에 직접 넣으면 그 값을 씁니다. 임대료는 상권별 평당 시세가 공개되지 않아 자동으로 채울 수 없습니다.';
+    out.linkNote='평수를 움직이면 직원 수와 기타 운영비가 같이 바뀌어요. 10평당 1명, 평당 6만원으로 잡은 우리 기준이라 실제와 다를 수 있고, 아래 칸에 직접 넣으면 그 값을 써요. 임대료는 상권별 평당 시세가 공개되지 않아 자동으로 채울 수 없어요.';
 
     out.inputs=[
       {label:'월 임대료 (만원)', value:S.rent, onChange:num('rent'), tag:'기본 400만원 · 실제 금액으로 수정'},
@@ -288,21 +288,21 @@ globalThis.MysbizonParts.views = {
       const cells=[];
       for(let i=0;i<20;i++) cells.push({style:'width:100%;aspect-ratio:1;border-radius:2px;background:'+(i<d.n?col:'var(--surface)')});
       return {label:label, pct:c.rev>0?Math.round(v/c.rev*100)+'%':'—', cells:cells,
-        word: c.rev>0? (v/c.rev>=0.4?'가장 무겁습니다':(v/c.rev>=0.2?'부담됩니다':'가볍습니다')) : ''};
+        word: c.rev>0? (v/c.rev>=0.4?'가장 무거워요':(v/c.rev>=0.2?'부담돼요':'가벼워요')) : ''};
     });
     // 항목별 독립 막대다 — 한 예산을 나눠 쓰는 그림이 아니라고 분명히 쓴다
     const totPct=c.rev>0? Math.round((c.rev*c.cogs+c.rent+c.labor+c.etc)/c.rev*100) : 0;
     out.dotNote = c.rev>0
       ? (totPct>100
-        ? '한 줄이 매출 전체(20칸)이고, 칠한 칸이 그 항목이 먹는 몫입니다. 네 항목을 더하면 '+totPct+'%로 매출을 넘어서 남는 게 없습니다.'
-        : '한 줄이 매출 전체(20칸)이고, 칠한 칸이 그 항목이 먹는 몫입니다. 네 항목을 더하면 '+totPct+'%, 나머지 '+(100-totPct)+'%가 내 몫입니다.')
+        ? '한 줄이 매출 전체(20칸)이고, 칠한 칸이 그 항목이 가져가는 몫이에요. 네 항목을 더하면 '+totPct+'%로 매출을 넘어서 남는 게 없어요.'
+        : '한 줄이 매출 전체(20칸)이고, 칠한 칸이 그 항목이 가져가는 몫이에요. 네 항목을 더하면 '+totPct+'%, 나머지 '+(100-totPct)+'%가 내 몫이에요.')
       : '';
     out.scens=['적게 팔릴 때','보통일 때','잘될 때'].map(p=>({
       label:p, pick:()=>this.setState({scen:p}),
       style:'font-size:14px;padding:9px 18px;border-radius:9px;cursor:pointer;white-space:nowrap;min-height:40px;display:inline-flex;align-items:center;transition:background .16s;'+(S.scen===p?'background:var(--bg);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)':'color:var(--ink2)')
     }));
-    out.scenNote = S.scen==='적게 팔릴 때'? '이 동네 평균의 70%만 팔린다고 보고 계산합니다. 70%는 우리가 정한 값입니다.'
-      : (S.scen==='잘될 때'? '이 동네 평균보다 30% 더 팔린다고 보고 계산합니다. 30%는 우리가 정한 값입니다.'
+    out.scenNote = S.scen==='적게 팔릴 때'? '이 동네 평균의 70%만 팔린다고 보고 계산해요. 70%는 우리가 정한 값이에요.'
+      : (S.scen==='잘될 때'? '이 동네 평균보다 30% 더 팔린다고 보고 계산해요. 30%는 우리가 정한 값이에요.'
       : this.t('bep.scenNote',{ind:this.tr(this.indName(S.ind))}));
     out.condHint=this.t('diag.cond',{area:c.area, rent:this.man(c.rent), n:c.staff});
 
@@ -320,8 +320,8 @@ globalThis.MysbizonParts.views = {
     out.stackLead=(()=>{
       const left=c.profit>0?Math.round(c.profit/tot*10000):0;
       return c.profit>0
-        ? '1만원어치 팔면 '+left.toLocaleString()+'원이 남습니다.'
-        : '1만원어치 팔면 '+Math.round(Math.abs(c.profit)/tot*10000).toLocaleString()+'원이 모자랍니다.';
+        ? '1만원어치 팔면 '+left.toLocaleString()+'원이 남아요.'
+        : '1만원어치 팔면 '+Math.round(Math.abs(c.profit)/tot*10000).toLocaleString()+'원이 모자라요.';
     })();
     const rowS='display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-top:1px solid var(--line);font-size:15px';
     const vS='font-variant-numeric:tabular-nums;white-space:nowrap';
@@ -344,7 +344,7 @@ globalThis.MysbizonParts.views = {
     out.dayHint = dailyCnt? '하루 '+dailyCnt.toLocaleString()+'건':'—';
     out.dayWhy = dailyCnt
       ? this.t('bep.dayWhy',{bep:this.man(c.bep), src:this.tr(unitSrc), unit:unit.toLocaleString(), ind:this.tr(this.indName(S.ind))})
-      : '이 장사는 결제 1건당 추정 금액이 자료에 없어 건수를 낼 수 없습니다.';
+      : '이 장사는 결제 1건당 추정 금액이 자료에 없어 건수를 낼 수 없어요.';
 
     const R=S.sti&&S.sti.ind?S.sti.ind[S.ind]:null;
     const bigv='font-size:24px;font-weight:500;letter-spacing:-0.02em;margin-top:5px;font-variant-numeric:tabular-nums';
@@ -400,8 +400,8 @@ globalThis.MysbizonParts.views = {
       };
     })();
     out.riskLead = R? (R.closed>R.opened
-      ? '가게가 줄고 있습니다. 경쟁이 풀리는 신호일 수도, 업종이 어려워지는 신호일 수도 있습니다.'
-      : '가게가 늘고 있습니다. 지금 계산한 한 집당 매출은 앞으로 더 나뉠 수 있습니다.') : '';
+      ? '가게가 줄고 있어요. 경쟁이 풀리는 신호일 수도, 업종이 어려워지는 신호일 수도 있어요.'
+      : '가게가 늘고 있어요. 지금 계산한 한 집당 매출은 앞으로 더 나뉠 수 있어요.') : '';
     out.riskHint = R? (R.closed>R.opened? '줄고 있음':'늘고 있음') : '—';
 
     // ── 지도분석 — 자치구로 좁혀 볼 수 있다. 지도는 카카오로 붙인다.
@@ -446,7 +446,7 @@ globalThis.MysbizonParts.views = {
           {label:'보통', op:'0.4'},
           {label:'높음', op:'0.75'}
         ]:[],
-        legendNote:mxPer>0?'색이 진한 구일수록 이 장사의 가게 한 곳당 매출이 높습니다. 자료가 없는 구는 회색입니다.':'',
+        legendNote:mxPer>0?'색이 진한 구일수록 이 장사의 가게 한 곳당 매출이 높아요. 자료가 없는 구는 회색이에요.':'',
         vb:vx.toFixed(2)+' '+vy.toFixed(2)+' '+vw.toFixed(2)+' '+vh.toFixed(2),
         stroke:(side/100*0.5).toFixed(2),
         gus:Object.keys(SM.gus).map(g=>{
@@ -482,13 +482,13 @@ globalThis.MysbizonParts.views = {
       note:this.dataNote('mv',
         '여기 숫자는 상권 전체를 집계한 추정값이에요. 한 가게의 실적이 아니에요.',
         [['매출·점포',
-          '서울열린데이터광장 상권분석서비스의 상권별 추정매출·점포 수입니다. 가게 한 곳당 매출은 상권 매출을 점포 수로 나눈 값이고, 원자료가 3개월 합계라 3으로 나눠 월 기준으로 적습니다.'],
+          '서울열린데이터광장 상권분석서비스의 상권별 추정매출·점포 수예요. 가게 한 곳당 매출은 상권 매출을 점포 수로 나눈 값이고, 원자료가 3개월 합계라 3으로 나눠 월 기준으로 적었어요.'],
          ['유동인구',
-          '상권이 속한 행정동의 하루 평균 생활인구입니다. 상권 한 곳만의 숫자가 아니라 그 동네 전체 값이에요. 시간대별·요일별은 공개 자료에 없어 보여드리지 못합니다.'],
+          '상권이 속한 행정동의 하루 평균 생활인구예요. 상권 한 곳만의 숫자가 아니라 그 동네 전체 값이에요. 시간대별·요일별은 공개 자료에 없어 보여드리지 못해요.'],
          ['임대료·공실',
-          '한국부동산원 상업용부동산 임대동향조사(서울 63개 주요 상권·권역)입니다. 이름이 정확히 맞는 상권만 그 값을 쓰고, 나머지는 서울 평균이라고 밝혀 적습니다. 건물·점포 단위 임대료는 공개 자료에 없습니다.'],
+          '한국부동산원 상업용부동산 임대동향조사(서울 63개 주요 상권·권역) 자료예요. 이름이 정확히 맞는 상권만 그 값을 쓰고, 나머지는 서울 평균이라고 밝혀 적어요. 건물·점포 단위 임대료는 공개 자료에 없어요.'],
          ['비교 대상',
-          '‘서울 중앙값’은 같은 업종 데이터가 있는 서울 상권들의 가운데 값이에요. 평균이 아니라 중앙값이라 아주 크거나 작은 몇 곳에 끌려가지 않습니다.'],
+          '‘서울 중앙값’은 같은 업종 데이터가 있는 서울 상권들의 가운데 값이에요. 평균이 아니라 중앙값이라 아주 크거나 작은 몇 곳에 끌려가지 않아요.'],
          ['주의할 점',
           '규모·업력·자리에 따라 실제 값은 크게 다를 수 있어요. 여기 숫자는 상권끼리 견주는 용도이고, 개업 여부는 현장 확인과 함께 판단해 주세요.']]),
       // 시·도를 바꾸면 구 목록도 따라 바뀐다. 서울 밖은 자료가 없으므로
@@ -970,7 +970,7 @@ globalThis.MysbizonParts.views = {
 
     const ga=n=>this.josa(n,'ga');
     const KOW=['','한','두','세','네','다섯'];
-    const tieSent=KOW[picks.length]+' 곳이 모두 같습니다';
+    const tieSent=KOW[picks.length]+' 곳이 모두 같아요';
     const bigc='font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums';
     const MX={per:Math.max(...picks.map(o=>o.per)),sales:Math.max(...picks.map(o=>o.sales)),stores:Math.max(...picks.map(o=>o.stores))};
     const maxPop=Math.max(...RK.list.map(o=>o.pop||0),0)||null;
@@ -1167,7 +1167,7 @@ globalThis.MysbizonParts.views = {
         label:'min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 10px;border-radius:999px;background:var(--bg);color:'+(on?'var(--ink)':'var(--ink2)')+';font-weight:'+(on?'600':'400')+';box-shadow:0 1px 4px rgba(0,0,0,.12)'
       };
     });
-    out.mapNote='비교 중인 '+picks.length+'곳을 도식으로 놓았습니다. 핀을 누르면 그 자리가 선택되고 본전 계산이 다시 계산됩니다. 핀 위치는 실제 좌표가 아니며, 실지도는 카카오 좌표로 그립니다.';
+    out.mapNote='비교 중인 '+picks.length+'곳을 도식으로 놓았어요. 핀을 누르면 그 자리가 골라지고 본전 계산도 다시 해요. 핀 위치는 실제 좌표가 아니고, 실제 지도는 카카오 좌표로 그려요.';
     // 색은 '어느 상권인지'만 뜻한다 — 좋다/나쁘다는 배지와 문장으로만 말한다
     out.c.honesty=this.t('cmp.honesty',{q:this.qtr(r.quarter), ind:this.indName(S.ind)});
     return out;

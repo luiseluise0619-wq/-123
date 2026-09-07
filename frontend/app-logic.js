@@ -154,7 +154,7 @@ class Component extends DCLogic {
       .then(r=>r.json())
       .then(j=>this.setState({sp:j}))
       .catch(()=>this.setState({sp:{ok:false,configured:true,items:[],
-        error:'공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'}}))
+        error:'공고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'}}))
       .finally(()=>{this._spLoading=false;});
   }
 
@@ -442,7 +442,7 @@ class Component extends DCLogic {
         {tab:'정밀분석', body:'여기 왜 괜찮지? — 고른 곳 하나를 매출·수요·경쟁·비용으로 뜯어봅니다.'},
         {tab:'통합시세', body:'장사 환경은 어떤가? — 임대료·공실부터 환율·원자재까지.'},
         {tab:'리포트',   body:'어떤 지원을 받지? — 조건에 해당할 수 있는 정부 창업지원사업을 찾아 줍니다.'},
-        {tab:'AI 도우미', body:'오른쪽 아래 버튼. 계산된 값만 근거로 답하고, 없는 값은 없다고 말합니다.'}
+        {tab:'AI 도우미', body:'오른쪽 아래 버튼이에요. 계산된 값만 근거로 답하고, 없는 값은 없다고 말해요.'}
       ],
       aboutRows:[
         {title:'장사를 먼저 골라요',
@@ -450,7 +450,7 @@ class Component extends DCLogic {
         {title:'점수가 어떻게 나왔는지 보여드려요',
          body:'손님이 얼마나 쓰는지, 같은 가게가 몇 곳인지, 한 곳당 얼마 버는지. 어느 항목 때문에 점수가 높은지 그 자리에서 보실 수 있어요.'},
         {title:'모르는 건 모른다고 써요',
-         body:'없는 값을 지어내지 않습니다. 실제로 센 숫자와 나눠서 낸 추정값을 화면에서 구분해 표시합니다.'}
+         body:'없는 값을 지어내지 않아요. 실제로 센 숫자와 나눠서 낸 추정값을 화면에서 구분해 표시해요.'}
       ],
       // 리포트 — 화면에 없는 값만 묻는다(개업 시기 · 자금 · 인력). 이메일은 동의를 받아야 보낸다.
       rp:(()=>{
@@ -982,7 +982,7 @@ class Component extends DCLogic {
                'rp_cost','rp_email','rp_agree','rp_step','rp_touched'].map(k=>[k,S[k]]));
             sessionStorage.setItem('mysbizon.return',JSON.stringify(restore));
             location.href='report-print.html';
-          }catch{this.setState({rp_error:'브라우저 저장 공간을 사용할 수 없습니다. CSV 저장을 이용해 주세요.'});}},
+          }catch{this.setState({rp_error:'브라우저 저장 공간을 쓸 수 없어요. CSV 저장을 이용해 주세요.'});}},
           submit:async()=>{
             if(!enabled||!ok||sent||sending||this._reportSending)return;
             this._reportSending=true;
@@ -994,15 +994,15 @@ class Component extends DCLogic {
                 facts:[...(p.support||[]).map(x=>({label:x.title, value:[x.amount,x.period].filter(Boolean).join(' · '), tag:x.org})),
                        ...(p.bep||[])],
                 survey:p.survey||[],zones:(p.zones||[]).map(z=>({name:z.name,value:z.score+'점'})),
-                honesty:'지원사업은 자격을 판정한 목록이 아닙니다 — 답하신 조건과 겹치는 공고이며 신청 가능 여부는 공고 원문에서 확인해 주세요. 손익은 상권 집계에서 계산한 추정치이고, 넣어 주신 조건은 서버에서 재검증하지 않았습니다.'});
+                honesty:'지원사업은 자격을 판정한 목록이 아니에요 — 답하신 조건과 겹치는 공고라, 신청 가능 여부는 공고 원문에서 확인해 주세요. 손익은 상권 집계에서 계산한 추정치이고, 넣어 주신 조건은 서버에서 다시 검증하지 않았어요.'});
               if(this._reportBody!==body){this._reportBody=body;this._reportKey=crypto.randomUUID();}
               const response=await fetch('/api/report',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':this._reportKey},body,signal:AbortSignal.timeout(15000)});
-              const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'발송하지 못했습니다.');
+              const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'발송하지 못했어요.');
               this.setState({rp_sent:true});
-            }catch(e){this.setState({rp_error:e.name==='TimeoutError'?'응답 확인 시간이 초과되었습니다. 수신함을 확인한 뒤 다시 시도해 주세요.':e.message});}
+            }catch(e){this.setState({rp_error:e.name==='TimeoutError'?'응답을 확인하는 데 시간이 너무 걸렸어요. 수신함을 확인한 뒤 다시 시도해 주세요.':e.message});}
             finally{this._reportSending=false;this.setState({rp_sending:false});}
           },
-          note:S.rp_error||(sent?'메일 서비스에 발송을 요청했습니다. 스팸함도 확인해 주세요.':!enabled?'현재는 미리보기와 CSV 저장을 이용할 수 있어요. 이메일 발송은 운영 준비 후 제공됩니다.':'이메일은 요청한 리포트 발송에만 사용합니다. 매출 추정치와 직접 입력한 조건을 구분해 담습니다.')
+          note:S.rp_error||(sent?'메일 서비스에 발송을 요청했어요. 스팸함도 확인해 주세요.':!enabled?'현재는 미리보기와 CSV 저장을 이용할 수 있어요. 이메일 발송은 준비가 끝나면 열어 드릴게요.':'이메일은 요청하신 리포트 발송에만 써요. 매출 추정치와 직접 넣으신 조건은 구분해서 담아요.')
         };
       })(),
       noticeStop:e=>e.stopPropagation(),
@@ -1245,7 +1245,7 @@ class Component extends DCLogic {
               +'overflow:hidden;text-overflow:ellipsis;transition:background .14s,color .14s;'
               +(cur===o.v?'background:var(--accent-3);color:var(--accent);font-weight:700'
                          :'background:var(--surface);color:var(--ink2)')})),
-          guNote: cur? this.t('find.guCount',{gu:this.placeName(cur), n:(guCount[cur]||0)}) : '서울 전체에서 찾습니다',
+          guNote: cur? this.t('find.guCount',{gu:this.placeName(cur), n:(guCount[cur]||0)}) : '서울 전체에서 찾아요',
           hasGu: gus.length>0,
           indValue:S.ind,
           indName:this.indName(S.ind),
@@ -1261,7 +1261,7 @@ class Component extends DCLogic {
 
       // 지역 화면에서 업종을 이미 골라 왔으면 질문이 아니라 확인으로 말한다
       findTitle: S.fromRegion
-        ? this.indName(S.ind)+' 기준으로 보고 있습니다'
+        ? this.indName(S.ind)+' 기준으로 보고 있어요'
         : '어떤 장사를 하실 건가요?',
 
       findSub: S.fromRegion
@@ -1334,14 +1334,14 @@ class Component extends DCLogic {
         verdict:'', pctText:'', pctFine:'', medText:'', scoreBar:'display:none', scoreMed:'display:none', reasons:[],
         thin:false, thinWarn:'', thinBadge:''};
       out.rows=[]; out.honesty='';
-      out.d={eyebrow:'',headline:S.err?'데이터를 읽지 못했습니다.':'불러오는 중입니다.',bep:'—',rev:'—',revName:'',gap:'',gapStyle:'display:none',fill:'display:none',mark:'display:none',factors:[],thin:'',thinStyle:'display:none',honesty:''};
+      out.d={eyebrow:'',headline:S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.',bep:'—',rev:'—',revName:'',gap:'',gapStyle:'display:none',fill:'display:none',mark:'display:none',factors:[],thin:'',thinStyle:'display:none',honesty:''};
       out.inputs=[]; out.scens=[]; out.scenNote=''; out.stack=[]; out.moneyRows=[]; out.stackLead='';
       out.dayStats=[]; out.dayWhy=''; out.riskStats=[]; out.riskLead='';
       out.foot={has:false,lead:'',stats:[],note:''};
       out.sat={has:false};
       out.condHint=''; out.moneyHint=''; out.dayHint=''; out.riskHint='';
       // 불러오기 실패에도 죽은 컨트롤이 남지 않도록 중립값을 채운다
-      out.c={headline: S.err?'데이터를 읽지 못했습니다.':'불러오는 중입니다.',
+      out.c={headline: S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.',
         sub: S.err? '잠시 후 다시 열어 주세요.':'', cols:[], diffs:[], honesty:'', empty:true, on:false,
         add:{q:'',onQ:()=>{},onKey:()=>{},clear:()=>{},hasQ:false,searching:false,
              found:[],hasFound:false,noResult:false,noResultText:'',
@@ -1361,7 +1361,7 @@ class Component extends DCLogic {
       out.area=S.area; out.onArea=()=>{}; out.areaLabel='—'; out.areaWord='';
       out.linked=[]; out.linkNote=''; out.moneyDots=[]; out.dotNote='';
       out.rg=this.region();
-      out.mv={eyebrow:'', headline:S.err?'데이터를 읽지 못했습니다.':'불러오는 중입니다.', sub:'',
+      out.mv={eyebrow:'', headline:S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.', sub:'',
         map:{ready:false,gus:[],pins:[],vb:'0 0 100 100',stroke:'0.5',legend:[],legendNote:''},
         detail:{has:false,title:'',dong:'',rows:[],facts:[],note:''},
         target:'', stamp:'', question:'', rowStyle:'', tagStyle:'',

@@ -372,7 +372,7 @@ globalThis.MysbizonParts.screens = {
                      :(g===S.homeGu?'color:var(--accent);font-weight:600':'color:var(--ink2)'))
       })),
       // 고른 구를 한 번 더 누르라고 알려 준다 — 두 번 눌러야 하는 걸 알 방법이 없다
-      guHint: guTab? guTab+'를 한 번 더 누르면 이 구로 찾습니다' : '구를 누르면 골라지고, 한 번 더 누르면 정해져요',
+      guHint: guTab? guTab+'를 한 번 더 누르면 이 구에서 찾아요' : '구를 누르면 골라지고, 한 번 더 누르면 정해져요',
       pickEmpty: !!pq && (open==='zone'? zoneList.length===0 : indList.length===0),
       pickEmptyText: open==='zone'? this.t('search.noZone',{q:pq}) : this.t('search.noInd',{q:pq}),
       startDisabled:!!S.starting,
@@ -555,7 +555,7 @@ globalThis.MysbizonParts.screens = {
       note:this.dataNote('zc',
         '금액은 가게 한 곳이 한 달에 파는 돈의 추정값이에요. 어느 한 가게의 실적은 아니에요.',
         [['어떻게 계산했나요',
-          '자치구 안 상권들의 매출 합계를 같은 업종 점포 수 합계로 나눴어요. 원자료는 3개월 합계라 3으로 나눠 월 기준으로 적습니다.'],
+          '자치구 안 상권들의 매출 합계를 같은 업종 점포 수 합계로 나눴어요. 원자료는 3개월 합계라 3으로 나눠 월 기준으로 적었어요.'],
          ['무엇이 빠졌나요',
           '이 업종의 매출·점포 기록이 없는 상권은 합산에서 빠졌어요. 그래서 구마다 합산에 들어간 상권 수가 달라요.'],
          ['기준 시점', this.qtr(zi.quarter)+' · '+this.tr('서울열린데이터광장 상권분석서비스')],
@@ -587,7 +587,7 @@ globalThis.MysbizonParts.screens = {
           {label:'가게 한 곳이 한 달에 파는 돈', value:this.won(per/3), tag:'(추정)'},
           {label:'가게 수', value:stores.toLocaleString()+'곳', tag:''},
           {label:'손님이 쓴 돈 (3개월)', value:this.won(sales), tag:''},
-          {label:'결제 1건당 추정 금액', value:unit? this.wonRaw(unit):'데이터 없음', tag:unit?'실제 집계':'정부 자료에 없어 점수에 넣지 않았습니다'}
+          {label:'결제 1건당 추정 금액', value:unit? this.wonRaw(unit):'데이터 없음', tag:unit?'실제 집계':'정부 자료에 없어 점수에 넣지 않았어요'}
         ],
         confirm:()=>this.setState({ind:S.regPick,sel:S.zoneId,screen:'find',openWhy:false,fromRegion:true,regPick:null}),
         back:()=>this.setState({regPick:null})

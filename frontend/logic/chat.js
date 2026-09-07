@@ -8,7 +8,7 @@ globalThis.MysbizonParts.chat = {
     const t=(q||'').trim();
     const S=this.state;
     if(!t) return null;
-    if(!r) return {text:'아직 데이터를 불러오지 못했습니다. 잠시 후 다시 물어봐 주세요.'};
+    if(!r) return {text:'아직 데이터를 불러오지 못했어요. 잠시 후 다시 물어봐 주세요.'};
     const L=r.list, top=L[0];
     const monthly=v=>this.won(v/3);
     if(/어디|추천|자리|후보/.test(t)) return {
@@ -21,7 +21,7 @@ globalThis.MysbizonParts.chat = {
     };
     if(/임대료|월세|보증금|권리금/.test(t)) return {
       text:'임대료는 알려드릴 수 없어요.',
-      source:'한국부동산원이 이 상권 체계로 임대료를 공표하지 않아 원자료에 없습니다. 지어내지 않습니다. 중개인에게 확인한 금액을 본전 계산에 직접 넣으시면 그 값으로 계산해 드립니다.',
+      source:'한국부동산원이 이 상권 체계로 임대료를 공표하지 않아 원자료에 없어요. 지어내지 않아요. 중개인에게 확인한 금액을 본전 계산에 직접 넣으시면 그 값으로 계산해 드려요.',
       cta:'본전 계산으로 가기', go:'diag'
     };
     if(/본전|손익|얼마.*팔|매출.*필요/.test(t)){
@@ -61,7 +61,7 @@ globalThis.MysbizonParts.chat = {
     }
     return {
       text:'그 질문에는 답할 근거가 없어요.',
-      source:'답할 수 있는 것은 업종별 기회 상권, 본전 계산, 손님 구성, 개·폐업 추이입니다. 임대료·권리금·건물 공실은 공개 통계에 없어 답하지 않습니다.'
+      source:'답할 수 있는 것은 업종별 기회 상권, 본전 계산, 손님 구성, 개·폐업 추이예요. 임대료·권리금·건물 공실은 공개 통계에 없어 답하지 않아요.'
     };
   },
 

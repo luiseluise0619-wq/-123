@@ -481,7 +481,7 @@ globalThis.MysbizonParts.analysis = {
       verdict:(()=>{
         if(!lp) return '유동인구가 없어서 손님 구성을 말하지 못했어요.';
         const perHead=sel.unit;
-          return '유동인구 구성은 방문객의 참고 정보입니다. 실제 고객과 메뉴 수요는 현장에서 확인해 주세요.';
+          return '유동인구 구성은 참고 정보예요. 실제 손님과 메뉴 수요는 현장에서 확인해 주세요.';
       })(),
       rows:tips, bars:[],
       note:'저희가 가진 데이터로 말할 수 있는 것만 적었어요. 메뉴·가격·마케팅은 데이터가 아니라 사장님 판단이에요.'});
