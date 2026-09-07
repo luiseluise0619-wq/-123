@@ -78,6 +78,7 @@
   "home.location": "Location",
   "home.locationAny": "All of Seoul",
   "home.popular": "Popular searches",
+  "home.stamp": "{n} Seoul commercial areas · as of {q}",
   "home.start": "Find a neighbourhood",
   "home.sub": "Pick a business type to compare neighbourhoods and see the break-even line for your own numbers.",
   "home.title": "Where should you open?",

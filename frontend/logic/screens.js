@@ -173,7 +173,11 @@ globalThis.MysbizonParts.screens = {
     return {
       badgeStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);background:var(--surface);border-radius:999px;padding:7px 14px;margin:0 auto 26px;'
         +(S.skip?'opacity:1':'opacity:0;animation:lateIn .7s cubic-bezier(.22,.7,.25,1) .5s forwards'),
-      heroEyebrow:this.t('home.eyebrow'),
+      // 첫 줄은 표어가 아니라 '무엇을 근거로 말하는지'다.
+      // 자료가 붙기 전에는 슬로건으로 두고, 붙으면 실제 개수·분기로 바꾼다.
+      heroEyebrow:(S.zi && S.zi.n_zones)
+        ? this.t('home.stamp',{n:S.zi.n_zones.toLocaleString(), q:this.qtr(S.zi.quarter)})
+        : this.t('home.eyebrow'),
       heroTitle:this.t('home.title'),
       heroSub:this.t('home.sub'),
       labLocation:this.t('home.location'),
@@ -236,6 +240,14 @@ globalThis.MysbizonParts.screens = {
           if(c===0){ this.setState({homeZoneName:null,zoneId:null,sel:null,zq:'',pickOpen:null,cursor:0}); return; }
           const f=zoneList[c-1];
           if(f) this.setState({homeZoneName:f.name,zoneId:f.id,zq:f.name,pickOpen:null,cursor:0});
+          return;
+        }
+        // 빈 칸에서 Backspace 면 앞 칸(업종)으로. 업종이 첫 칸이라 input[0] 이다.
+        if(e.key==='Backspace' && !zq){
+          e.preventDefault();
+          this.setState({pickOpen:'ind'});
+          const el=document.querySelectorAll('[data-search] input')[0];
+          if(el) el.focus();
         }
       },
       onIndKey:e=>{
@@ -248,13 +260,6 @@ globalThis.MysbizonParts.screens = {
           const f=list[S.cursor||0];
           if(f) this.setState({homeInd:f,ind:f,iq:this.indName(f),pickOpen:null,cursor:0});
           return;
-        }
-        // 빈 칸에서 Backspace면 앞 칸으로
-        if(e.key==='Backspace' && !iq){
-          e.preventDefault();
-          this.setState({pickOpen:'zone'});
-          const el=document.querySelectorAll('[data-search] input')[0];
-          if(el) el.focus();
         }
       },
       dividerStyle:this.L('flex:none;height:1px;margin:0 16px;background:var(--line)','flex:none;width:1px;height:26px;background:var(--line)','flex:none;width:1px;height:26px;background:var(--line)'),

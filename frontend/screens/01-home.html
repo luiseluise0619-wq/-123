@@ -10,6 +10,20 @@
 
           <div class="hero-search" data-search="1" style="{{ searchWrap }}">
             <div data-fl-ref="1" style="{{ pickerRow }}">
+              <div onClick="{{ openInd }}" style="{{ indBtn }}">
+                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:2px">
+                  <span style="font-size:13px;font-weight:500;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ labIndustry }}</span>
+                  <input maxLength="200" value="{{ iq }}" onChange="{{ onIndQ }}" onFocus="{{ openInd }}" onKeyDown="{{ onIndKey }}" aria-label="{{ labIndustry }}" placeholder="{{ phIndustry }}" style="{{ segInput }}">
+                </div>
+                <sc-if value="{{ hasIndVal }}">
+                  <span role="button" tabIndex="0" aria-label="업종 지우기" onClick="{{ clearInd }}" style="{{ clearStyle }}" style-hover="background:var(--line-strong)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:11px;height:11px;display:block">
+                      <sc-for list="{{ icoX }}" as="p"><path d="{{ p.d }}"></path></sc-for>
+                    </svg>
+                  </span>
+                </sc-if>
+              </div>
+              <div style="{{ dividerStyle }}"></div>
               <div onClick="{{ openZone }}" style="{{ zoneBtn }}">
                 <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:2px">
                   <span style="display:flex;align-items:baseline;gap:6px;min-width:0">
@@ -20,20 +34,6 @@
                 </div>
                 <sc-if value="{{ hasZone }}">
                   <span role="button" tabIndex="0" aria-label="지역 지우기" onClick="{{ clearZone }}" style="{{ clearStyle }}" style-hover="background:var(--line-strong)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:11px;height:11px;display:block">
-                      <sc-for list="{{ icoX }}" as="p"><path d="{{ p.d }}"></path></sc-for>
-                    </svg>
-                  </span>
-                </sc-if>
-              </div>
-              <div style="{{ dividerStyle }}"></div>
-              <div onClick="{{ openInd }}" style="{{ indBtn }}">
-                <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:2px">
-                  <span style="font-size:13px;font-weight:500;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ labIndustry }}</span>
-                  <input maxLength="200" value="{{ iq }}" onChange="{{ onIndQ }}" onFocus="{{ openInd }}" onKeyDown="{{ onIndKey }}" aria-label="{{ labIndustry }}" placeholder="{{ phIndustry }}" style="{{ segInput }}">
-                </div>
-                <sc-if value="{{ hasIndVal }}">
-                  <span role="button" tabIndex="0" aria-label="업종 지우기" onClick="{{ clearInd }}" style="{{ clearStyle }}" style-hover="background:var(--line-strong)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:11px;height:11px;display:block">
                       <sc-for list="{{ icoX }}" as="p"><path d="{{ p.d }}"></path></sc-for>
                     </svg>

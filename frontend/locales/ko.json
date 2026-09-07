@@ -78,6 +78,7 @@
   "home.location": "위치",
   "home.locationAny": "서울 전체",
   "home.popular": "인기 검색",
+  "home.stamp": "서울 상권 {n}곳 · {q} 기준",
   "home.start": "동네 찾아보기",
   "home.sub": "업종을 고르면 동네를 비교하고, 내 조건에 맞는 본전선을 확인할 수 있어요.",
   "home.title": "어떤 동네에서 시작해 볼까요?",
