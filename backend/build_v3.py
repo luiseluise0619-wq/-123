@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-v3 데이터 조립기 — 수집기 산출물 → frontend/data/v3/ (화면이 실제로 읽는 10개 파일).
+v3 데이터 조립기 — 수집기 산출물 → frontend/data/v3/ (화면이 실제로 읽는 파일들).
 
 왜 이 단계가 따로 필요한가
 --------------------------
 수집기들은 `frontend/` 에 원천·중간 파일 35개를 만든다(trade_zones, zone_intel,
 seoul_dong.geojson 처럼 화면이 직접 쓰지 않는 것도 많다).
-반면 통합 배포본의 화면은 `frontend/data/v3/` 의 **10개만** 읽는다.
+반면 통합 배포본의 화면은 `frontend/data/v3/` 안의 것만 읽는다.
 그 사이를 잇는 게 이 파일이다. 무엇이 배포에 나가는지 한 곳에서 정한다.
 
 설계 원칙 — 지리는 지키고, 분기마다 바뀌는 것만 갱신한다
@@ -218,7 +218,58 @@ def main():
     else:
         kept.append("seoul_map.json")
 
-    # ── ⑤ 고정 지리 ──
+    # ── ⑤ 상권 생존 : 평균 영업기간 · 상권변화 단계 ──
+    #
+    # zone_change.json 은 163KB 인데 화면이 쓰는 건 상권당 세 값(opr·cls·ix)뿐이다.
+    # 이름(nm)은 이미 zone_industry 에 있으므로 빼고, 서울 기준값만 함께 담는다.
+    # 그래야 배포본이 25KB 가 아니라 10KB 안쪽으로 나간다.
+    ch = load(os.path.join(FE, "zone_change.json"), quiet=True)
+    if ch and ch.get("zones"):
+        zones = {}
+        for cd, v in ch["zones"].items():
+            row = {}
+            for k in ("opr", "cls"):
+                if isinstance(v.get(k), (int, float)):
+                    row[k] = r0(v[k])
+            if v.get("ix"):
+                row["ix"] = v["ix"]
+            if row:
+                zones[cd] = row
+        json.dump({"source": "서울열린데이터광장 상권변화지표",
+                   "quarter": ch.get("quarter"), "updated": ch.get("updated"),
+                   "note": "opr=상권 내 가게 평균 운영개월, cls=문 닫은 가게의 평균 운영개월, "
+                           "ix=상권변화 등급(LL 다이나믹 / LH 상권확장 / HL 상권축소 / HH 정체). "
+                           "상권 단위 실측이며 특정 업종 값이 아니다.",
+                   "seoul": ch.get("seoul") or {}, "grades": ch.get("grades") or {},
+                   "n": len(zones), "zones": zones},
+                  open(os.path.join(V3, "zone_change.json"), "w", encoding="utf-8"),
+                  ensure_ascii=False)
+        made.append(f"zone_change.json({len(zones)})")
+    else:
+        kept.append("zone_change.json")
+
+    # ── ⑥ 닮은 상권 : zone_intel 이 이미 뽑아 둔 5곳 ──
+    #
+    # zone_intel.json 은 466KB 다. 화면에 필요한 건 상권당 닮은 곳 id 5개뿐이라
+    # 그것만 뽑는다(80KB → 5KB 수준). 우리가 새로 계산하지 않는다.
+    if intel and intel.get("zones"):
+        sim = {cd: v["sim"][:5] for cd, v in intel["zones"].items()
+               if isinstance(v.get("sim"), list) and v["sim"]}
+        if sim:
+            json.dump({"source": "zone_intel.json 의 유사 상권(수요·공급 구성이 가까운 순)",
+                       "quarter": intel.get("quarter"), "updated": intel.get("updated"),
+                       "note": "수요(배후세대·유동인구·집객시설·시가)와 공급 구성이 가까운 상권. "
+                               "업종별이 아니라 상권 자체의 성격이 닮았다는 뜻이다.",
+                       "n": len(sim), "zone": sim},
+                      open(os.path.join(V3, "zone_sim.json"), "w", encoding="utf-8"),
+                      ensure_ascii=False)
+            made.append(f"zone_sim.json({len(sim)})")
+        else:
+            kept.append("zone_sim.json")
+    else:
+        kept.append("zone_sim.json")
+
+    # ── ⑦ 고정 지리 ──
     for n in FIXED_GEO:
         kept.append(n)
 

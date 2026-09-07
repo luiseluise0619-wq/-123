@@ -233,8 +233,11 @@ globalThis.MysbizonParts.charts = {
       // '기준 …'을 화면 조각에서 앞에 붙이면 영어·중국어에서 어순이 깨진다.
       // 한 문장으로 만들어 내려보낸다(asOf). 꼬리의 '기준'은 옛 호출부 대비용이다.
       period: (opt.period || '').replace(/\s*기준\s*$/, ''),
+      // '2026년 1분기 · 3개월' 처럼 두 조각인 것도 있다. 통째로 찾으면 사전에 없으니
+      // 조각마다 옮긴 뒤 다시 잇는다.
       periodLabel: opt.period
-        ? this.t('asOf', {q: this.tr(String(opt.period).replace(/\s*기준\s*$/, ''))}) : '',
+        ? this.t('asOf', {q: String(opt.period).replace(/\s*기준\s*$/, '')
+            .split(' · ').map(x => this.tr(x)).join(' · ')}) : '',
       hasPeriod: !!opt.period,
       height: (opt.height || 220) + 'px',
       // 차트는 카드 안에 넣지 않는다(§2 card-in-card 금지 · §7 차트가 주인공).

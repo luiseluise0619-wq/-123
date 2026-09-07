@@ -175,6 +175,31 @@ globalThis.MysbizonParts.util = {
     return s;
   },
 
+  // 개월 수를 사람이 읽는 말로. 119개월을 그대로 두면 얼마인지 감이 안 온다.
+  //   119 → '9년 11개월' / 24 → '2년' / 7 → '7개월'
+  // 개월 수를 괄호로 함께 적어 봤더니 390px 에서 줄이 화면 밖으로 밀렸다 — 한 형태만 쓴다.
+  months(m){
+    if(m==null||!isFinite(m)) return '—';
+    const n=Math.round(m);
+    if(n<12) return this.t('surv.mo',{n:n});
+    const y=Math.floor(n/12), r=n%12;
+    return r? this.t('surv.ym',{y:y, m:r}) : this.t('surv.y',{y:y});
+  },
+
+  // 상권변화 등급 — 서울시가 매기는 4단계.
+  //   앞글자는 '이 상권 가게가 얼마나 오래 버티나'(운영영업기간), 뒷글자는 '폐업영업기간'.
+  //   L = 서울 평균보다 짧다, H = 길다. 우리가 만든 값이 아니라 공표 등급이다.
+  changeGrade(ix){
+    const M={
+      LL:['다이나믹','새 가게가 자주 들어오고 빨리 바뀌는 곳'],
+      LH:['상권 확장','들어오는 가게가 늘고 자리 잡는 곳'],
+      HL:['상권 축소','오래된 가게는 남았지만 새 가게가 못 버티는 곳'],
+      HH:['정체','들고 나는 움직임이 적은 곳']
+    };
+    const v=M[String(ix||'').toUpperCase()];
+    return v? {name:this.tr(v[0]), why:this.tr(v[1])} : null;
+  },
+
   // 통계 코드명을 사람이 쓰는 말로. 조회는 원래 이름(raw)으로 한다.
   indName(raw){
     const M={

@@ -112,7 +112,9 @@ function loaded(locale) {
       && v.age.length === 6 && v.age.every(Number.isFinite))),
     rentStats: j('../frontend/data/v3/rent.json'),
     salesHistory: j('../frontend/data/v3/sales_history.json'),
-    income: j('../frontend/data/v3/income.json')
+    income: j('../frontend/data/v3/income.json'),
+    zchg: j('../frontend/data/v3/zone_change.json'),
+    zsim: j('../frontend/data/v3/zone_sim.json').zone
   });
   return c;
 }

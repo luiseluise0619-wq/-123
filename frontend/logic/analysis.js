@@ -394,13 +394,41 @@ globalThis.MysbizonParts.analysis = {
       note:'한국부동산원 상업용부동산 임대동향조사(중대형 상가) 기준이에요. 조사 상권 구획이 이 앱의 상권 1,564곳과 달라, 이름이 정확히 맞는 곳만 그 상권 값을 쓰고 나머지는 서울 평균을 보여드려요.'});
 
     // 시장 구조
+    //
+    // 이 카드는 '누가 버티고 있나'를 묻는데, 지금까지는 서울 전체 개·폐업만 답했다.
+    // zone_change 는 **이 상권** 가게들이 실제로 몇 달 버텼는지를 담고 있다 —
+    // 서울 중앙값 119개월, 상권별로 25~283개월까지 갈린다. 그걸 먼저 둔다.
     const kk=[];
+    const ch=(S.zchg&&S.zchg.zones)? S.zchg.zones[sel.id] : null;
+    const chSeoul=(S.zchg&&S.zchg.seoul)||null;
+    if(ch&&Number.isFinite(ch.opr)){
+      kk.push({label:'평균 영업기간', value:this.months(ch.opr),
+        tag: chSeoul&&Number.isFinite(chSeoul.opr)
+          ? this.t('surv.vsSeoul',{v:this.months(chSeoul.opr)}) : '이 상권 실측'});
+    }
+    if(ch&&Number.isFinite(ch.cls)){
+      kk.push({label:'폐업 전 영업기간', value:this.months(ch.cls),
+        tag:'문 닫은 가게'});
+    }
+    if(ch&&ch.ix&&this.changeGrade(ch.ix)){
+      kk.push({label:'변화 단계', value:this.changeGrade(ch.ix).name,
+        tag:this.changeGrade(ch.ix).why});
+    }
+    // 닮은 상권 — zone_intel 이 이미 뽑아 둔 것을 이름으로 바꿔 적기만 한다.
+    // 우리가 새로 계산하지 않는다. 1,564곳 중 927곳에만 있어서 없으면 줄이 안 나온다.
+    const simIds=(S.zsim&&S.zsim[sel.id])||null;
+    if(simIds&&simIds.length&&S.zi&&S.zi.zones){
+      const names=simIds.map(id=>{ const z=S.zi.zones[id]; return z&&z.nm? this.zoneLabelOf(z.nm):null; })
+        .filter(Boolean).slice(0,2);
+      if(names.length) kk.push({label:'닮은 상권', value:names.join(' · '),
+        tag:'구성이 비슷한 곳'});
+    }
     if(R){
       const rate=R.stores? R.closed/R.stores*100 : 0;
       kk.push({label:'프랜차이즈 비중', value:R.fr_share+'%', tag:'서울 전체'});
       kk.push({label:'새로 연 곳 / 문 닫은 곳', value:R.opened.toLocaleString()+'곳 / '+R.closed.toLocaleString()+'곳', tag:'서울 전체 · 3개월'});
       kk.push({label:'폐업률', value:rate.toFixed(1)+'%', tag:'서울 전체 · 폐업 ÷ 전체'});
-    } else kk.push({label:'개·폐업', value:'데이터 없음', tag:''});
+    } else if(!kk.length) kk.push({label:'개·폐업', value:'데이터 없음', tag:''});
     // 이 자리 다른 장사 — 같은 상권 안 다른 업종의 가게 수와 한 곳당 매출
     const nb=(()=>{
       const z=S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
@@ -466,7 +494,10 @@ globalThis.MysbizonParts.analysis = {
         ? '가게가 늘고 있어요. 지금 계산한 한 곳당 매출은 앞으로 더 나뉠 수 있어요.'
         : '가게가 줄고 있어요. 경쟁이 풀리는 신호일 수도, 장사가 어려워지는 신호일 수도 있어요.') : '개·폐업 데이터가 없어요.',
       rows:kk, bars:[],
-      note:'모두 서울 전체 이 장사 기준이라 자리를 바꿔도 변하지 않아요.'});
+      // 위 두세 줄은 이 상권 값이고 아래 세 줄은 서울 전체 값이다. 섞여 있으니 그렇게 적는다.
+      note: ch
+        ? '영업기간과 변화 단계는 이 상권 값이에요(업종을 가리지 않은 상권 전체 기준). 프랜차이즈 비중·개폐업·폐업률은 서울 전체 이 장사 기준이라 자리를 바꿔도 변하지 않아요.'
+        : '모두 서울 전체 이 장사 기준이라 자리를 바꿔도 변하지 않아요.'});
 
     // 메뉴는 6개까지. 순서는 '매출 → 수요 → 경쟁 → 비용 → 이 자리 → 시장 구조'.
     // '늘리기'는 숫자가 아니라 조언이라 메뉴에서 빼고 대시보드 아래에 따로 둔다.
