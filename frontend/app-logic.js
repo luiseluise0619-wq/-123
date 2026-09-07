@@ -448,13 +448,48 @@ class Component extends DCLogic {
         let supportForReport=[];
         const buildReport=()=>{
             const sel=r?(r.list.find(o=>o.id===S.sel)||r.list.find(o=>o.id===S.zoneId)||r.list[0]):null;
+            // 손익은 **리포트 결과물에만** 넣는다(사장님 지시 2026-09-07).
+            // 리포트 화면은 설문 → 지원사업 둘뿐이고, 아래 값은 PDF·CSV·메일에서만 보인다.
+            // 설문의 '가게 조건' 단계에서 받은 값을 쓰고, 비워 두셨으면 기본 가정으로 계산한다.
+            // 어느 쪽인지 줄마다 적는다 — 지어낸 값과 넣으신 값이 섞이면 안 된다(§1).
+            const c=sel?this.calc(sel):null;
+            // 그 칸을 실제로 손댔을 때만 '직접 넣으신 값'이라고 적는다.
+            const touched=S.rp_touched||{};
+            const said=k=>touched[k]? '직접 넣으신 값' : '기본 가정';
+            const bep=c?[
+              {label:'월 본전선 (이만큼 팔면 본전)', value:this.man(c.bep), tag:'고정비 ÷ (1 − 원가율)'},
+              {label:'월매출 가정 ('+S.scen+')', value:this.man(c.rev), tag:'상권 평균 추정 × '+c.mult},
+              {label:'월 영업이익', value:this.man(c.profit), tag:'세금·대출 이자는 빼지 않음'},
+              {label:'월 임대료', value:(S.rent||0).toLocaleString()+'만원', tag:said('rent')},
+              {label:'평수', value:(S.area||0)+'평', tag:said('area')},
+              {label:'인건비', value:this.man(c.labor),
+               tag:(touched.staffOv&&S.staffOv!=null)?'직접 넣으신 직원 수':'평수로 추정'},
+              {label:'원가율', value:(S.cogs||0)+'%', tag:'기본 가정'}
+            ]:null;
+            if(c&&c.payback!=null) bep.push(
+              {label:'회수기간', value:c.payback.toFixed(1)+'개월', tag:'초기투자 ÷ 월 영업이익'});
             const payload={
               ind:S.ind?this.tr(this.indName(S.ind)):'', zone:sel?this.zoneLabelOf(sel.name):this.tr('동네 미선택'),
               gu:sel?this.guLabel(sel.id):'',
               quarter:S.zi?this.qtr(S.zi.quarter):'',
-              // 리포트는 '답한 조건'과 '그 조건에 걸리는 지원사업' 둘만 담는다.
-              // 본전선·매출 가정·비용 구성은 여기 넣지 않는다 — 본전 계산은 ② 정밀분석 화면이다.
               support:supportForReport,
+              bep:bep,
+              // 돈이 어디로 나가는지 — 매출 대비 비중
+              money:c?(()=>{
+                const rev=c.rev||1;
+                const rows=[
+                  {label:'임대료', v:S.rent||0},
+                  {label:'인건비', v:c.labor||0},
+                  {label:'재료비', v:rev*(S.cogs||0)/100},
+                  {label:'그 밖의 운영비', v:c.etc||0}
+                ];
+                const mx=Math.max(...rows.map(o=>o.v),1);
+                return rows.filter(o=>o.v>0).map(o=>({
+                  label:o.label, value:this.man(o.v),
+                  pct:Math.round(o.v/mx*100),
+                  warn:o.v/rev>0.3
+                }));
+              })():null,
               survey:[
                 ['지역',[S.rp_sido,S.rp_gu&&S.rp_gu!=='아직 안 정했어요'?S.rp_gu:''].filter(Boolean).join(' ')],
                 ['업종',S.rp_ind?this.indName(S.rp_ind):''],
@@ -471,6 +506,8 @@ class Component extends DCLogic {
             if(!payload.zones.length) delete payload.zones;
             if(!payload.survey.length) delete payload.survey;
             if(!payload.support.length) delete payload.support;
+            if(!payload.bep) delete payload.bep;
+            if(!payload.money||!payload.money.length) delete payload.money;
             return payload;
         };
         return {
@@ -584,6 +621,18 @@ class Component extends DCLogic {
                opts:['사업화 자금','시설·임차 비용','교육·멘토링','융자·대출'].map(v=>({v,label:v})),
                val:S.rp_need, set:v=>({rp_need:v})},
 
+              // ⑧ 가게 조건 — 여기만 성격이 다르다.
+              //   지원사업 매칭에는 **쓰지 않는다**(공고 자격에 임대료·평수가 나오지 않는다).
+              //   리포트(PDF·CSV·메일)의 손익 계산에만 쓴다. 화면에는 결과를 그리지 않는다.
+              //   비워 두고 넘어갈 수 있다 — 자리를 아직 안 정한 분은 임대료를 알 수 없다.
+              //   그때는 기본 가정으로 계산하고, 리포트에 '기본 가정'이라고 적는다(§1).
+              {k:'cost', q:'가게 조건을 알려주시면 손익도 같이 계산해 드려요',
+               hint:'리포트(PDF·메일)에만 들어가요. 모르시면 비워 두고 넘어가셔도 돼요.',
+               nums:[{label:'월 임대료 (만원)', key:'rent',    value:S.rent},
+                     {label:'평수 (평)',        key:'area',    value:S.area},
+                     {label:'직원 수 (명)',     key:'staffOv', value:S.staffOv}],
+               opts:[], val:S.rp_cost},
+
               // 이메일 — 리포트를 보낼 곳. 건너뛸 수 없다.
               {k:'email', q:'결과를 어디로 보내 드릴까요?',
                hint:'찾은 지원사업과 상권 분석을 한 장으로 묶어 보내 드려요.',
@@ -676,6 +725,26 @@ class Component extends DCLogic {
               multiNext: ()=>this.setState({rp_step:step+1, rp_q:''}),
               multiLabel: PICKS.length? PICKS.length+'곳 담음 · 다음' : '안 고르고 다음',
 
+              // 가게 조건 단계 — 숫자 칸 셋. 비워도 넘어간다(그러면 기본 가정으로 계산한다).
+              isNums: !!(cur&&cur.nums),
+              numFields: (cur&&cur.nums||[]).map(f=>({
+                label:f.label,
+                value:(f.value==null?'':String(f.value)),
+                // 숫자만 받는다. 비우면 null 로 되돌려 '기본 가정'을 쓰게 한다.
+                // 어느 칸을 실제로 손댔는지 기억한다 — 임대료·평수는 기본값(400·15)이 미리 들어
+                // 있어서, 그냥 넘긴 값을 리포트에 '직접 넣으신 값'이라고 적으면 거짓말이 된다(§1).
+                onChange:e=>{ const raw=String(e.target.value||'').replace(/[^0-9]/g,'').slice(0,7);
+                  this.setState({[f.key]: raw===''? null : Number(raw), rp_sent:false,
+                    rp_touched:{...(S.rp_touched||{}), [f.key]:true}}); },
+                style:'width:100%;font-size:16px;font-weight:500;color:var(--ink);background:var(--surface);'
+                  +'border:none;border-radius:14px;padding:0 16px;height:52px;outline:none'
+              })),
+              numsNext: ()=>this.setState({rp_cost:'입력함', rp_step:step+1, rp_q:'', rp_sent:false}),
+              numsLabel:'다음',
+              numsNextStyle:'width:100%;margin-top:18px;font-size:15.5px;font-weight:600;border:none;'
+                +'border-radius:14px;height:50px;cursor:pointer;transition:filter .16s;'
+                +'background:var(--accent);color:#FFFFFF',
+
               // 이메일 단계 — 입력칸과 동의 체크가 이 카드 안에서 끝난다.
               // 여기는 건너뛸 수 없다. 주소가 있어야 리포트를 보내 드릴 수 있어서다.
               // 버튼은 늘 눌린다. 비었으면 막는 대신 입력칸이 흔들리고 빨간 글자로 이유를 말한다
@@ -707,10 +776,13 @@ class Component extends DCLogic {
               hasBack: step>0,
               qsAllDone: !cur,
               // 다 답한 뒤엔 카드가 사라진다. 답을 다시 볼 수 있게 한 줄만 남긴다.
+              // 이어 붙인 뒤에는 사전이 못 찾는다 — 조각마다 옮긴 뒤 잇는다.
+              // '가게 조건'은 숫자라 요약에 넣지 않는다('입력함'은 사장님께 아무 뜻이 없다).
               doneLine: STEPS.map(st=>{
+                  if(st.k==='cost') return '';
                   const v=shown(st.val, st.isZone);
                   return st.k==='ind'? (st.val? this.indName(st.val) : '') : v;
-                }).filter(v=>v&&v!=='건너뜀'&&v!=='없음').join(' · '),
+                }).filter(v=>v&&v!=='건너뜀'&&v!=='없음').map(v=>this.tr(v)).join(' · '),
               editAgain: ()=>this.setState({rp_step:0, rp_q:''}),
               // 리포트가 몇 칸까지 열렸는지 — rv 가 이 값으로 한 칸씩 연다
               qsN:N, qsStepNum:step
@@ -854,6 +926,7 @@ class Component extends DCLogic {
               ...(p.survey||[]).map(x=>[x.label,x.value,'설문 답']),
               ...(p.support||[]).map(x=>[x.title,[x.amount,x.period].filter(Boolean).join(' · '),
                                          [x.org,x.why,x.url].filter(Boolean).join(' · ')]),
+              ...(p.bep||[]).map(x=>[x.label,x.value,x.tag]),
               ...(p.zones||[]).map(x=>[x.name,x.score+'점','비교 후보'])];
             const q=v=>{let t=String(v==null?'':v);if(/^[\s]*[=+@-]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"';};
             const body=rows.map(r=>r.map(q).join(',')).join('\r\n');
@@ -875,11 +948,12 @@ class Component extends DCLogic {
             this.setState({rp_sending:true,rp_error:''});
             try {
               const p=buildReport();
-              // facts 에 담던 본전 계산을 뺐다. 리포트는 설문 답과 찾은 지원사업만 담는다.
+              // 지원사업이 먼저고 손익이 그 다음이다 — 화면과 같은 순서로 담는다.
               const body=JSON.stringify({email,agreed:S.rp_agree===true,headline:'창업 지원사업 리포트',sub:p.zone+' · '+p.ind,
-                facts:(p.support||[]).map(x=>({label:x.title, value:[x.amount,x.period].filter(Boolean).join(' · '), tag:x.org})),
+                facts:[...(p.support||[]).map(x=>({label:x.title, value:[x.amount,x.period].filter(Boolean).join(' · '), tag:x.org})),
+                       ...(p.bep||[])],
                 survey:p.survey||[],zones:(p.zones||[]).map(z=>({name:z.name,value:z.score+'점'})),
-                honesty:'자격을 판정한 목록이 아닙니다. 답하신 조건과 겹치는 공고이며, 신청 가능 여부는 반드시 공고 원문에서 확인해 주세요.'});
+                honesty:'지원사업은 자격을 판정한 목록이 아닙니다 — 답하신 조건과 겹치는 공고이며 신청 가능 여부는 공고 원문에서 확인해 주세요. 손익은 상권 집계에서 계산한 추정치이고, 넣어 주신 조건은 서버에서 재검증하지 않았습니다.'});
               if(this._reportBody!==body){this._reportBody=body;this._reportKey=crypto.randomUUID();}
               const response=await fetch('/api/report',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':this._reportKey},body,signal:AbortSignal.timeout(15000)});
               const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'발송하지 못했습니다.');

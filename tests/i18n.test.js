@@ -126,10 +126,23 @@ const SCREEN_KEYS = ['home', 'hubZone', 'zone', 'find', 'region', 'fineCmp', 'hu
 function sweep(locale) {
   const seed = loaded(locale);
   const ids = Object.keys(seed.state.zi.zones || {});
+  // 리포트 설문은 '지금 열린 질문' 하나만 그린다. 답을 안 채우면 1번 질문에서 멈춰
+  // 뒤 질문들의 문구를 한 번도 못 본다 — 실제로 그렇게 영어 화면에 한국어가 남아 있었다.
+  // 그래서 단계마다 한 번씩 세워 본다.
+  const RP_STEPS = 10;
+  const surveyAt = n => c => {
+    Object.assign(c.state, {
+      rp_sido: '서울', rp_gu: '마포구', rp_ind: '커피-음료',
+      rp_stage: '아직 준비 중이에요 (예비창업자)', rp_age: '만 39세 이하',
+      rp_biz: '아직 안 했어요', rp_when: '6개월 안', rp_need: '사업화 자금',
+      rp_cost: '입력함', rp_email: 'a@b.com', rp_step: n
+    });
+  };
   const picks = [
     c => { },
     c => { c.state.sel = ids[0]; c.state.zoneId = ids[0]; c.state.picks = ids.slice(0, 3); },
-    c => { c.state.sel = ids[5]; c.state.zoneId = ids[5]; c.state.picks = ids.slice(2, 5); c.state.ind = '한식음식점'; }
+    c => { c.state.sel = ids[5]; c.state.zoneId = ids[5]; c.state.picks = ids.slice(2, 5); c.state.ind = '한식음식점'; },
+    ...Array.from({ length: RP_STEPS }, (_, n) => surveyAt(n))
   ];
   const found = new Set();
   for (const screen of SCREEN_KEYS) {

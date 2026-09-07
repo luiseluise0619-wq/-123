@@ -60,6 +60,20 @@
                 </div>
                 </sc-if>
 
+                <!-- 가게 조건 — 숫자 칸 셋. 이메일 칸과 같은 모양이다(새 스타일을 만들지 않는다).
+                     결과(손익)는 화면에 그리지 않는다. 리포트 PDF·CSV·메일에만 들어간다. -->
+                <sc-if value="{{ rp.isNums }}">
+                  <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+                    <sc-for list="{{ rp.numFields }}" as="f">
+                      <label style="display:block">
+                        <span style="display:block;font-size:13px;color:var(--ink2);margin-bottom:7px">{{ f.label }}</span>
+                        <input value="{{ f.value }}" onChange="{{ f.onChange }}" aria-label="{{ f.label }}" maxLength="7" inputMode="numeric" placeholder="비워 두셔도 돼요" style="{{ f.style }}">
+                      </label>
+                    </sc-for>
+                  </div>
+                  <button onClick="{{ rp.numsNext }}" style="{{ rp.numsNextStyle }}" style-hover="filter:brightness(.97)">{{ rp.numsLabel }}</button>
+                </sc-if>
+
                 <!-- 마지막 질문 — 이메일도 이 카드 안에서 끝낸다 -->
                 <sc-if value="{{ rp.isEmail }}">
                   <input value="{{ rp.email }}" onChange="{{ rp.onEmail }}" aria-label="리포트를 받을 이메일" maxLength="254" type="email" inputMode="email" placeholder="name@example.com" style="{{ rp.emailInputStyle }}">

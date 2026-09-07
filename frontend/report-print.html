@@ -60,6 +60,43 @@
       </div>
     </sc-if>
 
+    <!-- 손익은 리포트 결과물에만 들어간다. 화면(리포트 탭)에는 그리지 않는다. -->
+    <sc-if value="{{ hasBep }}">
+      <h2 style="font-size:16px;font-weight:700;letter-spacing:-0.02em;margin:34px 0 0">손익 계산</h2>
+      <p style="font-size:12.5px;color:var(--ink2);line-height:1.6;margin:6px 0 0">{{ bepLead }}</p>
+      <table style="width:100%;border-collapse:collapse;margin-top:12px">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:0 0 7px;border-bottom:1px solid var(--ink);font-size:10.5px;font-weight:700;color:var(--ink3)">항목</th>
+            <th style="text-align:right;padding:0 0 7px;border-bottom:1px solid var(--ink);font-size:10.5px;font-weight:700;color:var(--ink3)">값</th>
+            <th style="text-align:right;padding:0 0 7px 14px;border-bottom:1px solid var(--ink);font-size:10.5px;font-weight:700;color:var(--ink3);white-space:nowrap">어떻게 나온 값인가</th>
+          </tr>
+        </thead>
+        <sc-for list="{{ bep }}" as="b">
+          <tr>
+            <td style="padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink2)">{{ b.label }}</td>
+            <td style="padding:9px 0;border-bottom:1px solid var(--line);text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ b.value }}</td>
+            <td style="padding:9px 0 9px 14px;border-bottom:1px solid var(--line);text-align:right;font-size:10.5px;color:var(--ink3);white-space:nowrap">{{ b.tag }}</td>
+          </tr>
+        </sc-for>
+      </table>
+    </sc-if>
+
+    <sc-if value="{{ hasMoney }}">
+      <h2 style="font-size:16px;font-weight:700;letter-spacing:-0.02em;margin:32px 0 0">돈이 어디로 나가나</h2>
+      <div class="keep" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ money }}" as="m">
+          <div style="display:flex;align-items:center;gap:14px">
+            <span style="flex:0 0 92px;font-size:12.5px;color:var(--ink2)">{{ m.label }}</span>
+            <span style="flex:1;min-width:0;height:7px;border-radius:4px;background:var(--surface);display:block;overflow:hidden">
+              <span style="{{ m.bar }}"></span>
+            </span>
+            <span style="flex:none;width:82px;text-align:right;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">{{ m.value }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
     <sc-if value="{{ hasSurvey }}">
       <h2 style="font-size:16px;font-weight:700;letter-spacing:-0.02em;margin:32px 0 0">알려주신 조건</h2>
       <table style="width:100%;border-collapse:collapse;margin-top:12px">
