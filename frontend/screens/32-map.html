@@ -3,7 +3,7 @@
     <sc-if value="{{ onMapScreen }}">
       <section class="u-sec">
         <h1 style="{{ ds1 }}">{{ mv.target }}</h1>
-        <p style="{{ dsBody }}; margin-top:10px">이 상권이 정확히 어디인지 위치로 확인해요.</p>
+        <p style="{{ dsBody }}; margin-top:10px">상권을 바꿔 가며 매출·수요·경쟁을 한눈에 봐요.</p>
 
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:20px">
           <select value="{{ sidoSel }}" onChange="{{ onSido }}" style="{{ selectStyle }}">
@@ -31,9 +31,12 @@
                     좌표는 이미 있다 — logic/analysis.js 의 mv.map.pins 가 상권별 x·y 를 만든다.
                  ③ 지도 SDK 는 외부 스크립트라 CSP 를 같이 손봐야 한다(지금은 self 만 허용).
                  ※ 지도를 못 불러와도 아래 상권 목록과 오른쪽 지표는 그대로 동작해야 한다. -->
-            <div id="kakao-map" role="img" aria-label="상권 위치 지도 (준비 중)"
-                 style="width:100%;aspect-ratio:16/12;border-radius:var(--r-lg);background:var(--surface);
-                        display:flex;align-items:center;justify-content:center;overflow:hidden">
+            <!-- 지도가 붙기 전까지는 자리를 크게 잡지 않는다. 390px 에서 aspect-ratio:16/12 는
+                 268px 짜리 빈 회색 상자가 되어, 화면에서 가장 좋은 자리를 '미완성'이 차지했다.
+                 ④ 지도를 붙일 때 style 을 aspect-ratio:16/12 로 되돌린다. -->
+            <div id="kakao-map" role="status"
+                 style="width:100%;padding:14px 16px;border-radius:var(--r-md);background:var(--surface);
+                        display:flex;align-items:center;overflow:hidden">
               <span style="{{ dsSub }}">지도는 준비 중이에요</span>
             </div>
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
