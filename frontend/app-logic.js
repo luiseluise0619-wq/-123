@@ -1248,7 +1248,10 @@ class Component extends DCLogic {
           guToggle:()=>this.setState({findGuOpen:!S.findGuOpen}),
           guToggleLabel:(S.findGuOpen?'접기':'구 전체 보기')+' ('+gus.length+')',
           guBoxStyle:'margin-top:12px;display:grid;gap:8px;'
-            +'grid-template-columns:repeat(auto-fill,minmax('+this.L('92px','108px','116px')+',1fr));'
+            // 로마자 자치구 이름은 한글보다 길다 — 최소 폭을 언어에 맞춘다.
+            +'grid-template-columns:repeat(auto-fill,minmax('
+            +(this.locale()==='en' ? this.L('132px','150px','160px') : this.L('92px','108px','116px'))
+            +',1fr));'
             // 펼치면 스크롤이 생긴다. 스크롤 막대가 보이도록 오른쪽 여백을 둔다.
             +(S.findGuOpen? 'max-height:'+this.L('200px','240px','280px')+';overflow-y:auto;padding-right:8px' : ''),
           // 접었을 때는 앞 6개만 그린다 — 반 잘린 줄을 남기면 '아래를 못 본다'가 된다

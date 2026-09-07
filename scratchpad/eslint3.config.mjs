@@ -1,2 +1,0 @@
-export default [{ files:['**/*.js'], languageOptions:{ecmaVersion:2023,sourceType:'module',globals:{process:'readonly',console:'readonly',Buffer:'readonly',URL:'readonly',setTimeout:'readonly',TextEncoder:'readonly',fetch:'readonly',AbortController:'readonly',__dirname:'readonly'}},
- rules:{'no-dupe-keys':'error','no-unreachable':'error','no-undef':'error','no-dupe-else-if':'error','use-isnan':'error','no-cond-assign':'error','no-constant-condition':'error'}}];

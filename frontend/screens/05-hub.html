@@ -18,7 +18,7 @@
           <div style="margin-top:28px">
             <button onClick="{{ hub.primary.go }}" style="{{ hub.primary.style }}" style-hover="filter:brightness(1.06)">{{ hub.primary.label }}</button>
             <!-- 이미 계산해 둔 결과 한 줄. 값이 없으면 설명 줄로 내려간다 -->
-            <div style="font-size:13.5px;margin-top:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;{{ hub.primary.peekStyle }}">{{ hub.primary.peekText }}</div>
+            <div style="font-size:13.5px;margin-top:12px;line-height:1.5;text-wrap:pretty;max-width:520px;{{ hub.primary.peekStyle }}">{{ hub.primary.peekText }}</div>
           </div>
         </sc-if>
 

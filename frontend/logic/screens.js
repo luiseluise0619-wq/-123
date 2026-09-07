@@ -272,10 +272,15 @@ globalThis.MysbizonParts.screens = {
       clearZone:e=>{ e.stopPropagation(); this.setState({homeZoneName:null,homeGu:null,findGu:'',zoneId:null,sel:null,zq:'',pickOpen:null}); },
       clearInd:e=>{ e.stopPropagation(); this.setState({homeInd:null,iq:'',pickOpen:null}); },
       zoneHint:(S.homeZoneName||S.homeGu)?'':'· 몰라도 돼요',
+      // 칸 순서는 업종(0) → 위치(1) 다. 번호를 바꾸면 각 칸의 onFocus 가 서로를
+      // 부르며 무한히 돈다(실제로 그렇게 'Maximum call stack size exceeded' 가 났다).
+      // 이미 그 칸에 커서가 있으면 다시 focus 하지 않는 것도 그래서다.
       openInd:()=>{ if(open!=='ind') this.setState({pickOpen:'ind'});
-        const el=document.querySelectorAll('[data-search] input')[1]; if(el) el.focus(); },
+        const el=document.querySelectorAll('[data-search] input')[0];
+        if(el && document.activeElement!==el) el.focus(); },
       openZone:()=>{ if(open!=='zone') this.setState({pickOpen:'zone'});
-        const el=document.querySelectorAll('[data-search] input')[0]; if(el) el.focus(); },
+        const el=document.querySelectorAll('[data-search] input')[1];
+        if(el && document.activeElement!==el) el.focus(); },
       pickOpen:!!open, indPanel:open==='ind', zonePanel:open==='zone',
       // 통째로 교체되는 목록은 위치 애니메이션 대신 짧은 페이드로 바꾼다
       indGridStyle:'display:grid;grid-template-columns:'+this.L('1fr','1fr 1fr','1fr 1fr')+';gap:8px;'
@@ -354,7 +359,8 @@ globalThis.MysbizonParts.screens = {
       // 구 25개를 세로 한 줄로 세우면 옆이 텅 빈다. ㄱㄴㄷ 순으로 여러 열에 깐다.
       guGridStyle:'display:grid;gap:4px;margin-top:14px;padding-top:14px;'
         +'border-top:1px solid var(--line);'
-        +'grid-template-columns:repeat('+this.L(3,4,5)+',minmax(0,1fr))',
+        // 로마자 자치구 이름은 한글보다 길어 3칸이면 잘린다 — 영어만 칸을 줄인다.
+        +'grid-template-columns:repeat('+(this.locale()==='en'? this.L(2,3,4) : this.L(3,4,5))+',minmax(0,1fr))',
       hasRecent:(S.recent||[]).length>0,
       recentChips:(S.recent||[]).map(nm=>zoneAll.find(z=>z.name===nm)).filter(Boolean).slice(0,4).map(z=>({
         name:this.zoneLabelOf(z.name), meta:guOf(z.id),
