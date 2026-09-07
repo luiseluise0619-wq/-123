@@ -238,7 +238,7 @@ globalThis.MysbizonParts.views = {
              text:'초기투자 '+this.man(c.invest)+'을 되찾는 데 약 '+Math.ceil(c.payback)+'개월'}
           : (c.invest>0
             ? {sign:'↓', arrow:arrowDn, text:'지금 조건에서는 초기투자를 회수하지 못해요'}
-            : {sign:'↓', arrow:arrowDn, text:'보증금·권리금·인테리어를 넣으면 회수기간도 계산해 드려요'})
+            : {sign:'↓', arrow:arrowDn, text:'초기투자를 넣으면 회수기간도 나와요'})
       ],
       thinStyle: sel.stores<=5?'font-size:12.5px;color:var(--warn);margin-top:26px;max-width:600px;text-wrap:pretty':'display:none',
       thin: sel.stores>5 ? ''

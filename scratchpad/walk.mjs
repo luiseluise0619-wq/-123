@@ -22,6 +22,23 @@ for (let i=0;i<STEPS;i++) {
   } catch(e){}
   await p.waitForTimeout(90);
   // 화면에 NaN/undefined 가 보이는지
+  if (i % 3 === 0) {
+    const cut = await p.evaluate(()=>{
+      const res=[];
+      for (const el of document.querySelectorAll('body *')) {
+        const cs=getComputedStyle(el);
+        if (cs.display==='none'||cs.visibility==='hidden') continue;
+        const clamp = cs.webkitLineClamp && cs.webkitLineClamp!=='none';
+        if (cs.textOverflow!=='ellipsis' && !clamp) continue;
+        const cutW = el.scrollWidth>el.clientWidth+1 && el.clientWidth>0;
+        const cutH = clamp && el.scrollHeight>el.clientHeight+1;
+        if (cutW||cutH) { const t=(el.textContent||'').trim();
+          if (t) res.push('CUT '+(cutW?(el.scrollWidth-el.clientWidth)+'px':'세로')+' (칸 '+el.clientWidth+'px) '+JSON.stringify(t.slice(0,70))); }
+      }
+      return [...new Set(res)];
+    });
+    cut.forEach(c=>errs.push(c));
+  }
   if (i % 10 === 0) {
     const bad = await p.evaluate(()=>{ const t=document.body.innerText; const m=t.match(/NaN|undefined|\[object Object\]|Infinity|null원|{{/g); return m? [...new Set(m)] : []; });
     if (bad.length) errs.push('TEXT ' + bad.join(',') + ' @step' + i);

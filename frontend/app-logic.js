@@ -515,7 +515,7 @@ class Component extends DCLogic {
                 }));
               })():null,
               survey:[
-                ['지역',[S.rp_sido,S.rp_gu&&S.rp_gu!=='아직 안 정했어요'?S.rp_gu:''].filter(Boolean).join(' ')],
+                ['지역',[S.rp_sido,S.rp_gu&&S.rp_gu!=='아직 몰라요'?S.rp_gu:''].filter(Boolean).join(' ')],
                 ['업종',S.rp_ind?this.indName(S.rp_ind):''],
                 ['창업 단계',S.rp_stage],['나이',S.rp_age],['사업자등록',S.rp_biz],
                 ['개업 시기',S.rp_when],['필요한 지원',S.rp_need]
@@ -587,7 +587,7 @@ class Component extends DCLogic {
             const RP_GU_SEOUL=['종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구',
                                '강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구',
                                '구로구','금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
-            const RP_GU_NONE='아직 안 정했어요';
+            const RP_GU_NONE='아직 몰라요';
             // 이 설문의 목적은 본전 계산이 아니라 '신청할 수 있는 정부 창업지원사업'을
             // 찾아 주는 것이다. 그래서 매칭에 쓰지 않는 질문(자금·대출·버틸 기간)은 뺐다.
             // 남은 것은 전부 공고 자격 요건에 실제로 등장하는 조건이다.
@@ -855,7 +855,7 @@ class Component extends DCLogic {
             if(S.rp_need==='융자·대출') RULES.push({why:'융자·정책자금', kw:['융자','대출','정책자금','보증']});
             if(S.ind) RULES.push({why:'업종 조건', kw:[this.indName(S.ind), S.ind]});
             const sidoNow=S.rp_sido||'';
-            const guNow=(S.rp_gu && S.rp_gu!=='아직 안 정했어요')? S.rp_gu : '';
+            const guNow=(S.rp_gu && S.rp_gu!=='아직 몰라요')? S.rp_gu : '';
             if(sidoNow||guNow) RULES.push({why:'지역 조건', kw:[guNow, sidoNow].filter(Boolean)});
 
             const reasonsOf=it=>{
