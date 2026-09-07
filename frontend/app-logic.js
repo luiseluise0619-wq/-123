@@ -495,6 +495,9 @@ class Component extends DCLogic {
             const payload={
               ind:S.ind?this.tr(this.indName(S.ind)):'', zone:sel?this.zoneLabelOf(sel.name):this.tr('동네 미선택'),
               gu:sel?this.guLabel(sel.id):'',
+              // 상권을 안 고르고 리포트를 받으면 이 업종 1위 상권으로 계산된다.
+              // 그걸 '고르신 곳'처럼 적으면 지어낸 값이 된다(§1) — 리포트에 밝혀 적는다.
+              zoneAuto: !(S.sel||S.zoneId),
               quarter:S.zi?this.qtr(S.zi.quarter):'',
               support:supportForReport,
               bep:bep,
@@ -810,6 +813,10 @@ class Component extends DCLogic {
               curBack: step>0?()=>this.setState({rp_step:step-1, rp_q:''}):()=>{},
               hasBack: step>0,
               qsAllDone: !cur,
+              // 공고 목록은 '가게 조건'·'이메일' 뒤에 숨어 있었다. 두 단계는 공고 매칭에
+              // 쓰지 않는데도(임대료·평수·직원 수·이메일은 자격 요건에 안 나온다),
+              // 이메일을 안 남기면 설문의 결론을 영영 못 보게 돼 있었다.
+              spReady: !cur || cur.k==='email' || cur.k==='cost',
               // 다 답한 뒤엔 카드가 사라진다. 답을 다시 볼 수 있게 한 줄만 남긴다.
               // 이어 붙인 뒤에는 사전이 못 찾는다 — 조각마다 옮긴 뒤 잇는다.
               // '가게 조건'은 숫자라 요약에 넣지 않는다('입력함'은 사장님께 아무 뜻이 없다).
