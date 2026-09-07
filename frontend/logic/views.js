@@ -230,14 +230,20 @@ globalThis.MysbizonParts.views = {
         over
           ? {sign:'↑', arrow:arrowUp, text:'하루 '+(dailyCnt?dailyCnt.toLocaleString()+'건':'—')+'이 본전선이고 이 매출 가정에서는 넘습니다'}
           : {sign:'↓', arrow:arrowDn, text:'하루 '+(dailyCnt?dailyCnt.toLocaleString()+'건':'—')+'까지 올려야 본전입니다'},
-        {sign:'↓', arrow:arrowDn, text:'권리금·인테리어는 이 계산에 없습니다'}
+        // 회수기간 = 초기투자 ÷ 월 영업이익. 안 넣으면 넣으라고만 말한다(지어내지 않는다).
+        c.payback!=null
+          ? {sign:'↑', arrow:arrowUp,
+             text:'초기투자 '+this.man(c.invest)+'을 되찾는 데 약 '+Math.ceil(c.payback)+'개월'}
+          : (c.invest>0
+            ? {sign:'↓', arrow:arrowDn, text:'지금 조건에서는 초기투자를 회수하지 못합니다'}
+            : {sign:'↓', arrow:arrowDn, text:'보증금·권리금·인테리어를 넣으면 회수기간도 계산합니다'})
       ],
       thinStyle: sel.stores<=5?'font-size:12.5px;color:var(--warn);margin-top:26px;max-width:600px;text-wrap:pretty':'display:none',
       thin: sel.stores>5 ? ''
         : '계산의 출발점인 이 자리 '+this.indName(S.ind)+' 평균은 '+sel.stores+'곳만의 평균입니다. 잘되는 한 집이 평균을 끌어올리니, 아래 ‘내 조건 바꾸기’에서 ‘보수적’으로 낮춰 보세요.',
       honesty:'본전 = 고정비 ÷ (1 − 원가율). 임대료와 평수는 입력값이며 처음에는 기본 가정이 들어 있습니다. 직원 수와 기타 운영비는 평수에서 자동으로 잡은 값이고(10평당 1명 · 평당 6만원, 우리 기준), 칸에 직접 넣으면 그 값을 씁니다. 원가율은 기본 가정 · 수정 가능입니다. '
         +'매출은 이 자리에서 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아닙니다. 보수적 70%·낙관적 130%는 우리가 정한 배수입니다. '
-        +'세금·대출 이자는 넣지 않았습니다.'
+        +'세금·대출 이자는 넣지 않았습니다. 회수기간은 초기투자(보증금+권리금+인테리어) ÷ 월 영업이익이고, 보증금은 나갈 때 돌려받지만 묶이는 돈이라 포함했습니다.'
     };
 
     const num=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?'':this.bound(v,0,k==='cogs'?95:100000,0)});};
@@ -260,7 +266,12 @@ globalThis.MysbizonParts.views = {
       {label:'월 임대료 (만원)', value:S.rent, onChange:num('rent'), tag:'기본 400만원 · 실제 금액으로 수정'},
       {label:'원가율 (%)', value:S.cogs, onChange:num('cogs'), tag:'기본 가정 · 수정 가능'},
       {label:'직원 수 (명)', value:(S.staffOv==null?'':S.staffOv), onChange:ovr('staffOv'), tag:c.staffAuto?'비우면 '+c.staff+'명':'직접 넣은 값'},
-      {label:'기타 운영비 (만원)', value:(S.etcOv==null?'':S.etcOv), onChange:ovr('etcOv'), tag:c.etcAuto?'비우면 '+c.etc+'만원':'직접 넣은 값'}
+      {label:'기타 운영비 (만원)', value:(S.etcOv==null?'':S.etcOv), onChange:ovr('etcOv'), tag:c.etcAuto?'비우면 '+c.etc+'만원':'직접 넣은 값'},
+      // 처음 한 번 나가는 돈 — 회수기간(초기투자 ÷ 월 영업이익)에만 쓴다.
+      // 기본값을 두지 않는다. 상권별 보증금·권리금은 공개 자료가 없어 지어낼 수 없다(§1).
+      {label:'보증금 (만원)', value:(S.deposit==null?'':S.deposit), onChange:num('deposit'), tag:'나갈 때 돌려받지만 묶이는 돈이라 포함'},
+      {label:'권리금 (만원)', value:(S.premium==null?'':S.premium), onChange:num('premium'), tag:'없으면 비워 두세요'},
+      {label:'인테리어 (만원)', value:(S.interior==null?'':S.interior), onChange:num('interior'), tag:'설비·집기까지 합쳐서'}
     ];
 
 

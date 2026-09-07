@@ -291,6 +291,19 @@ globalThis.MysbizonParts.analysis = {
       lp.age.forEach((v,i)=>dBars.push({label:AL[i], value:Math.round(v).toLocaleString()+'명', bar:bar(v/mxA*100)}));
       dRows.push({label:'추정 객단가', value:this.wonRaw(Math.round(sel.unit)), tag:'(추정)'});
       dRows.push({label:'여성 / 남성', value:Math.round(lp.f/lp.tot*100)+'% / '+Math.round(lp.m/lp.tot*100)+'%', tag:''});
+      // 1인당·1점포당 시장 규모 — 이미 있는 값 셋을 나눈 것이다(새 자료 없음).
+      //   사람 1명당 하루 소비 = 상권 3개월 소비액 ÷ 90일 ÷ 하루 유동인구
+      //   가게 1곳당 사람 수   = 하루 유동인구 ÷ 같은 업종 점포 수
+      // 유동인구가 '행정동' 단위라 상권보다 넓다 → 1인당 값은 실제보다 작게 나온다.
+      // 지어낸 값이 아니라 나눗셈이지만, 무엇을 무엇으로 나눴는지 tag 에 그대로 적는다(§1).
+      if(lp.tot>0 && isFinite(sel.sales)){
+        dRows.push({label:'사람 1명당 하루 소비', value:this.wonRaw(Math.round(sel.sales/90/lp.tot)),
+          tag:'소비액 ÷ 90일 ÷ 유동인구'});
+      }
+      if(sel.stores>0 && lp.tot>0){
+        dRows.push({label:'가게 1곳당 사람 수', value:Math.round(lp.tot/sel.stores).toLocaleString()+'명',
+          tag:'유동인구 ÷ '+sel.stores.toLocaleString()+'곳'});
+      }
     }
     out.push({key:'demand', title:'수요 · 누가 오나요',
       q:'하루에 사람이 얼마나 오나요?',

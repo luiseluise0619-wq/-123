@@ -132,9 +132,17 @@ globalThis.MysbizonParts.util = {
     const mult=(S.scen==='적게 팔릴 때'?0.7:(S.scen==='잘될 때'?1.3:1));
     const avg=z? z.per/3/1e4 : 0;
     const rev = avg*mult;
+    const profit = rev*(1-cogs)-fixed;
+    // 처음 한 번 나가는 돈 — 사장님이 넣은 값만 쓴다(기본 가정을 두지 않는다).
+    // 회수기간 = 초기투자 ÷ 월 영업이익. 이익이 0 이하면 회수되지 않으므로 null.
+    const invest = this.bound(S.deposit,0,1000000,0)
+                 + this.bound(S.premium,0,1000000,0)
+                 + this.bound(S.interior,0,1000000,0);
+    const payback = (invest>0 && profit>0) ? invest/profit : null;
     return {rent,etc,staff,labor,cogs,fixed,bep,avg,rev,mult,area:sz.area,
       staffAuto:sz.staffAuto, etcAuto:sz.etcAuto,
-      profit:rev*(1-cogs)-fixed};
+      invest, payback,
+      profit};
   },
 
   // Lucide 아이콘 (lucide-icons/lucide@main, ISC). 텍스트 글리프(✕, ›) 대신 쓴다.
