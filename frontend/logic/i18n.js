@@ -137,6 +137,8 @@ globalThis.MysbizonParts.i18n = {
       'menu.sweep':'자치구 훑기','menu.map':'지도','menu.detail':'정밀분석',
       'menu.sim':'정밀비교','menu.bep':'본전 계산',
 
+      'hub.peekTop':'{ind} · {n}곳 중 1위 {zone}',
+      'hub.peekRank':'{zone} · {n}곳 중 {r}위',
       'home.eyebrow':'내 장사의 시작, 데이터로 한 걸음 더',
       'home.title':'어떤 동네에서 시작해 볼까요?',
       'home.sub':'업종을 고르면 동네를 비교하고, 내 조건에 맞는 본전선을 확인할 수 있어요.',

@@ -1091,6 +1091,20 @@ class Component extends DCLogic {
         // 강조는 하나만. 셋 다 강조하면 아무것도 강조되지 않는다.
         const next = zone ? 'find'
                           : (selNm ? 'fineDetail' : 'map');
+        // 허브가 메뉴판으로만 끝나면 화면 절반이 빈다. 이미 계산해 둔 값 한 줄을
+        // 버튼 밑에 붙여 '누르면 무엇이 나오는지'를 미리 보여준다. 없으면 줄을 안 그린다.
+        const r = this.rank();
+        const peek = (()=>{
+          if(!r || !r.list.length) return '';
+          if(zone){
+            return this.t('hub.peekTop',{ind:this.indName(S.ind), n:r.covered.toLocaleString(),
+                                         zone:this.zoneLabelOf(r.list[0].name)});
+          }
+          if(!selId) return '';
+          const i = r.list.findIndex(o=>o.id===selId);
+          if(i<0) return '';
+          return this.t('hub.peekRank',{zone:selNm, n:r.covered.toLocaleString(), r:i+1});
+        })();
         return {
           title: HEAD[k].t,
           desc: HEAD[k].d,
@@ -1103,40 +1117,39 @@ class Component extends DCLogic {
           // 메뉴판 대신 '다음 행동' 하나를 크게 둔다(§14·§18).
           // 나머지는 아래 한 줄짜리 목록으로 — 넷을 나란히 두면 무엇부터 눌러야 할지 모른다.
           primary:(()=>{
-            const it=(g?g.items:[]).find(([k])=>k===next);
-            if(!it) return {label:'', sub:'', go:()=>{}, has:false};
+            const it=(g?g.items:[]).find(([kk])=>kk===next);
+            if(!it) return {has:false, label:'', sub:'', peek:'', hasPeek:false, go:()=>{}};
             const c=CARD[next]||{d:'',cta:'열기'};
-            return {label:c.cta, sub:c.d, has:true,
+            // 상권을 아직 안 골랐으면 '지도 열기'가 아니라 '상권 고르기'다 —
+            // 지도 자체는 아직 준비 중이고, 이 화면의 목적은 목록에서 한 곳을 고르는 것이다.
+            const first = (next==='map' && !selNm);
+            const label = first ? '상권 고르기' : c.cta;
+            return {has:true, label:label, sub:c.d,
+                    // 결과 한 줄이 있으면 그걸 쓰고, 없으면 '무엇을 하는 곳인지'로 내려간다.
+                    peekText: peek || (first ? '한 곳을 고르면 그 자리를 뜯어봐요' : c.d),
+                    peekStyle: peek ? 'font-weight:600;color:var(--accent)' : 'color:var(--ink2)',
+                    style:this.ds('cta')+';display:inline-flex;align-items:center;justify-content:center;'
+                      +'gap:8px;'+this.L('width:100%','','')+';max-width:100%',
                     go:()=>this.setState({screen:next,menu:null})};
           })(),
-          // 배너 — 이 메뉴가 무엇을 하는 곳인지 한 덩어리로. 화면 폭을 다 쓴다.
-          banner:'background:var(--surface);border-radius:var(--r-lg);'
-            +'padding:'+this.L('26px 20px','34px 30px','44px 40px'),
-          // 카드 한 줄 — 데스크톱은 나란히, 모바일은 가로로 넘긴다(§9·§10)
-          cardsGrid:this.L('', 'display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))',
-                               'display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))'),
-          cardsAsRail:this.bp()==='mobile',
-          cardsAsGrid:this.bp()!=='mobile',
-          rail:this.rail('hub',{per:4}),
-          cards:(g?g.items:[]).map(([key,label])=>{
-            const on=key===next;
-            const c=CARD[key]||{d:'',cta:'열기'};
+          // 배너 — 회색 카드를 걷어내고 글자만 둔다. 모바일에서 185px 을 먹고 있었다.
+          banner:'padding:0',
+          // 나머지는 한 줄짜리 목록. 카드 셋을 나란히 두면 무게가 같아져 강조가 사라진다.
+          rest:(g?g.items:[]).filter(([key])=>key!==next).map(([key,label])=>{
+            const c=CARD[key]||{d:''};
             return {
-              label:label, sub:c.d, cta:c.cta+' →', on:on,
+              label:label, sub:c.d,
               go:()=>this.setState({screen:key,menu:null}),
-              labelStyle:'font-size:'+this.L('17px','18px','19px')+';font-weight:700;letter-spacing:-.02em;'
-                +(on?'color:var(--accent)':'color:var(--ink)'),
-              subStyle:'font-size:13.5px;line-height:1.5;text-wrap:pretty;color:var(--ink2);margin-top:8px',
-              ctaStyle:'font-size:13.5px;font-weight:600;margin-top:auto;padding-top:16px;white-space:nowrap;'
-                +(on?'color:var(--accent)':'color:var(--ink2)'),
-              // 카드 넷은 테두리를 똑같이 둔다. 강조는 색 테두리가 아니라
-              // 제목·버튼 글자 색으로만 준다 — 테두리에 색을 넣으면 그것부터 눈에 걸린다.
-              style:'display:flex;flex-direction:column;height:100%;min-height:'+this.L('132px','150px','168px')+';'
-                +'padding:'+this.L('18px','20px','22px')+';border-radius:var(--r-lg);cursor:pointer;min-width:0;'
-                +'transition:transform .18s cubic-bezier(.2,.7,.3,1);background:var(--bg);'
-                +'border:1px solid var(--line)'
+              row:'display:flex;align-items:center;gap:14px;padding:'+this.L('15px 0','16px 0','17px 0')
+                +';border-top:1px solid var(--line);cursor:pointer;min-width:0',
+              labelStyle:'flex:0 0 auto;font-size:16px;font-weight:600;letter-spacing:-.01em;white-space:nowrap',
+              // 모바일에서는 설명을 접는다 — 칸이 좁아 어차피 말줄임으로 잘린다.
+              subStyle:this.bp()==='mobile' ? 'display:none'
+                : 'flex:1 1 auto;min-width:0;font-size:13.5px;color:var(--ink3);'
+                  +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis',
+              spacerStyle:this.bp()==='mobile' ? 'flex:1 1 auto' : 'display:none'
             };
-          }),
+          })
         };
       })(),
       goFind:go('find'), goDiag:go('diag'), goCmp:go('sim'),
