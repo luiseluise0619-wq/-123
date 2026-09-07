@@ -44,10 +44,35 @@ globalThis.MysbizonParts.i18n = {
     let saved=null;
     try{ saved=JSON.parse(localStorage.getItem('mysbizon.theme')||'{}').locale; }catch(e){}
     if(saved && this.LOCALES().some(l=>l.k===saved)) { this.setState({locale:saved}); return; }
-    // 사장님이 고른 적이 없으면 브라우저 언어를 첫 값으로 쓴다(고른 값이 항상 이긴다)
-    const nav=(typeof navigator!=='undefined' && navigator.language)||'ko';
-    const guess = nav.startsWith('zh') ? 'zh-CN' : (nav.startsWith('en') ? 'en' : 'ko');
-    if(guess!=='ko') this.setState({locale:guess});
+    // 고른 적이 없으면 '지금 있는 위치'를 먼저 본다(고른 값이 항상 이긴다).
+    //
+    // 위치는 타임존으로 읽는다 — 권한을 묻지 않고, 네트워크도 쓰지 않고,
+    // 기기 설정 그대로라 VPN·번역기보다 정확하다. GPS 권한 팝업을 띄우지 않는다.
+    // 타임존이 곧 언어는 아니므로, 위치로 못 정하면 브라우저 언어로 넘어간다.
+    if(this.locale()!=='ko') return;          // 이미 다른 값이 잡혀 있으면 두 번 정하지 않는다
+    this.setState({locale:this.guessLocale()});
+  },
+
+  // 위치(타임존) → 언어. 못 읽으면 브라우저 언어, 그것도 아니면 ko.
+  // ko 로 떨어뜨리는 건 '한국 서비스'라서가 아니라, 판단 근거가 없을 때의 기본값이다.
+  guessLocale(){
+    const tz=(()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||''; }catch(e){ return ''; } })();
+    if(tz==='Asia/Seoul' || tz==='Asia/Pyongyang') return 'ko';
+    const ZH=['Asia/Shanghai','Asia/Chongqing','Asia/Harbin','Asia/Urumqi',
+              'Asia/Macau','Asia/Hong_Kong','Asia/Taipei'];
+    if(ZH.indexOf(tz)>=0) return 'zh-CN';
+
+    const langs=(typeof navigator!=='undefined'
+      && (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language]))||[];
+    for(const raw of langs){
+      const l=String(raw||'').toLowerCase();
+      if(l.startsWith('ko')) return 'ko';
+      if(l.startsWith('zh')) return 'zh-CN';
+      if(l.startsWith('en')) return 'en';
+    }
+    // 타임존은 읽혔는데 한국·중화권이 아니고 언어도 못 맞췄다 → 해외로 보고 영어.
+    // 타임존조차 못 읽으면 근거가 없으니 기본값 ko 로 둔다.
+    return tz? 'en' : 'ko';
   },
 
   setLocale(k){

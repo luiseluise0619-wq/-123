@@ -1191,7 +1191,7 @@ class Component extends DCLogic {
           pickOpen: !!S.findPickOpen,
           pickToggle: ()=>this.setState({findPickOpen:!S.findPickOpen}),
           pickLabel: S.findPickOpen? '접기' : '바꾸기',
-          summary: (cur||'서울 전체')+' · '+this.indName(S.ind)
+          summary: (cur||this.t('pr.seoulAll'))+' · '+this.indName(S.ind)
         };
       })(),
 
