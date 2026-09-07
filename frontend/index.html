@@ -43,10 +43,12 @@
   </svg>
 </template>
 
-<!-- 파비콘을 두지 않는다. 선언이 없으면 브라우저가 /favicon.ico 를 스스로 찾아
-     매 접속마다 404 를 찍는다(화면에는 영향 없지만 콘솔이 지저분하다).
-     'data:,' 는 '아이콘 없음'을 명시해 그 요청 자체를 막는다 — 보이는 건 지금과 같다. -->
-<link rel="icon" href="data:,">
+<!-- 파비콘 파일을 두지 않는다. 선언까지 없으면 브라우저가 /favicon.ico 를 스스로 찾아
+     매 접속마다 404 를 찍으므로, 빈 SVG 로 '아이콘 없음'을 명시한다.
+     ※ 헤드리스 Chromium 은 이 선언과 상관없이 /favicon.ico 를 계속 부른다(알려진 동작)라
+       이 작업 환경에서는 404 가 사라지는 것을 확인하지 못했다. 실제 브라우저에서 확인할 것.
+       화면에는 어느 쪽이든 영향이 없다. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22/%3E">
 <link rel="stylesheet" href="company.css">
 <script src="company-accessibility.js" defer></script>
 <style>
