@@ -161,15 +161,8 @@
           </sc-if>
 
           <sc-if value="{{ rp.sp.hasItems }}">
-            <sc-if value="{{ rp.sp.rail.arrows }}">
-              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
-                <span role="button" tabIndex="0" aria-label="이전 공고" onClick="{{ rp.sp.rail.prev }}" style="{{ rp.sp.rail.arrowStyle }}" style-hover="background:var(--line-strong)">←</span>
-                <span role="button" tabIndex="0" aria-label="다음 공고" onClick="{{ rp.sp.rail.next }}" style="{{ rp.sp.rail.arrowStyle }}" style-hover="background:var(--line-strong)">→</span>
-              </div>
-            </sc-if>
-            <div data-rail="sp" style="{{ rp.sp.rail.trackStyle }}; margin-top:10px">
+            <div style="display:flex;flex-direction:column;gap:14px;margin-top:14px">
               <sc-for list="{{ rp.sp.items }}" as="s">
-                <div style="{{ rp.sp.rail.itemStyle }}">
                 <div style="{{ s.style }}">
                   <div style="display:flex;align-items:flex-start;gap:12px">
                     <span style="flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.4;text-wrap:pretty">{{ s.title }}</span>
@@ -194,7 +187,6 @@
                   <sc-if value="{{ s.hasUrl }}">
                     <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;margin-top:16px;font-size:14.5px;font-weight:600;color:var(--accent);text-decoration:none">공고 보기 →</a>
                   </sc-if>
-                </div>
                 </div>
               </sc-for>
             </div>

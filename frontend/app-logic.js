@@ -803,7 +803,7 @@ class Component extends DCLogic {
                 why:o.why.map(w=>({text:w})),
                 hasWhy:o.why.length>0,
                 url:it.url||'', hasUrl:!!it.url,
-                // 가로 슬라이드 안에서 카드 높이가 제각각이면 줄이 들쭉날쭉해 보인다
+                // 아래 '조건에 걸리지 않은 공고' 격자에서는 카드 높이를 맞춘다
                 style:'display:flex;flex-direction:column;gap:0;padding:22px;border-radius:var(--r-lg);height:100%;'
                   +'background:var(--bg);border:1px solid '+(soon?'var(--accent-2)':'var(--line)')
                   +';min-width:0'
@@ -829,8 +829,6 @@ class Component extends DCLogic {
               hasNearest: nearest!=null,
               items:list,
               hasItems:list.length>0,
-              // 공고는 세로로 쌓으면 화면이 한없이 길어진다 — 옆으로 넘겨 본다
-              rail:this.rail('sp',{per:3}),
               empty:!!d&&!!d.ok&&all.length===0,
               noMatch:!!d&&!!d.ok&&all.length>0&&list.length===0,
               restCount:rest.length,
