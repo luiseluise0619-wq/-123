@@ -1108,7 +1108,8 @@ class Component extends DCLogic {
           if(!selId) return '';
           const i = r.list.findIndex(o=>o.id===selId);
           if(i<0) return '';
-          return this.t('hub.peekRank',{zone:selNm, n:r.covered.toLocaleString(), r:i+1});
+          // 이름은 바로 위 '고른 상권' 칩에 이미 있다 — 순위만 적는다
+          return this.t('rank.ofPlaces',{n:r.covered.toLocaleString(), r:i+1});
         })();
         return {
           title: HEAD[k].t,
@@ -1158,8 +1159,18 @@ class Component extends DCLogic {
         };
       })(),
       goFind:go('find'), goDiag:go('diag'), goCmp:go('sim'),
-      goMap:()=>this.setState({screen:'map',menu:null,
-        mapGu:(S.sel&&S.zgu&&S.zgu[S.sel])||'서울 전체'}),
+      // 후보지 화면은 아무것도 안 고른 상태에서 1위 상권을 보여준다(S.sel 은 null).
+      // 그 상태에서 '이 상권 자세히 보기'를 누르면 화면에 보이던 상권이 그대로
+      // 넘어가야 한다 — 예전에는 S.sel 이 null 이라 자치구가 '서울 전체'로 떨어지고,
+      // 그다음 허브도 '고른 상권 없음'으로 되돌아갔다.
+      goMap:()=>{
+        const r=this.rank(), L=(r&&r.list)||[];
+        const shown = S.sel
+          || ((S.homeZone && (L.find(o=>o.name===S.homeZone)||{}).id) || (L[0]||{}).id)
+          || null;
+        this.setState({screen:'map', menu:null, sel:shown||S.sel,
+          mapGu:(shown&&S.zgu&&S.zgu[shown])||'서울 전체'});
+      },
       goFineCmp:go('fineCmp'),
       // 다시 열면 보낸 상태가 남아 있지 않게 초기화한다
       openReport:()=>this.setState({screen:'report',rp_sent:false}),

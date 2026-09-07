@@ -138,7 +138,6 @@ globalThis.MysbizonParts.i18n = {
       'menu.sim':'정밀비교','menu.bep':'본전 계산',
 
       'hub.peekTop':'{ind} · {n}곳 중 1위 {zone}',
-      'hub.peekRank':'{zone} · {n}곳 중 {r}위',
       'home.stamp':'서울 상권 {n}곳 · {q} 기준',
       'home.eyebrow':'내 장사의 시작, 데이터로 한 걸음 더',
       'home.title':'어떤 동네에서 시작해 볼까요?',

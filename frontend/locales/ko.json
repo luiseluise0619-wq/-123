@@ -82,7 +82,6 @@
   "home.start": "동네 찾아보기",
   "home.sub": "업종을 고르면 동네를 비교하고, 내 조건에 맞는 본전선을 확인할 수 있어요.",
   "home.title": "어떤 동네에서 시작해 볼까요?",
-  "hub.peekRank": "{zone} · {n}곳 중 {r}위",
   "hub.peekTop": "{ind} · {n}곳 중 1위 {zone}",
   "market.add": "+ 관심지표 추가",
   "market.addQ": "어떤 지표를 추가할까요?",
