@@ -11,6 +11,8 @@ globalThis.MysbizonParts.views = {
     const go=s=>()=>this.setState({screen:s,menu:null});
     const arrowUp='flex:none;font-size:15px;font-weight:600;color:var(--good);width:14px';
     const arrowDn='flex:none;font-size:15px;font-weight:600;color:var(--warn);width:14px';
+    // 좋고 나쁨이 아니라 '아직 안 넣었다'를 말하는 줄. ↑↓ 를 쓰면 없는 판단을 전한다.
+    const arrowInfo='flex:none;font-size:15px;font-weight:600;color:var(--ink3);width:14px';
     // 후보지는 '지역 → 구 → 업종' 순으로 좁힌다. 구를 고르면 그 안에서만 줄 세운다.
     const findGu = S.findGu || '';
     const Lall = r.list;
@@ -242,7 +244,7 @@ globalThis.MysbizonParts.views = {
              text:'초기투자 '+this.man(c.invest)+'을 되찾는 데 약 '+Math.ceil(c.payback)+'개월'}
           : (c.invest>0
             ? {sign:'↓', arrow:arrowDn, text:'지금 조건에서는 초기투자를 회수하지 못해요'}
-            : {sign:'↓', arrow:arrowDn, text:'초기투자를 넣으면 회수기간도 나와요'})
+            : {sign:'·', arrow:arrowInfo, text:'초기투자를 넣으면 회수기간도 나와요'})
       ],
       thinStyle: sel.stores<=5?'font-size:12.5px;color:var(--warn);margin-top:26px;max-width:600px;text-wrap:pretty':'display:none',
       // 업종 이름이 문장 안에 들어가면 통째로는 사전에서 못 찾는다 — 자리표시자로 둔다
@@ -256,6 +258,8 @@ globalThis.MysbizonParts.views = {
     const num=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?'':this.bound(v,0,k==='cogs'?95:100000,0)});};
     const ovr=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?null:this.bound(v,0,k==='staffOv'?100:100000,0)});};
 
+    // 다른 화면과 같은 방식으로 접는다 — 문장은 그대로 두고 '데이터 기준 보기' 안으로 넣는다.
+    out.d.note=this.dataNote('bep', '본전 = 고정비 ÷ (1 − 원가율) 로 계산해요.', [['계산 기준', out.d.honesty]]);
     // 평수 하나로 규모가 움직인다
     // 슬라이더는 '계산에 쓰는 평수'를 보여준다. 설문에서 상한을 넘는 값을 넣었을 때
     // 슬라이더만 다른 숫자를 들고 있으면 화면과 계산이 어긋난다.
@@ -687,7 +691,7 @@ globalThis.MysbizonParts.views = {
         return {
           charts:ch.charts, hasCharts:ch.charts.length>0,
           // 한 화면에 차트 하나(§8). 두 개를 나란히 두면 관리자 대시보드가 된다.
-          rail:this.rail('mv',{per:1}),
+          rail:this.rail('mv',{per:1, peek:false, arrows:true}),
           // 아래에 차트 이름을 늘어놓고, 누르면 그 차트로 건너뛴다
           chartNav:ch.charts.map((c,i)=>({
             label:c.title,
@@ -887,7 +891,7 @@ globalThis.MysbizonParts.views = {
                   valStyle:'font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums', bar:null}]
         })),
         add:addBox, rail:this.rail('cmpCols',{per:3}),
-        charts:[], chartRail:this.rail('cmpCh',{per:1}), hasCharts:false,
+        charts:[], chartRail:this.rail('cmpCh',{per:1, peek:false, arrows:true}), hasCharts:false,
         diffs:[], honesty:'', empty:true, on:picks.length>0,
         verdict:'', verdictWhy:[], hasVerdict:false,
         // 순위 UI 는 두 곳 이상 담아야 뜬다 — 자리만 비워 둔다
@@ -1037,7 +1041,7 @@ globalThis.MysbizonParts.views = {
             text:'담은 '+picks.length+'곳 중 손님이 쓴 돈이 가장 많아요.'} : null});
         return C;
       })(),
-      chartRail:this.rail('cmpCh',{per:1}),
+      chartRail:this.rail('cmpCh',{per:1, peek:false, arrows:true}),
       hasCharts:true,
 
       cols:RK.list.map(o=>{

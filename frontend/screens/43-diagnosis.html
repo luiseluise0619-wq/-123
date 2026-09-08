@@ -218,6 +218,16 @@
           </sc-if>
         </div>
 
-        <p style="font-size:12.5px;color:var(--ink3);margin:28px 0 0;max-width:640px;text-wrap:pretty">{{ d.honesty }}</p>
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;max-width:640px;margin-top:28px">
+          <span style="{{ d.note.lineStyle }}">ⓘ {{ d.note.line }}</span>
+          <span role="button" tabIndex="0" onClick="{{ d.note.toggle }}" style="{{ d.note.btnStyle }}">{{ d.note.label }}</span>
+        </div>
+        <sc-if value="{{ d.note.open }}">
+          <div style="margin-top:10px;max-width:640px">
+            <sc-for list="{{ d.note.rows }}" as="n">
+              <div style="{{ dsSub }}">{{ n.body }}</div>
+            </sc-for>
+          </div>
+        </sc-if>
       </section>
     </sc-if>

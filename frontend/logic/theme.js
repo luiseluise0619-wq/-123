@@ -169,7 +169,10 @@ globalThis.MysbizonParts.theme = {
     set('--color-on-primary', this.onPrimary(primaryNow) );
     // ⑤ 강조색을 '글자'로 쓸 때. 배경과 4.5:1 이 안 되면 그만큼만 옮긴다.
     const bgNow = (cst&&cst.background) || (dark?'#000000':'#FFFFFF');
-    set('--color-primary-text', this.readableOn(primaryNow, bgNow));
+    //   배경만 보면 모자란다 — 같은 글자가 회색 면(--surface)과 hover 면(--line) 위에도 앉는다.
+    //   가장 진한 면까지 통과하도록 두 번 재운다(이미 넘으면 값이 그대로 돌아온다).
+    const surfNow = dark ? '#1F1F22' : '#EAECEC';
+    set('--color-primary-text', this.readableOn(this.readableOn(primaryNow, bgNow), surfNow));
 
     // 차트는 CSS 변수를 직접 못 읽는다 — 다시 그리게 표시만 바꿔 준다
     this._theme = (dark?'dark':'light')+'/'+key+'/'+JSON.stringify(cst||{});
@@ -223,7 +226,7 @@ globalThis.MysbizonParts.theme.settingsView = function(){
     settingsOpen:!!S.setOpen,
     openSettings:()=>this.setState({setOpen:!S.setOpen}),
     closeSettings:()=>this.setState({setOpen:false, setAdv:false}),
-    settingsBtn:'flex:none;width:34px;height:34px;border-radius:50%;display:inline-flex;'
+    settingsBtn:'flex:none;width:40px;height:40px;border-radius:50%;display:inline-flex;'
       +'align-items:center;justify-content:center;cursor:pointer;font-size:15px;'
       +'background:var(--color-surface);color:var(--color-text-secondary)',
     // 시트/패널

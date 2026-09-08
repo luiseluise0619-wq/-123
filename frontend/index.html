@@ -71,7 +71,7 @@
     --color-text-secondary:#4E5968;
     /* #687583 은 흰 바탕에서는 넉넉했지만 회색 바탕(--surface)에서 4.32:1 로
        AA(4.5) 를 아슬아슬하게 못 넘었다. 두 바탕 모두에서 넘게 한 단계 내린다. */
-    --color-text-muted:#636F7C;
+    --color-text-muted:#5F6A78;
     --color-border:#EAECEC;
     --color-border-strong:#D2D2D7;
     /* 의미 색 — '+' 라서 초록이 아니라, 사장님에게 좋은 값일 때만 초록이다.
@@ -237,7 +237,7 @@
   <a class="skip-link" href="#main-content">본문으로 바로가기</a>
   <header style="{{ headerStyle }}">
     <div style="{{ headerInner }}">
-      <div role="button" tabIndex="0" onClick="{{ goHome }}" style="font-size:15px;font-weight:700;letter-spacing:-0.02em;flex:none;cursor:pointer;white-space:nowrap">MYSBIZON</div>
+      <div role="button" tabIndex="0" onClick="{{ goHome }}" style="font-size:15px;font-weight:700;letter-spacing:-0.02em;flex:none;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;min-height:44px">MYSBIZON</div>
       <nav style="display:flex;gap:2px;align-items:center;flex:1 1 auto;min-width:0">
         <sc-for list="{{ nav }}" as="n">
           <div style="position:relative;flex:0 1 auto;min-width:0;overflow:hidden">
@@ -705,7 +705,7 @@
           <div data-rp-card="1" style="padding:24px 22px;border-radius:20px;background:var(--bg);box-shadow:0 0 0 1px var(--line)">
             <div style="display:flex;align-items:center;gap:10px">
               <sc-if value="{{ rp.hasBack }}">
-                <span role="button" tabIndex="0" aria-label="이전 질문" onClick="{{ rp.curBack }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .14s" style-hover="background:var(--line-strong)">←</span>
+                <span role="button" tabIndex="0" aria-label="이전 질문" onClick="{{ rp.curBack }}" style="flex:none;width:44px;height:44px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .14s" style-hover="background:var(--line-strong)">←</span>
               </sc-if>
               <span style="flex:1"></span>
               <sc-if value="{{ rp.hasStep }}">
@@ -1100,13 +1100,13 @@
 
         <div style="margin-top:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span class="u-lab">업종</span>
-          <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+          <select aria-label="업종 선택" value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o">
               <option value="{{ o.raw }}">{{ o.label }}</option>
             </sc-for>
           </select>
           <span class="u-lab">자치구</span>
-          <select value="{{ fc.guValue }}" onChange="{{ fc.onGu }}" style="{{ selectStyle }}">
+          <select aria-label="자치구 선택" value="{{ fc.guValue }}" onChange="{{ fc.onGu }}" style="{{ selectStyle }}">
             <sc-for list="{{ fc.guOptions }}" as="g">
               <option value="{{ g.v }}">{{ g.label }}</option>
             </sc-for>
@@ -1195,13 +1195,13 @@
         <p style="{{ dsBody }}; margin-top:10px">상권을 바꿔 가며 매출·수요·경쟁을 한눈에 봐요.</p>
 
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:20px">
-          <select value="{{ sidoSel }}" onChange="{{ onSido }}" style="{{ selectStyle }}">
+          <select aria-label="시·도 선택" value="{{ sidoSel }}" onChange="{{ onSido }}" style="{{ selectStyle }}">
             <sc-for list="{{ sidoOptions }}" as="o"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
           </select>
-          <select value="{{ mv.guValue }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
+          <select aria-label="자치구 선택" value="{{ mv.guValue }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
             <sc-for list="{{ mv.guOptions }}" as="g"><option value="{{ g.v }}">{{ g.label }}</option></sc-for>
           </select>
-          <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+          <select aria-label="업종 선택" value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o"><option value="{{ o.raw }}">{{ o.label }}</option></sc-for>
           </select>
         </div>
@@ -1412,7 +1412,7 @@
       <!-- 서울과의 비교 — 지도가 아니라 여기가 제자리다 -->
       <section style="padding:44px 0 0">
         <h2 style="{{ ds3 }}">서울과 견주면 어떤가요?</h2>
-        <div style="margin-top:14px;overflow-x:auto">
+        <div class="u-xscroll" style="margin-top:14px;overflow-x:auto">
           <div style="{{ mv.vs.boxStyle }}">
             <div style="display:flex;align-items:center;gap:12px;padding:0 0 10px;border-bottom:1px solid var(--line)">
               <span style="flex:1;min-width:0;font-size:12.5px;color:var(--ink3)">항목</span>
@@ -1455,7 +1455,7 @@
 
         <div style="margin-top:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span class="u-lab">업종</span>
-          <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+          <select aria-label="업종 선택" value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o">
               <option value="{{ o.raw }}">{{ o.label }}</option>
             </sc-for>
@@ -1630,7 +1630,7 @@
 
           <!-- 2단: 고른 업종 -->
           <div style="{{ rg.paneStyle }}">
-            <span role="button" tabIndex="0" onClick="{{ rg.detail.back }}" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--accent-text);cursor:pointer;white-space:nowrap">
+            <span role="button" tabIndex="0" onClick="{{ rg.detail.back }}" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--accent-text);cursor:pointer;white-space:nowrap;min-height:44px">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;display:block">
                 <sc-for list="{{ icoBack }}" as="p"><path d="{{ p.d }}"></path></sc-for>
               </svg>목록으로
@@ -1700,7 +1700,7 @@
 
             <div class="u-lab" style="margin-top:22px">업종</div>
             <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-              <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+              <select aria-label="업종 선택" value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
                 <sc-for list="{{ indOptions }}" as="o">
                   <option value="{{ o.raw }}">{{ o.label }}</option>
                 </sc-for>
@@ -2047,7 +2047,17 @@
           </sc-if>
         </div>
 
-        <p style="font-size:12.5px;color:var(--ink3);margin:28px 0 0;max-width:640px;text-wrap:pretty">{{ d.honesty }}</p>
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;max-width:640px;margin-top:28px">
+          <span style="{{ d.note.lineStyle }}">ⓘ {{ d.note.line }}</span>
+          <span role="button" tabIndex="0" onClick="{{ d.note.toggle }}" style="{{ d.note.btnStyle }}">{{ d.note.label }}</span>
+        </div>
+        <sc-if value="{{ d.note.open }}">
+          <div style="margin-top:10px;max-width:640px">
+            <sc-for list="{{ d.note.rows }}" as="n">
+              <div style="{{ dsSub }}">{{ n.body }}</div>
+            </sc-for>
+          </div>
+        </sc-if>
       </section>
     </sc-if>
     <!-- 정밀비교 — 담아 둔 상권을 공개 데이터로 견준다. 결론(종합 1위)이 먼저다.
@@ -2059,7 +2069,7 @@
 
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px">
           <span class="u-lab">업종</span>
-          <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+          <select aria-label="업종 선택" value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o">
               <option value="{{ o.raw }}">{{ o.label }}</option>
             </sc-for>

@@ -6,13 +6,13 @@
         <p style="{{ dsBody }}; margin-top:10px">상권을 바꿔 가며 매출·수요·경쟁을 한눈에 봐요.</p>
 
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:20px">
-          <select value="{{ sidoSel }}" onChange="{{ onSido }}" style="{{ selectStyle }}">
+          <select aria-label="시·도 선택" value="{{ sidoSel }}" onChange="{{ onSido }}" style="{{ selectStyle }}">
             <sc-for list="{{ sidoOptions }}" as="o"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
           </select>
-          <select value="{{ mv.guValue }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
+          <select aria-label="자치구 선택" value="{{ mv.guValue }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
             <sc-for list="{{ mv.guOptions }}" as="g"><option value="{{ g.v }}">{{ g.label }}</option></sc-for>
           </select>
-          <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+          <select aria-label="업종 선택" value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o"><option value="{{ o.raw }}">{{ o.label }}</option></sc-for>
           </select>
         </div>

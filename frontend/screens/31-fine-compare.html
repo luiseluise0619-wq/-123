@@ -6,13 +6,13 @@
 
         <div style="margin-top:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span class="u-lab">업종</span>
-          <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+          <select aria-label="업종 선택" value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o">
               <option value="{{ o.raw }}">{{ o.label }}</option>
             </sc-for>
           </select>
           <span class="u-lab">자치구</span>
-          <select value="{{ fc.guValue }}" onChange="{{ fc.onGu }}" style="{{ selectStyle }}">
+          <select aria-label="자치구 선택" value="{{ fc.guValue }}" onChange="{{ fc.onGu }}" style="{{ selectStyle }}">
             <sc-for list="{{ fc.guOptions }}" as="g">
               <option value="{{ g.v }}">{{ g.label }}</option>
             </sc-for>

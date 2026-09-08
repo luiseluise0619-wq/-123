@@ -71,7 +71,7 @@
     --color-text-secondary:#4E5968;
     /* #687583 은 흰 바탕에서는 넉넉했지만 회색 바탕(--surface)에서 4.32:1 로
        AA(4.5) 를 아슬아슬하게 못 넘었다. 두 바탕 모두에서 넘게 한 단계 내린다. */
-    --color-text-muted:#636F7C;
+    --color-text-muted:#5F6A78;
     --color-border:#EAECEC;
     --color-border-strong:#D2D2D7;
     /* 의미 색 — '+' 라서 초록이 아니라, 사장님에게 좋은 값일 때만 초록이다.
@@ -237,7 +237,7 @@
   <a class="skip-link" href="#main-content">본문으로 바로가기</a>
   <header style="{{ headerStyle }}">
     <div style="{{ headerInner }}">
-      <div role="button" tabIndex="0" onClick="{{ goHome }}" style="font-size:15px;font-weight:700;letter-spacing:-0.02em;flex:none;cursor:pointer;white-space:nowrap">MYSBIZON</div>
+      <div role="button" tabIndex="0" onClick="{{ goHome }}" style="font-size:15px;font-weight:700;letter-spacing:-0.02em;flex:none;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;min-height:44px">MYSBIZON</div>
       <nav style="display:flex;gap:2px;align-items:center;flex:1 1 auto;min-width:0">
         <sc-for list="{{ nav }}" as="n">
           <div style="position:relative;flex:0 1 auto;min-width:0;overflow:hidden">

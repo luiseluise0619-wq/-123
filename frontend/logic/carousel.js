@@ -31,7 +31,7 @@ globalThis.MysbizonParts.carousel = {
       // 화살표는 데스크톱에서만. 손가락으로 넘기는 화면에 화살표는 군더더기다.
       // arrows:true 로 넘기면 모바일에서도 낸다 — 잘려 보이는 자리가 없어 '더 있다'가 안 읽히는 칸에서만.
       arrows: o.arrows === true ? true : this.bp() === 'desktop',
-      arrowStyle: 'flex:none;width:34px;height:34px;border-radius:50%;background:var(--surface);'
+      arrowStyle: 'flex:none;width:40px;height:40px;border-radius:50%;background:var(--surface);'
         + 'color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;'
         + 'cursor:pointer;font-size:15px;transition:background .14s;user-select:none'
     };

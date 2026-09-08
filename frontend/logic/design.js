@@ -82,7 +82,9 @@ globalThis.MysbizonParts.design = {
       toggle:()=>this.setState({['note_'+key]:!open}),
       rows:(detail||[]).map(d=>({label:d[0], body:d[1]})),
       lineStyle:'font-size:12.5px;color:var(--ink3);line-height:1.55;text-wrap:pretty',
-      btnStyle:'font-size:12.5px;font-weight:600;color:var(--accent-text);cursor:pointer;white-space:nowrap'
+      // 글자만 있는 버튼도 손가락으로 누른다 — 보이는 크기는 그대로 두고 누를 칸을 44px 로(WCAG 2.5.5)
+      btnStyle:'font-size:12.5px;font-weight:600;color:var(--accent-text);cursor:pointer;white-space:nowrap;'
+        +'display:inline-flex;align-items:center;min-height:44px'
     };
   },
 

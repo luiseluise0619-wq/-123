@@ -165,7 +165,7 @@ globalThis.MysbizonParts.screens = {
             });
             this.startZone();
           },
-          style:'flex:none;font-size:13px;padding:8px 14px;border-radius:999px;background:var(--surface);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;transition:background .16s,color .16s'
+          style:'flex:none;font-size:13px;padding:11px 14px;border-radius:999px;background:var(--surface);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .16s,color .16s'
         });
       });
     }
@@ -223,8 +223,10 @@ globalThis.MysbizonParts.screens = {
         +(open
           ? 'box-shadow:0 16px 40px rgba(0,0,0,.12)'
           : 'box-shadow:0 12px 32px rgba(0,0,0,.08)'),
+      // 보이는 높이는 22px 그대로 두고 누를 칸만 44px 로 넓힌다(WCAG 2.5.5).
+      // height 44 + 세로 padding 11 로 글자 자리를 잡고, 음수 margin 으로 칸 높이를 되돌린다.
       segInput:'width:100%;min-width:0;font-size:15px;font-weight:500;letter-spacing:-0.015em;color:var(--ink);'
-        +'background:transparent;border:none;padding:0;height:22px;outline:none',
+        +'background:transparent;border:none;padding:11px 0;margin:-11px 0;height:44px;outline:none',
       zq:zq, iq:iq,
       onZoneQ:e=>this.setState({zq:e.target.value,pickOpen:'zone',cursor:0}),
       onIndQ:e=>this.setState({iq:e.target.value,pickOpen:'ind',cursor:0}),
@@ -289,7 +291,7 @@ globalThis.MysbizonParts.screens = {
         .filter(([n])=>indsAll.indexOf(n)>=0)
         .map(([n,em])=>({label:em+' '+this.indName(n),
           pick:()=>this.setState({homeInd:n,ind:n,iq:this.indName(n),pickOpen:null}),
-          style:'flex:none;font-size:13.5px;font-weight:500;padding:9px 15px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:38px;display:inline-flex;align-items:center;transition:background .14s,color .14s;'
+          style:'flex:none;font-size:13.5px;font-weight:500;padding:12px 15px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .14s,color .14s;'
             +(n===S.homeInd?'background:var(--accent);color:var(--on-accent)':'background:var(--surface);color:var(--ink2)')})),
       indCats:CATS.map(c=>({label:c,
         pick:()=>this.setState({indCat:c}),
@@ -365,7 +367,7 @@ globalThis.MysbizonParts.screens = {
       recentChips:(S.recent||[]).map(nm=>zoneAll.find(z=>z.name===nm)).filter(Boolean).slice(0,4).map(z=>({
         name:this.zoneLabelOf(z.name), meta:guOf(z.id),
         pick:()=>this.setState({homeZoneName:z.name,zoneId:z.id,sel:z.id,zq:this.zoneLabelOf(z.name),pickOpen:null}),
-        style:'flex:none;display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:999px;background:var(--surface);cursor:pointer;white-space:nowrap;min-height:38px;transition:background .14s,color .14s'
+        style:'flex:none;display:inline-flex;align-items:center;gap:7px;padding:12px 15px;border-radius:999px;background:var(--surface);cursor:pointer;white-space:nowrap;min-height:44px;transition:background .14s,color .14s'
       })),
       // ㄱㄴㄷ 순 — 행정 순서(종로구부터)는 사장님이 아는 순서가 아니라 찾기 어렵다
       // 한 번 누르면 고르고, 같은 구를 한 번 더 누르면 그 구로 정하고 창을 닫는다.
@@ -430,7 +432,7 @@ globalThis.MysbizonParts.screens = {
   zoneCompare(){
     const S=this.state, zi=S.zi, zgu=S.zgu;
     const empty={rows:[], cards:[], ind:'', lead:'', sub:'', note:this.dataNote('zc','',[]), maxPer:1,
-      charts:[], hasCharts:false, rail:this.rail('zc',{per:4}), chartRail:this.rail('zcc',{per:1}),
+      charts:[], hasCharts:false, rail:this.rail('zc',{per:4}), chartRail:this.rail('zcc',{per:1, peek:false, arrows:true}),
       hasList:false, allOpen:false, toggleAll:()=>{}, allLabel:'', medLine:'', medNote:'', picked:''};
     if(!zi||!zgu) return empty;
     const idx=zi.inds.indexOf(S.ind);
@@ -547,7 +549,7 @@ globalThis.MysbizonParts.screens = {
       medNote:'가운데 눈금이 서울 자치구 중앙값이에요',
       // 가로 슬라이드 — 25개를 세로로 펼치지 않는다
       rail:this.rail('zc',{per:4}),
-      chartRail:this.rail('zcc',{per:1}),
+      chartRail:this.rail('zcc',{per:1, peek:false, arrows:true}),
       cards:list.map(card),
       charts:C, hasCharts:C.length>0,
       // 전체 목록은 눌렀을 때만
@@ -752,7 +754,7 @@ globalThis.MysbizonParts.screens = {
       list:[], listTitle:'', hasList:false,
       // 자료를 못 불러와 일찍 돌아가는 갈래에서도 값이 비지 않게 미리 넣어 둔다
       chartCount:'', noteBox:this.dataNote('pr','',[]),
-      rail:this.rail('price', {per:1, peek:this.bp()!=='mobile'? false : true, arrows:true})
+      rail:this.rail('price', {per:1, peek:false, arrows:true})
     };
     const C=[];   // 이 카테고리의 차트들
     const push=(id,opt)=>{ const c=this.chartCard(id,opt); if(c) C.push(c); };
@@ -1005,7 +1007,7 @@ globalThis.MysbizonParts.screens = {
     out.hasList=out.list.length>0;
     // 한 화면에 차트 하나. 옆으로 넘겨 다음 질문으로 간다(§8·§21)
     // 데스크톱은 세로 메뉴 옆 좁은 칸이라 꽉 채우고, 모바일은 다음 장이 10% 걸치게 둔다(§9).
-    out.rail=this.rail('price', {per:1, peek:this.bp()!=='mobile'? false : true, arrows:true});
+    out.rail=this.rail('price', {per:1, peek:false, arrows:true});
     return out;
   }
 };

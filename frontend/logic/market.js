@@ -114,7 +114,7 @@ globalThis.MysbizonParts.market.marketView = function(){
       +'overflow:hidden;text-overflow:ellipsis;'
       +(on?'color:var(--ink)':'color:var(--ink3)');
   const indStyle=on=> mob
-    ? 'flex:none;scroll-snap-align:start;padding:6px 2px;cursor:pointer;font-size:14px;'
+    ? 'flex:none;scroll-snap-align:start;padding:6px 12px;min-width:44px;text-align:center;cursor:pointer;font-size:14px;'
       +'white-space:nowrap;transition:color .14s;border-bottom:2px solid '
       +(on?'var(--accent);color:var(--ink);font-weight:700':'transparent;color:var(--ink3)')
     : 'display:block;margin-left:8px;padding:10px 13px;border-radius:var(--r-sm);cursor:pointer;'

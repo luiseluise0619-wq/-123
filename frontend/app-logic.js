@@ -418,7 +418,7 @@ class Component extends DCLogic {
         open:()=> g.hub==='__bot'
           ? this.setState({bot:true,menu:null})
           : this.setState({screen:g.hub,menu:null}),
-        style:'font-size:14px;white-space:nowrap;cursor:pointer;padding:8px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
+        style:'font-size:14px;white-space:nowrap;cursor:pointer;padding:11px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
           +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:600;background:var(--surface)':'color:var(--ink2)'),
         items:g.items.map(([k,label,tag])=>({
           label:label+(tag?'  '+tag:''),
@@ -1378,7 +1378,9 @@ class Component extends DCLogic {
                 'right:28px;bottom:calc(28px + env(safe-area-inset-bottom,0px));'),
       // CTA 체계 — 주 행동 하나만 강조한다
       ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
-      ctaText:'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap',
+      // 글자 버튼 — 보이는 크기는 그대로, 누를 칸만 44px (WCAG 2.5.5)
+      ctaText:'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap;'
+        +'display:inline-flex;align-items:center;min-height:44px',
       openWhy:S.openWhy, whyLabel:S.openWhy?'계산 방식 접기':'점수 계산 방식 보기',
       toggleWhy:()=>this.setState({openWhy:!S.openWhy}),
       openCond:S.open.cond, openMoney:S.open.money, openDay:S.open.day, openRisk:S.open.risk,
@@ -1393,7 +1395,7 @@ class Component extends DCLogic {
         verdict:'', pctText:'', pctFine:'', medText:'', scoreBar:'display:none', scoreMed:'display:none', reasons:[],
         thin:false, thinWarn:'', thinBadge:''};
       out.rows=[]; out.honesty='';
-      out.d={eyebrow:'',headline:S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.',bep:'—',rev:'—',revName:'',gap:'',gapStyle:'display:none',fill:'display:none',mark:'display:none',factors:[],thin:'',thinStyle:'display:none',honesty:''};
+      out.d={eyebrow:'',headline:S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.',bep:'—',rev:'—',revName:'',gap:'',gapStyle:'display:none',fill:'display:none',mark:'display:none',factors:[],thin:'',thinStyle:'display:none',honesty:'',note:this.dataNote('bep','',[])};
       out.inputs=[]; out.scens=[]; out.scenNote=''; out.stack=[]; out.moneyRows=[]; out.stackLead='';
       out.dayStats=[]; out.dayWhy=''; out.riskStats=[]; out.riskLead='';
       out.foot={has:false,lead:'',stats:[],note:''};
@@ -1407,7 +1409,7 @@ class Component extends DCLogic {
              recent:[],hasRecent:false,suggest:[],hasSuggest:false,full:false,fullText:'',
              foundRail:this.rail('cmpFound',{per:3}),recentRail:this.rail('cmpRecent',{per:3}),
              suggestRail:this.rail('cmpSug',{per:3})},
-        rail:this.rail('cmpCols',{per:3}), chartRail:this.rail('cmpCh',{per:1}),
+        rail:this.rail('cmpCols',{per:3}), chartRail:this.rail('cmpCh',{per:1, peek:false, arrows:true}),
         charts:[], hasCharts:false, emptyCount:'',
         verdict:'', verdictWhy:[], hasVerdict:false,
         presets:[], presetRail:this.rail('cmpPre',{per:5}),
@@ -1421,7 +1423,7 @@ class Component extends DCLogic {
         detail:{has:false,title:'',dong:'',rows:[],facts:[],note:''},
         target:'', stamp:'', question:'', rowStyle:'', tagStyle:'',
         cards:[], cardIndex:0,
-        now:{charts:[],hasCharts:false,rail:this.rail('mv',{per:1}),chartNav:[],
+        now:{charts:[],hasCharts:false,rail:this.rail('mv',{per:1, peek:false, arrows:true}),chartNav:[],
              hasChartNav:false,chartCount:'0개',missing:[],hasMissing:false,
              title:'',q:'',big:'',bigLabel:'',verdict:'',hasVerdict:false,
              rows:[],bars:[],hasBars:false,note:'',hasNote:false,bigStyle:''},

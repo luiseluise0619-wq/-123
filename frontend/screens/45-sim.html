@@ -7,7 +7,7 @@
 
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px">
           <span class="u-lab">업종</span>
-          <select value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
+          <select aria-label="업종 선택" value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
             <sc-for list="{{ indOptions }}" as="o">
               <option value="{{ o.raw }}">{{ o.label }}</option>
             </sc-for>
