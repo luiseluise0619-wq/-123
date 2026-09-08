@@ -35,7 +35,7 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
   header { height:auto !important;min-height:56px;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:var(--card) !important; }
   header > div { gap:0 12px !important;padding-top:4px !important;padding-bottom:4px !important; }
   header > div > [role=button] { min-height:40px !important; }
-  header nav { position:fixed;left:0;right:0;bottom:0;z-index:60;width:auto;
+  header nav { position:fixed;left:0;right:0;bottom:0;z-index:55;width:auto;
     display:flex;justify-content:space-around;gap:0;
     padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px));
     background:var(--bg-blur);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);

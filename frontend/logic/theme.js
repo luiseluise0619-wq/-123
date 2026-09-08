@@ -231,10 +231,10 @@ globalThis.MysbizonParts.theme.settingsView = function(){
       +'background:var(--color-surface);color:var(--color-text-secondary)',
     // 시트/패널
     settingsCard: mobile
-      ? 'position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--color-background);'
+      ? 'position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--color-elevated);'
         +'border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.24);padding:22px 20px 28px;'
         +'max-height:82vh;overflow-y:auto;animation:botIn .24s cubic-bezier(.22,.72,.24,1) both'
-      : 'position:fixed;right:22px;top:66px;z-index:80;width:320px;background:var(--color-background);'
+      : 'position:fixed;right:22px;top:66px;z-index:80;width:320px;background:var(--color-elevated);'
         +'border:1px solid var(--color-border);border-radius:20px;box-shadow:var(--shadow-pop);'
         +'padding:20px;max-height:calc(100vh - 96px);overflow-y:auto;'
         +'animation:riseIn .18s cubic-bezier(.22,.72,.24,1) both',

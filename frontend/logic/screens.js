@@ -223,10 +223,10 @@ globalThis.MysbizonParts.screens = {
         +(open
           ? 'box-shadow:0 16px 40px rgba(0,0,0,.12)'
           : 'box-shadow:0 12px 32px rgba(0,0,0,.08)'),
-      // 보이는 높이는 22px 그대로 두고 누를 칸만 44px 로 넓힌다(WCAG 2.5.5).
-      // height 44 + 세로 padding 11 로 글자 자리를 잡고, 음수 margin 으로 칸 높이를 되돌린다.
+      // 입력칸 자체는 22px 이지만 누르는 칸은 감싼 셀(indBtn·zoneBtn, onClick=openInd/openZone)이라
+      // 44px 이 넘는다. 칸을 44px 로 키우면 초점 테두리가 위아래 라벨을 가로질러 그어진다(실제로 그랬다).
       segInput:'width:100%;min-width:0;font-size:15px;font-weight:500;letter-spacing:-0.015em;color:var(--ink);'
-        +'background:transparent;border:none;padding:11px 0;margin:-11px 0;height:44px;outline:none',
+        +'background:transparent;border:none;padding:0;height:22px;outline:none',
       zq:zq, iq:iq,
       onZoneQ:e=>this.setState({zq:e.target.value,pickOpen:'zone',cursor:0}),
       onIndQ:e=>this.setState({iq:e.target.value,pickOpen:'ind',cursor:0}),
