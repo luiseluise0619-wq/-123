@@ -23,7 +23,7 @@ test('리포트 동의 false 문자열·잘못된 배열·과도한 항목 거�
   assert.equal(reportInput({email:'t@e.com',agreed:true,headline:'Startup support report'}).headline,'Startup support report');
   assert.equal(reportInput({email:'t@e.com',agreed:true,headline:'x'.repeat(300)}).headline.length,100);
   assert.equal(reportInput({email:'t@e.com',agreed:true,headline:'   '}).headline,'상권 분석 리포트');
-  assert.match(reportInput({email:'t@e.com',agreed:true,honesty:'보장합니다'}).honesty,/추정치입니다/);
+  assert.match(reportInput({email:'t@e.com',agreed:true,honesty:'보장합니다'}).honesty,/추정치예요/);
 });
 test('요청 제한 만료·메모리 상한·프록시 헤더 위조 방어',()=>{
   let time=0;const limit=createLimiter({now:()=>time,maxKeys:2});
