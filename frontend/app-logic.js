@@ -209,6 +209,14 @@ class Component extends DCLogic {
       this._onPop=e=>{
         const scr=e.state&&e.state.mysbizon;
         if(!scr) return;                       // 우리가 쌓은 기록이 아니면 브라우저에 맡긴다
+        const S=this.state;
+        // 떠 있는 창이 열려 있으면 뒤로 가기는 **그것부터 닫는다.** 폰에서 기대하는 동작이고,
+        // 안 그러면 창은 그대로인 채 뒤 화면만 바뀐다. 화면을 안 옮겼으니 기록을 도로 쌓는다.
+        if(S.setOpen || S.bot || S.notice){
+          try{ history.pushState({mysbizon:this._screen}, ''); }catch(err){}
+          this.setState({setOpen:false, bot:false, notice:false});
+          return;
+        }
         this._fromPop=true;
         this.setState({screen:scr, menu:null, pickOpen:null});
       };
