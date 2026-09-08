@@ -11,10 +11,23 @@ class Component extends DCLogic {
       sessionStorage.removeItem('mysbizon.report');
       if(raw) this.setState({d:JSON.parse(raw)});
     }catch(e){}
+    // 화면에서 고른 언어를 인쇄본도 따른다. 한국어면 아무 일도 하지 않는다.
+    var I=globalThis.MysbizonReportI18n;
+    // 사전은 나중에 온다. 이름을 끼워 만든 문장은 다시 그려야 옮겨진다.
+    if(I) I.load().then(()=>{ if(this.forceUpdate) this.forceUpdate(); I.apply(); });
+  }
+
+  // 다시 그릴 때마다 한 번 더 훑는다 — 이미 옮긴 글자에는 한글이 없어 그냥 지나간다.
+  componentDidUpdate(){
+    var I=globalThis.MysbizonReportI18n;
+    if(I) I.apply();
   }
 
   renderVals(){
     const d=this.state.d;
+    // 인쇄본은 그린 뒤 DOM 을 훑어 옮기지만, 이름을 끼워 만드는 문장은 미리 옮겨야 한다.
+    const I=globalThis.MysbizonReportI18n;
+    const TR=s=>(I&&I.tr)? I.tr(s) : s;
     const today=(()=>{ const t=new Date();
       return t.getFullYear()+'년 '+(t.getMonth()+1)+'월 '+t.getDate()+'일'; })();
     // 이 리포트가 답하지 않는 것. 본전·비용은 여기서 다루지 않으므로 그 사실을 적는다.
@@ -50,9 +63,11 @@ class Component extends DCLogic {
       head:(ind?ind+' · ':'')+zone+(gu?' · '+gu:''),
       // 상권을 직접 고르지 않은 채 받은 리포트는 그렇다고 적는다.
       hasHeadNote:!!d.zoneAuto,
+      // 구 이름이 문장 안에 들어가면 통째로는 사전에서 못 찾는다 — 옮긴 뒤 이름을 끼운다
       headNote: d.zoneAutoGu
-        ? '직접 고르신 상권이 아니라, '+d.zoneAutoGu+'에서 이 업종 1위인 상권으로 계산했습니다.'
-        : '직접 고르신 상권이 아니라, 이 업종에서 1위인 상권으로 계산했습니다.',
+        ? TR('직접 고르신 상권이 아니라, {0}에서 이 업종 1위인 상권으로 계산했습니다.')
+            .split('{0}').join(d.zoneAutoGu)
+        : TR('직접 고르신 상권이 아니라, 이 업종에서 1위인 상권으로 계산했습니다.'),
       quarter:d.quarter||'—', today:today,
       // 공고가 하나도 없을 때 '모았습니다' 라고 적으면 없는 것을 약속하는 셈이다(§1).
       // 그때는 이 리포트가 실제로 담은 것(손익)을 제목으로 삼는다.

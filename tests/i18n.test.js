@@ -282,7 +282,10 @@ test('중국어 화면 값에는 고유명사만 한글로 남는다', () => {
 function markupKorean() {
   const dir = new URL('../frontend/screens/', import.meta.url);
   const out = new Map();
-  for (const f of fs.readdirSync(dir).filter(n => n.endsWith('.html')).sort()) {
+  // 인쇄본도 같은 표(@phrases)로 옮긴다(report-i18n.js) — 여기 빠지면 PDF 만 한국어로 나간다.
+  const files = [...fs.readdirSync(dir).filter(n => n.endsWith('.html')).sort(),
+                 '../report-print.html'];
+  for (const f of files) {
     const src = fs.readFileSync(new URL(f, dir), 'utf8')
       .replace(/<!--[\s\S]*?-->/g, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')

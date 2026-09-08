@@ -1002,7 +1002,8 @@ class Component extends DCLogic {
               org:o.it.org||'',
               amount:o.it.amount||'',
               period:[o.it.start,o.it.deadline].filter(Boolean).join(' ~ '),
-              why:o.why.join(' · '),
+              // 이어 붙인 뒤에는 사전이 통째로는 못 찾는다 — 조각마다 옮긴 뒤 잇는다
+              why:o.why.map(w=>this.tr(w)).join(' · '),
               url:o.it.url||''
             }));
             const nearest=(top.length?top:matched).map(o=>ddOf(o.it)).filter(v=>v!=null).sort((a,b)=>a-b)[0];
@@ -1097,7 +1098,9 @@ class Component extends DCLogic {
           // 인쇄본으로 넘어가기 전에 지금 상태를 담아 둔다.
           // 설문 답(rp_*)도 같이 담아야 '돌아가기' 로 왔을 때 다시 안 물어본다.
           preview:()=>{try{
-            const payload=buildReport();
+            // 인쇄본도 화면과 같은 언어로 나가야 한다 — 담기 전에 한 번 옮긴다.
+            // 한국어면 trDeep 이 아무 일도 하지 않는다.
+            const payload=this.trDeep(buildReport());
             sessionStorage.setItem('mysbizon.report',JSON.stringify(payload));
             const restore=Object.fromEntries(
               ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen','picks',
@@ -1111,13 +1114,14 @@ class Component extends DCLogic {
             this._reportSending=true;
             this.setState({rp_sending:true,rp_error:''});
             try {
-              const p=buildReport();
+              // 메일도 화면과 같은 언어로 나간다(한국어면 trDeep 이 아무 일도 하지 않는다)
+              const p=this.trDeep(buildReport());
               // 지원사업이 먼저고 손익이 그 다음이다 — 화면과 같은 순서로 담는다.
-              const body=JSON.stringify({email,agreed:S.rp_agree===true,headline:'창업 지원사업 리포트',sub:p.zone+' · '+p.ind,
+              const body=JSON.stringify({email,agreed:S.rp_agree===true,headline:this.tr('창업 지원사업 리포트'),sub:p.zone+' · '+p.ind,
                 facts:[...(p.support||[]).map(x=>({label:x.title, value:[x.amount,x.period].filter(Boolean).join(' · '), tag:x.org})),
                        ...(p.bep||[])],
                 survey:p.survey||[],zones:(p.zones||[]).map(z=>({name:z.name,value:z.score+'점'})),
-                honesty:'지원사업은 자격을 판정한 목록이 아니에요 — 답하신 조건과 겹치는 공고라, 신청 가능 여부는 공고 원문에서 확인해 주세요. 손익은 상권 집계에서 계산한 추정치이고, 넣어 주신 조건은 서버에서 다시 검증하지 않았어요.'});
+                honesty:this.tr('지원사업은 자격을 판정한 목록이 아니에요 — 답하신 조건과 겹치는 공고라, 신청 가능 여부는 공고 원문에서 확인해 주세요. 손익은 상권 집계에서 계산한 추정치이고, 넣어 주신 조건은 서버에서 다시 검증하지 않았어요.')});
               if(this._reportBody!==body){this._reportBody=body;this._reportKey=crypto.randomUUID();}
               const response=await fetch('/api/report',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':this._reportKey},body,signal:AbortSignal.timeout(15000)});
               const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'발송하지 못했어요.');
