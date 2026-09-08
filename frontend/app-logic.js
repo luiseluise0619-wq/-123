@@ -978,7 +978,8 @@ class Component extends DCLogic {
                 ddayStyle:'flex:none;font-size:13px;font-weight:700;white-space:nowrap;'
                   +'padding:5px 11px;border-radius:999px;font-variant-numeric:tabular-nums;'
                   +(dd==null?'background:var(--surface);color:var(--ink2)'
-                    :(soon?'background:var(--err);color:#FFFFFF':'background:var(--accent-3);color:var(--accent-hover)')),
+                    // 어두운 화면의 빨강(#FF6B60)에 흰 글자를 얹으면 2.79:1 이라 AA(4.5) 미달이다.
+                    :(soon?'background:var(--err);color:var(--on-err)':'background:var(--accent-3);color:var(--accent-hover)')),
                 period:[it.start,it.deadline].filter(Boolean).join(' ~ ')||'',
                 hasPeriod:!!(it.start||it.deadline),
                 why:o.why.map(w=>({text:w})),

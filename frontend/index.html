@@ -43,12 +43,10 @@
   </svg>
 </template>
 
-<!-- 파비콘 파일을 두지 않는다. 선언까지 없으면 브라우저가 /favicon.ico 를 스스로 찾아
-     매 접속마다 404 를 찍으므로, 빈 SVG 로 '아이콘 없음'을 명시한다.
-     ※ 헤드리스 Chromium 은 이 선언과 상관없이 /favicon.ico 를 계속 부른다(알려진 동작)라
-       이 작업 환경에서는 404 가 사라지는 것을 확인하지 못했다. 실제 브라우저에서 확인할 것.
-       화면에는 어느 쪽이든 영향이 없다. -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22/%3E">
+<!-- 파비콘. 빈 SVG 로 '아이콘 없음'만 선언해 두었더니, 브라우저는 그와 상관없이
+     /favicon.ico 를 스스로 찾아 매 접속마다 404 를 찍었다(빈 탭 아이콘도 미완성으로 보인다).
+     선언으로는 못 막으니 파일을 둔다 — 32×32 · 175바이트 · 브랜드 민트 바탕에 막대 셋. -->
+<link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="stylesheet" href="company.css">
 <script src="company-accessibility.js" defer></script>
 <style>
@@ -83,6 +81,9 @@
     --color-positive:#1F7A4D;
     --color-warning:#A8620F;
     --color-negative:#D93025;
+    /* 빨간 면 위 글자. 밝은 화면의 #D93025 는 흰 글자로 4.78:1 이지만,
+       어두운 화면의 #FF6B60 은 흰 글자로 2.79:1 밖에 안 나온다 — 그쪽은 먹색으로 바꾼다. */
+    --color-on-negative:#FFFFFF;
     /* 비교 대상 색 — Okabe-Ito 팔레트. 색각 이상에서도 서로 갈린다.
        한 상권은 모든 차트에서 같은 색을 쓴다(logic/rank.js 의 colorSlot). */
     --chart-series-1:#0072B2;
@@ -99,6 +100,7 @@
     --accent-2:var(--color-primary-mid); --accent-3:var(--color-primary-soft);
     --selection:var(--color-primary-soft);
     --good:var(--color-positive); --warn:var(--color-warning); --err:var(--color-negative);
+    --on-err:var(--color-on-negative);
     /* 카드 그림자 — 회색 배경 대신 흰 카드 + 얇은 테두리 + 아주 옅은 그림자 */
     --shadow-card:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.03);
     --shadow-pop:0 12px 32px -12px rgba(16,24,40,.18);
@@ -123,7 +125,7 @@
     --color-border-strong:#3A3A3E;
     --color-positive:#4E9E6A;
     --color-warning:#C88A3A;
-    --color-negative:#FF6B60;
+    --color-negative:#FF6B60; --color-on-negative:#1A0806;
     /* 어두운 배경에서는 같은 팔레트가 가라앉는다 — 밝기만 올린 짝을 쓴다 */
     --chart-series-1:#56B4E9;
     --chart-series-2:#F0B849;
@@ -459,7 +461,7 @@
                   <div style="font-size:11px;color:var(--ink3);margin-top:10px;line-height:1.6;text-wrap:pretty">{{ m.source }}</div>
                 </sc-if>
                 <sc-if value="{{ m.hasCta }}">
-                  <div role="button" tabIndex="0" onClick="{{ m.ctaGo }}" style="font-size:13px;color:var(--accent);cursor:pointer;margin-top:11px;white-space:nowrap">{{ m.cta }}</div>
+                  <div role="button" tabIndex="0" onClick="{{ m.ctaGo }}" style="font-size:13px;color:var(--accent-hover);cursor:pointer;margin-top:11px;text-wrap:pretty">{{ m.cta }}</div>
                 </sc-if>
               </div>
             </div>
