@@ -50,7 +50,9 @@ class Component extends DCLogic {
       head:(ind?ind+' · ':'')+zone+(gu?' · '+gu:''),
       // 상권을 직접 고르지 않은 채 받은 리포트는 그렇다고 적는다.
       hasHeadNote:!!d.zoneAuto,
-      headNote:'직접 고르신 상권이 아니라, 이 업종에서 1위인 상권으로 계산했습니다.',
+      headNote: d.zoneAutoGu
+        ? '직접 고르신 상권이 아니라, '+d.zoneAutoGu+'에서 이 업종 1위인 상권으로 계산했습니다.'
+        : '직접 고르신 상권이 아니라, 이 업종에서 1위인 상권으로 계산했습니다.',
       quarter:d.quarter||'—', today:today,
       lead:'받으실 수 있는 창업지원사업을 모았습니다.',
       leadSub:'아래는 답해 주신 조건과 겹치는 정부·지자체 공고입니다. 자격을 판정한 목록이 아니라 겹치는 조건을 찾아 모은 것이라, 신청 가능 여부는 반드시 공고 원문에서 확인해 주세요.',

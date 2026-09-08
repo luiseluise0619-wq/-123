@@ -471,7 +471,12 @@ class Component extends DCLogic {
         // (sp 는 renderVals 안에서 돌고 buildReport 는 그 뒤 클릭 때 불린다.)
         let supportForReport=[];
         const buildReport=()=>{
-            const sel=r?(r.list.find(o=>o.id===S.sel)||r.list.find(o=>o.id===S.zoneId)||r.list[0]):null;
+            // 상권을 직접 고르지 않았으면 **설문에서 답한 구** 안에서 1위를 고른다.
+            // 서울 밖(부산 등)은 자료가 없어 서울 1위로 떨어진다 — 그건 아래에서 밝혀 적는다.
+            const rpGu=(S.rp_sido==='서울' && S.rp_gu && S.rp_gu!=='아직 몰라요') ? S.rp_gu : '';
+            const inGu=(r&&rpGu&&S.zgu) ? r.list.find(o=>S.zgu[o.id]===rpGu) : null;
+            const sel=r?(r.list.find(o=>o.id===S.sel)||r.list.find(o=>o.id===S.zoneId)
+                        ||inGu||r.list[0]):null;
             // 손익은 **리포트 결과물에만** 넣는다(사장님 지시 2026-09-07).
             // 리포트 화면은 설문 → 지원사업 둘뿐이고, 아래 값은 PDF·CSV·메일에서만 보인다.
             // 설문의 '가게 조건' 단계에서 받은 값을 쓰고, 비워 두셨으면 기본 가정으로 계산한다.
@@ -497,9 +502,10 @@ class Component extends DCLogic {
             const payload={
               ind:S.ind?this.tr(this.indName(S.ind)):'', zone:sel?this.zoneLabelOf(sel.name):this.tr('동네 미선택'),
               gu:sel?this.guLabel(sel.id):'',
-              // 상권을 안 고르고 리포트를 받으면 이 업종 1위 상권으로 계산된다.
+              // 상권을 안 고르고 리포트를 받으면 앱이 골라 계산한다.
               // 그걸 '고르신 곳'처럼 적으면 지어낸 값이 된다(§1) — 리포트에 밝혀 적는다.
               zoneAuto: !(S.sel||S.zoneId),
+              zoneAutoGu: (!(S.sel||S.zoneId) && inGu) ? rpGu : '',
               quarter:S.zi?this.qtr(S.zi.quarter):'',
               support:supportForReport,
               bep:bep,
@@ -968,7 +974,7 @@ class Component extends DCLogic {
               ['기준 분기',S.zi?this.qtr(S.zi.quarter):'','원자료 기준'],
               ['장사',p.ind,''],
               // 인쇄본과 같은 안내를 CSV 에도 남긴다 — 고른 적 없는 상권이면 그렇다고 적는다(§1)
-              ['동네',p.zone, p.zoneAuto? '직접 고른 상권이 아니라 이 업종 1위 상권':''],
+              ['동네',p.zone, p.zoneAuto? ('직접 고른 상권이 아니라 '+(p.zoneAutoGu||'서울')+' 이 업종 1위 상권'):''],
               ...(p.survey||[]).map(x=>[x.label,x.value,'설문 답']),
               ...(p.support||[]).map(x=>[x.title,[x.amount,x.period].filter(Boolean).join(' · '),
                                          [x.org,x.why,x.url].filter(Boolean).join(' · ')]),
