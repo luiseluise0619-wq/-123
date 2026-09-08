@@ -173,7 +173,10 @@
   ::-webkit-scrollbar-corner{background:transparent}
   html[data-theme="dark"] *{scrollbar-color:rgba(255,255,255,.2) transparent}
   html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2)}
-  body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all}
+  body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all;
+  /* 로마자로 옮긴 상권 이름은 한 낱말이 아주 길다('Hongdaesosanggonginsangjeomga' 29자).
+     keep-all 만 두면 390px 화면에서 제목이 116px 밖으로 밀려 나간다 — 어쩔 수 없을 때만 끊는다. */
+  overflow-wrap:anywhere}
   *{box-sizing:border-box}
   a{color:var(--accent);text-decoration:none}
   a:hover{color:var(--accent-hover)}
@@ -1384,8 +1387,9 @@
               <sc-for list="{{ mv.now.rows }}" as="r">
                 <div style="{{ mv.rowStyle }}">
                   <!-- 이름은 줄이지 않는다(flex-shrink:0). 기준 0 으로 두면 오른쪽 값이 길 때
-                       이름 칸이 18px 까지 눌린다 — 영어 화면에서 실제로 그랬다. -->
-                  <span style="flex:1 0 auto;min-width:0;font-size:14.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.label }}</span>
+                       이름 칸이 18px 까지 눌린다 — 영어 화면에서 실제로 그랬다.
+                       다만 max-width 가 없으면 영어 라벨이 길 때 320px 화면을 통째로 밀어낸다. -->
+                  <span style="flex:1 0 auto;min-width:0;max-width:100%;font-size:14.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.label }}</span>
                   <!-- 모바일에서는 설명(tag)이 값 아래 줄로 접힌다 — 줄바꿈을 막으면 화면 밖으로 밀린다 -->
                   <span style="flex:0 1 auto;min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;justify-content:flex-end">
                     <sc-if value="{{ r.hasTag }}">
@@ -1608,7 +1612,7 @@
                 <div role="button" tabIndex="0" onClick="{{ i.pick }}" style="{{ i.row }}">
                   <!-- 이름은 줄이지 않는다(flex-shrink:0). 막대가 먼저 줄어든다 — 390px 에서
                        이름이 28px 로 눌려 '옷..' 처럼 두 글자만 보이던 걸 고친 것이다. -->
-                  <span style="flex:1 0 auto;min-width:0;font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ i.name }}</span>
+                  <span style="flex:1 0 auto;min-width:0;max-width:100%;font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ i.name }}</span>
                   <span style="flex:0 1 140px;min-width:40px;height:5px;border-radius:3px;background:var(--surface);overflow:hidden;display:block">
                     <span style="{{ i.bar }}"></span>
                   </span>

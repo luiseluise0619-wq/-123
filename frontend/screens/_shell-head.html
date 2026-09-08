@@ -173,7 +173,10 @@
   ::-webkit-scrollbar-corner{background:transparent}
   html[data-theme="dark"] *{scrollbar-color:rgba(255,255,255,.2) transparent}
   html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2)}
-  body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all}
+  body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all;
+  /* 로마자로 옮긴 상권 이름은 한 낱말이 아주 길다('Hongdaesosanggonginsangjeomga' 29자).
+     keep-all 만 두면 390px 화면에서 제목이 116px 밖으로 밀려 나간다 — 어쩔 수 없을 때만 끊는다. */
+  overflow-wrap:anywhere}
   *{box-sizing:border-box}
   a{color:var(--accent);text-decoration:none}
   a:hover{color:var(--accent-hover)}

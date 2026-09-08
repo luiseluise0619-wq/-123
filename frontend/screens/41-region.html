@@ -27,7 +27,7 @@
                 <div role="button" tabIndex="0" onClick="{{ i.pick }}" style="{{ i.row }}">
                   <!-- 이름은 줄이지 않는다(flex-shrink:0). 막대가 먼저 줄어든다 — 390px 에서
                        이름이 28px 로 눌려 '옷..' 처럼 두 글자만 보이던 걸 고친 것이다. -->
-                  <span style="flex:1 0 auto;min-width:0;font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ i.name }}</span>
+                  <span style="flex:1 0 auto;min-width:0;max-width:100%;font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ i.name }}</span>
                   <span style="flex:0 1 140px;min-width:40px;height:5px;border-radius:3px;background:var(--surface);overflow:hidden;display:block">
                     <span style="{{ i.bar }}"></span>
                   </span>
