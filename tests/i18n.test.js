@@ -153,6 +153,19 @@ function sweep(locale) {
       koreanIn(c.renderVals(), [], 0).forEach(s => found.add(s));
     }
   }
+  // 도우미(AI 답변)는 물어봐야 생긴다. 안 물어보면 이 시험이 도우미를 한 번도 못 본다 —
+  // 실제로 그래서 영어·중국어 화면에서 도우미만 한국어로 답하고 있었다.
+  const ASK = ['어디가 좋아요?', '본전은 얼마예요?', '손님은 누가 와요?',
+    '임대료 알려줘요', '폐업 많아요?', '이건 못 답하는 질문'];
+  for (const q of ASK) {
+    const c = loaded(locale);
+    c.state.ind = '커피-음료';
+    const r = c.rank();
+    const sel = r ? r.list[0] : null;
+    const ans = c.answer(q, r, sel);
+    // 화면은 값을 그린 뒤 한 번 더 옮긴다(trDeep) — 시험도 같은 자리에서 잰다.
+    koreanIn(c.trDeep(ans), [], 0).forEach(s => found.add(s));
+  }
   return [...found];
 }
 
@@ -234,6 +247,45 @@ test('중국어 화면 값에는 고유명사만 한글로 남는다', () => {
     .filter(s => /[가-힣]/.test(strip(s)));
   assert.equal(left.length, 0,
     left.length + '개 남음: ' + left.slice(0, 8).map(s => JSON.stringify(s.slice(0, 50))).join(' / '));
+});
+
+// ── 화면 조각(screens/*.html)에 그대로 적힌 한국어 ────────────────
+// 문구의 절반은 view model 이 아니라 마크업에 그대로 적혀 있고, 그건 trDom 이
+// '원문 그대로' 사전에서 찾아 바꾼다. 위 화면 값 훑기로는 여기가 안 잡힌다 —
+// 실제로 '나에게 맞는 지원사업'·'본전선' 같은 47개가 영어·중국어 화면에
+// 한국어로 남아 있었다. trDom 과 같은 방식(trim 한 원문)으로 뽑아 대조한다.
+function markupKorean() {
+  const dir = new URL('../frontend/screens/', import.meta.url);
+  const out = new Map();
+  for (const f of fs.readdirSync(dir).filter(n => n.endsWith('.html')).sort()) {
+    const src = fs.readFileSync(new URL(f, dir), 'utf8')
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<title>[\s\S]*?<\/title>/gi, '');
+    // trDom 은 placeholder·aria-label·title 속성도 옮긴다
+    for (const m of src.matchAll(/\s(?:aria-label|placeholder|title)="([^"{}]*[가-힣][^"{}]*)"/g)) {
+      const t = m[1].trim(); if (t) out.set(t, out.get(t) || f);
+    }
+    // 태그 밖 글자. {{ }} 는 따로 그려지므로 그 자리에서 끊는다(DOM 텍스트 노드와 같은 모양).
+    for (const seg of src.split(/<[^>]*>/))
+      for (const piece of seg.split(/\{\{[^}]*\}\}/)) {
+        const t = piece.trim();
+        if (t && /[가-힣]/.test(t)) out.set(t, out.get(t) || f);
+      }
+  }
+  return out;
+}
+
+test('화면 조각에 그대로 적힌 한국어가 세 언어 사전에 다 있다', () => {
+  const all = markupKorean();
+  assert.ok(all.size > 100, '조각에서 문구를 못 읽었다(' + all.size + '개)');
+  const miss = [];
+  for (const [text, file] of all) {
+    for (const [name, dict] of [['en', EN], ['zh-CN', ZH]])
+      if (!(dict['@phrases'] || {})[text]) miss.push(name + ' ' + file + ' :: ' + text.slice(0, 40));
+  }
+  assert.equal(miss.length, 0, miss.length + '개 빠짐: ' + miss.slice(0, 6).join(' / '));
 });
 
 test('한국어에서는 번역이 아무 일도 하지 않는다', () => {

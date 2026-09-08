@@ -10,20 +10,23 @@ globalThis.MysbizonParts.util = {
   //   한국어  1,000만 / 3.3억          영어  KRW 10.0M / KRW 330M
   //   중국어  1,000万 / 3.3亿
   // fmt 는 '원 단위' 값을, man 은 '만원 단위' 값을 받는다.
+  // '1.0억' 처럼 뜻 없는 소수점 0 은 떼고 적는다. 1.5억은 그대로 둔다.
+  d1(n){ return String(n).replace(/\.0$/,''); },
+
   fmt(v){ if(v==null||!isFinite(v)) return '—';
     const L=(this.locale?this.locale():'ko');
     if(L==='en'){
       const a=Math.abs(v), s=v<0?'-':'';
-      if(a>=1e9) return s+'KRW '+(a/1e9).toFixed(a>=1e10?0:1)+'B';
-      if(a>=1e6) return s+'KRW '+(a/1e6).toFixed(a>=1e7?0:1)+'M';
+      if(a>=1e9) return s+'KRW '+this.d1((a/1e9).toFixed(a>=1e10?0:1))+'B';
+      if(a>=1e6) return s+'KRW '+this.d1((a/1e6).toFixed(a>=1e7?0:1))+'M';
       if(a>=1e3) return s+'KRW '+Math.round(a/1e3).toLocaleString('en')+'K';
       return s+'KRW '+Math.round(a).toLocaleString('en');
     }
     if(L==='zh-CN'){
-      if(v>=1e8) return (v/1e8).toFixed(v>=1e9?0:1)+'亿';
+      if(v>=1e8) return this.d1((v/1e8).toFixed(v>=1e9?0:1))+'亿';
       return Math.round(v/1e4).toLocaleString('zh-CN')+'万';
     }
-    if(v>=1e8) return (v/1e8).toFixed(v>=1e9?0:1)+'억';
+    if(v>=1e8) return this.d1((v/1e8).toFixed(v>=1e9?0:1))+'억';
     return Math.round(v/1e4).toLocaleString()+'만'; },
 
   man(v){ if(v==null||!isFinite(v)) return '—';
@@ -31,16 +34,16 @@ globalThis.MysbizonParts.util = {
     const a=Math.abs(v);
     if(L==='en'){
       const s=v<0?'-':'';
-      if(a>=100) return s+'KRW '+(a/100).toFixed(a>=1000?0:1)+'M';
+      if(a>=100) return s+'KRW '+this.d1((a/100).toFixed(a>=1000?0:1))+'M';
       return s+'KRW '+Math.round(a*10000).toLocaleString('en');
     }
     if(L==='zh-CN'){
       const s=v<0?'−':'';
-      if(a>=10000) return s+(a/10000).toFixed(a>=100000?0:1)+'亿韩元';
+      if(a>=10000) return s+this.d1((a/10000).toFixed(a>=100000?0:1))+'亿韩元';
       return s+Math.round(a).toLocaleString('zh-CN')+'万韩元';
     }
     const s=v<0?'−':'';
-    if(a>=10000) return s+(a/10000).toFixed(a>=100000?0:1)+'억원';
+    if(a>=10000) return s+this.d1((a/10000).toFixed(a>=100000?0:1))+'억원';
     return s+Math.round(a).toLocaleString()+'만원'; },
 
   // fmt/man 은 단위 글자를 안 붙인다. 화면에서 '원'을 덧붙이던 곳들을 위해 아래를 쓴다.
@@ -53,6 +56,44 @@ globalThis.MysbizonParts.util = {
     const L=(this.locale?this.locale():'ko');
     const n=Math.round(v).toLocaleString(L==='ko'?undefined:L);
     return L==='en'? 'KRW '+n : (L==='zh-CN'? n+'韩元' : n+'원'); },
+  // 공고에 적힌 금액 글자에서 '원 단위 숫자'를 뽑는다.
+  //   '최대 5,000만원 이내' → 50000000 · '1억 5,000만원' → 150000000
+  // 단위(억·만·천·백·십·원)가 붙지 않은 숫자는 무엇인지 알 수 없으므로 버린다 —
+  // '업력 3년', '2026년', '자부담 20%' 를 금액으로 읽지 않기 위해서다(§1 데이터 정직성).
+  // 읽어낼 수 없으면 null 을 돌려준다. 지어내지 않는다.
+  wonParse(text){
+    const s=String(text==null?'':text);
+    if(!s) return null;
+    const BIG={'억':1e8,'만':1e4}, SMALL={'천':1e3,'백':100,'십':10};
+    let best=null;
+    // 숫자·쉼표·공백·단위가 이어지는 덩어리만 본다. 다른 글자가 나오면 거기서 끊는다.
+    const runs=s.match(/[0-9][0-9,\s억만천백십원]*/g)||[];
+    for(const raw of runs){
+      const run=raw.replace(/[,\s]/g,'');
+      if(!/[억만천백십원]/.test(run)) continue;      // 단위가 없으면 금액이 아니다
+      const toks=run.match(/[0-9]+|[억만천백십원]/g)||[];
+      let total=0, group=0, cur=null, sawUnit=false;
+      for(const t of toks){
+        if(/^[0-9]+$/.test(t)){ if(cur!=null) group+=cur; cur=Number(t); continue; }
+        sawUnit=true;
+        // '3천만원' — 천에서 이미 3,000 이 쌓였으니 만 앞에 숫자가 없다고 1 을 더하면 안 된다.
+        if(BIG[t]){ group+=(cur!=null?cur:(group===0?1:0)); total+=group*BIG[t]; group=0; cur=null; }
+        else if(t==='원'){ total+=group+(cur==null?0:cur); group=0; cur=null; }
+        else { group+=(cur==null?1:cur)*SMALL[t]; cur=null; }
+      }
+      total+=group+(cur==null?0:cur);
+      if(!sawUnit||!isFinite(total)||total<=0) continue;
+      if(best==null||total>best) best=total;
+    }
+    return best;
+  },
+
+  // '최대 5,000만원' / 'Up to KRW 50M' / '最多 5,000万韩元'
+  // 단위와 어순이 언어마다 달라 사전(@phrases)으로는 못 맞춘다 — fmt/won 과 같은 이유로 여기 둔다.
+  wonMax(v){ const s=this.won(v); if(s==='—') return s;
+    const L=(this.locale?this.locale():'ko');
+    return L==='en'? ('Up to '+s) : (L==='zh-CN'? ('最多 '+s) : ('최대 '+s)); },
+
   // 만원 단위 값을 소수점까지 남겨 적는다(㎡당 임대료 15.2만원 처럼)
   manF(v,d){ if(v==null||!isFinite(v)) return '—';
     const L=(this.locale?this.locale():'ko');

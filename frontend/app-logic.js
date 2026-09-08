@@ -997,6 +997,16 @@ class Component extends DCLogic {
             }));
             const nearest=(top.length?top:matched).map(o=>ddOf(o.it)).filter(v=>v!=null).sort((a,b)=>a-b)[0];
 
+            // ── '최대 얼마까지' ────────────────────────────────────────
+            // 화면에 뜬 공고들의 금액 글자에서 숫자를 읽어 가장 큰 값을 앞에 세운다.
+            // 읽어낸 게 하나도 없으면 이 줄은 아예 안 나온다 — 없는 값을 지어내지 않는다(§1).
+            // 자격을 판정한 값이 아니다(§17). 그래서 어느 공고의 금액인지 이름을 같이 적는다.
+            let maxOf=null;
+            shownList.forEach(o=>{
+              const v=this.wonParse(o.it.amount);
+              if(v!=null && (maxOf==null||v>maxOf.v)) maxOf={v:v, title:o.it.title||''};
+            });
+
             return {
               loading:!d,
               notConfigured:!!d&&d.configured===false,
@@ -1011,6 +1021,9 @@ class Component extends DCLogic {
               countLabel:list.length+'개',
               nearest: nearest==null? '—' : (nearest===0?'오늘':'D-'+nearest),
               hasNearest: nearest!=null,
+              hasMax: !!maxOf,
+              maxAmount: maxOf? this.wonMax(maxOf.v) : '',
+              maxFrom: maxOf? maxOf.title : '',
               items:list,
               hasItems:list.length>0,
               empty:!!d&&!!d.ok&&all.length===0,

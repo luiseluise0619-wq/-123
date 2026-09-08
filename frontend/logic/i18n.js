@@ -268,6 +268,36 @@ globalThis.MysbizonParts.i18n = {
       "mv.popNote": "유동인구는 {dong} 행정동 값이라 상권보다 넓어요. 시간대·요일 데이터는 아직 없어요.",
       "fc.lead": "{gu}에서 {ind}이(가) 가장 잘 되는 곳은 {top}이에요(예요).",
       "fc.note": "{gu} 안에서 자료가 있는 상권 {n}곳을 가게 한 곳당 매출로 줄 세웠어요.",
+      "chat.noData": "아직 데이터를 불러오지 못했어요. 잠시 후 다시 물어봐 주세요.",
+      "chat.where.text": "{ind}라면(이라면) {zone}을(를) 먼저 보시면 좋아요.",
+      "chat.where.score": "기회점수",
+      "chat.where.stores": "경쟁 가게",
+      "chat.where.per": "한 집당 월매출",
+      "chat.where.src": "서울시 상권분석서비스 {q} 자료로 계산했어요. 기회점수는 저희가 만든 값이에요.",
+      "chat.where.cta": "후보지에서 전체 순위 보기",
+      "chat.rent.text": "임대료는 알려드릴 수 없어요.",
+      "chat.rent.src": "한국부동산원이 이 상권 체계로 임대료를 공표하지 않아 원자료에 없어요. 지어내지 않아요. 중개인에게 확인한 금액을 본전 계산에 직접 넣으시면 그 값으로 계산해 드려요.",
+      "chat.rent.cta": "본전 계산으로 가기",
+      "chat.bep.text": "{zone}에서 월 {amt}을(를) 팔면 본전이에요.",
+      "chat.bep.bep": "본전선",
+      "chat.bep.avg": "이 자리 평균",
+      "chat.bep.fixed": "고정비",
+      "chat.bep.src": "임대료 {rent} · 원가율 {cogs}% · {area}평 기준이에요. 조건을 바꾸면 값도 바뀌어요.",
+      "chat.bep.cta": "조건 바꿔 계산하기",
+      "chat.cust.none": "이 장사의 손님 데이터가 없어요.",
+      "chat.cust.text": "{ind}에 돈을 쓰는 사람은 {age}이(가) 가장 많아요.",
+      "chat.cust.female": "여성",
+      "chat.cust.unit": "손님 1명이 쓰는 돈",
+      "chat.cust.src": "서울 전체 {ind} 카드 결제 기준이에요. 동네별 성별·연령은 공개되지 않아요.",
+      "chat.risk.none": "이 장사의 개·폐업 데이터가 없어요.",
+      "chat.risk.down": "{ind}은(는) 지금 가게가 줄고 있어요.",
+      "chat.risk.up": "{ind}은(는) 지금 가게가 늘고 있어요.",
+      "chat.risk.closed": "문 닫은 곳",
+      "chat.risk.opened": "새로 연 곳",
+      "chat.risk.fr": "프랜차이즈",
+      "chat.risk.src": "3개월 기준이에요. 줄어드는 이유가 경쟁이 풀리는 것인지 장사가 어려워지는 것인지는 데이터가 구분하지 않아요.",
+      "chat.none.text": "그 질문에는 답할 근거가 없어요.",
+      "chat.none.src": "답할 수 있는 것은 업종별 기회 상권, 본전 계산, 손님 구성, 개·폐업 추이예요. 임대료·권리금·건물 공실은 공개 통계에 없어 답하지 않아요.",
       "chat.hello": "안녕하세요. {ind} 기준으로 답해 드려요. 궁금한 걸 물어보시거나 아래 버튼을 눌러 주세요.",
       "rg.share": "{ind}은(는) 이 동네에서 손님이 쓴 돈의 {pct}%를 차지해요.",
 
@@ -390,7 +420,7 @@ globalThis.MysbizonParts.i18n.tn = function(key, vars){
   if(this.locale()!=='ko') return s;
   // 짝을 적어 두면 앞 글자 받침을 보고 고른다. '이에요(예요)' 를 '이(가)' 보다 먼저 둔다 —
   // 뒤에 두면 '이(가)' 규칙이 '이에요(예요)' 의 앞부분만 먹는다.
-  const PAIR=/(은\(는\)|는\(은\)|이에요\(예요\)|예요\(이에요\)|와\(과\)|과\(와\)|이\(가\)|가\(이\)|을\(를\)|를\(을\))/g;
+  const PAIR=/(은\(는\)|는\(은\)|이에요\(예요\)|예요\(이에요\)|라면\(이라면\)|이라면\(라면\)|와\(과\)|과\(와\)|이\(가\)|가\(이\)|을\(를\)|를\(을\))/g;
   return String(s).replace(PAIR, (pair, _g, at, whole)=>{
     // 따옴표·괄호는 건너뛰고 그 앞 글자를 본다 — ‘역삼’과 / ‘강남’와
     let i=at-1;
@@ -400,6 +430,7 @@ globalThis.MysbizonParts.i18n.tn = function(key, vars){
     const bat=(c>=0&&c<11172)? c%28!==0 : /[013678lmnr]$/i.test(prev);
     if(pair.indexOf('은')===0||pair.indexOf('는')===0) return bat?'은':'는';
     if(pair.indexOf('이에요')===0||pair.indexOf('예요')===0) return bat?'이에요':'예요';
+    if(pair.indexOf('라면')===0||pair.indexOf('이라면')===0) return bat?'이라면':'라면';
     if(pair.indexOf('와')===0||pair.indexOf('과')===0) return bat?'과':'와';
     if(pair.indexOf('이')===0||pair.indexOf('가')===0) return bat?'이':'가';
     return bat?'을':'를';

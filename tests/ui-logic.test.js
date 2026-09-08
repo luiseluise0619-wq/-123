@@ -95,3 +95,26 @@ test('본전 계산 입력칸을 비우면 기본 가정으로 돌아간다',()=
   c.state.rent=0;
   assert.equal(c.calc(sample).rent,0,'직접 넣은 0 이 기본값으로 바뀌면 안 된다');
 });
+test('공고 금액 글자에서 단위가 붙은 숫자만 읽는다',()=>{
+  const {instance:c}=component();
+  const cases=[['최대 5,000만원',5e7],['1억원',1e8],['1억 5,000만원',1.5e8],['3천만원',3e7],
+    ['1,000~5,000만원',5e7],['1,000천원',1e6],['10000000원',1e7],
+    // 단위가 없는 숫자를 금액으로 읽으면 안 된다 — 연도·업력·자부담 비율
+    ['2026년 최대 300만원',3e6],['업력 3년 이내 최대 2억원',2e8],['최대 100만원(자부담 20%)',1e6],
+    // 읽어낼 수 없으면 null. 0 원짜리 금액도 값으로 세지 않는다.
+    ['별도 협의',null],['5000',null],['3년',null],['0원',null],['',null],[null,null]];
+  for(const [text,want] of cases) assert.equal(c.wonParse(text),want,JSON.stringify(text));
+});
+test('최대 지원금은 화면에 뜬 공고에서만 뽑고, 못 읽으면 줄 자체가 없다',()=>{
+  const {instance:c}=component();
+  const item=(title,amount)=>({title,org:'테스트기관',amount,deadline:'2099-12-31',url:'https://example.com',
+    target:'예비창업자',kind:'사업화',content:'',region:'서울'});
+  c.state.screen='report'; c.state.rp_stage='아직 준비 중이에요 (예비창업자)';
+  c.state.sp={ok:true,configured:true,items:[item('가',' 최대 3,000만원'),item('나','1억원'),item('다','별도 협의')]};
+  const sp=c.renderVals().rp.sp;
+  assert.equal(sp.hasMax,true); assert.equal(sp.maxAmount,'최대 1억원'); assert.equal(sp.maxFrom,'나');
+  // 금액을 하나도 못 읽으면 아무 숫자도 만들지 않는다(§1)
+  c.state.sp={ok:true,configured:true,items:[item('가','별도 협의'),item('나','')]};
+  const sp2=c.renderVals().rp.sp;
+  assert.equal(sp2.hasMax,false); assert.equal(sp2.maxAmount,'');
+});

@@ -835,6 +835,17 @@
         </sc-if>
 
         <sc-if value="{{ rp.sp.ready }}">
+          <!-- 최대 얼마까지 — 공고에 적힌 금액 중 가장 큰 값.
+               읽어낸 금액이 하나도 없으면 이 줄은 안 나온다(§1). 자격 판정이 아니다(§17). -->
+          <sc-if value="{{ rp.sp.hasMax }}">
+            <div style="margin-top:20px">
+              <div style="font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.2;color:var(--accent);font-variant-numeric:tabular-nums">{{ rp.sp.maxAmount }}</div>
+              <div style="font-size:17px;font-weight:600;letter-spacing:-.02em;margin-top:4px">받을 수 있는 지원사업이 있어요</div>
+              <div style="{{ dsSub }}; margin-top:8px">{{ rp.sp.maxFrom }}</div>
+              <div style="{{ dsSub }}">공고에 적힌 금액이에요. 실제로 받는 금액과 신청 자격은 원문에서 확인해 주세요.</div>
+            </div>
+          </sc-if>
+
           <!-- 결론 요약 -->
           <div style="margin-top:20px">
             <div style="{{ dsGrid4 }}">
