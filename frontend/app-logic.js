@@ -116,6 +116,7 @@ class Component extends DCLogic {
   }
 
   componentDidUpdate(){
+    this.saveSurvey();
     if(this._screen!==this.state.screen){
       const first = this._screen===undefined;
       this._screen=this.state.screen;
@@ -160,6 +161,43 @@ class Component extends DCLogic {
       .catch(()=>this.setState({sp:{ok:false,configured:true,items:[],
         error:'공고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'}}))
       .finally(()=>{this._spLoading=false;});
+  }
+
+  // 저장해 둔 설문 답을 '믿을 수 있는 값만' 골라 되살린다.
+  // 이 목록이 곧 '설문이 기억하는 것'의 정의다.
+  SURVEY_KEYS(){
+    return ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen',
+      'rp_sido','rp_gu','rp_ind','rp_stage','rp_age','rp_biz','rp_when','rp_need',
+      'rp_cost','rp_email','rp_agree','rp_step'];
+  }
+  surveyRestore(saved){
+    const restore={};
+    if(!saved || typeof saved!=='object') return restore;
+    for(const k of this.SURVEY_KEYS()){
+      const v=saved[k];
+      if(v===null||typeof v==='string'||typeof v==='number'||typeof v==='boolean') restore[k]=v;
+    }
+    // 어느 칸을 직접 넣었는지도 되살린다(리포트가 '기본 가정'과 구분해 적는다)
+    if(saved.rp_touched && typeof saved.rp_touched==='object'){
+      const t={};
+      for(const k of ['rent','area','staffOv']) if(saved.rp_touched[k]===true) t[k]=true;
+      restore.rp_touched=t;
+    }
+    if(Array.isArray(saved.picks)) restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);
+    return restore;
+  }
+  // 새로고침을 대비해 담아 둔다. 값이 그대로면 쓰지 않는다.
+  saveSurvey(){
+    try{
+      const S=this.state, out={};
+      for(const k of this.SURVEY_KEYS()) out[k]=S[k]===undefined?null:S[k];
+      out.rp_touched=S.rp_touched||{};
+      out.picks=S.picks||[];
+      const raw=JSON.stringify(out);
+      if(raw===this._surveyRaw) return;
+      this._surveyRaw=raw;
+      sessionStorage.setItem('mysbizon.survey', raw);
+    }catch(e){}
   }
 
   componentWillUnmount(){
@@ -237,24 +275,20 @@ class Component extends DCLogic {
     // 설문 답(rp_*)까지 되살린다 — 안 그러면 미리보기를 한 번 본 대가로
     // 8문항을 처음부터 다시 답해야 했다.
     try{
-      const raw=sessionStorage.getItem('mysbizon.return');
+      const back=sessionStorage.getItem('mysbizon.return');
       sessionStorage.removeItem('mysbizon.return');
+      // 인쇄본에서 돌아온 게 아니면, 새로고침 전에 저장해 둔 설문 답을 되살린다.
+      // 새로고침 한 번에 8문항을 다시 답하게 하지 않는다. sessionStorage 라
+      // 탭을 닫으면 사라진다 — '한 번 앉은 자리'의 기록이다.
+      const raw = back || sessionStorage.getItem('mysbizon.survey');
       if(raw){
-        const saved=JSON.parse(raw), restore={screen:'report'};
-        const KEYS=['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen',
-          'rp_sido','rp_gu','rp_ind','rp_stage','rp_age','rp_biz','rp_when','rp_need',
-          'rp_cost','rp_email','rp_agree','rp_step'];
-        for(const k of KEYS){
-          const v=saved[k];
-          if(v===null||typeof v==='string'||typeof v==='number'||typeof v==='boolean') restore[k]=v;
-        }
-        // 어느 칸을 직접 넣었는지도 되살린다(리포트가 '기본 가정'과 구분해 적는다)
-        if(saved.rp_touched && typeof saved.rp_touched==='object'){
-          const t={};
-          for(const k of ['rent','area','staffOv']) if(saved.rp_touched[k]===true) t[k]=true;
-          restore.rp_touched=t;
-        }
-        if(Array.isArray(saved.picks)) restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);
+        const restore=this.surveyRestore(JSON.parse(raw));
+        // 답을 하나라도 한 사람만 리포트 화면으로 되돌린다.
+        // 질문 키만 본다 — `rp_touched` 는 늘 객체({})라 truthy 여서,
+        // 이걸 같이 세면 설문을 시작도 안 한 사람이 리포트 화면으로 떨어진다.
+        const ANSWERED=['rp_sido','rp_gu','rp_ind','rp_stage','rp_age',
+                        'rp_biz','rp_when','rp_need','rp_cost','rp_email'];
+        if(back || ANSWERED.some(k=>restore[k])) restore.screen='report';
         this.setState(restore);
       }
     }catch{}
