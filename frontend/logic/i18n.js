@@ -32,25 +32,34 @@ globalThis.MysbizonParts.i18n = {
   loadLocales(){
     // ko 는 아래에 심어 두어 첫 화면이 키로 보이지 않게 한다.
     this._dict = this._dict || {ko:this.KO_BASE()};
-    this.LOCALES().forEach(l=>{
-      if(l.k==='ko') return;
-      fetch('./locales/'+l.k+'.json')
-        .then(r=>r.ok?r.json():null)
-        .then(j=>{ if(j){ this._dict[l.k]=j;
-          // 사전이 도착하기 전에 그린 값들이 캐시에 '번역 안 됨'으로 남아 있다 — 비운다
-          this._trCache={}; this.forceUpdate(); } })
-        .catch(()=>{});
-    });
+
+    // 고른 적이 있으면 그 값이 이긴다. 없으면 '지금 있는 위치'로 정한다.
     let saved=null;
     try{ saved=JSON.parse(localStorage.getItem('mysbizon.theme')||'{}').locale; }catch(e){}
-    if(saved && this.LOCALES().some(l=>l.k===saved)) { this.setState({locale:saved}); return; }
-    // 고른 적이 없으면 '지금 있는 위치'를 먼저 본다(고른 값이 항상 이긴다).
-    //
-    // 위치는 타임존으로 읽는다 — 권한을 묻지 않고, 네트워크도 쓰지 않고,
-    // 기기 설정 그대로라 VPN·번역기보다 정확하다. GPS 권한 팝업을 띄우지 않는다.
-    // 타임존이 곧 언어는 아니므로, 위치로 못 정하면 브라우저 언어로 넘어간다.
-    if(this.locale()!=='ko') return;          // 이미 다른 값이 잡혀 있으면 두 번 정하지 않는다
-    this.setState({locale:this.guessLocale()});
+    const want = (saved && this.LOCALES().some(l=>l.k===saved)) ? saved
+               : (this.locale()!=='ko' ? this.locale() : this.guessLocale());
+    if(want!==this.locale()) this.setState({locale:want});
+    // **쓸 사전만 받는다.** 전에는 en·zh 를 늘 같이 받아, 한국어로 보는 사람도
+    // gzip 60KB(전체 전송량의 9%)를 쓰지도 않을 번역에 썼다.
+    this.fetchLocale(want);
+  },
+
+  // 사전 하나를 받아 둔다. 이미 있으면 아무 일도 하지 않는다.
+  fetchLocale(k){
+    if(!k || k==='ko') return Promise.resolve();
+    this._dict = this._dict || {ko:this.KO_BASE()};
+    if(this._dict[k]) return Promise.resolve();
+    this._fetching = this._fetching || {};
+    if(this._fetching[k]) return this._fetching[k];
+    const done = fetch('./locales/'+k+'.json')
+      .then(r=>r.ok?r.json():null)
+      .then(j=>{ if(j){ this._dict[k]=j;
+        // 사전이 도착하기 전에 그린 값들이 캐시에 '번역 안 됨'으로 남아 있다 — 비운다
+        this._trCache={}; this.forceUpdate(); } })
+      .catch(()=>{})
+      .then(()=>{ delete this._fetching[k]; });
+    this._fetching[k]=done;
+    return done;
   },
 
   // 위치(타임존) → 언어. 못 읽으면 브라우저 언어, 그것도 아니면 ko.
@@ -77,6 +86,8 @@ globalThis.MysbizonParts.i18n = {
 
   setLocale(k){
     this._trCache={};
+    // 아직 안 받은 사전이면 받아 온다(첫 화면에서는 쓸 것만 받는다).
+    this.fetchLocale(k);
     this.setState({locale:k});
     try{
       const cur=JSON.parse(localStorage.getItem('mysbizon.theme')||'{}');
