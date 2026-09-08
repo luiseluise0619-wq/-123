@@ -72,7 +72,7 @@
         <div role="dialog" aria-modal="true" aria-label="서비스 소개" tabIndex="-1" onClick="{{ noticeStop }}" style="{{ noticeCard }}">
           <div style="display:flex;align-items:flex-start;gap:14px">
             <div class="u-fill">
-              <div style="font-size:12.5px;color:var(--accent);font-weight:700;letter-spacing:-0.01em;white-space:nowrap">MYSBIZON</div>
+              <div style="font-size:12.5px;color:var(--accent-text);font-weight:700;letter-spacing:-0.01em;white-space:nowrap">MYSBIZON</div>
               <div style="font-size:20px;font-weight:700;letter-spacing:-0.025em;line-height:1.25;margin-top:8px;text-wrap:pretty">내 장사가 들어갈 빈자리를 찾아요</div>
             </div>
             <span role="button" tabIndex="0" aria-label="서비스 소개 닫기" data-dialog-close="1" onClick="{{ noticeClose }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .14s" style-hover="background:var(--line-strong)">
@@ -112,7 +112,7 @@
             <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
               <sc-for list="{{ aboutTabs }}" as="t">
                 <div style="display:flex;gap:12px;align-items:flex-start">
-                  <span style="flex:0 0 82px;font-size:13px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.tab }}</span>
+                  <span style="flex:0 0 82px;font-size:13px;font-weight:600;color:var(--accent-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.tab }}</span>
                   <span style="flex:1;min-width:0;font-size:13px;color:var(--ink2);line-height:1.6;text-wrap:pretty">{{ t.body }}</span>
                 </div>
               </sc-for>

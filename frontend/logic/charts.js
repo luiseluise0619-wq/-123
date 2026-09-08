@@ -229,7 +229,7 @@ globalThis.MysbizonParts.charts = {
       winText: w ? w.text : '',
       winDot: w ? 'flex:none;width:9px;height:9px;border-radius:50%;background:' + (w.color || 'var(--accent)') : '',
       winBadgeStyle: 'flex:none;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;'
-        + 'white-space:nowrap;background:var(--color-primary-soft);color:var(--color-primary)',
+        + 'white-space:nowrap;background:var(--color-primary-soft);color:var(--color-primary-text)',
       // '기준 …'을 화면 조각에서 앞에 붙이면 영어·중국어에서 어순이 깨진다.
       // 한 문장으로 만들어 내려보낸다(asOf). 꼬리의 '기준'은 옛 호출부 대비용이다.
       period: (opt.period || '').replace(/\s*기준\s*$/, ''),

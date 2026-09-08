@@ -85,6 +85,9 @@
        (초록 5.3:1 · 주황 4.8:1 · 빨강 4.8:1), 어두운 화면의 같은 색들은
        밝아져서 흰 글자가 2.9~3.3:1 로 떨어진다 — 그쪽은 먹색으로 바꾼다. */
     --color-on-positive:#FFFFFF; --color-on-warning:#FFFFFF; --color-on-negative:#FFFFFF;
+    /* 강조색을 '글자'로 쓸 때. 기본값은 강조색 그대로이고, theme.js 가 배경과의 대비를
+       재서 4.5:1 이 안 되면 그만큼만 옮긴 값으로 덮어쓴다(직접 고른 형광 노랑은 1.07:1). */
+    --color-primary-text:var(--color-primary);
     /* 비교 대상 색 — Okabe-Ito 팔레트. 색각 이상에서도 서로 갈린다.
        한 상권은 모든 차트에서 같은 색을 쓴다(logic/rank.js 의 colorSlot). */
     --chart-series-1:#0072B2;
@@ -97,7 +100,7 @@
     --ink:var(--color-text-primary); --ink2:var(--color-text-secondary); --ink3:var(--color-text-muted);
     --line:var(--color-border); --line-strong:var(--color-border-strong); --surface:var(--color-surface);
     --accent:var(--color-primary); --accent-hover:var(--color-primary-hover);
-    --on-accent:var(--color-on-primary);
+    --on-accent:var(--color-on-primary); --accent-text:var(--color-primary-text);
     --accent-2:var(--color-primary-mid); --accent-3:var(--color-primary-soft);
     --selection:var(--color-primary-soft);
     --good:var(--color-positive); --warn:var(--color-warning); --err:var(--color-negative);
@@ -159,7 +162,7 @@
   .u-between{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
   .u-tap{display:flex;align-items:center;gap:12px;padding:19px 0;cursor:pointer}
   .u-stack{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-  .u-check{flex:none;color:var(--accent);font-weight:700}
+  .u-check{flex:none;color:var(--accent-text);font-weight:700}
   .u-rule{border-top:1px solid var(--line)}
   .u-sec{padding:56px 0 0}
   .u-sec-lg{padding:64px 0 0}
@@ -180,7 +183,7 @@
      keep-all 만 두면 390px 화면에서 제목이 116px 밖으로 밀려 나간다 — 어쩔 수 없을 때만 끊는다. */
   overflow-wrap:anywhere}
   *{box-sizing:border-box}
-  a{color:var(--accent);text-decoration:none}
+  a{color:var(--accent-text);text-decoration:none}
   a:hover{color:var(--accent-hover)}
   input,button,select{font-family:inherit}
   ::selection{background:var(--selection)}

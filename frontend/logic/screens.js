@@ -380,7 +380,7 @@ globalThis.MysbizonParts.screens = {
           +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;'
           +'transition:background .14s,color .14s;'
           +(g===guTab?'background:var(--accent-3);color:var(--accent-hover);font-weight:700'
-                     :(g===S.homeGu?'color:var(--accent);font-weight:600':'color:var(--ink2)'))
+                     :(g===S.homeGu?'color:var(--accent-text);font-weight:600':'color:var(--ink2)'))
       })),
       // 고른 구를 한 번 더 누르라고 알려 준다 — 두 번 눌러야 하는 걸 알 방법이 없다
       // 구 이름이 문장 안에 들어가면 통째로는 사전에서 못 찾는다 — 자리표시자 키로 둔다

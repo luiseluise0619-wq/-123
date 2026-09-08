@@ -186,7 +186,7 @@ globalThis.MysbizonParts.views = {
           : 'background:var(--surface)'),
       pickLabel: PICKS.indexOf(o.id)>=0 ? '비교에서 빼기' : (PICKS.length>=3? '비교 3곳 꽉 찼어요' : '비교에 담기'),
       pickStyle: PICKS.indexOf(o.id)>=0
-        ? 'font-size:12.5px;color:var(--accent);cursor:pointer;white-space:nowrap;font-weight:600'
+        ? 'font-size:12.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap;font-weight:600'
         : (PICKS.length>=5
           ? 'font-size:12.5px;color:var(--ink3);white-space:nowrap'
           : 'font-size:12.5px;color:var(--ink3);cursor:pointer;white-space:nowrap'),
@@ -779,8 +779,8 @@ globalThis.MysbizonParts.views = {
           cardStyle:'flex:0 0 100%;scroll-snap-align:start;min-width:0;padding:24px 0 8px;'
             +'display:flex;flex-direction:column',
           // 경쟁 카드에서만 배치도를 보여준다
-          prevStyle:i>0? 'font-size:14.5px;color:var(--accent);cursor:pointer;white-space:nowrap' : 'display:none',
-          nextStyle:i<A.length-1? 'font-size:14.5px;color:var(--accent);cursor:pointer;white-space:nowrap' : 'display:none',
+          prevStyle:i>0? 'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap' : 'display:none',
+          nextStyle:i<A.length-1? 'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap' : 'display:none',
           nextLabel:i<A.length-1? (A[i+1].title.split(' · ')[0]+' →') : '',
           prev:()=>this.goCard(Math.max(i-1,0),A[Math.max(i-1,0)].key),
           next:()=>this.goCard(Math.min(i+1,A.length-1),A[Math.min(i+1,A.length-1)].key),

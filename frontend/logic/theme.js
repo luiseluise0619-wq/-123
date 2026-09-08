@@ -94,7 +94,34 @@ globalThis.MysbizonParts.theme = {
     const L=0.2126*f(ch(0))+0.7152*f(ch(1))+0.0722*f(ch(2));
     const white=1.05/(L+0.05);          // 흰 글자와의 대비
     const dark =(L+0.05)/(0.0223+0.05); // #052620 과의 대비
+    const best=Math.max(white,dark);
+    // 중간 회색(#7F7F7F)은 둘 다 4.5 를 못 넘는다 — 그때만 순백·순검으로 간다.
+    // (직접 고른 색이라 미리 막을 수 없다. 보기보다 읽히는 쪽을 고른다.)
+    if(best<4.5) return (1.05/(L+0.05)) >= ((L+0.05)/0.05) ? '#FFFFFF' : '#000000';
     return white>=dark ? '#FFFFFF' : '#052620';
+  },
+
+  // '글자로 쓰는 강조색'. 면 위 글자(--color-on-primary)와 다른 문제다 —
+  // 강조색을 배경 위에 글자로 얹으면, 밝은 색을 고른 순간 안 보인다(형광 노랑 1.07:1).
+  // 배경과 4.5:1 이 될 때까지 어둡게(또는 밝게) 옮긴 값을 돌려준다.
+  // 기본 프리셋들은 이미 넘기므로 **그대로 돌아간다** — 화면이 바뀌지 않는다.
+  readableOn(hex, bgHex){
+    const rgb=t=>{ const m=String(t||'').trim().match(/^#?([0-9a-f]{6})$/i);
+      return m? [0,1,2].map(i=>parseInt(m[1].slice(i*2,i*2+2),16)) : null; };
+    const f=x=>{ const s=x/255; return s<=0.03928? s/12.92 : Math.pow((s+0.055)/1.055,2.4); };
+    const lum=c=>0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2]);
+    const a=rgb(hex), b=rgb(bgHex);
+    if(!a||!b) return hex;
+    const bl=lum(b);
+    const ratio=c=>{ const l=lum(c); return (Math.max(l,bl)+0.05)/(Math.min(l,bl)+0.05); };
+    if(ratio(a)>=4.5) return hex;
+    const toward = bl>0.5 ? 0 : 255;              // 밝은 배경이면 어둡게, 어두우면 밝게
+    let cur=a.slice();
+    for(let i=0;i<20;i++){
+      cur=cur.map(v=>Math.round(v+(toward-v)*0.12));
+      if(ratio(cur)>=4.5) break;
+    }
+    return '#'+cur.map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('').toUpperCase();
   },
 
   applyTheme(appearance, presetK, custom){
@@ -140,6 +167,9 @@ globalThis.MysbizonParts.theme = {
     //   프리셋·직접 설정으로 어떤 색이 와도 맞도록, 실제 색의 밝기를 재서 고른다.
     const primaryNow = (cst&&cst.primary) || c.primary;
     set('--color-on-primary', this.onPrimary(primaryNow) );
+    // ⑤ 강조색을 '글자'로 쓸 때. 배경과 4.5:1 이 안 되면 그만큼만 옮긴다.
+    const bgNow = (cst&&cst.background) || (dark?'#000000':'#FFFFFF');
+    set('--color-primary-text', this.readableOn(primaryNow, bgNow));
 
     // 차트는 CSS 변수를 직접 못 읽는다 — 다시 그리게 표시만 바꿔 준다
     this._theme = (dark?'dark':'light')+'/'+key+'/'+JSON.stringify(cst||{});

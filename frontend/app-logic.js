@@ -1255,7 +1255,7 @@ class Component extends DCLogic {
             return {has:true, label:label, sub:c.d,
                     // 결과 한 줄이 있으면 그걸 쓰고, 없으면 '무엇을 하는 곳인지'로 내려간다.
                     peekText: peek || (first ? '한 곳을 고르면 그 자리를 뜯어봐요' : c.d),
-                    peekStyle: peek ? 'font-weight:600;color:var(--accent)' : 'color:var(--ink2)',
+                    peekStyle: peek ? 'font-weight:600;color:var(--accent-text)' : 'color:var(--ink2)',
                     style:this.ds('cta')+';display:inline-flex;align-items:center;justify-content:center;'
                       +'gap:8px;'+this.L('width:100%','','')+';max-width:100%',
                     go:()=>this.setState({screen:next,menu:null})};
@@ -1465,14 +1465,14 @@ class Component extends DCLogic {
       botFab:'position:fixed;z-index:70;display:inline-flex;align-items:center;justify-content:center;gap:7px;'
         +this.L('width:40px;padding:0;','padding:0 14px;','padding:0 14px;')
         +'height:40px;border-radius:999px;'
-        +'background:var(--bg);color:var(--accent);border:1px solid var(--line-strong);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.06);'
+        +'background:var(--bg);color:var(--accent-text);border:1px solid var(--line-strong);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.06);'
         +'transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1);'
         +this.L('right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));',
                 'right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));',
                 'right:28px;bottom:calc(28px + env(safe-area-inset-bottom,0px));'),
       // CTA 체계 — 주 행동 하나만 강조한다
       ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
-      ctaText:'font-size:14.5px;color:var(--accent);cursor:pointer;white-space:nowrap',
+      ctaText:'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap',
       prosCols:this.L('1fr','1fr 1fr','1fr 1fr'),
       openWhy:S.openWhy, whyLabel:S.openWhy?'계산 방식 접기':'점수 계산 방식 보기',
       toggleWhy:()=>this.setState({openWhy:!S.openWhy}),

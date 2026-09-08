@@ -85,6 +85,9 @@
        (초록 5.3:1 · 주황 4.8:1 · 빨강 4.8:1), 어두운 화면의 같은 색들은
        밝아져서 흰 글자가 2.9~3.3:1 로 떨어진다 — 그쪽은 먹색으로 바꾼다. */
     --color-on-positive:#FFFFFF; --color-on-warning:#FFFFFF; --color-on-negative:#FFFFFF;
+    /* 강조색을 '글자'로 쓸 때. 기본값은 강조색 그대로이고, theme.js 가 배경과의 대비를
+       재서 4.5:1 이 안 되면 그만큼만 옮긴 값으로 덮어쓴다(직접 고른 형광 노랑은 1.07:1). */
+    --color-primary-text:var(--color-primary);
     /* 비교 대상 색 — Okabe-Ito 팔레트. 색각 이상에서도 서로 갈린다.
        한 상권은 모든 차트에서 같은 색을 쓴다(logic/rank.js 의 colorSlot). */
     --chart-series-1:#0072B2;
@@ -97,7 +100,7 @@
     --ink:var(--color-text-primary); --ink2:var(--color-text-secondary); --ink3:var(--color-text-muted);
     --line:var(--color-border); --line-strong:var(--color-border-strong); --surface:var(--color-surface);
     --accent:var(--color-primary); --accent-hover:var(--color-primary-hover);
-    --on-accent:var(--color-on-primary);
+    --on-accent:var(--color-on-primary); --accent-text:var(--color-primary-text);
     --accent-2:var(--color-primary-mid); --accent-3:var(--color-primary-soft);
     --selection:var(--color-primary-soft);
     --good:var(--color-positive); --warn:var(--color-warning); --err:var(--color-negative);
@@ -159,7 +162,7 @@
   .u-between{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
   .u-tap{display:flex;align-items:center;gap:12px;padding:19px 0;cursor:pointer}
   .u-stack{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-  .u-check{flex:none;color:var(--accent);font-weight:700}
+  .u-check{flex:none;color:var(--accent-text);font-weight:700}
   .u-rule{border-top:1px solid var(--line)}
   .u-sec{padding:56px 0 0}
   .u-sec-lg{padding:64px 0 0}
@@ -180,7 +183,7 @@
      keep-all 만 두면 390px 화면에서 제목이 116px 밖으로 밀려 나간다 — 어쩔 수 없을 때만 끊는다. */
   overflow-wrap:anywhere}
   *{box-sizing:border-box}
-  a{color:var(--accent);text-decoration:none}
+  a{color:var(--accent-text);text-decoration:none}
   a:hover{color:var(--accent-hover)}
   input,button,select{font-family:inherit}
   ::selection{background:var(--selection)}
@@ -374,7 +377,7 @@
                     <sc-if value="{{ sidoWaiting }}">
                       <div style="{{ panelBodyStyle }}">
                         <div style="padding:14px 16px;border-radius:12px;background:var(--surface);font-size:13.5px;line-height:1.6;color:var(--ink2);text-wrap:pretty">{{ sidoWaitText }}</div>
-                        <span role="button" tabIndex="0" onClick="{{ backToSeoulHome }}" style="display:inline-flex;align-items:center;margin-top:12px;font-size:14px;font-weight:600;color:var(--accent);cursor:pointer">서울로 돌아가기</span>
+                        <span role="button" tabIndex="0" onClick="{{ backToSeoulHome }}" style="display:inline-flex;align-items:center;margin-top:12px;font-size:14px;font-weight:600;color:var(--accent-text);cursor:pointer">서울로 돌아가기</span>
                       </div>
                     </sc-if>
 
@@ -507,7 +510,7 @@
         <div role="dialog" aria-modal="true" aria-label="서비스 소개" tabIndex="-1" onClick="{{ noticeStop }}" style="{{ noticeCard }}">
           <div style="display:flex;align-items:flex-start;gap:14px">
             <div class="u-fill">
-              <div style="font-size:12.5px;color:var(--accent);font-weight:700;letter-spacing:-0.01em;white-space:nowrap">MYSBIZON</div>
+              <div style="font-size:12.5px;color:var(--accent-text);font-weight:700;letter-spacing:-0.01em;white-space:nowrap">MYSBIZON</div>
               <div style="font-size:20px;font-weight:700;letter-spacing:-0.025em;line-height:1.25;margin-top:8px;text-wrap:pretty">내 장사가 들어갈 빈자리를 찾아요</div>
             </div>
             <span role="button" tabIndex="0" aria-label="서비스 소개 닫기" data-dialog-close="1" onClick="{{ noticeClose }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .14s" style-hover="background:var(--line-strong)">
@@ -547,7 +550,7 @@
             <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
               <sc-for list="{{ aboutTabs }}" as="t">
                 <div style="display:flex;gap:12px;align-items:flex-start">
-                  <span style="flex:0 0 82px;font-size:13px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.tab }}</span>
+                  <span style="flex:0 0 82px;font-size:13px;font-weight:600;color:var(--accent-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.tab }}</span>
                   <span style="flex:1;min-width:0;font-size:13px;color:var(--ink2);line-height:1.6;text-wrap:pretty">{{ t.body }}</span>
                 </div>
               </sc-for>
@@ -800,7 +803,7 @@
           <sc-if value="{{ rp.qsAllDone }}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
               <span style="flex:1;min-width:0;font-size:13px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ rp.doneLine }}</span>
-              <span role="button" tabIndex="0" onClick="{{ rp.editAgain }}" style="flex:none;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;white-space:nowrap">답 고치기</span>
+              <span role="button" tabIndex="0" onClick="{{ rp.editAgain }}" style="flex:none;font-size:13px;font-weight:600;color:var(--accent-text);cursor:pointer;white-space:nowrap">답 고치기</span>
             </div>
           </sc-if>
 
@@ -846,7 +849,7 @@
                읽어낸 금액이 하나도 없으면 이 줄은 안 나온다(§1). 자격 판정이 아니다(§17). -->
           <sc-if value="{{ rp.sp.hasMax }}">
             <div style="margin-top:20px">
-              <div style="font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.2;color:var(--accent);font-variant-numeric:tabular-nums">{{ rp.sp.maxAmount }}</div>
+              <div style="font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.2;color:var(--accent-text);font-variant-numeric:tabular-nums">{{ rp.sp.maxAmount }}</div>
               <div style="font-size:17px;font-weight:600;letter-spacing:-.02em;margin-top:4px">받을 수 있는 지원사업이 있어요</div>
               <div style="{{ dsSub }}; margin-top:8px">{{ rp.sp.maxFrom }}</div>
               <div style="{{ dsSub }}">공고에 적힌 금액이에요. 실제로 받는 금액과 신청 자격은 원문에서 확인해 주세요.</div>
@@ -858,7 +861,7 @@
             <div style="{{ dsGrid4 }}">
               <div>
                 <div class="u-lab-p">신청 가능한 지원사업</div>
-                <div style="{{ dsNum }}; color:var(--accent);margin-top:6px">{{ rp.sp.countLabel }}</div>
+                <div style="{{ dsNum }}; color:var(--accent-text);margin-top:6px">{{ rp.sp.countLabel }}</div>
               </div>
               <sc-if value="{{ rp.sp.hasNearest }}">
                 <div>
@@ -892,7 +895,7 @@
                     <span style="{{ s.ddayStyle }}">{{ s.dday }}</span>
                   </div>
                   <sc-if value="{{ s.hasAmount }}">
-                    <div style="font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--accent);margin-top:12px">{{ s.amount }}</div>
+                    <div style="font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--accent-text);margin-top:12px">{{ s.amount }}</div>
                   </sc-if>
                   <sc-if value="{{ s.hasWhy }}">
                     <div style="margin-top:14px;display:flex;flex-direction:column;gap:5px">
@@ -908,7 +911,7 @@
                     <div style="{{ dsSub }}; margin-top:4px">{{ s.org }}</div>
                   </sc-if>
                   <sc-if value="{{ s.hasUrl }}">
-                    <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;margin-top:16px;font-size:14.5px;font-weight:600;color:var(--accent);text-decoration:none">공고 보기 →</a>
+                    <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;margin-top:16px;font-size:14.5px;font-weight:600;color:var(--accent-text);text-decoration:none">공고 보기 →</a>
                   </sc-if>
                 </div>
               </sc-for>
@@ -930,7 +933,7 @@
                         <div style="{{ dsSub }}; margin-top:8px">{{ s.org }}</div>
                       </sc-if>
                       <sc-if value="{{ s.hasUrl }}">
-                        <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:12px;font-size:14px;font-weight:600;color:var(--accent);text-decoration:none">공고 보기 →</a>
+                        <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:12px;font-size:14px;font-weight:600;color:var(--accent-text);text-decoration:none">공고 보기 →</a>
                       </sc-if>
                     </div>
                   </sc-for>
@@ -947,10 +950,10 @@
       <section style="padding:36px 0 0">
         <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
           <button disabled="{{ rp.sendDisabled }}" onClick="{{ rp.submit }}" style="{{ rp.sendStyle }}">{{ rp.sendLabel }}</button>
-          <button onClick="{{ rp.preview }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--accent);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">미리보기 · PDF 저장</button>
+          <button onClick="{{ rp.preview }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--accent-text);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">미리보기 · PDF 저장</button>
           <button onClick="{{ rp.csv }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--ink2);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">CSV 저장</button>
         </div>
-        <div style="margin-top:18px"><p role="status" aria-live="polite" style="{{ dsSub }}">{{ rp.note }}</p><a href="privacy.html" style="font-size:13px;color:var(--accent)">개인정보 안내</a></div>
+        <div style="margin-top:18px"><p role="status" aria-live="polite" style="{{ dsSub }}">{{ rp.note }}</p><a href="privacy.html" style="font-size:13px;color:var(--accent-text)">개인정보 안내</a></div>
       </section>
       </sc-if>
     </sc-if>
@@ -1089,7 +1092,7 @@
 
         <div style="margin-top:40px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
           <button onClick="{{ goMap }}" style="{{ ctaPrimary }}">지도분석 보기</button>
-          <span role="button" tabIndex="0" onClick="{{ goFineCmp }}" style="font-size:15px;color:var(--accent);cursor:pointer;white-space:nowrap">정밀비교 보기</span>
+          <span role="button" tabIndex="0" onClick="{{ goFineCmp }}" style="font-size:15px;color:var(--accent-text);cursor:pointer;white-space:nowrap">정밀비교 보기</span>
         </div>
       </section>
     </sc-if>
@@ -1492,7 +1495,7 @@
                   <span style="display:block;height:100%;border-radius:3px;overflow:hidden"><span style="{{ c.bar }}"></span></span>
                   <span style="{{ zc.medLine }}"></span>
                 </div>
-                <div style="font-size:12.5px;font-weight:600;color:var(--accent);margin-top:10px;text-wrap:pretty">{{ c.verdict }}</div>
+                <div style="font-size:12.5px;font-weight:600;color:var(--accent-text);margin-top:10px;text-wrap:pretty">{{ c.verdict }}</div>
                 <div style="display:flex;flex-direction:column;gap:9px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
                   <sc-for list="{{ c.facts }}" as="f">
                     <div style="min-width:0">
@@ -1631,7 +1634,7 @@
 
           <!-- 2단: 고른 업종 -->
           <div style="{{ rg.paneStyle }}">
-            <span role="button" tabIndex="0" onClick="{{ rg.detail.back }}" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--accent);cursor:pointer;white-space:nowrap">
+            <span role="button" tabIndex="0" onClick="{{ rg.detail.back }}" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--accent-text);cursor:pointer;white-space:nowrap">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;display:block">
                 <sc-for list="{{ icoBack }}" as="p"><path d="{{ p.d }}"></path></sc-for>
               </svg>목록으로
@@ -1651,7 +1654,7 @@
 
             <div style="margin-top:44px;display:flex;align-items:center;gap:22px;flex-wrap:wrap">
               <button onClick="{{ rg.detail.confirm }}" style="font-size:16px;font-weight:500;color:var(--on-accent);background:var(--accent);border:none;border-radius:999px;padding:0 30px;height:52px;cursor:pointer;transition:opacity .16s" style-hover="opacity:.86">이 업종으로 분석하기</button>
-              <span role="button" tabIndex="0" onClick="{{ rg.detail.back }}" style="font-size:15px;color:var(--accent);cursor:pointer;white-space:nowrap">다시 고르기</span>
+              <span role="button" tabIndex="0" onClick="{{ rg.detail.back }}" style="font-size:15px;color:var(--accent-text);cursor:pointer;white-space:nowrap">다시 고르기</span>
             </div>
           </div>
 
@@ -1725,7 +1728,7 @@
           <div class="u-lab-p" style="text-wrap:pretty;max-width:640px">{{ t.eyebrow }}</div>
           <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-top:8px">
             <h2 style="font-size:clamp(26px,4vw,36px);font-weight:700;letter-spacing:-.03em;margin:0">{{ t.name }}</h2>
-            <span style="font-size:15px;font-weight:700;color:var(--accent);white-space:nowrap">{{ t.pctFine }}</span>
+            <span style="font-size:15px;font-weight:700;color:var(--accent-text);white-space:nowrap">{{ t.pctFine }}</span>
           </div>
           <div style="font-size:17px;font-weight:600;margin-top:10px;text-wrap:pretty;max-width:640px">{{ t.verdict }}</div>
           <sc-if value="{{ t.thin }}">
@@ -2071,7 +2074,7 @@
       <sc-if value="{{ c.empty }}">
         <sc-if value="{{ c.emptyCount }}">
           <section style="padding:16px 0 0">
-            <p style="font-size:14px;font-weight:600;color:var(--accent)">{{ c.emptyCount }}</p>
+            <p style="font-size:14px;font-weight:600;color:var(--accent-text)">{{ c.emptyCount }}</p>
           </section>
         </sc-if>
       </sc-if>
@@ -2109,7 +2112,7 @@
                 <span style="{{ o.dot }}"></span>
                 <span style="flex:1;min-width:0;font-size:15.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.name }}</span>
                 <sc-if value="{{ o.best }}">
-                  <span style="flex:none;font-size:11.5px;font-weight:700;color:var(--color-primary);white-space:nowrap">{{ o.badge }}</span>
+                  <span style="flex:none;font-size:11.5px;font-weight:700;color:var(--color-primary-text);white-space:nowrap">{{ o.badge }}</span>
                 </sc-if>
               </div>
             </sc-for>
@@ -2231,7 +2234,7 @@
                           </div>
                         </sc-if>
                         <sc-if value="{{ x.note }}">
-                          <div style="font-size:11.5px;font-weight:600;color:var(--accent);margin-top:5px;text-wrap:pretty">{{ x.note }}</div>
+                          <div style="font-size:11.5px;font-weight:600;color:var(--accent-text);margin-top:5px;text-wrap:pretty">{{ x.note }}</div>
                         </sc-if>
                       </div>
                     </sc-for>
@@ -2263,7 +2266,7 @@
             </span>
           </div>
           <sc-if value="{{ c.add.full }}">
-            <p style="font-size:13.5px;font-weight:600;color:var(--accent);margin-top:12px">{{ c.add.fullText }}</p>
+            <p style="font-size:13.5px;font-weight:600;color:var(--accent-text);margin-top:12px">{{ c.add.fullText }}</p>
           </sc-if>
 
           <!-- 검색 결과 -->
@@ -2277,7 +2280,7 @@
                       <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
                       <span class="u-note" style="display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
                     </span>
-                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent)">+ 담기</span>
+                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent-text)">+ 담기</span>
                   </div>
                 </div>
               </sc-for>
@@ -2298,7 +2301,7 @@
                       <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
                       <span class="u-note" style="display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
                     </span>
-                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent)">+ 담기</span>
+                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent-text)">+ 담기</span>
                   </div>
                 </div>
               </sc-for>
@@ -2316,7 +2319,7 @@
                       <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
                       <span class="u-note" style="display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
                     </span>
-                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent)">+ 담기</span>
+                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent-text)">+ 담기</span>
                   </div>
                 </div>
               </sc-for>
