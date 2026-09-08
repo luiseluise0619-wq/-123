@@ -93,7 +93,7 @@
         <!-- 돈 흐름 -->
         <div class="u-rule">
           <div role="button" tabIndex="0" onClick="{{ tgMoney }}" class="u-tap">
-            <span class="u-fill-n">돈이 어디로 나가나</span>
+            <span class="u-fill-n">돈이 어디로 나가나요?</span>
             <span class="u-lab-f">{{ moneyHint }}</span>
             <span style="{{ caretMoney }}">⌄</span>
           </div>
@@ -132,7 +132,7 @@
                   </div>
                 </sc-for>
               </div>
-              <p style="font-size:12px;color:var(--ink3);margin:12px 0 0;max-width:420px;text-wrap:pretty">가운데 숫자는 1만원어치 팔았을 때 각 항목으로 나가는 돈이에요. 오른쪽은 한 달 금액이에요.</p>
+              <p style="font-size:12px;color:var(--ink3);margin:12px 0 0;max-width:420px;text-wrap:pretty">1만원어치 팔면 어디로 얼마가 나가는지 보여드려요. 오른쪽은 한 달치예요.</p>
               <div style="margin-top:24px">
                 <sc-for list="{{ moneyRows }}" as="r">
                   <div style="{{ r.style }}">
@@ -170,7 +170,7 @@
         <!-- 위험 -->
         <div style="border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
           <div role="button" tabIndex="0" onClick="{{ tgRisk }}" class="u-tap">
-            <span class="u-fill-n">이 업종의 위험</span>
+            <span class="u-fill-n">이 업종, 요즘 어때요?</span>
             <span class="u-lab-f">{{ riskHint }}</span>
             <span style="{{ caretRisk }}">⌄</span>
           </div>
