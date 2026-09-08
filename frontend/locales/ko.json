@@ -169,6 +169,7 @@
   "pop.noteWide": "유동인구는 {dong} 행정동 값이라 상권보다 넓어요. 시간대·요일 데이터는 아직 없어요.",
   "pr.cmpRent": "상권별 임대료 비교",
   "pr.cmpVac": "상권별 공실률 비교",
+  "pr.guMissing": "{n}개 구는 원자료에 없어 목록에서 빠졌어요({names}).",
   "pr.rentUnit": "㎡당 월 임대료",
   "pr.seoulAll": "서울 전체",
   "pr.seoulRent": "서울 전체 임대료 추이",

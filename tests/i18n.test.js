@@ -163,7 +163,10 @@ function sweep(locale) {
       });
     },
     c => { Object.assign(c.state, { sp: { ok: false, configured: false, items: [] } }); },
-    c => { Object.assign(c.state, { sp: { ok: false, configured: true, items: [] } }); }
+    c => { Object.assign(c.state, { sp: { ok: false, configured: true, items: [] } }); },
+    // 통합시세는 고른 지표 하나만 그린다 — 안 고르면 나머지 다섯 갈래의 문구를 못 본다.
+    // 실제로 '자치구 20곳'·자료 출처 문단이 그렇게 한국어로 남아 있었다.
+    ...['rent', 'vacancy', 'sales', 'spend', 'churn', 'fr'].map(k => c => { c.state.mkSel = k; })
   ];
   const found = new Set();
   for (const screen of SCREEN_KEYS) {

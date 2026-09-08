@@ -846,7 +846,8 @@ globalThis.MysbizonParts.screens = {
       const qLabel=q=>String(q).slice(0,4)+'.'+String(q).slice(4)+'Q';
       const cur=series.filter(v=>v!=null).slice(-1)[0];
       const prev=series.filter(v=>v!=null).slice(-5)[0];
-      out.title=this.indName(pick)+' · 서울 전체 분기 매출';
+      // 업종 이름이 앞에 붙으면 통째로는 사전에서 못 찾는다 — 조각마다 옮긴 뒤 잇는다
+      out.title=this.tr(this.indName(pick))+' · '+this.tr('서울 전체 분기 매출');
       out.now=this.won(cur);
       out.nowLabel=this.qtr(qs[qs.length-1]);
       if(cur&&prev){
@@ -855,7 +856,7 @@ globalThis.MysbizonParts.screens = {
         out.deltaStyle='font-size:13.5px;font-weight:700;line-height:1.4;color:'
           +(Math.abs(g)<3?'var(--ink3)':(g>0?'var(--good)':'var(--warn)'));
       }
-      push('pr-sales-trend',{type:'line', title:this.indName(pick)+' 매출 추이',
+      push('pr-sales-trend',{type:'line', title:this.tr(this.indName(pick))+' '+this.tr('매출 추이'),
         sub:'서울 전체 분기 합계', unit:'원',
         period:this.qtr(qs[0])+' ~ '+this.qtr(qs[qs.length-1]), height:250,
         labels:qs.map(qLabel), datasets:[{label:this.indName(pick), data:series}]});
@@ -896,7 +897,7 @@ globalThis.MysbizonParts.screens = {
       const rows=Object.keys(ST.ind).map(n=>({name:this.indName(n), raw:n, ...ST.ind[n]}))
         .filter(o=>isFinite(o.opened)&&isFinite(o.closed));
       const mine=rows.find(o=>o.raw===S.ind)||rows[0];
-      out.title=mine.name+' · 3개월 동안';
+      out.title=this.tr(mine.name)+' · '+this.tr('3개월 동안');
       const net=mine.opened-mine.closed;
       out.now=(net>0?'+':'')+net.toLocaleString()+'곳';
       out.nowLabel='새로 연 곳 − 문 닫은 곳 · 서울 전체';
@@ -904,7 +905,7 @@ globalThis.MysbizonParts.screens = {
       out.deltaStyle='font-size:13.5px;font-weight:700;line-height:1.4;color:'+(net>=0?'var(--good)':'var(--warn)');
       const byChurn=rows.slice().sort((a,b)=>(b.opened+b.closed)-(a.opened+a.closed)).slice(0,12);
       push('pr-churn',{type:'bar', title:'업종별 개업 · 폐업', sub:'움직임이 큰 12개 업종',
-        unit:'곳', period:this.qtr(ST.quarter)+' · 3개월', height:280,
+        unit:'곳', period:this.qtr(ST.quarter)+' · '+this.tr('3개월'), height:280,
         labels:byChurn.map(o=>o.name),
         datasets:[{label:'새로 연 곳', data:byChurn.map(o=>o.opened)},
                   {label:'문 닫은 곳', data:byChurn.map(o=>o.closed)}]});
@@ -918,7 +919,7 @@ globalThis.MysbizonParts.screens = {
         .sort((a,b)=>b.v-a.v);
       const netShow=[...net12.slice(0,6), ...net12.slice(-6)];
       push('pr-net',{type:'hbar', title:'가게가 느는 업종 · 주는 업종', sub:'새로 연 곳 − 문 닫은 곳',
-        unit:'곳', period:this.qtr(ST.quarter)+' · 3개월', height:320,
+        unit:'곳', period:this.qtr(ST.quarter)+' · '+this.tr('3개월'), height:320,
         labels:netShow.map(o=>o.name),
         datasets:[{label:'순증감', data:netShow.map(o=>o.v),
           colors:netShow.map(o=>o.v>=0?'on':'warn')}]});
@@ -956,12 +957,12 @@ globalThis.MysbizonParts.screens = {
       const pick=(S.prPick&&IC.gu[S.prPick])?S.prPick:(gus.indexOf(S.rp_gu)>=0?S.rp_gu:gus[0]);
       const spend=(IC.gu[pick]&&IC.gu[pick].spend)||[];
       const sorted=spend.slice().sort((a,b)=>b.pct-a.pct);
-      out.title=pick+' · 가구가 돈을 쓰는 곳';
-      out.now=sorted.length? sorted[0].name : '—';
-      out.nowLabel=sorted.length? '가장 큰 항목 '+sorted[0].pct+'%' : '';
-      push('pr-spend',{type:'doughnut', title:pick+' 소비 구성', sub:'가구 지출에서 차지하는 비율',
+      out.title=this.placeName(pick)+' · '+this.tr('가구가 돈을 쓰는 곳');
+      out.now=sorted.length? this.tr(sorted[0].name) : '—';
+      out.nowLabel=sorted.length? this.tr('가장 큰 항목 '+sorted[0].pct+'%') : '';
+      push('pr-spend',{type:'doughnut', title:this.placeName(pick)+' '+this.tr('소비 구성'), sub:'가구 지출에서 차지하는 비율',
         unit:'%', period:this.qtr(IC.quarter), height:300,
-        labels:sorted.map(o=>o.name), datasets:[{label:'비율', data:sorted.map(o=>o.pct)}]});
+        labels:sorted.map(o=>this.tr(o.name)), datasets:[{label:'비율', data:sorted.map(o=>o.pct)}]});
       // 같은 항목을 자치구끼리 견준다 — 다른 질문
       const key=sorted.length? sorted.find(o=>o.name==='음식')||sorted[0] : null;
       if(key){
@@ -969,19 +970,26 @@ globalThis.MysbizonParts.screens = {
           const it=((IC.gu[g]||{}).spend||[]).find(x=>x.name===key.name);
           return it? {g, v:it.pct} : null;
         }).filter(Boolean).sort((a,b)=>b.v-a.v);
-        push('pr-spend-gu',{type:'hbar', title:this.t('pr.spendByGu',{name:key.name}),
+        push('pr-spend-gu',{type:'hbar', title:this.t('pr.spendByGu',{name:this.tr(key.name)}),
           sub:'같은 항목을 자치구끼리 견줘요', unit:'%', period:this.qtr(IC.quarter), height:340,
-          labels:cross.map(o=>o.g), datasets:[{label:key.name+' 비중', data:cross.map(o=>o.v),
+          labels:cross.map(o=>this.placeName(o.g)), datasets:[{label:this.tr(key.name)+' '+this.tr('비중'), data:cross.map(o=>o.v),
             colors:cross.map(o=>o.g===pick?'on':'')}]});
       }
-      out.listTitle='자치구 '+gus.length+'곳';
+      out.listTitle=this.tr('자치구 '+gus.length+'곳');
       out.list=gus.map(g=>({
-        name:g, meta:'',
-        value:(((IC.gu[g]||{}).spend||[]).slice().sort((a,b)=>b.pct-a.pct)[0]||{}).name||'—',
+        name:this.placeName(g), meta:'',
+        value:this.tr((((IC.gu[g]||{}).spend||[]).slice().sort((a,b)=>b.pct-a.pct)[0]||{}).name||'—'),
         pick:()=>this.setState({prPick:g}),
         style:'display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-sm);cursor:pointer;'
           +(g===pick?'background:var(--accent-3)':'')}));
-      out.note=IC.income_note||'자치구 단위 가구 지출 구성이에요. 상권 하나의 값은 아니에요.';
+      // 25개 구 중 5개가 원자료에 없다. 말없이 20곳만 보여주면 자기 구를 찾던 분은
+      // 앱이 고장 난 줄 안다 — 왜 없는지 적는다(§1 데이터 정직성).
+      const allGu=[...new Set(Object.values(S.zgu||{}))].filter(Boolean);
+      const missing=allGu.filter(g=>!IC.gu[g]);
+      // 이어 붙인 뒤에는 사전이 통째로는 못 찾는다 — 조각마다 옮긴 뒤 잇는다
+      out.note=this.tr(IC.income_note||'자치구 단위 가구 지출 구성이에요. 상권 하나의 값은 아니에요.')
+        +(missing.length? ' '+this.t('pr.guMissing',{n:missing.length,
+            names:missing.map(g=>this.placeName(g)).join(' · ')}) : '');
     }
 
     out.charts=C; out.hasCharts=C.length>0;

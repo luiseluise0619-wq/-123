@@ -157,7 +157,7 @@ def main():
         "available": True,
         "updated": datetime.datetime.utcnow().strftime("%Y-%m-%d"),
         "income_avg": None,   # 서울시 '월 평균 소득' 원본 종료(2026-05) → 없음. 지어내지 않는다.
-        "income_note": "서울시가 '월 평균 소득 금액'을 2020년 수급 중단·2026-05-13 삭제해 소득은 제공하지 않습니다. 자치구별 소득은 국세청·국민연금 통계가 대체 자료입니다.",
+        "income_note": "서울시가 '월 평균 소득 금액'을 2020년 수급 중단·2026-05-13 삭제해 소득은 제공하지 않아요. 자치구별 소득은 국세청·국민연금 통계가 대체 자료예요.",
         "spend": pct_list(seoul_amt),   # 서울 전체 합계 구성비(하위호환)
         "gu": gu_out,
     }
