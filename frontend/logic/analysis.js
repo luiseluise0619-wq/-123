@@ -507,6 +507,36 @@ globalThis.MysbizonParts.analysis = {
     const ORDER=['sales','demand','comp','cost','nearby','market'];
     const rk=k=>{ const i=ORDER.indexOf(k); return i<0?99:i; };
     out.sort((a,b)=>rk(a.key)-rk(b.key));
+        // 요즘 — 최근 30일 · 반경 500m 개·폐업(지방행정인허가). 자료가 없어도 절은 둔다:
+    // 이 앱에서 유일하게 '요즘'을 말하는 숫자라, 없으면 없다고 말해야 한다(§1).
+    {
+      const OP=S.op;
+      const z=(OP&&OP.available&&OP.zones)?OP.zones[sel.id]:null;
+      const rows=[];
+      let big='', bigLabel='', verdict='', note='';
+      if(!OP){ note=this.t('op.loading'); }
+      else if(!OP.available){ note=this.t('op.wait'); }
+      else {
+        const o=z?z.o:0, c=z?z.c:0;
+        big=this.t('op.count',{n:o});
+        bigLabel=this.t('op.bigLabel',{days:OP.days, r:OP.radius_m});
+        verdict=(o||c) ? this.t('op.verdict',{o:o, c:c}) : this.t('op.none',{days:OP.days, r:OP.radius_m});
+        (z?z.items:[]).forEach(it=>{
+          if(!Array.isArray(it)||it.length<5) return;
+          // 가게 이름·업태는 고유명사 — 상권 이름과 같은 규칙(영어는 로마자, 중국어는 그대로)
+          rows.push({label:this.placeName(String(it[0]||'')),
+            value:(it[2]==='o'?this.t('op.opened'):this.t('op.closed'))+' · '+String(it[3]).slice(5).replace('-','/'),
+            tag:(it[1]?this.placeName(String(it[1]))+' · ':'')+Math.round(it[4])+'m'});
+        });
+        note=this.t('op.note',{since:OP.since, until:OP.until});
+      }
+      out.push({key:'recent', title:'요즘 · 근처에 뭐가 생겼나요',
+        q:'요즘 이 근처에 뭐가 열리고 닫혔나요?',
+        big:big, bigLabel:bigLabel, verdict:verdict, rows:rows, note:note,
+        // 이 상권을 '내 가게'로 기억해 두면 정밀분석 허브 맨 위에 이 숫자가 늘 뜬다
+        actionLabel:S.myShop===sel.id ? this.t('op.saved') : this.t('op.save'),
+        action:()=>this.saveMyShop(sel.id)});
+    }
     return out;
   }
 };

@@ -1387,7 +1387,24 @@
     "누르면 담겨요 · Enter 는 첫 번째": "Results — tap to add (Enter picks the first)",
     "막대는 가게 한 곳이 한 달에 파는 돈이에요. 목록에 없는 장사는 안 되는 게 아니라, 자료가 없어서 알 수 없는 거예요. 동네마다 매출 상위 15개 업종까지만 담겨 있어요.": "The bar is what one shop sells in a month. A business missing from the list isn't a bad business — we simply have no data for it. This dataset holds only the top 15 business types by sales in each area.",
     "자치구 안 상권 매출을 다 더해 같은 업종 가게 수로 나눴어요. 원자료가 {0}개월치라 {1}으로 나눠 한 달 값으로 적었어요.": "We added up sales of every area in the district and divided by the number of same-type shops. The raw data covers {0} months, so we divided by {1} for a monthly figure.",
-    "이 메뉴의 화면": "Screens in this menu"
+    "이 메뉴의 화면": "Screens in this menu",
+    "요즘 · 근처에 뭐가 생겼나요": "Lately · what's new nearby",
+    "요즘": "Lately",
+    "요즘 이 근처에 뭐가 열리고 닫혔나요?": "What opened or closed around here lately?"
   },
-  "mk.waitingCats": "{names} prices are on the way."
+  "mk.waitingCats": "{names} prices are on the way.",
+  "op.loading": "Loading recent openings and closures…",
+  "op.wait": "Recent openings and closures aren't connected yet. Once they are, new and closed shops near here will show up right here.",
+  "op.count": "{n}",
+  "op.bigLabel": "Restaurants & cafés opened within {r}m in the last {days} days",
+  "op.verdict": "{o} opened · {c} closed.",
+  "op.none": "No restaurant or café opened or closed within {r}m in the last {days} days.",
+  "op.opened": "Opened",
+  "op.closed": "Closed",
+  "op.note": "From Korea's local business-licence open data ({since}–{until}). These are filing dates, so real opening/closing days may differ by a few days; distance is straight-line to the area's centre.",
+  "op.save": "Save this area as my shop",
+  "op.saved": "Saved as my shop · remove",
+  "op.mine": "Around my shop lately",
+  "op.mineSub": "{o} opened · {c} closed · last {days} days",
+  "op.mineWait": "Openings data on the way"
 }

@@ -710,6 +710,7 @@ globalThis.MysbizonParts.views = {
           rows:(cur.rows||[]).map(r=>({...r, hasTag:!!r.tag})),
           bars:cur.bars||[], hasBars:!!(cur.bars&&cur.bars.length),
           note:cur.note||'', hasNote:!!cur.note,
+          hasAction:!!cur.action, actionLabel:cur.actionLabel||'', action:cur.action||(()=>{}),
           bigStyle:'font-size:'+this.L('30px','34px','40px')+';font-weight:700;letter-spacing:-.03em;'
             +'line-height:1.08;font-variant-numeric:tabular-nums;margin-top:10px;'
             +((cur.big&&cur.big!=='데이터 없음'&&cur.big!=='자료 없음')?'':'font-size:19px;color:var(--ink3)')

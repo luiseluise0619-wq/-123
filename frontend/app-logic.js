@@ -79,6 +79,8 @@ class Component extends DCLogic {
       });
     }
     if(this.state.screen==='report') this.loadSupport();
+    // 최근 개·폐업은 정밀분석(과 '내 가게'를 저장한 허브)에서만 쓴다 — 그때 한 번만 받는다.
+    if(this.state.screen==='fineDetail'||(this.state.screen==='hubFine'&&this.state.myShop)) this.loadOpenings();
     this.placePanel();
     // 차트와 가로 슬라이드는 DOM 이 그려진 뒤에 붙인다.
     // DC 가 다시 그려도 같은 canvas 면 값만 갱신한다(charts.js 참조).
@@ -100,6 +102,30 @@ class Component extends DCLogic {
       .catch(()=>this.setState({sp:{ok:false,configured:true,items:[],
         error:'공고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'}}))
       .finally(()=>{this._spLoading=false;});
+  }
+
+  // 최근 30일 개·폐업(지방행정인허가 → 상권 반경 500m). 수집 전이면 available:false 가 온다.
+  // 정적 파일이지만 300KB 쯤 될 수 있어 첫 로드에 끼우지 않고 필요할 때 받는다.
+  loadOpenings(){
+    if(this._opLoading||this.state.op) return;
+    this._opLoading=true;
+    this.loadData('data/v3/openings.json').then(r=>r.json())
+      .then(d=>{
+        const ok = d && typeof d==='object' && !Array.isArray(d);
+        const live = ok && d.available===true && d.zones && typeof d.zones==='object' && !Array.isArray(d.zones)
+          && Number.isFinite(d.days) && Number.isFinite(d.radius_m);
+        this.setState({op: live ? d : {available:false}});
+      })
+      .catch(()=>this.setState({op:{available:false}}))
+      .finally(()=>{this._opLoading=false;});
+  }
+
+  // '내 가게' — 상권 하나를 이 브라우저에 기억해 둔다(계정이 없으니 이 기기에서만).
+  // 저장하면 정밀분석 허브 맨 위에 '내 가게 주변 요즘' 줄이 생긴다.
+  saveMyShop(id){
+    const next = this.state.myShop===id ? null : id;
+    this.setState({myShop:next});
+    try{ if(next) localStorage.setItem('mysbizon.myShop', next); else localStorage.removeItem('mysbizon.myShop'); }catch(e){}
   }
 
   // 저장해 둔 설문 답을 '믿을 수 있는 값만' 골라 되살린다.
@@ -305,6 +331,8 @@ class Component extends DCLogic {
       .catch(()=>this.setState({err:'분석 자료를 불러오지 못했어요. 연결을 확인한 뒤 다시 시도해 주세요.'}));
     try{ const r=JSON.parse(localStorage.getItem('mysbizon.recentZones')||'[]');
       if(Array.isArray(r)&&r.length) this.setState({recent:r}); }catch(e){}
+    // 내 가게 — 상권 코드(숫자)만 받는다. 사람이 고칠 수 있는 곳이라 모양을 본다.
+    try{ const m=localStorage.getItem('mysbizon.myShop'); if(m&&/^[0-9]{5,12}$/.test(m)) this.setState({myShop:m}); }catch(e){}
   }
 
 
@@ -1220,7 +1248,7 @@ class Component extends DCLogic {
                     go:()=>this.setState({screen:next,menu:null})};
           })(),
           // 나머지는 한 줄짜리 목록. 카드 셋을 나란히 두면 무게가 같아져 강조가 사라진다.
-          rest:(g?g.items:[]).filter(([key])=>key!==next).map(([key,label])=>{
+          rest:(()=>{ const rows=(g?g.items:[]).filter(([key])=>key!==next).map(([key,label])=>{
             const c=CARD[key]||{d:''};
             return {
               label:label, sub:c.d,
@@ -1235,7 +1263,27 @@ class Component extends DCLogic {
                   +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis',
               spacerStyle:this.bp()==='mobile' ? 'flex:1 1 auto' : 'display:none'
             };
-          })
+          });
+          // '내 가게'를 저장해 뒀으면 맨 위에 한 줄 — 창업한 뒤에도 다시 올 이유가 되는 자리다.
+          // 자료가 없으면 없다고 적는다(§1).
+          const mineId = (!zone && S.myShop && S.zi && S.zi.zones[S.myShop]) ? S.myShop : null;
+          if(mineId && rows.length){
+            const OP=S.op, z=(OP&&OP.available&&OP.zones)?OP.zones[mineId]:null;
+            const sub = !OP ? this.t('op.loading')
+              : (!OP.available ? this.t('op.mineWait')
+                 : this.t('op.mineSub',{o:z?z.o:0, c:z?z.c:0, days:OP.days}));
+            // 다른 줄은 모바일에서 설명을 접지만, 이 줄의 설명은 숫자라 접으면 뜻이 없다 —
+            // 둘째 줄로 내려 보여준다(order 로 맨 뒤, 100% 폭).
+            rows.unshift({...rows[0], label:this.t('op.mine'),
+              sub:this.zoneLabelOf(S.zi.zones[mineId].nm)+' · '+sub,
+              row:rows[0].row+';flex-wrap:wrap',
+              subStyle:this.bp()==='mobile'
+                ? 'order:3;flex:1 1 100%;min-width:0;font-size:13px;color:var(--ink3);margin-top:4px;text-wrap:pretty'
+                : rows[0].subStyle,
+              go:()=>this.setState({screen:'fineDetail', sel:mineId, zoneId:mineId, mvTab:'recent', menu:null})});
+          }
+          return rows;
+        })()
         };
       })(),
       goFind:go('find'), goCmp:go('sim'),

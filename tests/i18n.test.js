@@ -119,6 +119,10 @@ function loaded(locale) {
   return c;
 }
 
+// 가짜 개·폐업 자료 — 시험용. 이름·업태는 고유명사라 그대로 남는 게 맞다(placeNames 에서 뺀다).
+const OP_ITEMS = [['테스트분식', '분식', 'o', '2026-09-01', 120], ['옛날다방', '카페', 'c', '2026-08-20', 430]];
+const OP_FAKE = { available: true, days: 30, radius_m: 500, since: '2026-08-09', until: '2026-09-08',
+  zones: {} };
 const SCREEN_KEYS = ['home', 'hubZone', 'zone', 'find', 'region', 'fineCmp', 'hubFine',
   'fineIntro', 'map', 'fineDetail', 'sim', 'diag', 'price', 'report'];
 
@@ -126,6 +130,7 @@ const SCREEN_KEYS = ['home', 'hubZone', 'zone', 'find', 'region', 'fineCmp', 'hu
 function sweep(locale) {
   const seed = loaded(locale);
   const ids = Object.keys(seed.state.zi.zones || {});
+  OP_FAKE.zones[ids[0]] = { o: 2, c: 1, items: OP_ITEMS };
   // 리포트 설문은 '지금 열린 질문' 하나만 그린다. 답을 안 채우면 1번 질문에서 멈춰
   // 뒤 질문들의 문구를 한 번도 못 본다 — 실제로 그렇게 영어 화면에 한국어가 남아 있었다.
   // 그래서 단계마다 한 번씩 세워 본다.
@@ -171,9 +176,15 @@ function sweep(locale) {
     // 실제로 '자치구 20곳'·자료 출처 문단이 그렇게 한국어로 남아 있었다.
     ...['rent', 'vacancy', 'sales', 'spend', 'churn', 'fr'].map(k => c => { c.state.mkSel = k; }),
     // 정밀분석도 '열린 탭' 하나만 그린다 — 같은 이유로 탭을 하나씩 세워 본다
-    ...['demand', 'comp', 'sales', 'cost', 'nearby', 'grow', 'market'].map(k => c => {
+    ...['demand', 'comp', 'sales', 'cost', 'nearby', 'grow', 'market', 'recent'].map(k => c => {
       c.state.mvTab = k; c.state.sel = ids[0]; c.state.zoneId = ids[0];
-    })
+    }),
+    // '요즘' 절은 자료가 와야 큰 숫자·목록·안내문이 그려진다. 세 상태를 다 세워 본다.
+    c => { c.state.mvTab = 'recent'; c.state.sel = ids[0]; c.state.zoneId = ids[0]; c.state.op = OP_FAKE; c.state.myShop = ids[0]; },
+    c => { c.state.mvTab = 'recent'; c.state.sel = ids[0]; c.state.zoneId = ids[0]; c.state.op = { available: false }; },
+    // 허브 맨 위 '내 가게 주변' 줄 — 저장해 둔 상태에서만 나온다
+    c => { c.state.myShop = ids[0]; c.state.op = OP_FAKE; },
+    c => { c.state.myShop = ids[0]; c.state.op = { available: false }; }
   ];
   const found = new Set();
   for (const screen of SCREEN_KEYS) {
@@ -270,6 +281,7 @@ function placeNames() {
   for (const b of Object.values(seed.state.zbd || {})) if (Array.isArray(b)) b.forEach(add);
   for (const z of Object.values((seed.state.rentStats || {}).zones || {})) { add(z && z.nm); add(z && z.gwon); }
   for (const g of Object.keys((seed.state.income || {}).gu || {})) add(g);
+  OP_ITEMS.forEach(it => { add(it[0]); add(it[1]); });
   return names;
 }
 

@@ -103,6 +103,29 @@ curl -s -X POST -H "Origin: https://내도메인" -H "content-type: application/
 
 ---
 
+## 4-1. 내 가게 주변 개·폐업 (지방행정인허가 LOCALDATA) — 창업한 뒤에도 쓰는 숫자
+
+정밀분석 › **'요즘' 탭**과 정밀분석 허브의 **'내 가게 주변 요즘'** 줄이 이 자료로 산다.
+최근 30일 동안 상권 반경 500m 안에 새로 연/닫은 음식점·카페·제과점 수와 최근 항목 5개.
+
+**넣는 곳:** GitHub → Settings → Secrets / Variables (수집은 GitHub Actions 가 매주 돈다)
+
+| 이름 | 종류 | 값 |
+| --- | --- | --- |
+| `LOCALDATA_KEY` | Secret | localdata.go.kr 회원가입 → 마이페이지 → **인증키 발급** (무료) |
+| `LOCALDATA_SVCS` | Variable(선택) | 개방서비스 ID, 쉼표 구분. 기본 `07_24_04_P,07_24_05_P,07_24_03_P`(일반음식점·휴게음식점·제과점) |
+| `LOCALDATA_LOCALCODES` | Variable(선택) | 서울 자치구 개방자치단체코드(쉼표 구분). 비우면 전국을 받아 주소로 거른다(느리지만 안전) |
+| `LOCALDATA_EPSG` | Variable(선택) | 좌표계. 비우면 5174·2097 중 서울 안에 더 많이 떨어지는 쪽을 스크립트가 고른다 |
+
+**넣고 나서 확인 (CI 로그):**
+- `좌표계 EPSG:5174 → 표본 300개 중 서울 안 N개` — N 이 0 에 가까우면 좌표계가 다른 것. `LOCALDATA_EPSG` 로 지정
+- `저장: … 열림 N · 닫음 M · 상권 K` — K 가 0 이면 `응답은 왔지만 … 0` 줄을 보고 서비스 ID·필드명을 확인
+- 화면: 정밀분석 › 요즘 탭에 '{n}곳' 큰 숫자가 뜨면 성공. 안 뜨면 `openings.json` 의 `available` 을 볼 것
+
+※ 서비스 ID·필드명(`bplcNm`·`apvPermYmd`·`dcbYmd`·`x`·`y`…)·좌표계는 **문서에서 찾은 값**이다.
+  개발 환경에서 localdata.go.kr 접속이 막혀 실제 응답으로 확인하지 못했다(가짜 상위 API 로 파이프라인만 검증).
+※ 이용조건: 지방행정인허가 개방자료의 라이선스(공공누리 유형)와 상업 이용 조건을 **확인 필요**.
+
 ## 5. 🔴 운영 배포 전 반드시 (키가 아니라 설정)
 
 | 이름 | 왜 |
@@ -120,6 +143,7 @@ curl -s -X POST -H "Origin: https://내도메인" -H "content-type: application/
 | 이름 | 종류 | 무엇 |
 | --- | --- | --- |
 | `SEOUL_API_KEY` | Secret | 서울 열린데이터광장 |
+| `LOCALDATA_KEY` | Secret | 지방행정인허가(localdata.go.kr) — §4-1 |
 | `DATA_GO_KR_KEY` | Secret | 공공데이터포털 |
 | `ZONE_RENT_SERVICE` | Variable | 상권 단위 임대료 **오퍼레이션명** (기본 `VwsmTrdarStorQq` — 미검증) |
 | `FTC_BRAND_URL` · `FTC_INDUSTRY_URL` · `FTC_COST_URL` | Variable | 공정위 가맹정보 (활용신청 필요) |

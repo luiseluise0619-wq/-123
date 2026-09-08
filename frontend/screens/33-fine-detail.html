@@ -139,6 +139,9 @@
             <sc-if value="{{ mv.now.hasNote }}">
               <p style="{{ dsSub }}; margin-top:18px">{{ mv.now.note }}</p>
             </sc-if>
+            <sc-if value="{{ mv.now.hasAction }}">
+              <div style="margin-top:12px"><span role="button" tabIndex="0" onClick="{{ mv.now.action }}" style="{{ ctaText }}">{{ mv.now.actionLabel }}</span></div>
+            </sc-if>
           </div>
         </div>
       </section>
