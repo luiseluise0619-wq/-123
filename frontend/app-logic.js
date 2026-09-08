@@ -484,11 +484,13 @@ class Component extends DCLogic {
               {label:'월 본전선 (이만큼 팔면 본전)', value:this.man(c.bep), tag:'고정비 ÷ (1 − 원가율)'},
               {label:'월매출 가정 ('+S.scen+')', value:this.man(c.rev), tag:'상권 평균 추정 × '+c.mult},
               {label:'월 영업이익', value:this.man(c.profit), tag:'세금·대출 이자는 빼지 않음'},
-              {label:'월 임대료', value:(S.rent||0).toLocaleString()+'만원', tag:said('rent')},
-              {label:'평수', value:(S.area||0)+'평', tag:said('area')},
+              // 계산에 **실제로 쓴 값**을 적는다. 화면 state 를 그대로 적으면
+              // 칸을 비웠을 때 '0만원' 이라고 인쇄해 놓고 계산은 400 으로 하게 된다.
+              {label:'월 임대료', value:c.rent.toLocaleString()+'만원', tag:said('rent')},
+              {label:'평수', value:c.area+'평', tag:said('area')},
               {label:'인건비', value:this.man(c.labor),
                tag:(touched.staffOv&&S.staffOv!=null)?'직접 넣으신 직원 수':'평수로 추정'},
-              {label:'원가율', value:(S.cogs||0)+'%', tag:'기본 가정'}
+              {label:'원가율', value:Math.round(c.cogs*100)+'%', tag:'기본 가정'}
             ]:null;
             if(c&&c.payback!=null) bep.push(
               {label:'회수기간', value:c.payback.toFixed(1)+'개월', tag:'초기투자 ÷ 월 영업이익'});
@@ -964,7 +966,9 @@ class Component extends DCLogic {
             const p=buildReport();
             const rows=[['항목','값','비고'],
               ['기준 분기',S.zi?this.qtr(S.zi.quarter):'','원자료 기준'],
-              ['장사',p.ind,''],['동네',p.zone,''],
+              ['장사',p.ind,''],
+              // 인쇄본과 같은 안내를 CSV 에도 남긴다 — 고른 적 없는 상권이면 그렇다고 적는다(§1)
+              ['동네',p.zone, p.zoneAuto? '직접 고른 상권이 아니라 이 업종 1위 상권':''],
               ...(p.survey||[]).map(x=>[x.label,x.value,'설문 답']),
               ...(p.support||[]).map(x=>[x.title,[x.amount,x.period].filter(Boolean).join(' · '),
                                          [x.org,x.why,x.url].filter(Boolean).join(' · ')]),
@@ -976,7 +980,15 @@ class Component extends DCLogic {
             const blob=new Blob(['\uFEFF'+body],{type:'text/csv;charset=utf-8'});
             const a=document.createElement('a');
             a.href=URL.createObjectURL(blob);
-            a.download='MYSBIZON_'+(S.homeZoneName||'서울전체')+'_'+(S.ind?this.indName(S.ind):'')+'.csv';
+            // 파일 이름에 한글을 넣으면 **크로미움이 이름을 통째로 버린다** —
+            // 확장자 없는 'download' 로 저장돼 엑셀이 더블클릭으로 못 연다(재현 확인).
+            // 로마자로 옮기고 ASCII 만 남긴다. 날짜를 붙여 여러 번 받아도 안 겹친다.
+            const asciiName=t=>String(t||'').replace(/[^\x20-\x7E]/g,'').trim()
+              .replace(/\s+/g,'-').replace(/[^A-Za-z0-9._-]/g,'').replace(/-{2,}/g,'-').slice(0,40);
+            const zoneName=asciiName(this.romanizeName(S.homeZoneName||''))||'Seoul';
+            const indName =asciiName(this.romanizeName(S.ind?this.indName(S.ind):''));
+            const day=new Date().toISOString().slice(0,10);
+            a.download=['MYSBIZON',zoneName,indName,day].filter(Boolean).join('_')+'.csv';
             document.body.appendChild(a); a.click();
             setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },0);
           },
