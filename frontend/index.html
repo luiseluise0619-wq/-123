@@ -1843,9 +1843,9 @@
             <div style="{{ d.fill }}"></div>
             <div style="{{ d.mark }}"></div>
           </div>
-          <div style="display:flex;gap:14px;margin-top:12px;font-size:12.5px;color:var(--ink2)">
+          <div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:12.5px;color:var(--ink2)">
             <sc-for list="{{ d.gaugeLabels }}" as="g">
-              <span style="{{ g.style }}">{{ g.label }} <b style="color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums">{{ g.value }}</b></span>
+              <span style="{{ g.style }}">{{ g.label }} <b style="color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap">{{ g.value }}</b></span>
             </sc-for>
           </div>
           <div style="{{ d.gapStyle }}">{{ d.gap }}</div>
@@ -1900,9 +1900,10 @@
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:24px">
                 <sc-for list="{{ inputs }}" as="f">
                   <label style="display:flex;flex-direction:column;gap:6px">
-                    <span class="u-lab">{{ f.label }}</span>
+                    <!-- 영어 라벨('Other operating costs (KRW 10K)')은 칸보다 길다 — 줄바꿈되는 u-lab-p 를 쓴다 -->
+                    <span class="u-lab-p">{{ f.label }}</span>
                     <input type="number" aria-label="{{ f.label }}" min="0" value="{{ f.value }}" onChange="{{ f.onChange }}" inputMode="numeric" style="font-size:18px;font-weight:500;background:transparent;border:none;border-bottom:1px solid var(--line-strong);padding:6px 0 9px;min-height:44px;outline:none;color:var(--ink);font-variant-numeric:tabular-nums;width:100%">
-                    <span class="u-note">{{ f.tag }}</span>
+                    <span class="u-note-w">{{ f.tag }}</span>
                   </label>
                 </sc-for>
               </div>

@@ -223,7 +223,9 @@ globalThis.MysbizonParts.views = {
       gaugeLabels:[{v:c.rev,label:revName,value:this.man(c.rev)},{v:c.bep,label:'본전',value:this.man(c.bep)}]
         .sort((a,b)=>a.v-b.v)
         .map((g,i)=>({label:g.label, value:g.value,
-          style:'white-space:nowrap;'+(i===0?'text-align:left':'text-align:right;margin-left:auto')})),
+          // 영어 라벨은 길다('Average for this spot') — 못 줄이면 390px 화면이 밀린다.
+          // 줄바꿈은 허용하고, 금액만 안 끊기게 둔다(아래 조각의 <b>).
+          style:(i===0?'text-align:left':'text-align:right;margin-left:auto')})),
       fill:'position:absolute;left:0;top:0;bottom:0;width:'+Math.max(Math.min(c.rev/mx*100,100),1).toFixed(1)+'%;border-radius:6px;background:'+(over?'var(--good)':'var(--warn)')+';transition:width .2s cubic-bezier(.2,.7,.3,1)',
       mark:'position:absolute;top:-7px;bottom:-7px;left:'+Math.min(c.bep/mx*100,100).toFixed(1)+'%;width:2px;background:var(--ink);border-radius:1px;transition:left .2s cubic-bezier(.2,.7,.3,1)',
       gapStyle:'font-size:13px;margin-top:11px;font-weight:500;white-space:nowrap;color:'+(over?'var(--good)':'var(--warn)'),
@@ -475,10 +477,10 @@ globalThis.MysbizonParts.views = {
             r:rr.toFixed(2),
             ty:(p[1]+rr*0.36).toFixed(2), fs:(rr*1.05).toFixed(2),
             fill:on?'var(--accent)':'var(--ink3)',
-            chip:'flex:none;display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 13px;border-radius:999px;'
             // 로마자 이름은 아주 길다 — 칩이 못 줄면 320px 화면이 통째로 밀린다
-            +'cursor:pointer;white-space:nowrap;min-height:36px;max-width:100%;overflow:hidden;text-overflow:ellipsis;'
-            +'transition:background .14s,color .14s;'
+            chip:'flex:none;display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 13px;border-radius:999px;'
+              +'cursor:pointer;white-space:nowrap;min-height:36px;max-width:100%;overflow:hidden;text-overflow:ellipsis;'
+              +'transition:background .14s,color .14s;'
               +(on?'background:var(--accent);color:var(--on-accent);font-weight:600':'background:var(--surface);color:var(--ink2)'),
             pick:()=>this.setState({sel:o.id})};
         })

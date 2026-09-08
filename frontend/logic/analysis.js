@@ -265,10 +265,10 @@ globalThis.MysbizonParts.analysis = {
         return {n:i+1, name:this.zoneLabelOf(o.name), x:p[0], y:p[1], on:on,
           r:rr.toFixed(2), ty:(p[1]+rr*0.36).toFixed(2), fs:(rr*1.05).toFixed(2),
           fill:on?'var(--accent)':'var(--ink3)',
-          chip:'flex:none;display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 13px;border-radius:999px;'
           // 로마자 이름은 아주 길다 — 칩이 못 줄면 320px 화면이 통째로 밀린다
-          +'cursor:pointer;white-space:nowrap;min-height:36px;max-width:100%;overflow:hidden;text-overflow:ellipsis;'
-          +'transition:background .14s,color .14s;'
+          chip:'flex:none;display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 13px;border-radius:999px;'
+            +'cursor:pointer;white-space:nowrap;min-height:36px;max-width:100%;overflow:hidden;text-overflow:ellipsis;'
+            +'transition:background .14s,color .14s;'
             +(on?'background:var(--accent);color:var(--on-accent);font-weight:600':'background:var(--surface);color:var(--ink2)'),
           pick:()=>this.setState({sel:o.id})};
       })
