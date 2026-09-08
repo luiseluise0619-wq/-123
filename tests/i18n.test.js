@@ -145,7 +145,25 @@ function sweep(locale) {
     ...Array.from({ length: RP_STEPS }, (_, n) => surveyAt(n)),
     // 매출 시나리오(적게·잘될 때)는 눌러야 문구가 바뀐다 — 기본값만 보면 두 문장을 못 본다
     c => { c.state.scen = '적게 팔릴 때'; },
-    c => { c.state.scen = '잘될 때'; }
+    c => { c.state.scen = '잘될 때'; },
+    // 지원사업 절은 공고가 와야 그려진다. 안 채우면 매칭 근거·마감 꼬리표·안내문을
+    // 한 번도 못 본다 — 실제로 그래서 영어 화면에 '예비창업자 조건' 같은 게 한국어로 남았다.
+    c => {
+      Object.assign(c.state, {
+        rp_sido: '서울', rp_gu: '마포구', rp_ind: '커피-음료',
+        rp_stage: '아직 준비 중이에요 (예비창업자)', rp_age: '만 39세 이하',
+        rp_biz: '아직 안 했어요', rp_when: '6개월 안', rp_need: '사업화 자금', rp_step: 9,
+        spRest: true,
+        sp: { ok: true, configured: true, undated: 1, expired: 2, items: [
+          { title: '청년창업사관학교', org: '중소벤처기업부', amount: '최대 1억원',
+            deadline: '2099-12-31', start: '2099-01-01', url: 'https://example.com',
+            kind: '사업화', region: '전국', target: '만 39세 이하 예비창업자', content: '사업화 자금' },
+          { title: '무관한 공고', org: '어딘가', amount: '', deadline: '', url: '' }
+        ] }
+      });
+    },
+    c => { Object.assign(c.state, { sp: { ok: false, configured: false, items: [] } }); },
+    c => { Object.assign(c.state, { sp: { ok: false, configured: true, items: [] } }); }
   ];
   const found = new Set();
   for (const screen of SCREEN_KEYS) {
@@ -202,7 +220,11 @@ function koreanIn(v, acc, d) {
 }
 
 // 언어 선택의 '한국어'는 일부러 한국어로 둔다.
-const ON_PURPOSE = s => s === '한국어';
+// 공고 제목·기관명·지원대상·금액은 기관이 올린 원문이라 옮기지 않는다(§1) —
+// 아래 시험용 공고에 넣은 값들도 같은 이유로 세지 않는다.
+const FIXTURE_KO = ['청년창업사관학교', '중소벤처기업부', '최대 1억원',
+  '만 39세 이하 예비창업자', '무관한 공고', '어딘가', '사업화'];
+const ON_PURPOSE = s => s === '한국어' || FIXTURE_KO.includes(s);
 
 test('영어 화면 값에 번역 안 된 한국어가 남지 않는다 (자료 없는 상태)', () => {
   const left = koreanIn(component('en').renderVals(), [], 0).filter(s => !ON_PURPOSE(s));

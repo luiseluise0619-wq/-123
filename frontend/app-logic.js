@@ -591,8 +591,10 @@ class Component extends DCLogic {
                 }));
               })():null,
               survey:[
-                ['지역',[S.rp_sido,S.rp_gu&&S.rp_gu!=='아직 몰라요'?S.rp_gu:''].filter(Boolean).join(' ')],
-                ['업종',S.rp_ind?this.indName(S.rp_ind):''],
+                // 지역·업종은 이름이라 이어 붙이면 사전이 못 찾는다 — 조각마다 옮긴 뒤 잇는다
+                ['지역',[S.rp_sido,S.rp_gu&&S.rp_gu!=='아직 몰라요'?S.rp_gu:'']
+                  .filter(Boolean).map(v=>this.placeName(v)).join(' ')],
+                ['업종',S.rp_ind?this.tr(this.indName(S.rp_ind)):''],
                 ['창업 단계',S.rp_stage],['나이',S.rp_age],['사업자등록',S.rp_biz],
                 ['개업 시기',S.rp_when],['필요한 지원',S.rp_need]
               ].filter(([,v])=>!!v).map(([label,value])=>({label,value})),
@@ -1043,10 +1045,13 @@ class Component extends DCLogic {
               restLabel:'조건에 걸리지 않은 공고 '+rest.length+'개도 보기',
               showRest:!!S.spRest,
               toggleRest:()=>this.setState({spRest:!S.spRest}),
-              warn:'자격을 판정한 목록이 아니에요. 실제 신청 자격은 업력·매출·지역·업종·소상공인 여부에 따라 달라요. '
-                +'여기 있는 건 답하신 조건과 겹치는 공고이고, 신청 가능 여부는 반드시 원문에서 확인해 주세요.'
-                +((d&&d.undated)?' 마감일을 읽지 못한 공고 '+d.undated+'개가 섞여 있어요(상시 모집일 수 있어요).':'')
-                +((d&&d.expired)?' 마감이 지난 '+d.expired+'개는 뺐어요.':'')
+              // 세 조각을 이어 붙인 뒤에는 사전이 통째로는 못 찾는다 — 조각마다 옮긴 뒤 잇는다.
+              warn:[
+                this.tr('자격을 판정한 목록이 아니에요. 실제 신청 자격은 업력·매출·지역·업종·소상공인 여부에 따라 달라요. '
+                  +'여기 있는 건 답하신 조건과 겹치는 공고이고, 신청 가능 여부는 반드시 원문에서 확인해 주세요.'),
+                (d&&d.undated)? this.tr('마감일을 읽지 못한 공고 '+d.undated+'개가 섞여 있어요(상시 모집일 수 있어요).') : '',
+                (d&&d.expired)? this.tr('마감이 지난 '+d.expired+'개는 뺐어요.') : ''
+              ].filter(Boolean).join(' ')
             };
           })(),
 
@@ -1058,14 +1063,18 @@ class Component extends DCLogic {
               ['기준 분기',S.zi?this.qtr(S.zi.quarter):'','원자료 기준'],
               ['장사',p.ind,''],
               // 인쇄본과 같은 안내를 CSV 에도 남긴다 — 고른 적 없는 상권이면 그렇다고 적는다(§1)
-              ['동네',p.zone, p.zoneAuto? ('직접 고른 상권이 아니라 '+(p.zoneAutoGu||'서울')+' 이 업종 1위 상권'):''],
+              // 이름이 문장 가운데 들어가면 통째로는 사전에서 못 찾는다 — 자리표시자로 옮긴 뒤 끼운다
+              ['동네',p.zone, p.zoneAuto? this.tr('직접 고른 상권이 아니라 {0} 이 업종 1위 상권')
+                .split('{0}').join(this.placeName(p.zoneAutoGu||'서울')) : ''],
               ...(p.survey||[]).map(x=>[x.label,x.value,'설문 답']),
               ...(p.support||[]).map(x=>[x.title,[x.amount,x.period].filter(Boolean).join(' · '),
                                          [x.org,x.why,x.url].filter(Boolean).join(' · ')]),
               ...(p.bep||[]).map(x=>[x.label,x.value,x.tag]),
               ...(p.zones||[]).map(x=>[x.name,x.score+'점','비교 후보'])];
             const q=v=>{let t=String(v==null?'':v);if(/^[\s]*[=+@-]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"';};
-            const body=rows.map(r=>r.map(q).join(',')).join('\r\n');
+            // 화면은 영어인데 받은 파일만 한국어면 쓸 수 없다. 화면과 같은 표(@phrases)로 옮긴다 —
+            // 공고 제목·기관명·상권 이름 같은 고유명사는 표에 없어 원문 그대로 남는다(그게 맞다).
+            const body=rows.map(r=>r.map(v=>q(this.tr(String(v==null?'':v)))).join(',')).join('\r\n');
             // 엑셀이 한글을 깨지 않게 BOM을 붙인다
             const blob=new Blob(['\uFEFF'+body],{type:'text/csv;charset=utf-8'});
             const a=document.createElement('a');
@@ -1366,7 +1375,7 @@ class Component extends DCLogic {
           // 구는 25개라 접어 둔다. 편 상태에서는 스크롤이 생기게 높이를 묶는다.
           guOpen:!!S.findGuOpen,
           guToggle:()=>this.setState({findGuOpen:!S.findGuOpen}),
-          guToggleLabel:(S.findGuOpen?'접기':'구 전체 보기')+' ('+gus.length+')',
+          guToggleLabel:this.tr(S.findGuOpen?'접기':'구 전체 보기')+' ('+gus.length+')',
           guBoxStyle:'margin-top:12px;display:grid;gap:8px;'
             // 로마자 자치구 이름은 한글보다 길다 — 최소 폭을 언어에 맞춘다.
             +'grid-template-columns:repeat(auto-fill,minmax('
@@ -1396,7 +1405,7 @@ class Component extends DCLogic {
           pickOpen: !!S.findPickOpen,
           pickToggle: ()=>this.setState({findPickOpen:!S.findPickOpen}),
           pickLabel: S.findPickOpen? '접기' : '바꾸기',
-          summary: (cur||this.t('pr.seoulAll'))+' · '+this.indName(S.ind)
+          summary: (cur? this.placeName(cur) : this.t('pr.seoulAll'))+' · '+this.tr(this.indName(S.ind))
         };
       })(),
 

@@ -53,7 +53,7 @@ globalThis.MysbizonParts.views = {
         : {sign:'↓', arrow:arrowDn, text:'경쟁이 치열해요 · 같은 가게 '+sel.stores.toLocaleString()+'곳'});
     out.t={
       eyebrow:this.t('find.rank',{ind:this.indName(S.ind), n:r.covered.toLocaleString(), r:(L.indexOf(sel)+1)})
-        +((S.homeZone&&!S.sel)? (fromHome? ' · 홈에서 고른 지역'
+        +((S.homeZone&&!S.sel)? (fromHome? ' · '+this.tr('홈에서 고른 지역')
             : ' · '+this.tn('find.noRecordIn',{zone:this.placeName(S.homeZone)})) : ''),
       name:this.zoneLabelOf(sel.name), score:Math.round(sel.score),
       grade:g[0], gradeStyle:'font-size:17px;font-weight:600;color:'+g[1]+';white-space:nowrap',
