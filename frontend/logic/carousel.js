@@ -15,6 +15,9 @@ globalThis.MysbizonParts.carousel = {
   rail(key, opt){
     const o = opt || {};
     const per = o.per || 3;
+    // bindRails 가 '한 장씩 꽉 채우는 레일(per:1)' 을 알아보고 점을 붙이려면 옵션을 기억해 둬야 한다
+    this._railOpts = this._railOpts || {};
+    this._railOpts[key] = { per };
     // 모바일은 90% — 지금 카드가 거의 다 보이고 다음 카드는 10%만 살짝 걸친다(§9).
     // 절반씩 잘려 보이면 '두 개를 동시에 읽어야 하나' 싶어진다.
     // peek:false 면 좁은 칸(세로 메뉴 옆) 이라 잘라 보일 자리가 없다 → 한 장을 꽉 채운다
@@ -65,9 +68,21 @@ globalThis.MysbizonParts.carousel = {
   // 드래그로 밀기 + 세로 휠을 가로 이동으로. 트랙마다 한 번만 붙인다.
   bindRails(){
     const rails = document.querySelectorAll('[data-rail]');
+    // 트랙이 사라졌는데 점만 남은 것 정리(React 가 트랙을 새로 만들면 점은 고아가 된다)
+    document.querySelectorAll('[data-rail-dots]').forEach(d => {
+      const prev = d.previousElementSibling;
+      if (!prev || prev.getAttribute('data-rail') !== d.getAttribute('data-rail-dots')) d.remove();
+    });
     rails.forEach(el => {
+      this.syncDots(el);
       if (el._railBound) return;
       el._railBound = true;
+      // 스크롤마다 점만 옮긴다 — setState 를 안 거친다(화면 전체를 다시 그리면 폰이 뜨거워진다)
+      let tick = 0;
+      el.addEventListener('scroll', () => {
+        if (tick) return;
+        tick = requestAnimationFrame(() => { tick = 0; this.syncDots(el); });
+      }, { passive: true });
 
       let down = false, startX = 0, startLeft = 0, moved = 0;
       el.addEventListener('pointerdown', e => {
@@ -123,6 +138,50 @@ globalThis.MysbizonParts.carousel = {
         e.preventDefault();
         el.scrollLeft = next;
       }, { passive: false });
+    });
+  },
+
+  // 점 표시 — 차트 레일처럼 한 장을 꽉 채우는 레일(per:1)은 다음 장이 안 보여서
+  // '차트가 하나뿐'으로 읽혔다(실제로 그런 말이 나왔다). 트랙 바로 아래에 점을 둔다.
+  // DOM 만 만진다: 상태를 안 거치므로 스크롤 중에도 화면을 다시 그리지 않는다.
+  syncDots(el){
+    const key = el.getAttribute('data-rail');
+    const o = (this._railOpts || {})[key];
+    if (!o || o.per !== 1) return;
+    const n = el.children.length;
+    let dots = el.nextElementSibling;
+    if (!dots || dots.getAttribute('data-rail-dots') !== key) {
+      if (n < 2) return;
+      dots = document.createElement('div');
+      dots.setAttribute('data-rail-dots', key);
+      dots.setAttribute('aria-hidden', 'true');       // 화살표가 접근성 경로다 — 점은 장식
+      dots.style.cssText = 'display:flex;justify-content:center;gap:2px;margin-top:-2px';
+      el.insertAdjacentElement('afterend', dots);
+    }
+    if (n < 2) { dots.remove(); return; }
+    if (dots.children.length !== n) {
+      dots.innerHTML = '';
+      for (let i = 0; i < n; i++) {
+        const cell = document.createElement('span');              // 누를 칸 24px, 점은 6px
+        cell.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;cursor:pointer';
+        const d = document.createElement('span');
+        d.style.cssText = 'width:6px;height:6px;border-radius:3px;background:var(--line-strong);transition:width .16s,background .16s';
+        cell.appendChild(d);
+        cell.addEventListener('click', () => this.railTo(key, i));
+        dots.appendChild(cell);
+      }
+    }
+    // 지금 보이는 장 = 시작점이 스크롤 위치에 가장 가까운 카드
+    const base = el.getBoundingClientRect().left - el.scrollLeft;
+    let cur = 0, best = Infinity;
+    [...el.children].forEach((c, i) => {
+      const d = Math.abs(c.getBoundingClientRect().left - base - el.scrollLeft);
+      if (d < best) { best = d; cur = i; }
+    });
+    [...dots.children].forEach((cell, i) => {
+      const d = cell.firstChild;
+      d.style.width = i === cur ? '18px' : '6px';
+      d.style.background = i === cur ? 'var(--accent)' : 'var(--line-strong)';
     });
   }
 };

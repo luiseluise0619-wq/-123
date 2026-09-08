@@ -92,3 +92,9 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
    (dc-nohover 는 app-logic.js 가 click 에 붙이고 pointermove 에 뗀다.) */
 .pick-opt { transition:background .14s, color .14s; }
 body:not(.dc-nohover) .pick-opt:hover { background:var(--line-strong) !important; }
+
+/* 손가락 기기(폰·태블릿)에서는 헤더의 backdrop-filter 흐림을 뺀다 — 스크롤 프레임마다
+   뒤를 다시 흐리게 그려 기기가 뜨거워진다. 노트북(hover 있음)만 흐림을 쓴다. */
+@media(hover:none){
+  header { backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:var(--card) !important; }
+}

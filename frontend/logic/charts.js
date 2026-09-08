@@ -139,7 +139,8 @@ globalThis.MysbizonParts.charts = {
         // 그리기·메모리만 는다. 발열 줄이기의 일부.
         devicePixelRatio: Math.min((globalThis.devicePixelRatio || 1), 2),
         indexAxis: horizontal ? 'y' : 'x',
-        animation: { duration: 250 },
+        // 폰·태블릿(hover:none)에서는 막대가 자라는 애니메이션을 끈다 — 발열 줄이기.
+        animation: (globalThis.matchMedia && matchMedia('(hover:none)').matches) ? false : { duration: 250 },
         // 창 크기가 바뀔 때마다 막대가 0부터 다시 자라면 읽는 사람이 어지럽다
         transitions: { resize: { animation: { duration: 0 } } },
         resizeDelay: 80,

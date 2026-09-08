@@ -252,18 +252,8 @@ class Component extends DCLogic {
     let seen=true;
     try{ seen=!!sessionStorage.getItem('mysbizon.seenIntro');
       if(seen) this.setState({skip:true}); else sessionStorage.setItem('mysbizon.seenIntro','1'); }catch(e){}
-    // 1,564까지 올라가는 카운트업 — 처음 방문에만
-    if(seen){ this.setState({count:1564}); }
-    else {
-      const t0=performance.now(), dur=1100, delay=500;
-      const step=now=>{
-        const p=Math.min(Math.max(now-t0-delay,0)/dur,1);
-        const e=1-Math.pow(1-p,3);
-        this.setState({count:Math.round(e*1564)});
-        if(p<1) this._raf=requestAnimationFrame(step);
-      };
-      this._raf=requestAnimationFrame(step);
-    }
+    // (전에 여기 있던 '1,564 카운트업'은 지웠다 — state.count 를 읽는 조각이 하나도 없는데
+    //  첫 방문마다 화면 전체를 60fps 로 100번 다시 그려 폰만 뜨겁게 했다.)
     // 버블 단계에서만 닫는다. 캡처로 잡으면 React onClick보다 먼저 돌아 열림을 막는다.
     this._out=e=>{
       const t=e.target;
@@ -381,7 +371,7 @@ class Component extends DCLogic {
     const MENU=[
       // region(동네 개요)·fineCmp(자치구 훑기)는 둘 다 '여러 곳을 훑는' 화면이라 여기 둔다.
       // 비교(담은 상권 종합순위)는 ② 정밀분석의 '정밀비교'로 옮겼다 — 입구를 둘로 두지 않는다.
-      {label:T('nav.zone'), keys:['hubZone','zone','find','region','fineCmp'], hub:'find',
+      {label:T('nav.zone'), keys:['hubZone','zone','find','region','fineCmp'], hub:'hubZone',
        items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],
               ['fineCmp',T('menu.sweep')]]},
       // 고른 상권 하나를 깊게 보는 것들이 다 여기 있다.
@@ -389,7 +379,7 @@ class Component extends DCLogic {
       //   정밀분석 왜 좋은지/나쁜지
       //   정밀비교 담아 둔 상권들의 종합순위
       //   본전 계산 이 자리 한 곳의 본전선
-      {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'fineDetail',
+      {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'hubFine',
        items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],
               ['sim',T('menu.sim')],['diag',T('menu.bep')]]},
       {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
@@ -416,7 +406,8 @@ class Component extends DCLogic {
       // 허브 화면 대신 — 같은 메뉴 안의 화면을 본문 맨 위 알약 한 줄로 오간다. 지금 화면은 진하게.
       sib:(()=>{
         const g=MENU.find(m=>m.keys.indexOf(S.screen)>=0);
-        if(!g||g.items.length<2) return {has:false, list:[]};
+        // 허브 화면은 그 자체가 목록이라 알약 줄을 겹쳐 두지 않는다
+        if(!g||g.items.length<2||/^hub/.test(S.screen||'')) return {has:false, list:[]};
         return {has:true, list:g.items.map(([k,label])=>({label,
           go:()=>this.setState({screen:k,menu:null}),
           style:'flex:none;font-size:13.5px;padding:9px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;'
