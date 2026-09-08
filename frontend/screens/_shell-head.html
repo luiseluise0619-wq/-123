@@ -162,6 +162,10 @@
   .u-nowrap{white-space:nowrap}
   .u-between{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
   .u-tap{display:flex;align-items:center;gap:12px;padding:19px 0;cursor:pointer}
+  /* 아코디언 줄의 오른쪽 값(15평 · 임대료 400만원 · 직원 2명)이 길면 왼쪽 이름을 덮었다 —
+     값 쪽이 줄바꿈하며 물러난다. 이름은 절대 안 줄인다. */
+  .u-tap > .u-fill-n{flex:0 0 auto}
+  .u-tap > .u-lab-f{flex:1 1 auto;min-width:0;white-space:normal;text-align:right;line-height:1.35}
   .u-stack{display:flex;flex-direction:column;gap:8px;margin-top:10px}
   .u-check{flex:none;color:var(--accent-text);font-weight:700}
   .u-rule{border-top:1px solid var(--line)}
