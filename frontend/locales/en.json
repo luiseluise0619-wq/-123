@@ -99,6 +99,7 @@
   "fc.none": "No areas in {gu} have data for {ind}.",
   "fc.note": "We ranked the {n} areas in {gu} that have data, by sales per store.",
   "fc.pickOther": "Try another district.",
+  "find.guHint": "Tap {gu} again to search inside it",
   "find.noRecordIn": "{zone} has no record for this business, so we show the top area instead",
   "find.ok": "A solid candidate for {ind}.",
   "find.rank": "{ind} · #{r} of {n}",

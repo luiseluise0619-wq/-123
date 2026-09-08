@@ -99,6 +99,7 @@
   "fc.none": "{gu}没有具备{ind}数据的商圈。",
   "fc.note": "把{gu}内有数据的{n}处商圈按每店营业额排了序。",
   "fc.pickOther": "请选择其他区。",
+  "find.guHint": "再次点击{gu}即可在该区内查找",
   "find.noRecordIn": "{zone}没有该行业的记录，因此显示第1位的商圈",
   "find.ok": "作为{ind}的候选，这里还不错。",
   "find.rank": "{ind} · 共{n}处中第{r}名",

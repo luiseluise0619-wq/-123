@@ -383,7 +383,9 @@ globalThis.MysbizonParts.screens = {
                      :(g===S.homeGu?'color:var(--accent);font-weight:600':'color:var(--ink2)'))
       })),
       // 고른 구를 한 번 더 누르라고 알려 준다 — 두 번 눌러야 하는 걸 알 방법이 없다
-      guHint: guTab? guTab+'를 한 번 더 누르면 이 구에서 찾아요' : '구를 누르면 골라지고, 한 번 더 누르면 정해져요',
+      // 구 이름이 문장 안에 들어가면 통째로는 사전에서 못 찾는다 — 자리표시자 키로 둔다
+      guHint: guTab? this.tn('find.guHint',{gu:this.placeName(guTab)})
+                   : '구를 누르면 골라지고, 한 번 더 누르면 정해져요',
       pickEmpty: !!pq && (open==='zone'? zoneList.length===0 : indList.length===0),
       pickEmptyText: open==='zone'? this.tn('search.noZone',{q:pq}) : this.tn('search.noInd',{q:pq}),
       startDisabled:!!S.starting,
