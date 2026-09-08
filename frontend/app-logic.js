@@ -418,8 +418,13 @@ class Component extends DCLogic {
         open:()=> g.hub==='__bot'
           ? this.setState({bot:true,menu:null})
           : this.setState({screen:g.hub,menu:null}),
-        style:'font-size:14px;white-space:nowrap;cursor:pointer;padding:11px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
-          +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:600;background:var(--surface)':'color:var(--ink2)'),
+        // 모바일은 아래 탭바(company.css) — 알약 없이 글자색으로만 활성을 표시한다(토스식)
+        style:this.bp()==='mobile'
+          ? 'font-size:12.5px;white-space:nowrap;cursor:pointer;padding:9px 4px;display:block;min-width:0;text-align:center;'
+            +'overflow:hidden;text-overflow:ellipsis;transition:color .16s;'
+            +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:700':'color:var(--ink3);font-weight:500')
+          : 'font-size:14px;white-space:nowrap;cursor:pointer;padding:11px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
+            +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:600;background:var(--surface)':'color:var(--ink2)'),
         items:g.items.map(([k,label,tag])=>({
           label:label+(tag?'  '+tag:''),
           go:()=>this.setState({screen:k,menu:null}),
@@ -430,6 +435,7 @@ class Component extends DCLogic {
       // 화면 아무 곳이나 누르면 skipAnim 이 건너뛴다.
       goHome:()=>this.setState({screen:'home',menu:null,skip:false}),
       onHome:S.screen==='home',
+      screenKey:S.screen||'home',
       // 소개는 별도 화면이 아니라 홈 위에 뜨는 안내창
       noticeOn:!!S.notice,
       noticeCard:'width:100%;max-width:'+this.L('100%','420px','440px')+';background:var(--bg);border-radius:22px;'
@@ -1373,11 +1379,11 @@ class Component extends DCLogic {
         +'height:40px;border-radius:999px;'
         +'background:var(--bg);color:var(--accent-text);border:1px solid var(--line-strong);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.06);'
         +'transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1);'
-        +this.L('right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));',
+        +this.L('right:14px;bottom:calc(74px + env(safe-area-inset-bottom,0px));',
                 'right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));',
                 'right:28px;bottom:calc(28px + env(safe-area-inset-bottom,0px));'),
       // CTA 체계 — 주 행동 하나만 강조한다
-      ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
+      ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;width:100%;max-width:420px;display:block;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
       // 글자 버튼 — 보이는 크기는 그대로, 누를 칸만 44px (WCAG 2.5.5)
       ctaText:'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap;'
         +'display:inline-flex;align-items:center;min-height:44px',

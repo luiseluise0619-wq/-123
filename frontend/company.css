@@ -28,23 +28,38 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
 @media(max-width:599px) {
   /* 모바일 헤더는 두 줄(이름 줄 + 메뉴 줄)이다. 104px 은 화면의 1/8 을 먹어
      본문이 늘 아래로 밀렸다. 두 줄을 유지하되 줄마다 군살을 뺀다. */
-  header { height:auto !important;min-height:90px; }
-  header > div { flex-wrap:wrap;gap:0 12px !important;padding-top:4px !important;padding-bottom:4px !important; }
+  /* 모바일 메뉴는 화면 아래 탭바다(토스·애플). 엄지가 닿는 곳에 늘 있고,
+     헤더는 한 줄(56px)로 줄어 본문이 위로 올라온다. */
+  /* backdrop-filter 가 있으면 그 안의 position:fixed 가 화면이 아니라 헤더를 기준으로 잡힌다 —
+     탭바를 아래로 보내려면 모바일 헤더에서는 흐림을 뺀다. */
+  header { height:auto !important;min-height:56px;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:var(--bg) !important; }
+  header > div { gap:0 12px !important;padding-top:4px !important;padding-bottom:4px !important; }
   header > div > [role=button] { min-height:40px !important; }
-  header nav { order:3;flex:0 0 100% !important;width:100%;justify-content:space-between;gap:4px; }
-  /* 메뉴 글자가 잘리면 안 된다. 영어·중국어는 한국어보다 길어서, 칸을 줄이는 대신
-     자연스러운 폭을 유지하고 넘치면 가로로 스크롤되게 한다. */
-  header nav > div { flex:none !important;overflow:visible !important; }
-  header nav:has(> div:nth-child(6)) { justify-content:flex-start; }
-  /* 메뉴는 가장 자주 누르는 곳이다 — 44px 을 지킨다(WCAG 2.5.5) */
-  header nav [role=button] { min-height:44px !important;padding:9px 7px !important;font-size:13px !important; }
+  header nav { position:fixed;left:0;right:0;bottom:0;z-index:60;width:auto;
+    display:flex;justify-content:space-around;gap:0;
+    padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px));
+    background:var(--bg-blur);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);
+    border-top:1px solid var(--line); }
+  header nav > div { flex:1 1 0 !important;min-width:0;overflow:visible !important; }
+  /* 탭은 가장 자주 누르는 곳이다 — 48px 을 지킨다 */
+  header nav [role=button] { min-height:48px !important;display:flex !important;align-items:center;justify-content:center; }
   header > div > [role=button]:last-child { margin-left:auto; }
-  main { padding-bottom:92px !important; }
+  /* 탭바(≈60px) + 도우미 버튼 자리 */
+  main { padding-bottom:150px !important; }
   .home-hero { min-height:780px !important;padding-top:42px !important; }
   .hero-eyebrow { font-size:12px;margin-bottom:18px; }
   .hero-search { margin-top:28px !important; }
   .hero-search > div:first-child { padding:10px !important;border-radius:22px !important; }
   input,select,textarea { font-size:16px !important; }
+}
+/* PC — '읽는' 화면(허브·본전 계산·리포트·설정)은 가운데 760px 한 줄로 모은다.
+   토스·애플처럼 넓은 화면에서도 글줄이 늘어지지 않게. 표·차트가 있는 화면은 그대로 넓게 쓴다. */
+@media(min-width:1000px) {
+  main[data-screen="hubZone"] > section, main[data-screen="hubFine"] > section,
+  main[data-screen="diag"] > section, main[data-screen="report"] > section,
+  main[data-screen="fineIntro"] > section { max-width:760px;margin-left:auto;margin-right:auto; }
+  main > section:first-of-type { padding-top:44px !important; }
+  header nav { gap:6px; }
 }
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after { animation:none !important;transition:none !important;scroll-behavior:auto !important; }
