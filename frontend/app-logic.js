@@ -532,6 +532,8 @@ class Component extends DCLogic {
         // sp 를 그리면서 채우고, 내보내기 버튼을 눌렀을 때 buildReport 가 읽는다.
         // (sp 는 renderVals 안에서 돌고 buildReport 는 그 뒤 클릭 때 불린다.)
         let supportForReport=[];
+        // 화면 맨 앞에 세운 '최대 얼마' 를 인쇄본에도 같이 적는다(같은 값, 같은 근거).
+        let supportMaxForReport=null;
         const buildReport=()=>{
             // 상권을 직접 고르지 않았으면 **설문에서 답한 구** 안에서 1위를 고른다.
             // 서울 밖(부산 등)은 자료가 없어 서울 1위로 떨어진다 — 그건 아래에서 밝혀 적는다.
@@ -570,6 +572,7 @@ class Component extends DCLogic {
               zoneAutoGu: (!(S.sel||S.zoneId) && inGu) ? rpGu : '',
               quarter:S.zi?this.qtr(S.zi.quarter):'',
               support:supportForReport,
+              supportMax:supportMaxForReport,
               bep:bep,
               // 돈이 어디로 나가는지 — 매출 대비 비중
               money:c?(()=>{
@@ -1006,6 +1009,7 @@ class Component extends DCLogic {
               const v=this.wonParse(o.it.amount);
               if(v!=null && (maxOf==null||v>maxOf.v)) maxOf={v:v, title:o.it.title||''};
             });
+            supportMaxForReport = maxOf? {amount:this.won(maxOf.v), title:maxOf.title} : null;
 
             return {
               loading:!d,

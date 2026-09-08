@@ -243,8 +243,9 @@ globalThis.MysbizonParts.views = {
             : {sign:'↓', arrow:arrowDn, text:'초기투자를 넣으면 회수기간도 나와요'})
       ],
       thinStyle: sel.stores<=5?'font-size:12.5px;color:var(--warn);margin-top:26px;max-width:600px;text-wrap:pretty':'display:none',
+      // 업종 이름이 문장 안에 들어가면 통째로는 사전에서 못 찾는다 — 자리표시자로 둔다
       thin: sel.stores>5 ? ''
-        : '계산의 출발점인 이 자리 '+this.indName(S.ind)+' 평균은 '+sel.stores+'곳만의 평균이에요. 잘되는 한 집이 평균을 끌어올리니, 아래 ‘내 조건 바꾸기’에서 ‘보수적’으로 낮춰 보세요.',
+        : this.t('diag.thinAvg',{ind:this.tr(this.indName(S.ind)), n:sel.stores}),
       honesty:'본전 = 고정비 ÷ (1 − 원가율). 임대료와 평수는 입력값이며 처음에는 기본 가정이 들어 있어요. 직원 수와 기타 운영비는 평수에서 자동으로 잡은 값이고(10평당 1명 · 평당 6만원, 우리 기준), 칸에 직접 넣으면 그 값을 써요. 원가율도 기본 가정이라 고칠 수 있어요. '
         +'매출은 이 자리에서 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아니에요. 보수적 70%·낙관적 130%는 우리가 정한 배수예요. '
         +'세금·대출 이자는 넣지 않았어요. 회수기간은 초기투자(보증금+권리금+인테리어) ÷ 월 영업이익이고, 보증금은 나갈 때 돌려받지만 묶이는 돈이라 포함했어요.'

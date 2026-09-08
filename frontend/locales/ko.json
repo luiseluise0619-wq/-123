@@ -93,6 +93,7 @@
   "diag.leftLabel": "남는 돈 {amt}",
   "diag.over": "예상 매출이 본전선을 {amt} 넘어요",
   "diag.short": "월 {amt} 모자라요",
+  "diag.thinAvg": "계산의 출발점인 이 자리 {ind} 평균은 {n}곳만의 평균이에요. 잘되는 한 집이 평균을 끌어올리니, 아래 ‘내 조건 바꾸기’에서 ‘보수적’으로 낮춰 보세요.",
   "fact.dongPop": "{dong} 하루 유동인구가 {n}명이에요",
   "fc.lead": "{gu}에서 {ind}이(가) 가장 잘 되는 곳은 {top}이에요(예요).",
   "fc.none": "{gu}에는 {ind} 자료가 있는 상권이 없어요.",

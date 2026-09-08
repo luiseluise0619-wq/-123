@@ -62,7 +62,9 @@ class Component extends DCLogic {
       leadSub: SP.length
         ? '아래는 답해 주신 조건과 겹치는 정부·지자체 공고입니다. 자격을 판정한 목록이 아니라 겹치는 조건을 찾아 모은 것이라, 신청 가능 여부는 반드시 공고 원문에서 확인해 주세요.'
         : '창업지원사업 공고는 아직 연결되지 않아 이 리포트에 담지 못했습니다. 연결되면 답해 주신 조건과 겹치는 공고가 이 자리에 함께 들어갑니다.',
-      supportLead:'조건이 겹치는 순서로 적었습니다. 「왜 걸렸나」는 답하신 내용 중 이 공고와 맞닿은 부분입니다.',
+      // 가장 큰 금액도 같이 적는다. 자격을 판정한 값이 아니라 '공고에 적힌' 금액이다(§1·§17).
+      supportLead:'조건이 겹치는 순서로 적었습니다. 「왜 걸렸나」는 답하신 내용 중 이 공고와 맞닿은 부분입니다.'
+        +(d.supportMax? ' 아래 공고 중 가장 큰 금액은 「'+d.supportMax.title+'」에 적힌 '+d.supportMax.amount+'입니다.' : ''),
       support:SP.map(x=>({
         title:x.title||'',
         meta:[x.org, x.amount].filter(Boolean).join(' · '),

@@ -142,7 +142,10 @@ function sweep(locale) {
     c => { },
     c => { c.state.sel = ids[0]; c.state.zoneId = ids[0]; c.state.picks = ids.slice(0, 3); },
     c => { c.state.sel = ids[5]; c.state.zoneId = ids[5]; c.state.picks = ids.slice(2, 5); c.state.ind = '한식음식점'; },
-    ...Array.from({ length: RP_STEPS }, (_, n) => surveyAt(n))
+    ...Array.from({ length: RP_STEPS }, (_, n) => surveyAt(n)),
+    // 매출 시나리오(적게·잘될 때)는 눌러야 문구가 바뀐다 — 기본값만 보면 두 문장을 못 본다
+    c => { c.state.scen = '적게 팔릴 때'; },
+    c => { c.state.scen = '잘될 때'; }
   ];
   const found = new Set();
   for (const screen of SCREEN_KEYS) {
