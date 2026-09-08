@@ -19,6 +19,11 @@ test('리포트 동의 false 문자열·잘못된 배열·과도한 항목 거�
   assert.throws(()=>reportInput({email:'test@example.com',agreed:true,facts:{}}));
   assert.throws(()=>reportInput({email:'test@example.com',agreed:true,zones:Array(31).fill({})}));
   assert.equal(reportInput({email:'test@example.com',agreed:true}).headline,'상권 분석 리포트');
+  // 제목은 화면 언어를 따른다(길이 제한·escape 는 그대로). 면책 문구는 서버가 고정한다(§17).
+  assert.equal(reportInput({email:'t@e.com',agreed:true,headline:'Startup support report'}).headline,'Startup support report');
+  assert.equal(reportInput({email:'t@e.com',agreed:true,headline:'x'.repeat(300)}).headline.length,100);
+  assert.equal(reportInput({email:'t@e.com',agreed:true,headline:'   '}).headline,'상권 분석 리포트');
+  assert.match(reportInput({email:'t@e.com',agreed:true,honesty:'보장합니다'}).honesty,/추정치입니다/);
 });
 test('요청 제한 만료·메모리 상한·프록시 헤더 위조 방어',()=>{
   let time=0;const limit=createLimiter({now:()=>time,maxKeys:2});

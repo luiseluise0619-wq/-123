@@ -37,6 +37,9 @@
 | 1.5 | Python 수집기 문법 | `py_compile` 77개 | ✅ 오류 0 |
 | 1.6 | 외부 npm 의존성 | `package.json` | ✅ **0개** — 공급망 위험이 구조적으로 없다 |
 | 1.7 | 화면 값에 NaN·undefined | `renderVals()` 전수 훑기 840조합 + 무작위 퍼징 1,350회 | ✅ 이상 0 |
+| 1.10 | 무결성 목록 | `npm run check:sums` | ✅ **고침** — `SHA256SUMS.json` 이 52개 중 **21개가 안 맞았다**(낡아서). 다시 만들었고, `npm run sums`/`check:sums` 를 뒀다 — **배포 직전에 한 번 돌릴 것** |
+| 1.11 | 옛 점검 기록 | `AUDIT.md` · `QA-RESULTS.md` · `verification.json` | ⚠️ **2026-09-05 시점 기록**이다(시험 13개 시절). 지금 상태는 **이 문서(RELEASE.md)** 가 맞다 |
+| 1.9 | 정적 서버 안전장치 | `server/static.js` | ✅ realpath 로 심볼릭 링크 탈출 차단 · 루트 밖 차단 · 확장자 허용 목록 · 10MB 상한 · 점(.)으로 시작하는 경로 차단 |
 | 1.8 | 무작위 클릭 훑기 | 3언어 × 320·390·768·1280 × 여러 씨앗 | ✅ 오류 0 · 이상 글자 0 |
 
 ## 2. 배포 — 🔴 먼저 정할 것
@@ -61,6 +64,7 @@
 | 2.6 | 종료 신호 처리 | `server.js` SIGTERM/SIGINT | ✅ 15초 안에 정리 후 종료 |
 | 2.7 | systemd 강화 | `deploy/mysbizon.service` | ✅ 전용 계정 · `ProtectSystem=strict` · `NoNewPrivileges` · 메모리 512M |
 | 2.8 | nginx 예시 | `deploy/nginx.conf.example` | ✅ HTTPS 강제 · 요청/연결 제한 · **`access_log off`**(주소·이메일이 로그에 안 남는다) |
+| 2.10 | 배포 용량 | `frontend/` 6.5MB — 그중 화면이 실제로 받는 건 `data/v3` 10개 + `zone_rent.json` | ✅ 첫 로드 **630KB(gzip)**. 나머지 4MB 는 '아직 화면에 안 붙인 수집 자료'라 일부러 둔다(CLAUDE.md §25) — 아무도 안 받으므로 느려지지 않는다 |
 | 2.9 | Node 버전 | `package.json` engines `>=22 <25` / render `NODE_VERSION=24` | ✅ 맞음 |
 
 ## 3. 보안 (§2)
@@ -125,6 +129,9 @@
 | 6.2 | 인쇄본이 화면 언어를 따르는가 | en·zh 로 미리보기 | ✅ 남는 한국어는 공고 원문 금액·상권 이름뿐(옮기지 않는 게 맞다) |
 | 6.3 | 어두운 화면에서 인쇄 | 두 PDF 비교 | ✅ 바이트까지 동일 — 검은 종이가 안 나온다 |
 | 6.4 | CSV | 줄 수 · BOM · 수식 주입 · 파일 이름 | ✅ 22줄 · BOM O · 주입 0 · ASCII 이름 |
+| 6.6 | 메일이 화면 언어를 따르는가 | `api/report.js` | ✅ **고침** — 제목을 서버가 한국어로 덮어쓰고 있었다. 화면이 보낸 제목을 쓴다(길이 제한·escape 그대로). **면책 문구는 서버가 고정**한다 — 화면이 약하게 바꿀 수 있으면 안 된다(§17) |
+| 6.7 | 메일 본문에 HTML 주입 | `esc()` + 길이 제한 + 항목 30개 제한 | ✅ 전부 escape · 동의 없으면 400 |
+| 6.8 | 실제 메일 발송(Brevo) | — | ⬜ **확인 못 함.** 키가 없어 실제로 보내 보지 못했다. 켤 때 한 통 보내 확인할 것 |
 | 6.5 | 메일 발송 | 기본값 | ✅ **꺼져 있다**(`REPORT_EMAIL_ENABLED=false`). 켤 때는 §7 확인 |
 
 ## 7. 법적 · 운영 (§17 — 법률 판단은 확인 필요 사항으로만 적는다)
@@ -153,6 +160,16 @@
 | 8.6 | 검색엔진 | ✅ **넣음** — `robots.txt`. 출시 전까지 숨기려면 `Disallow: /` 로 바꿀 것 |
 
 ---
+
+## 8-1. 배포 직전에 돌릴 명령 (순서대로)
+
+```bash
+npm test          # 38개 — 하나라도 실패하면 배포하지 않는다
+npm run check:html   # index.html 이 조각과 맞는가
+npm run check:data   # 화면이 읽는 자료가 온전한가
+cd backend && python report_freshness.py && python check_data.py && cd ..
+npm run sums      # SHA256SUMS.json 을 이 배포본으로 다시 만든다 (마지막)
+```
 
 ## 9. 사장님이 해야 하는 것 (코드로 못 하는 것) — 순서대로
 

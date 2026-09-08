@@ -18,7 +18,10 @@ export function reportInput(raw) {
       return Object.fromEntries(keys.map(k => [k,text(row[k],300)]));
     });
   };
-  return {email,headline:'상권 분석 리포트',sub:text(b.sub,200),facts:rows(b.facts,['label','value','tag']),survey:rows(b.survey,['label','value']),zones:rows(b.zones,['name','value']),honesty:'매출은 상권 집계에서 계산한 추정치입니다. 입력 조건과 계산값은 사용자가 제공했으며 서버가 검증한 개별 점포 실적이 아닙니다.'};
+  // 제목은 화면이 보낸 것을 쓴다 — 영어로 보다가 메일만 한국어로 오면 안 된다.
+  // (아래 html() 이 전부 escape 하고, 길이도 잘라 둔다.)
+  // 다만 honesty(면책 문구)는 **서버가 고정**한다 — 화면이 약하게 바꿀 수 있으면 안 된다(§17).
+  return {email,headline:text(b.headline,100).trim()||'상권 분석 리포트',sub:text(b.sub,200),facts:rows(b.facts,['label','value','tag']),survey:rows(b.survey,['label','value']),zones:rows(b.zones,['name','value']),honesty:'매출은 상권 집계에서 계산한 추정치입니다. 입력 조건과 계산값은 사용자가 제공했으며 서버가 검증한 개별 점포 실적이 아닙니다.'};
 }
 const esc = s => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -74,7 +77,7 @@ async function deliver(req,res) {
   try {
     const response=await fetchT('https://api.brevo.com/v3/smtp/email',{
       method:'POST',headers:{'api-key':process.env.BREVO_API_KEY,'content-type':'application/json',accept:'application/json'},
-      body:JSON.stringify({sender:{email:process.env.REPORT_FROM_EMAIL,name:process.env.REPORT_FROM_NAME||'MYSBIZON'},to:[{email:data.email}],subject:'상권 분석 리포트 · MYSBIZON',htmlContent:html(data)})
+      body:JSON.stringify({sender:{email:process.env.REPORT_FROM_EMAIL,name:process.env.REPORT_FROM_NAME||'MYSBIZON'},to:[{email:data.email}],subject:data.headline+' · MYSBIZON',htmlContent:html(data)})
     },10000);
     if (!response.ok) { console.error('[report] upstream status',response.status); return res.status(502).json({error:'메일 발송을 요청하지 못했습니다. 잠시 후 다시 시도해 주세요.'}); }
     return res.status(200).json({ok:true});
