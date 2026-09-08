@@ -124,3 +124,21 @@ test('최대 지원금은 화면에 뜬 공고에서만 뽑고, 못 읽으면 �
   const sp2=c.renderVals().rp.sp;
   assert.equal(sp2.hasMax,false); assert.equal(sp2.maxAmount,'');
 });
+test('모양이 다른 자료 파일을 걸러 낸다',()=>{
+  const {instance:c}=component();
+  // 파싱은 되지만 모양이 다른 것들 — 수집기가 중간에 죽으면 실제로 이런 파일이 커밋된다.
+  for(const bad of [null,undefined,0,'',[],'hello',{},{zones:{}},{zones:[],inds:[]},{inds:[]}])
+    assert.equal(c.dataShapeOk('zi',bad),false,JSON.stringify(bad));
+  assert.equal(c.dataShapeOk('zi',{zones:{a:{}},inds:['커피-음료']}),true);
+  for(const bad of [{},{ind:5},{ind:[]},[]]) assert.equal(c.dataShapeOk('ind',bad),false);
+  assert.equal(c.dataShapeOk('ind',{ind:{'커피-음료':{}}}),true);
+  for(const bad of [{},{zone:[1,2]},'x']) assert.equal(c.dataShapeOk('zone',bad),false);
+  assert.equal(c.dataShapeOk('zone',{zone:{a:1}}),true);
+  assert.equal(c.dataShapeOk('gu',{gu:{a:'강남구'}}),true);
+  assert.equal(c.dataShapeOk('gu',{gu:null}),false);
+  // 지도는 좌표와 경계가 둘 다, 매출 추이는 업종값과 분기 목록이 짝으로 있어야 한다
+  for(const bad of [{},{pts:{}},{gus:{}},{pts:[],gus:{}}]) assert.equal(c.dataShapeOk('map',bad),false);
+  assert.equal(c.dataShapeOk('map',{pts:{a:[1,2]},gus:{'강남구':{d:'M0'}}}),true);
+  for(const bad of [{},{ind:{}},{quarters:[]},{ind:{},quarters:'x'}]) assert.equal(c.dataShapeOk('hist',bad),false);
+  assert.equal(c.dataShapeOk('hist',{ind:{'커피-음료':{}},quarters:['20261']}),true);
+});

@@ -56,6 +56,26 @@ globalThis.MysbizonParts.util = {
     const L=(this.locale?this.locale():'ko');
     const n=Math.round(v).toLocaleString(L==='ko'?undefined:L);
     return L==='en'? 'KRW '+n : (L==='zh-CN'? n+'韩元' : n+'원'); },
+  // 자료가 '없는' 것과 '모양이 다른' 것은 다르다.
+  //   없으면 fetch 가 실패해 catch 로 떨어지고 화면은 '못 불러왔어요'를 띄운다(정직).
+  //   그런데 파일이 파싱은 되는데 모양이 다르면(빈 객체·배열·글자·항목 누락) 그대로 상태에
+  //   들어가서 화면 코드가 그 자리에서 터진다 — 실제로 개발자 오류 메시지가 화면에 떴다.
+  //   수집기가 중간에 죽어 반쪽짜리 파일이 커밋되면 실제로 일어나는 일이다.
+  // 그래서 받는 자리에서 모양을 한 번 본다. 아니면 '없는 것'과 같게 다룬다.
+  dataShapeOk(kind, d){
+    const obj=v=>!!v && typeof v==='object' && !Array.isArray(v);
+    if(!obj(d)) return false;
+    if(kind==='zi')  return obj(d.zones) && Array.isArray(d.inds);
+    if(kind==='ind') return obj(d.ind);
+    if(kind==='zone')return obj(d.zone);
+    if(kind==='gu')  return obj(d.gu);
+    // 지도는 좌표(pts)와 자치구 경계(gus)가 둘 다 있어야 그린다
+    if(kind==='map') return obj(d.pts) && obj(d.gus);
+    // 매출 추이는 업종별 값(ind)과 분기 목록(quarters)이 짝이다
+    if(kind==='hist')return obj(d.ind) && Array.isArray(d.quarters);
+    return true;
+  },
+
   // 공고에 적힌 금액 글자에서 '원 단위 숫자'를 뽑는다.
   //   '최대 5,000만원 이내' → 50000000 · '1억 5,000만원' → 150000000
   // 단위(억·만·천·백·십·원)가 붙지 않은 숫자는 무엇인지 알 수 없으므로 버린다 —
