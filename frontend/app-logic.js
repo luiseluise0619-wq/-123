@@ -117,7 +117,11 @@ class Component extends DCLogic {
 
   componentDidUpdate(){
     if(this._screen!==this.state.screen){
+      const first = this._screen===undefined;
       this._screen=this.state.screen;
+      // 뒤로 가기 기록. 뒤로 가기로 온 것이면 새로 쌓지 않는다 — 쌓으면 앞으로 가기가 사라진다.
+      if(this._fromPop) this._fromPop=false;
+      else if(!first){ try{ history.pushState({mysbizon:this.state.screen}, ''); }catch(e){} }
       window.scrollTo({top:0,behavior:'auto'});
       // 리포트는 묻는 카드가 화면에 딱 들어오게 맞춘다.
       // 맨 위로만 올리면 제목만 보이고 정작 답할 곳이 아래에 걸린다.
@@ -159,6 +163,7 @@ class Component extends DCLogic {
   }
 
   componentWillUnmount(){
+    try{ if(this._onPop) window.removeEventListener('popstate', this._onPop); }catch(e){}
     if(this._out) document.removeEventListener('click',this._out,false);
     if(this._noHover) document.removeEventListener('click',this._noHover,true);
     if(this._yesHover) document.removeEventListener('pointermove',this._yesHover,true);
@@ -194,6 +199,21 @@ class Component extends DCLogic {
   componentDidMount(){
     // 저장해 둔 화면 설정(밝기·테마·색)과 언어를 먼저 얹는다 — 얹기 전에 그리면 한 번 번쩍인다
     try{ this.loadTheme(); this.loadLocales(); }catch(e){}
+    // 뒤로 가기로 화면을 하나씩 되돌린다.
+    //   전에는 어느 화면에서 뒤로 가든 **사이트를 통째로 벗어났다.** 폰에서는
+    //   뒤로 가기가 화면을 되돌리는 기본 동작이라, 사용자는 그냥 앱을 떠나게 됐다.
+    //   주소는 바꾸지 않는다 — 이 앱에는 아직 딥링크 규칙이 없어서, 주소만 바꾸면
+    //   새로고침했을 때 그 주소가 무엇을 뜻하는지 알 수 없다.
+    try{
+      history.replaceState({mysbizon:this.state.screen||'home'}, '');
+      this._onPop=e=>{
+        const scr=e.state&&e.state.mysbizon;
+        if(!scr) return;                       // 우리가 쌓은 기록이 아니면 브라우저에 맡긴다
+        this._fromPop=true;
+        this.setState({screen:scr, menu:null, pickOpen:null});
+      };
+      window.addEventListener('popstate', this._onPop);
+    }catch(e){}
     // 처음 온 분에게만 소개·사용법을 띄운다.
     // '시작하기'를 누르면 다시 안 뜨고, '일주일 동안 안 보기'는 그 기간만 쉰다.
     // localStorage 가 막힌 브라우저(사생활 보호 모드 등)에서는 그냥 띄우지 않는다 —
