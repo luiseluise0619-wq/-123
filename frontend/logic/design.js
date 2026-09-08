@@ -7,7 +7,7 @@ globalThis.MysbizonParts.design = {
   ds(kind){
     // 카드는 '정말 강조가 필요한 것'에만 쓴다(§2). 그림자는 쓰지 않는다(§3) —
     // 정보 구분은 여백 → 글자 크기 → 구분선 → 테두리 순으로 푼다.
-    const CARD='background:var(--bg);border:1px solid var(--line);';
+    const CARD='background:var(--card);border:1px solid transparent;';
     const M={
       card:      CARD+'border-radius:var(--r-md);padding:'+this.L('16px','18px','20px'),
       cardLg:    CARD+'border-radius:var(--r-lg);padding:'+this.L('18px','24px','28px'),
@@ -17,7 +17,7 @@ globalThis.MysbizonParts.design = {
       divider:   'height:1px;background:var(--line);border:none;margin:0',
       // 강조 카드. 민트로 면을 칠하지 않는다(§1: 민트는 화면당 1~2곳) —
       // 흰 바탕에 민트 테두리 한 줄로만 구분한다.
-      cardHi:    'background:var(--bg);border:1px solid var(--accent-2);'
+      cardHi:    'background:var(--card);border:1.5px solid var(--accent-2);'
                  +'border-radius:var(--r-lg);padding:'+this.L('18px','24px','28px'),
       h1:        'font-size:'+this.L('28px','32px','36px')+';font-weight:700;letter-spacing:-.03em;line-height:1.18;margin:0;text-wrap:pretty',
       h2:        'font-size:'+this.L('20px','22px','24px')+';font-weight:700;letter-spacing:-.02em;line-height:1.3;margin:0',
@@ -29,8 +29,8 @@ globalThis.MysbizonParts.design = {
       sub:       'font-size:13.5px;line-height:1.55;color:var(--ink3);margin:0;text-wrap:pretty',
       // 화면마다 강한 버튼은 하나뿐이다
       cta:       'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;'
-                 +'border-radius:var(--r-sm);padding:0 26px;height:52px;cursor:pointer;'
-                 +'box-shadow:0 6px 16px -8px rgba(8,127,107,.6);transition:filter .16s,transform .18s',
+                 +'border-radius:16px;padding:0 26px;height:54px;cursor:pointer;'
+                 +'box-shadow:0 8px 20px -10px rgba(8,127,107,.55);transition:filter .16s,transform .18s',
       ctaGhost:  'font-size:15px;font-weight:600;color:var(--accent-hover);background:var(--accent-3);border:none;'
                  +'border-radius:var(--r-sm);padding:0 20px;height:48px;cursor:pointer;transition:filter .16s',
       input:     'width:100%;font-size:16px;font-weight:500;color:var(--ink);background:var(--surface);'

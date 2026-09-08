@@ -159,7 +159,7 @@
             <sc-for list="{{ c.cols }}" as="col">
               <div style="{{ c.rail.itemStyle }}">
                 <div style="{{ col.cardStyle }}">
-                  <span role="button" tabIndex="0" aria-label="비교에서 빼기" onClick="{{ col.drop }}" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--bg);color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;transition:background .14s,color .14s" style-hover="background:var(--line-strong);color:var(--ink)">×</span>
+                  <span role="button" tabIndex="0" aria-label="비교에서 빼기" onClick="{{ col.drop }}" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--card);color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;transition:background .14s,color .14s" style-hover="background:var(--line-strong);color:var(--ink)">×</span>
                   <!-- 색은 어느 상권인지, 배지는 몇 위인지 — 역할을 섞지 않는다 -->
                   <div style="display:flex;align-items:center;gap:8px;padding-right:34px">
                     <span style="{{ col.dot }}"></span>

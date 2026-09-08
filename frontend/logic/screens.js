@@ -165,7 +165,7 @@ globalThis.MysbizonParts.screens = {
             });
             this.startZone();
           },
-          style:'flex:none;font-size:13px;padding:11px 14px;border-radius:999px;background:var(--surface);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .16s,color .16s'
+          style:'flex:none;font-size:13px;padding:11px 14px;border-radius:999px;background:var(--card);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .16s,color .16s'
         });
       });
     }
@@ -218,7 +218,7 @@ globalThis.MysbizonParts.screens = {
         +(S.picking?'opacity:.45;transform:scale(1.1)':''),
       // 테두리 없이 그림자만. 상자 속 상자를 만들지 않는다.
       // 모바일에서는 가로 3분할이 각 칸을 25px로 만든다 — 세로로 쌓아 전폭을 준다
-      pickerRow:'display:flex;background:var(--bg);border-radius:20px;padding:6px;transition:box-shadow .22s;'
+      pickerRow:'display:flex;background:var(--card);border-radius:20px;padding:6px;transition:box-shadow .22s;'
         +this.L('flex-direction:column;align-items:stretch;gap:4px;','align-items:center;gap:0;','align-items:center;gap:0;')
         +(open
           ? 'box-shadow:0 16px 40px rgba(0,0,0,.12)'
@@ -503,8 +503,8 @@ globalThis.MysbizonParts.screens = {
           +'background:var(--accent);opacity:'+(0.45+0.55*(o.per/maxPer)).toFixed(2),
         style:'min-width:0;padding:20px;border-radius:var(--r-lg);cursor:pointer;'
           +'transition:box-shadow .16s,transform .16s;'
-          +(on?'background:var(--bg);border:1px solid var(--accent)'
-              :'background:var(--bg);border:1px solid var(--line)')
+          +(on?'background:var(--card);border:1px solid var(--accent)'
+              :'background:var(--card);border:1px solid var(--line)')
       };
     };
 
@@ -696,8 +696,8 @@ globalThis.MysbizonParts.screens = {
           +((medPer&&o.per>=medPer)?'var(--good)':'var(--ink3)'),
         pick:()=>this.setState({sel:o.id,screen:'diag'}),
         style:'display:flex;flex-direction:column;padding:20px;border-radius:var(--r-lg);cursor:pointer;min-width:0;'
-          +(i===0?'background:var(--bg);border:1px solid var(--accent)'
-                 :'background:var(--bg);border:1px solid var(--line)')
+          +(i===0?'background:var(--card);border:1px solid var(--accent)'
+                 :'background:var(--card);border:1px solid var(--line)')
       })),
       topRail:this.rail('fcTop',{per:3}),
       // 나머지는 접어 둔다 — 71줄을 한 번에 던지지 않는다

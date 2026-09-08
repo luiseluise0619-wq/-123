@@ -65,21 +65,25 @@
     --color-primary-hover:#0F6B59;
     --color-primary-mid:#7FBCAE;
     --color-primary-soft:#E8F5F1;
-    --color-background:#FFFFFF;
-    --color-surface:#F5F5F7;
+    /* 바탕은 옅은 회색, 카드는 흰색(토스·애플 모델). 카드가 테두리 없이 떠 보인다.
+       --color-surface 는 칩·입력칸·hover 같은 '움푹한 면' — 회색 바탕 위에서도 흰 카드 안에서도 읽혀야
+       해서 바탕보다 한 단계 진하다. --color-elevated 는 카드·헤더·시트·창처럼 '떠 있는 면'. */
+    --color-background:#F5F6F8;
+    --color-elevated:#FFFFFF;
+    --color-surface:#EEF0F3;
     --color-text-primary:#191F28;
     --color-text-secondary:#4E5968;
     /* #687583 은 흰 바탕에서는 넉넉했지만 회색 바탕(--surface)에서 4.32:1 로
        AA(4.5) 를 아슬아슬하게 못 넘었다. 두 바탕 모두에서 넘게 한 단계 내린다. */
-    --color-text-muted:#5F6A78;
-    --color-border:#EAECEC;
+    --color-text-muted:#5A6573;
+    --color-border:#E5E8EB;
     --color-border-strong:#D2D2D7;
     /* 의미 색 — '+' 라서 초록이 아니라, 사장님에게 좋은 값일 때만 초록이다.
        경쟁 점포가 +30% 인 건 나쁜 값이라 주황/빨강으로 쓴다.
        비교 대상을 구분하는 색(--chart-series-*)과 절대 섞어 쓰지 않는다. */
-    --color-positive:#1F7A4D;
-    --color-warning:#A8620F;
-    --color-negative:#D93025;
+    --color-positive:#1C6F46;
+    --color-warning:#96560B;
+    --color-negative:#BD261C;
     /* 의미 색 면 위에 얹는 글자. 밝은 화면에서는 흰 글자가 넉넉하지만
        (초록 5.3:1 · 주황 4.8:1 · 빨강 4.8:1), 어두운 화면의 같은 색들은
        밝아져서 흰 글자가 2.9~3.3:1 로 떨어진다 — 그쪽은 먹색으로 바꾼다. */
@@ -95,7 +99,7 @@
     --chart-series-4:#CC79A7;
     --chart-series-5:#D55E00;
 
-    --bg:var(--color-background); --bg-blur:rgba(255,255,255,.8);
+    --bg:var(--color-background); --card:var(--color-elevated); --bg-blur:rgba(255,255,255,.82);
     --ink:var(--color-text-primary); --ink2:var(--color-text-secondary); --ink3:var(--color-text-muted);
     --line:var(--color-border); --line-strong:var(--color-border-strong); --surface:var(--color-surface);
     --accent:var(--color-primary); --accent-hover:var(--color-primary-hover);
@@ -106,7 +110,7 @@
     --on-good:var(--color-on-positive); --on-warn:var(--color-on-warning); --on-err:var(--color-on-negative);
     /* 카드 그림자 — 회색 배경 대신 흰 카드 + 얇은 테두리 + 아주 옅은 그림자 */
     --shadow-pop:0 12px 32px -12px rgba(16,24,40,.18);
-    --r-lg:20px; --r-md:16px; --r-sm:12px;
+    --r-lg:24px; --r-md:20px; --r-sm:12px;
   }
   /* 다크는 색 반전이 아니다. 같은 뜻의 토큰을 어두운 화면에서 읽히는 값으로 다시 정한다. */
   html[data-theme="dark"]{
@@ -116,7 +120,8 @@
     --color-primary-mid:#2E7565;
     --color-primary-soft:#12332C;
     --color-background:#000000;
-    --color-surface:#121214;
+    --color-elevated:#141417;
+    --color-surface:#1E1E22;
     /* ink3 는 --surface 위에서는 5.4:1 로 충분했지만 --accent-3(선택된 카드) 위에서
        3.98:1 로 떨어져 설명 글자가 흐리게 보였다. 두 배경 모두에서 4.5:1 을 넘기게 올린다. */
     --color-text-primary:#F5F5F7;
@@ -134,7 +139,7 @@
     --chart-series-3:#34C99B;
     --chart-series-4:#E8A0C4;
     --chart-series-5:#F07A3C;
-    --bg-blur:rgba(0,0,0,.72);
+    --bg-blur:rgba(20,20,23,.82);
     --shadow-pop:0 12px 32px -12px rgba(0,0,0,.7);
     color-scheme:dark;
   }
@@ -160,6 +165,7 @@
   .u-stack{display:flex;flex-direction:column;gap:8px;margin-top:10px}
   .u-check{flex:none;color:var(--accent-text);font-weight:700}
   .u-rule{border-top:1px solid var(--line)}
+  .u-rule.u-first{border-top:none}
   .u-sec{padding:56px 0 0}
   .u-sec-lg{padding:64px 0 0}
   .u-sec-b{padding:0 0 30px}
@@ -241,9 +247,16 @@
       <nav style="display:flex;gap:2px;align-items:center;flex:1 1 auto;min-width:0">
         <sc-for list="{{ nav }}" as="n">
           <div style="position:relative;flex:0 1 auto;min-width:0;overflow:hidden">
-            <span role="button" tabIndex="0" onClick="{{ n.open }}" style="{{ n.style }}">{{ n.label }}</span>
+            <span role="button" tabIndex="0" onClick="{{ n.open }}" style="{{ n.style }}">
+              <sc-if value="{{ n.hasIcon }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:22px;height:22px;display:block">
+                  <sc-for list="{{ n.icon }}" as="p"><path d="{{ p.d }}"></path></sc-for>
+                </svg>
+              </sc-if>
+              {{ n.label }}
+            </span>
             <sc-if value="{{ n.isOpen }}">
-              <div style="position:absolute;left:0;top:40px;z-index:30;min-width:184px;background:var(--bg);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.12);padding:6px">
+              <div style="position:absolute;left:0;top:40px;z-index:30;min-width:184px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.12);padding:6px">
                 <sc-for list="{{ n.items }}" as="i">
                   <div role="button" tabIndex="0" onClick="{{ i.go }}" style="{{ i.style }}">{{ i.label }}</div>
                 </sc-for>
@@ -313,7 +326,7 @@
 
             <!-- 업종 고르기 -->
             <sc-if value="{{ indPanel }}">
-              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--bg);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
+              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--card);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
                 <div data-anim="1" style="flex:none;display:flex;flex-wrap:wrap;gap:8px">
                   <sc-for list="{{ hotInds }}" as="h">
                     <span role="button" tabIndex="0" onClick="{{ h.pick }}" style="{{ h.style }}">{{ h.label }}</span>
@@ -344,7 +357,7 @@
 
             <!-- 위치 고르기 -->
             <sc-if value="{{ zonePanel }}">
-              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--bg);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
+              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--card);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
                 <sc-if value="{{ zoneSearching }}">
                   <div data-anim="1" data-fl-inner="1" style="max-height:300px;overflow-y:auto;padding-right:6px">
                     <sc-for list="{{ pickList }}" as="p">
@@ -680,7 +693,7 @@
           </div>
         </sc-if>
 
-        <div style="margin-top:36px">
+        <div style="margin-top:32px;{{ dsCard }};padding:4px 20px">
           <sc-for list="{{ hub.rest }}" as="c">
             <div role="button" tabIndex="0" onClick="{{ c.go }}" class="pick-opt" style="{{ c.row }}">
               <span style="{{ c.labelStyle }}">{{ c.label }}</span>
@@ -702,7 +715,7 @@
         <div style="margin-top:28px;display:flex;flex-direction:column;gap:18px">
           <!-- 창업 조건 — 답할 때마다 아래 리포트가 한 칸씩 자란다. 다 답하면 카드째 사라진다 -->
           <sc-if value="{{ rp.hasCur }}">
-          <div data-rp-card="1" style="padding:24px 22px;border-radius:20px;background:var(--bg);box-shadow:0 0 0 1px var(--line)">
+          <div data-rp-card="1" style="padding:24px 22px;border-radius:20px;background:var(--card);box-shadow:0 0 0 1px var(--line)">
             <div style="display:flex;align-items:center;gap:10px">
               <sc-if value="{{ rp.hasBack }}">
                 <span role="button" tabIndex="0" aria-label="이전 질문" onClick="{{ rp.curBack }}" style="flex:none;width:44px;height:44px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .14s" style-hover="background:var(--line-strong)">←</span>
@@ -1043,7 +1056,7 @@
             <sc-if value="{{ pr.hasList }}">
               <div style="margin-top:22px">
                 <div style="font-size:12.5px;color:var(--ink2)">{{ pr.listTitle }}</div>
-                <div style="margin-top:8px;max-height:264px;overflow-y:auto;padding-right:6px;display:flex;flex-direction:column;gap:2px">
+                <div style="margin-top:8px;max-height:264px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;{{ dsCard }};padding:8px">
                   <sc-for list="{{ pr.list }}" as="r">
                     <div role="button" tabIndex="0" onClick="{{ r.pick }}" style="{{ r.style }}" style-hover="background:var(--surface)">
                       <span class="u-fill-e">{{ r.name }}</span>
@@ -1384,7 +1397,7 @@
               </div>
             </sc-if>
 
-            <div style="margin-top:22px;display:flex;flex-direction:column">
+            <div data-card-list="1" style="margin-top:22px;display:flex;flex-direction:column;{{ dsCard }};padding:4px 20px">
               <sc-for list="{{ mv.now.rows }}" as="r">
                 <div style="{{ mv.rowStyle }}">
                   <!-- 이름은 줄이지 않는다(flex-shrink:0). 기준 0 으로 두면 오른쪽 값이 길 때
@@ -1412,7 +1425,7 @@
       <!-- 서울과의 비교 — 지도가 아니라 여기가 제자리다 -->
       <section style="padding:44px 0 0">
         <h2 style="{{ ds3 }}">서울과 견주면 어떤가요?</h2>
-        <div class="u-xscroll" style="margin-top:14px;overflow-x:auto">
+        <div class="u-xscroll" data-card-list="1" style="margin-top:14px;overflow-x:auto;{{ dsCard }};padding:4px 20px">
           <div style="{{ mv.vs.boxStyle }}">
             <div style="display:flex;align-items:center;gap:12px;padding:0 0 10px;border-bottom:1px solid var(--line)">
               <span style="flex:1;min-width:0;font-size:12.5px;color:var(--ink3)">항목</span>
@@ -1832,7 +1845,7 @@
       <section style="padding:72px 0 0">
         <div style="font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.eyebrow }}</div>
         <h1 style="font-size:clamp(26px,4vw,40px);font-weight:600;letter-spacing:-0.03em;line-height:1.06;margin:10px 0 0;text-wrap:pretty">{{ d.headline }}</h1>
-        <div style="margin-top:24px;max-width:640px;padding:24px;border-radius:20px;background:var(--surface)">
+        <div style="margin-top:24px;max-width:640px;padding:24px;border-radius:var(--r-lg);background:var(--card)">
           <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
             <div style="font-size:clamp(40px,7vw,64px);font-weight:700;letter-spacing:-0.04em;line-height:.94;font-variant-numeric:tabular-nums">{{ d.bep }}</div>
             <div style="padding-bottom:6px;font-size:14px;color:var(--ink2);white-space:nowrap">월 이만큼 팔면 본전</div>
@@ -1871,8 +1884,9 @@
       </section>
 
       <section style="padding:48px 0 0">
+        <div style="{{ dsCard }};padding:2px 20px;max-width:640px">
         <!-- 내 조건 -->
-        <div class="u-rule">
+        <div class="u-rule u-first">
           <div role="button" tabIndex="0" onClick="{{ tgCond }}" class="u-tap">
             <span class="u-fill-n">내 조건 바꾸기</span>
             <span class="u-lab-f">{{ condHint }}</span>
@@ -2047,6 +2061,7 @@
           </sc-if>
         </div>
 
+        </div>
         <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;max-width:640px;margin-top:28px">
           <span style="{{ d.note.lineStyle }}">ⓘ {{ d.note.line }}</span>
           <span role="button" tabIndex="0" onClick="{{ d.note.toggle }}" style="{{ d.note.btnStyle }}">{{ d.note.label }}</span>
@@ -2221,7 +2236,7 @@
             <sc-for list="{{ c.cols }}" as="col">
               <div style="{{ c.rail.itemStyle }}">
                 <div style="{{ col.cardStyle }}">
-                  <span role="button" tabIndex="0" aria-label="비교에서 빼기" onClick="{{ col.drop }}" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--bg);color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;transition:background .14s,color .14s" style-hover="background:var(--line-strong);color:var(--ink)">×</span>
+                  <span role="button" tabIndex="0" aria-label="비교에서 빼기" onClick="{{ col.drop }}" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--card);color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;transition:background .14s,color .14s" style-hover="background:var(--line-strong);color:var(--ink)">×</span>
                   <!-- 색은 어느 상권인지, 배지는 몇 위인지 — 역할을 섞지 않는다 -->
                   <div style="display:flex;align-items:center;gap:8px;padding-right:34px">
                     <span style="{{ col.dot }}"></span>

@@ -313,7 +313,7 @@ globalThis.MysbizonParts.views = {
       : '';
     out.scens=['적게 팔릴 때','보통일 때','잘될 때'].map(p=>({
       label:p, pick:()=>this.setState({scen:p}),
-      style:'font-size:14px;padding:9px 18px;border-radius:9px;cursor:pointer;white-space:nowrap;min-height:40px;display:inline-flex;align-items:center;transition:background .16s;'+(S.scen===p?'background:var(--bg);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)':'color:var(--ink2)')
+      style:'font-size:14px;padding:9px 18px;border-radius:9px;cursor:pointer;white-space:nowrap;min-height:40px;display:inline-flex;align-items:center;transition:background .16s;'+(S.scen===p?'background:var(--card);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)':'color:var(--ink2)')
     }));
     out.scenNote = S.scen==='적게 팔릴 때'? '이 동네 평균의 70%만 팔린다고 보고 계산해요. 70%는 우리가 정한 값이에요.'
       : (S.scen==='잘될 때'? '이 동네 평균보다 30% 더 팔린다고 보고 계산해요. 30%는 우리가 정한 값이에요.'
@@ -382,7 +382,7 @@ globalThis.MysbizonParts.views = {
       const mx=Math.max(me.v,med)*1.35;
       // 면 색마다 그 위에 얹을 글자색이 따로 있다 — 어두운 화면에서 흰 글자는 2.9:1 까지 떨어진다
       const state=ratio<=0.7?{t:'여유',c:'var(--good)',fg:'var(--on-good)'}
-        :(ratio<=1.3?{t:'보통',c:'var(--ink2)',fg:'var(--bg)'}
+        :(ratio<=1.3?{t:'보통',c:'var(--ink2)',fg:'var(--card)'}
         :{t:'과밀',c:'var(--warn)',fg:'var(--on-warn)'});
       return {
         has:true,
@@ -681,7 +681,7 @@ globalThis.MysbizonParts.views = {
             +'cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
             +'transition:background .14s,color .14s;'
             +(x.key===cur?'background:var(--accent-3);color:var(--accent-hover);font-weight:700'
-                         :(mob?'background:var(--surface);color:var(--ink2)':'color:var(--ink2)'))}));
+                         :(mob?'background:var(--card);color:var(--ink2)':'color:var(--ink2)'))}));
       })(),
       // 지금 고른 섹션 하나만 오른쪽에 크게 — 관련 차트 2~4개와 함께
       now:(()=>{
@@ -883,7 +883,7 @@ globalThis.MysbizonParts.views = {
           diag:()=>this.setState({sel:o.id,screen:'diag'}),
           drop:()=>this.setState({picks:PICKS.filter(x=>x!==o.id)}),
           best:false,
-          cardStyle:'background:var(--bg);border:1px solid var(--line);'
+          cardStyle:'background:var(--card);border:1px solid var(--line);'
             +'border-radius:var(--r-lg);padding:20px;min-width:0;position:relative',
           cells:[{label:'예상 매출 (추정)', value:this.won(o.per/3), note:'',
                   valStyle:'font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums', bar:null},

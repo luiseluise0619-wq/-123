@@ -4,7 +4,7 @@ body { font-feature-settings:"tnum"; }
 button,[role=button],input,select { -webkit-tap-highlight-color:transparent; }
 button:disabled { cursor:not-allowed !important; opacity:.6; }
 :focus-visible { outline:3px solid var(--accent-text,#087F6B) !important; outline-offset:4px; }
-.skip-link { position:fixed;left:16px;top:-80px;z-index:1000;background:#087F6B;color:white;padding:12px 18px;border-radius:10px; }
+.skip-link { position:fixed;left:16px;top:-80px;z-index:1000;background:var(--accent);color:var(--on-accent);padding:12px 18px;border-radius:10px; }
 .skip-link:focus { top:12px; }
 .hero-eyebrow { color:var(--accent-text);font-size:14px;letter-spacing:-.02em;font-weight:650;margin-bottom:20px; }
 .hero-title { font-weight:750 !important;letter-spacing:-.045em !important; }
@@ -32,7 +32,7 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
      헤더는 한 줄(56px)로 줄어 본문이 위로 올라온다. */
   /* backdrop-filter 가 있으면 그 안의 position:fixed 가 화면이 아니라 헤더를 기준으로 잡힌다 —
      탭바를 아래로 보내려면 모바일 헤더에서는 흐림을 뺀다. */
-  header { height:auto !important;min-height:56px;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:var(--bg) !important; }
+  header { height:auto !important;min-height:56px;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:var(--card) !important; }
   header > div { gap:0 12px !important;padding-top:4px !important;padding-bottom:4px !important; }
   header > div > [role=button] { min-height:40px !important; }
   header nav { position:fixed;left:0;right:0;bottom:0;z-index:60;width:auto;
@@ -42,7 +42,7 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
     border-top:1px solid var(--line); }
   header nav > div { flex:1 1 0 !important;min-width:0;overflow:visible !important; }
   /* 탭은 가장 자주 누르는 곳이다 — 48px 을 지킨다 */
-  header nav [role=button] { min-height:48px !important;display:flex !important;align-items:center;justify-content:center; }
+  header nav [role=button] { min-height:52px !important;display:flex !important;align-items:center;justify-content:center; }
   header > div > [role=button]:last-child { margin-left:auto; }
   /* 탭바(≈60px) + 도우미 버튼 자리 */
   main { padding-bottom:150px !important; }
@@ -77,6 +77,11 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
     radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.14), rgba(0,0,0,0)) left center / 14px 100% no-repeat scroll,
     radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.14), rgba(0,0,0,0)) right center / 14px 100% no-repeat scroll;
 }
+
+/* 카드 안 목록의 마지막 줄은 아랫선이 없다(카드 모서리가 그 역할) */
+[data-card-list] > :last-child { border-bottom:none !important; }
+/* 허브 목록 — 카드 안 행들 사이에만 얇은 선 */
+.pick-opt + .pick-opt { border-top:1px solid var(--line); }
 
 /* 리포트 설문처럼 '누르면 바로 다음 질문으로 넘어가는' 곳 —
    손을 안 움직였는데 새로 그려진 항목이 커서 밑으로 들어와 :hover 로 칠해진다.

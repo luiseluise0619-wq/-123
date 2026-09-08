@@ -52,7 +52,7 @@
 
             <!-- 업종 고르기 -->
             <sc-if value="{{ indPanel }}">
-              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--bg);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
+              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--card);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
                 <div data-anim="1" style="flex:none;display:flex;flex-wrap:wrap;gap:8px">
                   <sc-for list="{{ hotInds }}" as="h">
                     <span role="button" tabIndex="0" onClick="{{ h.pick }}" style="{{ h.style }}">{{ h.label }}</span>
@@ -83,7 +83,7 @@
 
             <!-- 위치 고르기 -->
             <sc-if value="{{ zonePanel }}">
-              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--bg);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
+              <div data-fl-panel="1" style="position:absolute;left:0;top:calc(100% + 8px);z-index:60;background:var(--card);border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.12);padding:16px">
                 <sc-if value="{{ zoneSearching }}">
                   <div data-anim="1" data-fl-inner="1" style="max-height:300px;overflow-y:auto;padding-right:6px">
                     <sc-for list="{{ pickList }}" as="p">

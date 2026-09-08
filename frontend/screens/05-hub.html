@@ -22,7 +22,7 @@
           </div>
         </sc-if>
 
-        <div style="margin-top:36px">
+        <div style="margin-top:32px;{{ dsCard }};padding:4px 20px">
           <sc-for list="{{ hub.rest }}" as="c">
             <div role="button" tabIndex="0" onClick="{{ c.go }}" class="pick-opt" style="{{ c.row }}">
               <span style="{{ c.labelStyle }}">{{ c.label }}</span>

@@ -413,15 +413,23 @@ class Component extends DCLogic {
       : [];
 
     const out={
-      nav:MENU.map(g=>({
+      nav:MENU.map((g,gi)=>({
         label:g.label, isOpen:false,
+        // 모바일 탭바 아이콘(Lucide 계열 선 아이콘). 순서는 MENU 와 같다.
+        hasIcon:this.bp()==='mobile',
+        icon:[
+          [{d:'M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z'},{d:'m21 21-4.35-4.35'}],
+          [{d:'M3 3v18h18'},{d:'M18 17V9'},{d:'M13 17V5'},{d:'M8 17v-3'}],
+          [{d:'m22 7-8.5 8.5-5-5L2 17'},{d:'M16 7h6v6'}],
+          [{d:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'},{d:'M14 2v6h6'},{d:'M16 13H8'},{d:'M16 17H8'}]
+        ][gi]||[],
         open:()=> g.hub==='__bot'
           ? this.setState({bot:true,menu:null})
           : this.setState({screen:g.hub,menu:null}),
         // 모바일은 아래 탭바(company.css) — 알약 없이 글자색으로만 활성을 표시한다(토스식)
         style:this.bp()==='mobile'
-          ? 'font-size:12.5px;white-space:nowrap;cursor:pointer;padding:9px 4px;display:block;min-width:0;text-align:center;'
-            +'overflow:hidden;text-overflow:ellipsis;transition:color .16s;'
+          ? 'font-size:11px;white-space:nowrap;cursor:pointer;padding:6px 4px;min-width:0;text-align:center;'
+            +'display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden;text-overflow:ellipsis;transition:color .16s;'
             +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:700':'color:var(--ink3);font-weight:500')
           : 'font-size:14px;white-space:nowrap;cursor:pointer;padding:11px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
             +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:600;background:var(--surface)':'color:var(--ink2)'),
@@ -438,7 +446,7 @@ class Component extends DCLogic {
       screenKey:S.screen||'home',
       // 소개는 별도 화면이 아니라 홈 위에 뜨는 안내창
       noticeOn:!!S.notice,
-      noticeCard:'width:100%;max-width:'+this.L('100%','420px','440px')+';background:var(--bg);border-radius:22px;'
+      noticeCard:'width:100%;max-width:'+this.L('100%','420px','440px')+';background:var(--card);border-radius:22px;'
         +'padding:'+this.L('22px','26px','28px')+';box-shadow:0 24px 60px rgba(0,0,0,.22);'
         +'max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain',
       aboutStats:[
@@ -472,7 +480,7 @@ class Component extends DCLogic {
       rp:(()=>{
         const pick=(k,v)=>()=>this.setState({['rp_'+k]:v,rp_sent:false,rp_error:''});
         const chip=(k,v)=>'flex:none;font-size:13.5px;padding:9px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;transition:background .14s,color .14s;'
-          +(S['rp_'+k]===v?'background:var(--ink);color:var(--bg);font-weight:500':'background:var(--surface);color:var(--ink2)');
+          +(S['rp_'+k]===v?'background:var(--ink);color:var(--card);font-weight:500':'background:var(--surface);color:var(--ink2)');
         const reportSelection=r?(r.list.find(o=>o.id===S.sel)||r.list.find(o=>o.id===S.zoneId)||r.list[0]):null;
         const reportZone=reportSelection?this.zoneLabelOf(reportSelection.name):this.tr('동네 미선택');
         const email=(S.rp_email||'').trim();
@@ -941,7 +949,7 @@ class Component extends DCLogic {
                 url:it.url||'', hasUrl:!!it.url,
                 // 아래 '조건에 걸리지 않은 공고' 격자에서는 카드 높이를 맞춘다
                 style:'display:flex;flex-direction:column;gap:0;padding:22px;border-radius:var(--r-lg);height:100%;'
-                  +'background:var(--bg);border:1px solid '+(soon?'var(--accent-2)':'var(--line)')
+                  +'background:var(--card);border:1px solid '+(soon?'var(--accent-2)':'var(--line)')
                   +';min-width:0'
               };
             };
@@ -1191,7 +1199,7 @@ class Component extends DCLogic {
             ...(selNm ? [{label:'고른 상권', value:selNm}] : [])
           ].map(c=>({...c,
             style:'display:inline-flex;align-items:baseline;gap:6px;padding:7px 12px;border-radius:999px;'
-              +'background:var(--surface);white-space:nowrap;min-width:0'})),
+              +'background:var(--card);white-space:nowrap;min-width:0'})),
           // 메뉴판 대신 '다음 행동' 하나를 크게 둔다(§14·§18).
           // 나머지는 아래 한 줄짜리 목록으로 — 넷을 나란히 두면 무엇부터 눌러야 할지 모른다.
           primary:(()=>{
@@ -1216,8 +1224,9 @@ class Component extends DCLogic {
             return {
               label:label, sub:c.d,
               go:()=>this.setState({screen:key,menu:null}),
-              row:'display:flex;align-items:center;gap:14px;padding:'+this.L('15px 0','16px 0','17px 0')
-                +';border-top:1px solid var(--line);cursor:pointer;min-width:0',
+              // 카드 안 목록 — 첫 줄은 윗선이 없다(카드 테두리가 그 역할)
+              row:'display:flex;align-items:center;gap:14px;padding:'+this.L('16px 0','17px 0','18px 0')
+                +';cursor:pointer;min-width:0;border-radius:8px',
               labelStyle:'flex:0 0 auto;font-size:16px;font-weight:600;letter-spacing:-.01em;white-space:nowrap',
               // 모바일에서는 설명을 접는다 — 칸이 좁아 어차피 말줄임으로 잘린다.
               subStyle:this.bp()==='mobile' ? 'display:none'
@@ -1365,7 +1374,7 @@ class Component extends DCLogic {
       // 홈에서 지역·업종 목록이 열려 있으면 AI 도우미 버튼은 비켜 준다 — 목록 오른쪽 아래를 가린다
       botOpen:!!S.bot, botClosed:!S.bot && !S.pickOpen,
       botToggle:()=>this.setState({bot:!S.bot},()=>{ if(!S.bot) this.scrollBot(); }),
-      botPanel:'position:fixed;z-index:70;display:flex;flex-direction:column;background:var(--bg);'
+      botPanel:'position:fixed;z-index:70;display:flex;flex-direction:column;background:var(--card);'
         +'border-radius:'+this.L('20px 20px 0 0','20px','20px')+';box-shadow:0 24px 60px rgba(0,0,0,.22);'
         +'animation:botIn .26s cubic-bezier(.22,.72,.24,1) both;'
         +this.L('left:0;right:0;bottom:0;height:78vh;','right:20px;bottom:20px;width:372px;height:min(560px,78vh);','right:28px;bottom:28px;width:392px;height:min(580px,76vh);'),
@@ -1377,7 +1386,7 @@ class Component extends DCLogic {
       botFab:'position:fixed;z-index:70;display:inline-flex;align-items:center;justify-content:center;gap:7px;'
         +this.L('width:40px;padding:0;','padding:0 14px;','padding:0 14px;')
         +'height:40px;border-radius:999px;'
-        +'background:var(--bg);color:var(--accent-text);border:1px solid var(--line-strong);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.06);'
+        +'background:var(--card);color:var(--accent-text);border:1px solid var(--line-strong);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.06);'
         +'transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1);'
         +this.L('right:14px;bottom:calc(74px + env(safe-area-inset-bottom,0px));',
                 'right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));',

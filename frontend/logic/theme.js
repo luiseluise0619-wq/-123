@@ -171,7 +171,7 @@ globalThis.MysbizonParts.theme = {
     const bgNow = (cst&&cst.background) || (dark?'#000000':'#FFFFFF');
     //   배경만 보면 모자란다 — 같은 글자가 회색 면(--surface)과 hover 면(--line) 위에도 앉는다.
     //   가장 진한 면까지 통과하도록 두 번 재운다(이미 넘으면 값이 그대로 돌아온다).
-    const surfNow = dark ? '#1F1F22' : '#EAECEC';
+    const surfNow = dark ? '#26262B' : '#E5E8EB';
     set('--color-primary-text', this.readableOn(this.readableOn(primaryNow, bgNow), surfNow));
 
     // 차트는 CSS 변수를 직접 못 읽는다 — 다시 그리게 표시만 바꿔 준다
