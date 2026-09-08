@@ -142,20 +142,13 @@ globalThis.MysbizonParts.i18n = {
     if(a>=1e8) return sign+this.nfmt(a/1e8,{maximumFractionDigits:a>=1e9?0:1})+'억';
     return sign+this.nfmt(Math.round(a/1e4))+'만';
   },
-  dfmt(d){
-    const dt=(d instanceof Date)?d:new Date(d);
-    if(isNaN(dt)) return '—';
-    try{ return new Intl.DateTimeFormat(this.locale(),
-      {year:'numeric',month:'short',day:'numeric'}).format(dt); }
-    catch(e){ return String(d); }
-  },
 
   // 한국어 원본. 이 목록이 곧 '번역해야 할 것'의 정의다.
   KO_BASE(){
     return {
-      'nav.zone':'상권분석','nav.fine':'정밀분석','nav.sim':'정밀비교',
+      'nav.zone':'상권분석','nav.fine':'정밀분석',
       'pr.seoulAll':'서울 전체','nav.market':'통합시세','nav.report':'리포트',
-      'menu.zoneCompare':'지역비교','menu.find':'후보지','menu.compare':'비교분석',
+      'menu.zoneCompare':'지역비교','menu.find':'후보지',
       'menu.sweep':'자치구 훑기','menu.map':'지도','menu.detail':'정밀분석',
       'menu.sim':'정밀비교','menu.bep':'본전 계산',
 
@@ -167,51 +160,17 @@ globalThis.MysbizonParts.i18n = {
       'home.location':'위치','home.locationAny':'서울 전체',
       'home.industry':'어떤 장사를 생각하시나요?','home.industryHint':'예: 카페, 편의점',
       'home.start':'동네 찾아보기','home.popular':'인기 검색',
-
-      'common.search':'검색','common.clear':'지우기','common.close':'닫기',
-      'common.more':'더 보기','common.less':'접기','common.reset':'기본값으로 복원',
-      'common.loading':'불러오는 중이에요','common.error':'데이터를 읽지 못했어요',
-      'common.retry':'다시 시도','common.noData':'데이터 없음','common.preparing':'데이터 준비 중',
-      'common.estimate':'(추정)','common.source':'출처','common.basis':'데이터 기준 보기',
-      'common.rank':'{n}위','common.of':'{n}곳 중',
-
-      'cmp.title':'담아 둔 {n}곳, 어디로 할까요?',
-      'cmp.weightQ':'무엇을 더 중요하게 볼까요?',
-      'cmp.showWeights':'추천 기준 보기','cmp.hideWeights':'기준 접기',
-      'cmp.best':'종합 1위','cmp.order':'전체 순위','cmp.byMetric':'항목별로 견주기',
-      'cmp.balanced':'균형 있게','cmp.salesFirst':'매출 우선','cmp.popFirst':'유동인구 우선',
-      'cmp.compFirst':'경쟁 적은 곳 우선','cmp.costFirst':'비용 우선',
-      'metric.sales':'예상 매출','metric.pop':'유동인구','metric.stores':'경쟁 점포',
-      'metric.spend':'소비 규모','metric.rent':'임대료','metric.vacancy':'공실률',
-      'metric.higher':'높을수록 좋음','metric.lower':'낮을수록 좋음',
-
-      'sim.title':'내 조건이면 어디가 더 남을까요?',
-      'sim.inputs':'내 조건 넣기','sim.monthly':'매달 (만원)','sim.initial':'처음 한 번 (만원)',
-      'sim.rev':'예상 월매출','sim.rent':'월세','sim.labor':'인건비','sim.cogs':'재료비',
-      'sim.mgmt':'관리비','sim.etc':'기타 비용','sim.deposit':'보증금','sim.premium':'권리금',
-      'sim.interior':'인테리어','sim.setup':'기타 초기비용',
-      'sim.profit':'월 예상 영업이익','sim.margin':'영업이익률','sim.cost':'월 비용',
-      'sim.invest':'초기 투자금','sim.payback':'회수 예상','sim.noPayback':'지금 조건에서는 회수 불가',
-
-      'market.title':'지금 장사 환경은 어떤가요?',
-      'market.watch':'내 관심지표','market.add':'+ 관심지표 추가',
-      'market.addQ':'어떤 지표를 추가할까요?','market.searchHint':'지표 이름 (예: 양파, 환율)',
-      'cat.all':'전체','cat.zone':'상권·부동산','cat.fx':'환율','cat.macro':'금리·물가',
-      'cat.crop':'농산물','cat.meat':'축산물','cat.fish':'수산물','cat.energy':'에너지',
-
-      'report.title':'리포트로 정리해 드려요',
-      'report.support':'나에게 맞는 지원사업','report.deadline':'가장 가까운 마감',
-      'report.viewNotice':'공고 보기','report.count':'신청 가능한 지원사업',
+      'common.reset':'기본값으로 복원',
+      'common.preparing':'데이터 준비 중',
 
       'settings.title':'설정','settings.appearance':'화면','settings.light':'밝게',
       'settings.dark':'어둡게','settings.system':'시스템 설정',
       'settings.language':'언어','settings.theme':'테마','settings.chartColors':'차트 색상',
-      'settings.textColors':'글자','settings.textPrimary':'본문 글자',
+      'settings.textPrimary':'본문 글자',
       'settings.textSecondary':'보조 글자','settings.custom':'직접 설정',
       'settings.adv':'고급 설정','settings.advClose':'고급 설정 닫기',
-      'settings.primary':'포인트 색','settings.background':'배경색',
+      'settings.background':'배경색',
       'settings.i18nNote':'상권 이름·업종 이름과 자료에서 만들어지는 문장은 아직 한국어예요.',
-
 
       // 이름·숫자가 들어가는 문장은 자리표시자를 둔 키로 관리한다(조사는 tn 이 고른다)
       "mk.waitTitle": "{name} — 데이터 준비 중",
@@ -234,7 +193,6 @@ globalThis.MysbizonParts.i18n = {
       "mv.noGuData": "자료 없음",
       "mv.topPerStore": "가게 한 곳당 월매출 1위 · {value}",
       "cmp.noZone": "‘{q}’와(과) 맞는 상권이 없어요. 상권 이름이나 구 이름으로 찾아보세요.",
-      "cmp.addOpt": "{name} · {score}점",
       "cmp.diffBoth": "손님이 가장 많은 곳은 {a}, 경쟁이 가장 적은 곳은 {b}이에요(예요).",
       "cmp.diffSame": "{a}은(는) 손님이 가장 많으면서 경쟁도 가장 적어요.",
       "cmp.diffSales": "손님이 가장 많은 곳은 {a}이에요(예요). 경쟁 가게 수는 {tie}.",
@@ -245,15 +203,12 @@ globalThis.MysbizonParts.i18n = {
       "search.noZone": "‘{q}’와(과) 맞는 동네가 없어요",
       "search.noInd": "‘{q}’와(과) 맞는 장사가 없어요",
       "search.noHit": "‘{q}’와(과) 맞는 게 없어요",
-      "search.indHits": "‘{q}’ 검색 결과 {n}가지",
-      "search.indMore": " · ···를 누르면 나머지 {n}가지",
       "sido.notYet": "‘{sido}’ 자료는 아직 없어요. 지금 쓰는 자료는 서울시 상권분석서비스라 서울 상권 1,564곳만 담고 있어요. 전국으로 넓히려면 소상공인시장진흥공단 상권정보로 갈아타야 하는데, 상권 구획과 업종 코드가 달라 맞춰 붙이는 작업이 필요해요.",
       "pr.spendByGu": "자치구별 ‘{name}’ 지출 비중",
       "rent.refOf": "{name} 기준 (한국부동산원)",
       "rent.perSqm": "{value}/㎡ · {note}",
       "bep.scenNote": "이 동네 {ind} 가게들의 평균만큼 팔린다고 보고 계산해요.",
       "bep.dayWhy": "본전 {bep} ÷ 30일 ÷ {src} {unit}원. 이 금액은 카드 1건당 결제액이라, 여러 명이 함께 결제하면 실제 손님 수와 결제 건수는 달라요. 시간대 비중은 서울 전체 {ind} 평균이에요.",
-      "bep.short": "예상 매출이 본전선에 {amt} 모자라요",
       "sat.lead": "사람 1만 명당 {ind}이(가) {v}개예요. 서울 중앙값은 {med}개라 {word}이에요(예요).",
       "rent.perNote": "{per} · {note}",
       "find.noRecordIn": "{zone}은(는) 이 장사 기록이 없어 1위를 보여드려요",
@@ -269,14 +224,11 @@ globalThis.MysbizonParts.i18n = {
       "cmp.verdictClear": "{name}이(가) ‘{preset}’ 기준에서 종합 1위예요.",
       "cmp.verdictClose": "{name}이(가) 조금 앞서요. ‘{preset}’ 기준에서 1·2위 차이가 크지 않아요.",
       "cmp.honesty": "같은 기간({q}) 같은 업종({ind})으로만 비교해요. 카드와 차트의 색은 상권을 구분하는 색이지 좋고 나쁨이 아니에요. 순위는 지금 고른 기준에서의 순위이고, 기준을 바꾸면 달라져요.",
-      "sim.verdict": "내가 입력한 조건에서는 {name}이(가) 가장 유리해요.",
-      "sim.tie": "입력한 조건에서는 이익이 같아요. 숫자를 조금 바꿔 보면 갈려요.",
       "mv.eyebrow": "{ind} · {zone}",
       "mv.guWhere": "{gu} 안에서 여기는 어디쯤인가요?",
       "mv.guPop": "{gu} 안에서 사람이 가장 많은 곳은?",
       "mv.guComp": "{gu} 안에서 경쟁이 센 곳은?",
       "mv.guSpend": "{gu} 사람들은 어디에 돈을 쓰나요?",
-      "mv.popNote": "유동인구는 {dong} 행정동 값이라 상권보다 넓어요. 시간대·요일 데이터는 아직 없어요.",
       "fc.lead": "{gu}에서 {ind}이(가) 가장 잘 되는 곳은 {top}이에요(예요).",
       "fc.note": "{gu} 안에서 자료가 있는 상권 {n}곳을 가게 한 곳당 매출로 줄 세웠어요.",
       "chat.noData": "아직 데이터를 불러오지 못했어요. 잠시 후 다시 물어봐 주세요.",
@@ -327,7 +279,6 @@ globalThis.MysbizonParts.i18n = {
       "pr.cmpVac": "상권별 공실률 비교",
       "pr.seoulRent": "서울 전체 임대료 추이",
       "pr.seoulVac": "서울 전체 공실률 추이",
-      "diag.over": "예상 매출이 본전선을 {amt} 넘어요",
       "diag.left": "월 {amt} 남아요",
       "diag.short": "월 {amt} 모자라요",
       "diag.leftLabel": "남는 돈 {amt}",
@@ -335,7 +286,6 @@ globalThis.MysbizonParts.i18n = {
       "diag.fixed": "고정비 {amt}을 못 덮어요",
       "mv.title": "{zone} × {ind}",
       "mv.head": "{ind} · {zone}",
-      "mv.stamp": "{ind} · {zone} · {q}",
       "find.rank": "{ind} · {n}곳 중 {r}위",
       "find.ok": "{ind} 후보로는 괜찮은 자리예요.",
       "rentPer": "{amt}/월",
@@ -343,19 +293,12 @@ globalThis.MysbizonParts.i18n = {
       "mv.popLabel": "{dong} 행정동 하루 유동인구",
       "mv.noPop": "유동인구 자료가 없어요",
       "mv.estMedian": "(추정) · 서울 중앙값 {amt}",
-      "sim.full": "3곳까지 견줄 수 있어요",
-      "sim.addMore": "견줄 곳 더하기",
       "fc.none": "{gu}에는 {ind} 자료가 있는 상권이 없어요.",
       "fc.pickOther": "다른 자치구를 골라 보세요.",
 
-      "mv.question": "{zone}에서 {ind}을(를) 시작해도 괜찮을까요?",
+      "mv.question": "{zone}에서 {ind}을(를) 시작해도 괜찮을까요?"
 
-      'chart.salesTrend':'이 장사, 시장이 크고 있나요?',
-      'chart.age':'어떤 연령대가 가장 많이 오나요?',
-      'chart.rentTrend':'임대료는 오르고 있나요?',
-      'chart.vacancy':'빈 가게가 늘고 있나요?',
-      'chart.compare':'어디가 더 많이 파나요?'
-    };
+      };
   }
 };
 

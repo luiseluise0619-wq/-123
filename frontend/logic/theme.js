@@ -200,7 +200,6 @@ globalThis.MysbizonParts.theme.settingsView = function(){
   const S=this.state, p=this.themePrefs();
   const cst=p.custom||{};
   const mobile=this.bp()==='mobile';
-  const cur=this.LOCALES().find(l=>l.k===this.locale())||this.LOCALES()[0];
 
   const pill=on=>'flex:none;padding:8px 14px;border-radius:999px;font-size:13px;cursor:pointer;'
     +'white-space:nowrap;transition:background .14s,color .14s;'
@@ -221,7 +220,6 @@ globalThis.MysbizonParts.theme.settingsView = function(){
 
   return {
     // 헤더 — ⚙ 하나만 둔다. 언어·밝기·테마는 전부 이 안으로 들어간다(§11).
-    localeShort:cur.short,
     settingsOpen:!!S.setOpen,
     openSettings:()=>this.setState({setOpen:!S.setOpen}),
     closeSettings:()=>this.setState({setOpen:false, setAdv:false}),
@@ -251,7 +249,6 @@ globalThis.MysbizonParts.theme.settingsView = function(){
           +'box-shadow:0 0 0 2px var(--color-background), 0 0 0 '+(on?'4px':'0')+' var(--color-text-primary);'
           +'transition:box-shadow .16s'};
     }),
-    customPrimaryLabel:this.t('settings.custom'),
     customPrimary:color('primary', this.t('settings.custom'), '#087F6B'),
 
     appearanceLabel:this.t('settings.appearance'),

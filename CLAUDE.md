@@ -1036,4 +1036,63 @@ DB index · query optimization · caching · pagination · rate limit · backgro
 - 오래 써도 안 무거워진다(노드 97 → 111, heap 8 → 24MB, 오류 0).
 - 성능: FCP 210~280ms · 첫 로드 ko 630KB · en 667KB · 실패 응답 0.
 
+### 죽은 코드 정리 (2026-09-08, 사장님 지시 "기능 디자인 건들지말고 쓸데없는 코드잇으면 정리")
+
+**기능도 디자인도 안 건드렸다.** 지운 건 전부 *화면이 한 번도 읽지 않는* 값·함수다.
+어떻게 골랐나: 조각(`screens/*.html`)의 `{{ }}` 를 `sc-for as=` 범위까지 따라가며 **실제로
+닿는 경로**를 뽑고, `renderVals()` 가 만드는 값과 대조했다. 이름만 같은 다른 값(`fd.summary`
+와 `mv.summary`, `c.charts.winName` 과 `pr.charts.winName`)에 속지 않으려면 범위를 봐야 한다 —
+이름으로만 세면 **살아 있는 걸 지운다**(실제로 `winName` 이 그렇게 걸릴 뻔했다).
+
+**지운 것**
+- `logic/i18n.js dfmt()` · `logic/util.js linePath()` — 어디서도 부르지 않는 함수 둘.
+- `logic/carousel.js rail()` 의 `key`·`trackId` — 조각은 트랙을 `data-rail` 로 찾는다.
+- **정밀분석 '가로 카드뉴스' 한 벌** — `mv.cards`·`mv.sections`·`mv.summary`·`mv.summaryGrid`·
+  `mv.cardIndex` 와 `paintTabs`·`syncTrack`·`goCard`(app-logic). 조각 어디에도
+  `data-mv-track`·`data-mv-tabs` 가 없어 **영원히 안 켜지는 코드**였다. 지금 정밀분석은
+  `mv.nav` + `mv.now`(고른 항목 하나)로 그린다.
+- **정밀비교 '도식 지도' 한 벌** — `openMap`·`toggleMap`·`mapLabel`·`mapBtn`·`cmpMap`·
+  `mapPins`·`mapNote`·`addZoneOptions`·`addZoneFull`·`onAddZone`. `buildMap` 은 남겼다
+  (정밀분석 `mv.map.pins` 가 쓴다).
+- **업종 칩의 '···(더 보기)' 묶음** — `hasMore`·`openMore`·`toggleMore`·`moreLabel`·
+  `moreStyle`·`moreList`·`chipNote`·`chips[].style`. `42-find.html` 은 `name`·`pick`·
+  `textStyle` 셋만 쓴다.
+- 낱개로 죽어 있던 값 — `findTitle`·`findSub`·`goDiag`·`bp`·`dsCardLg`·`dsSection`·
+  `prosCols`·`localeShort`·`customPrimaryLabel`·`fd.guOpen`·`fd.guNote`·`fd.indValue`·
+  `fd.indName`·`fd.scope`·`hub.banner`·`hub.primary.sub`·`hub.primary.peek`·
+  `hub.primary.hasPeek`·`rp.qsN`·`rp.qsStepNum`·`rp.sp.count`·`rp.sp.restCount`.
+- **사전 키 92개** — `t('...')` 로 아무도 찾지 않는 키(`nav.sim`·`cmp.*`·`sim.*`·`market.*`·
+  `common.*` 등, 지운 화면들이 남긴 것). ko·en·zh-CN 세 파일과 `KO_BASE()` 에서 같이 뺐다.
+  ※ 키를 문자열로 조립해 부르는 곳이 **한 군데도 없음**을 먼저 확인했다(전부 리터럴).
+- 쓰지 않는 CSS 변수 둘 — `--shadow-card`(인라인 그림자를 걷어낼 때 마지막 사용처가 사라졌다)·
+  `--color-surface-secondary`. `--chart-series-*` 는 **살아 있다**(`rank.js` 가 이름을
+  숫자로 조립해 쓴다) — 단순 검색으로는 죽은 것처럼 보이니 지우지 말 것.
+
+**되살리려면 git 이력에서 꺼내면 된다.**
+
+**어떻게 확인했나**
+- `npm test` 38개 · `check:html` · `check:data` 통과. `npm run sums` 로 체크섬 갱신.
+- **`renderVals()` 546조합(3언어 × 2폭 × 상권 7 × 화면 13)을 지우기 전후로 통째 비교** —
+  사라진 값은 위 목록뿐이고, **남은 값은 하나도 안 바뀌었다(변경 0 · 새로 생긴 값 0)**.
+  화면 조각을 안 건드렸으니 이게 곧 '화면이 그대로'라는 뜻이다.
+- 실제 브라우저 무작위 클릭 훑기(390·1280 × 3언어 × 80클릭): 오류 0 · NaN/undefined 0.
+
+**보고만 하고 안 고친 것**
+- [ ] 🟢 `logic/util.js ui()` 의 `search`·`mapPin` 아이콘에 원 좌표(`c:[x,y,r]`)가 들어 있는데
+      조각은 `<path d>` 만 그린다 — **돋보기 렌즈와 핀 가운데 점이 안 그려진다.**
+      죽은 코드가 아니라 '덜 그려지는' 쪽이라 지우지 않았다. 고치려면 조각에
+      `<circle>` 을 더하면 된다(디자인이 바뀌므로 먼저 여쭙는다).
+- [ ] 🟢 조각이 안 쓰는 계산값이 더 있다 — `mv.metrics`(폐업률·편차) · `mv.list` · `mv.detail` ·
+      `mv.headline` · `mv.honesty` · `t.reasons` · `t.factors` · `t.grade` · `t.score/scoreBar/scoreMed` ·
+      `t.pctText` · `t.medText` · `pr.cat/catLabel/when`. 지운 화면이 남긴 것인지, 곧 다시 붙일
+      값인지 판단이 필요해 남겼다. **붙일 생각이 없으면 지워도 화면은 안 바뀐다**(위와 같은 방법으로 확인함).
+- [ ] 🟡 `SHA256SUMS.json` 이 **배포 파일의 절반만** 담는다(52개). `frontend/logic/*.js` 14개 ·
+      `frontend/screens/*.html` 18개 · `report-i18n.js` · `favicon.ico` · `robots.txt` ·
+      `api/market.js` · `api/support.js` 가 빠져 있다. `scripts/make-sums.mjs` 가 **이미 목록에
+      있는 파일만** 다시 재기 때문이다. 목록이 반쪽이면 '누가 손댔다'를 못 잡으니
+      트리를 훑어 새 파일도 담도록 고칠지 판단할 것.
+- [ ] 🟢 `@phrases` 번역표(1,221개)에 안 쓰는 문구가 남아 있을 수 있다. 다만 이 표는
+      **자료에서 오는 이름**(상권·행정동 1,500여 개)도 같이 담아서, 소스에 없다고 지우면
+      실제로 쓰는 번역이 날아간다. 건드리지 않았다.
+
 - _새 항목은 발견 즉시 여기에 추가_

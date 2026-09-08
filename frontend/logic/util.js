@@ -180,19 +180,6 @@ globalThis.MysbizonParts.util = {
     return (I[name]||[]).map(p=>({d:p.d||'', cx:p.c?p.c[0]:null, cy:p.c?p.c[1]:null, r:p.c?p.c[2]:null, isCircle:!!p.c}));
   },
 
-  linePath(vals,w,h,pad){
-    if(!vals||vals.length<2) return {d:'',area:'',pts:[]};
-    const mn=Math.min(...vals), mx=Math.max(...vals);
-    const span=(mx-mn)||1;
-    const pts=vals.map((v,i)=>[
-      pad+ i*(w-pad*2)/(vals.length-1),
-      h-pad- ((v-mn)/span)*(h-pad*2)
-    ]);
-    const d='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L');
-    const area=d+'L'+pts[pts.length-1][0].toFixed(1)+' '+(h-pad)+'L'+pad+' '+(h-pad)+'Z';
-    return {d:d, area:area, pts:pts.map((p,i)=>({x:+p[0].toFixed(1),y:+p[1].toFixed(1),last:i===pts.length-1}))};
-  },
-
   // 시세분석 — 임대료·공실률·업종 매출·소비 구성. 전부 공개 통계.
   calc(z){
     const S=this.state, sz=this.size(), D=globalThis.MysbizonConst.BEP_DEFAULT;

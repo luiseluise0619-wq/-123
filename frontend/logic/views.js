@@ -709,37 +709,6 @@ globalThis.MysbizonParts.views = {
             +((cur.big&&cur.big!=='데이터 없음'&&cur.big!=='자료 없음')?'':'font-size:19px;color:var(--ink3)')
         };
       })(),
-      // 탭 — 스타일만 만든다. 내용은 card 하나가 그린다.
-      sections:(()=>{
-        const A=this._mvA||this.mvSections(sel,L);
-        const cur=S.mvTab||A[0].key;
-        return A.map(s=>({
-          tabLabel:s.title.split(' · ')[0],
-          toggle:()=>this.setState({mvTab:s.key}),
-          tabStyle:'flex:none;font-size:13.5px;font-weight:500;padding:10px 15px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:38px;display:inline-flex;align-items:center;transition:background .14s,color .14s;'
-            +(s.key===cur?'background:var(--ink);color:var(--bg);font-weight:600':'background:var(--surface);color:var(--ink2)')
-        }));
-      })(),
-      // 한눈 요약 — 7장의 핵심 숫자를 먼저 다 보여준다.
-      // 예전에는 카드가 가로 캐러셀에만 있어서 화면에 들어오면 1장만 보였고,
-      // 나머지 6장에 있는 값이 없는 것처럼 읽혔다. 요약을 먼저, 자세히는 아래에서.
-      summary:(()=>{
-        const A=this._mvA||this.mvSections(sel,L);
-        return A.map((s,i)=>{
-          const has=s.big&&s.big!=='데이터 없음';
-          return {
-            label:s.title.split(' · ')[0],
-            big:s.big||'데이터 없음',
-            bigStyle:'font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1.15;'
-              +'font-variant-numeric:tabular-nums;margin-top:6px;'
-              +(has?'color:var(--ink)':'color:var(--ink3);font-size:15px;font-weight:500'),
-            note:s.bigLabel||'',
-            go:()=>this.goCard(i,A[i].key),
-            style:'display:flex;flex-direction:column;padding:16px 18px;border-radius:14px;'
-              +'background:var(--surface);cursor:pointer;min-width:0;transition:background .14s'
-          };
-        });
-      })(),
       // 지도 옆 요약은 세 개만. 지도는 '어디인지'를 답하는 화면이다.
       summary3:(()=>{
         const A=this._mvA||this.mvSections(sel,L);
@@ -753,41 +722,6 @@ globalThis.MysbizonParts.views = {
               +(has?'':'font-size:17px;color:var(--ink3);font-weight:600')};
         });
       })(),
-      summaryGrid:'display:grid;gap:10px;margin-top:18px;grid-template-columns:'
-        +this.L('repeat(2,minmax(0,1fr))','repeat(3,minmax(0,1fr))','repeat(4,minmax(0,1fr))'),
-      // 가로 카드뉴스 — 5장을 트랙에 놓고 스냅으로 넘긴다.
-      // 반복 안에서는 sc-if가 접히지 않으므로 조건부를 display로 처리한다.
-      cards:(()=>{
-        const A=this._mvA;
-        const cur=S.mvTab||A[0].key;
-        const ci=Math.max(A.findIndex(s=>s.key===cur),0);
-        this._cardKeys=A.map(s=>s.key);
-        this._cardIndex=ci;
-        return A.map((s,i)=>({
-          ...s,
-          tabLabel:s.title.split(' · ')[0],
-          // 활성 표시는 goCard·스크롤 핸들러가 직접 칠한다. 렌더 값은 한 박자 늦다.
-          tabStyle:'flex:none;font-size:13.5px;padding:10px 15px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:38px;display:inline-flex;align-items:center;transition:background .14s,color .14s;background:var(--surface);color:var(--ink2);font-weight:500',
-          toggle:()=>this.goCard(i,A[i].key),
-          step:(i+1)+' / '+A.length,
-          trend:s.trend||{label:'',delta:'',deltaStyle:'display:none',bars:[],full:''},
-          trendStyle:s.trend? 'margin-top:22px;padding:16px 18px;border-radius:14px;background:var(--surface)' : 'display:none',
-          barsStyle:(s.bars||[]).length? 'display:flex;flex-direction:column;gap:9px;margin-top:22px;max-width:480px' : 'display:none',
-          // 세로 flex 로 둔다 — 아래 점·화살표 줄이 margin-top:auto 로 카드 바닥에 붙게 하려고.
-          // 트랙은 align-items 기본값(stretch)이라 카드 높이는 가장 긴 카드에 맞춰 같아진다.
-          // 그래야 옆으로 넘길 때 화살표가 위아래로 튀지 않는다.
-          cardStyle:'flex:0 0 100%;scroll-snap-align:start;min-width:0;padding:24px 0 8px;'
-            +'display:flex;flex-direction:column',
-          // 경쟁 카드에서만 배치도를 보여준다
-          prevStyle:i>0? 'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap' : 'display:none',
-          nextStyle:i<A.length-1? 'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap' : 'display:none',
-          nextLabel:i<A.length-1? (A[i+1].title.split(' · ')[0]+' →') : '',
-          prev:()=>this.goCard(Math.max(i-1,0),A[Math.max(i-1,0)].key),
-          next:()=>this.goCard(Math.min(i+1,A.length-1),A[Math.min(i+1,A.length-1)].key),
-          dots:A.map((_,j)=>({style:'width:'+(j===i?'18px':'6px')+';height:6px;border-radius:3px;transition:width .2s,background .2s;background:'+(j===i?'var(--accent)':'var(--line-strong)')}))
-        }));
-      })(),
-      cardIndex:this._cardIndex||0,
       // 세부 지표 — 서울시가 쓰는 공식을 그대로 계산한다
       metrics:(()=>{
         const ST=S.sti&&S.sti.ind;
@@ -960,11 +894,6 @@ globalThis.MysbizonParts.views = {
         presets:[], presetRail:this.rail('cmpPre',{per:5}),
         whyOpen:false, whyLabel:'', toggleWhy:()=>{}, why:{label:'',rows:[],how:''},
         bestName:'', bestSlotStyle:'', bestRanks:[], order:[]};
-      out.openMap=false; out.mapPins=[]; out.mapNote='';
-      out.cmpMap={ready:false,gus:[],pins:[],vb:'0 0 100 100',stroke:'0.5',legend:[],legendNote:''};
-      out.addZoneOptions=[{id:'',label:'동네 더하기'}]; out.addZoneFull=false; out.onAddZone=()=>{};
-      out.mapLabel='지도 보기'; out.mapBtn='display:none';
-      out.toggleMap=()=>{};
       return out;
     }
     // ── 종합순위 ────────────────────────────────────────────────
@@ -1162,32 +1091,6 @@ globalThis.MysbizonParts.views = {
       ],
       honesty:''
     };
-    // 지도 — 비교 중인 자리만 도식으로 놓는다
-    const MP=[[28,26],[64,40],[40,72],[76,66]];
-    out.openMap=!!S.openMap;
-    out.toggleMap=()=>this.setState({openMap:!S.openMap});
-    out.mapLabel=S.openMap?'지도 닫기':'지도 보기';
-    out.mapBtn='flex:none;font-size:14.5px;padding:11px 20px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .16s;'+(S.openMap?'background:var(--ink);color:var(--bg)':'background:var(--surface);color:var(--ink)');
-    // 비교분석도 실좌표 지도를 쓴다
-    out.cmpMap=this.buildMap(picks, sel.id);
-    // 비교에 동네를 바로 더 담는 드롭다운
-    out.addZoneOptions=[{id:'',label:'동네 더하기'}].concat(
-      L.filter(o=>PICKS.indexOf(o.id)<0).slice(0,120)
-        .map(o=>({id:o.id,label:this.t('cmp.addOpt',{name:this.zoneLabelOf(o.name), score:Math.round(o.score)})})));
-    out.addZoneFull=PICKS.length>=5;
-    out.onAddZone=e=>{ const id=e.target.value; if(!id) return;
-      if(PICKS.length>=5) return;
-      this.setState({picks:[...PICKS,id]}); };
-    out.mapPins=picks.map((o,i)=>{
-      const [x,y]=MP[i]||[50,50], on=o.id===sel.id, flip=x>50;
-      return {
-        name:this.zoneLabelOf(o.name), pick:()=>this.setState({sel:o.id}),
-        wrap:'position:absolute;left:'+x+'%;top:'+y+'%;transform:translate(-50%,-50%);display:flex;flex-direction:'+(flip?'row-reverse':'row')+';align-items:center;gap:8px;cursor:pointer;z-index:'+(on?3:2)+';max-width:'+(flip?x:100-x)+'%',
-        dot:'flex:none;width:'+(on?15:11)+'px;height:'+(on?15:11)+'px;border-radius:50%;background:'+(on?'var(--accent)':'var(--ink3)')+';border:2.5px solid var(--bg);box-shadow:0 1px 4px rgba(0,0,0,.18);transition:all .16s',
-        label:'min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 10px;border-radius:999px;background:var(--bg);color:'+(on?'var(--ink)':'var(--ink2)')+';font-weight:'+(on?'600':'400')+';box-shadow:0 1px 4px rgba(0,0,0,.12)'
-      };
-    });
-    out.mapNote='비교 중인 '+picks.length+'곳을 도식으로 놓았어요. 핀을 누르면 그 자리가 골라지고 본전 계산도 다시 해요. 핀 위치는 실제 좌표가 아니고, 실제 지도는 카카오 좌표로 그려요.';
     // 색은 '어느 상권인지'만 뜻한다 — 좋다/나쁘다는 배지와 문장으로만 말한다
     out.c.honesty=this.t('cmp.honesty',{q:this.qtr(r.quarter), ind:this.indName(S.ind)});
     return out;

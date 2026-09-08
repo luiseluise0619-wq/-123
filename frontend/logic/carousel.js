@@ -22,8 +22,6 @@ globalThis.MysbizonParts.carousel = {
       per === 1 ? '100%' : 'calc((100% - 16px)/2)',
       per === 1 ? '100%' : 'calc((100% - ' + (per - 1) * 20 + 'px)/' + per + ')');
     return {
-      key,
-      trackId: 'rail-' + key,
       trackStyle: 'display:flex;gap:' + this.L('12px', '16px', '20px') + ';overflow-x:auto;'
         + 'scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:4px 2px 10px;'
         + '-webkit-overflow-scrolling:touch;scrollbar-width:none;cursor:grab',

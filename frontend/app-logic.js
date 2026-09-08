@@ -54,67 +54,6 @@ class Component extends DCLogic {
     requestAnimationFrame(()=>{ el.scrollTop=el.scrollHeight; });
   }
 
-  // 탭을 누르면 트랙을 그 카드로 옮긴다. 손가락으로 밀면 탭이 따라온다.
-  // 알약 칠하기를 한 곳에서만 한다
-  paintTabs(i){
-    const tabs=document.querySelector('[data-mv-tabs]');
-    if(!tabs) return;
-    [...tabs.children].forEach((el,j)=>{
-      const on=j===i;
-      // 렌더가 style 문자열을 다시 쓰므로 important로 못 박는다
-      const dark=document.documentElement.getAttribute('data-theme')==='dark';
-      el.style.setProperty('background-color', on?(dark?'#F5F5F7':'#191F28'):(dark?'#1C2027':'#F5F5F7'), 'important');
-      el.style.setProperty('color', on?(dark?'#111418':'#FFFFFF'):(dark?'#9CA3AF':'#6B7280'), 'important');
-      el.style.setProperty('font-weight', on?'600':'500', 'important');
-    });
-  }
-
-  syncTrack(){
-    const t=document.querySelector('[data-mv-track]');
-    if(!t) return;
-    // 렌더가 인라인 스타일을 되돌리니 렌더 직후 스크롤 위치대로 다시 칠한다.
-    // 매 프레임 도는 루프는 화면 캡처를 깨뜨려 쓰지 않는다.
-    this.paintTabs(Math.round(t.scrollLeft/(t.clientWidth+24)));
-    if(!t.__bound){
-      t.__bound=true;
-      // 알약이 손가락을 바로 따라오게 한다 — 멈출 때까지 기다리지 않는다
-      t.addEventListener('scroll',()=>{
-        if(this._auto) return;
-        this._userScroll=true;
-        if(!this._raf) this._raf=requestAnimationFrame(()=>{
-          this._raf=null;
-          const k=Math.round(t.scrollLeft/(t.clientWidth+24));
-          const keys=this._cardKeys||[];
-          this.paintTabs(k);
-          if(keys[k] && keys[k]!==(this.state.mvTab||keys[0])) this.setState({mvTab:keys[k]});
-        });
-        clearTimeout(this._sc);
-        this._sc=setTimeout(()=>{ this._userScroll=false; },160);
-      },{passive:true});
-    }
-  }
-
-  // 카드로 옮긴다. 렌더 값이 늦게 계산되니 클릭 시점에 직접 움직인다.
-  goCard(i,key){
-    const t=document.querySelector('[data-mv-track]');
-    if(t){
-      this._auto=true;
-      clearTimeout(this._autoT);
-      this._autoT=setTimeout(()=>{ this._auto=false; },600);
-      // scrollTo({behavior:'smooth'})는 mandatory 스냅에 취소된다.
-      // scrollLeft 대입은 CSS scroll-behavior가 부드럽게 처리한다.
-      t.scrollLeft=i*(t.clientWidth+24);
-    }
-    const tabs=document.querySelector('[data-mv-tabs]');
-    if(tabs&&tabs.children[i]){
-      const p=tabs.children[i];
-      const to=Math.max(0,Math.min(p.offsetLeft-(tabs.clientWidth-p.offsetWidth)/2, tabs.scrollWidth-tabs.clientWidth));
-      if(Math.abs(tabs.scrollLeft-to)>4) tabs.scrollLeft=to;
-    }
-    this.paintTabs(i);
-    this.setState({mvTab:key});
-  }
-
   componentDidUpdate(){
     this.saveSurvey();
     if(this._screen!==this.state.screen){
@@ -140,7 +79,7 @@ class Component extends DCLogic {
       });
     }
     if(this.state.screen==='report') this.loadSupport();
-    this.placePanel();this.syncTrack();
+    this.placePanel();
     // 차트와 가로 슬라이드는 DOM 이 그려진 뒤에 붙인다.
     // DC 가 다시 그려도 같은 canvas 면 값만 갱신한다(charts.js 참조).
     this.paintCharts(); this.bindRails();
@@ -913,9 +852,7 @@ class Component extends DCLogic {
                   const v=shown(st.val, st.isZone);
                   return st.k==='ind'? (st.val? this.indName(st.val) : '') : v;
                 }).filter(v=>v&&v!=='건너뜀'&&v!=='없음').map(v=>this.tr(v)).join(' · '),
-              editAgain: ()=>this.setState({rp_step:0, rp_q:''}),
-              // 리포트가 몇 칸까지 열렸는지 — rv 가 이 값으로 한 칸씩 연다
-              qsN:N, qsStepNum:step
+              editAgain: ()=>this.setState({rp_step:0, rp_q:''})
             };
           })(),
           email:email,
@@ -1038,7 +975,6 @@ class Component extends DCLogic {
                 ? '지원사업 정보를 준비 중이에요. 준비되면 이 자리에 신청할 수 있는 공고가 떠요.'
                 : '지원사업 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
               retry:()=>{this._spLoading=false;this.setState({sp:null});},
-              count:list.length,
               countLabel:list.length+'개',
               nearest: nearest==null? '—' : (nearest===0?'오늘':'D-'+nearest),
               hasNearest: nearest!=null,
@@ -1049,7 +985,6 @@ class Component extends DCLogic {
               hasItems:list.length>0,
               empty:!!d&&!!d.ok&&all.length===0,
               noMatch:!!d&&!!d.ok&&all.length>0&&list.length===0,
-              restCount:rest.length,
               hasRest:rest.length>0,
               rest:rest.slice(0,20).map(card),
               restLabel:'조건에 걸리지 않은 공고 '+rest.length+'개도 보기',
@@ -1255,13 +1190,13 @@ class Component extends DCLogic {
           // 나머지는 아래 한 줄짜리 목록으로 — 넷을 나란히 두면 무엇부터 눌러야 할지 모른다.
           primary:(()=>{
             const it=(g?g.items:[]).find(([kk])=>kk===next);
-            if(!it) return {has:false, label:'', sub:'', peek:'', hasPeek:false, go:()=>{}};
+            if(!it) return {has:false, label:'', go:()=>{}};
             const c=CARD[next]||{d:'',cta:'열기'};
             // 상권을 아직 안 골랐으면 '지도 열기'가 아니라 '상권 고르기'다 —
             // 지도 자체는 아직 준비 중이고, 이 화면의 목적은 목록에서 한 곳을 고르는 것이다.
             const first = (next==='map' && !selNm);
             const label = first ? '상권 고르기' : c.cta;
-            return {has:true, label:label, sub:c.d,
+            return {has:true, label:label,
                     // 결과 한 줄이 있으면 그걸 쓰고, 없으면 '무엇을 하는 곳인지'로 내려간다.
                     peekText: peek || (first ? '한 곳을 고르면 그 자리를 뜯어봐요' : c.d),
                     peekStyle: peek ? 'font-weight:600;color:var(--accent-text)' : 'color:var(--ink2)',
@@ -1269,8 +1204,6 @@ class Component extends DCLogic {
                       +'gap:8px;'+this.L('width:100%','','')+';max-width:100%',
                     go:()=>this.setState({screen:next,menu:null})};
           })(),
-          // 배너 — 회색 카드를 걷어내고 글자만 둔다. 모바일에서 185px 을 먹고 있었다.
-          banner:'padding:0',
           // 나머지는 한 줄짜리 목록. 카드 셋을 나란히 두면 무게가 같아져 강조가 사라진다.
           rest:(g?g.items:[]).filter(([key])=>key!==next).map(([key,label])=>{
             const c=CARD[key]||{d:''};
@@ -1289,7 +1222,7 @@ class Component extends DCLogic {
           })
         };
       })(),
-      goFind:go('find'), goDiag:go('diag'), goCmp:go('sim'),
+      goFind:go('find'), goCmp:go('sim'),
       // 후보지 화면은 아무것도 안 고른 상태에서 1위 상권을 보여준다(S.sel 은 null).
       // 그 상태에서 '이 상권 자세히 보기'를 누르면 화면에 보이던 상권이 그대로
       // 넘어가야 한다 — 예전에는 S.sel 이 null 이라 자치구가 '서울 전체'로 떨어지고,
@@ -1307,32 +1240,12 @@ class Component extends DCLogic {
       openReport:()=>this.setState({screen:'report',rp_sent:false}),
       // 헤더 오른쪽 — 언어 칩 + 설정(⚙). '어둡게' 하나만 있던 자리를 설정으로 키웠다(§44)
       ...this.settingsView(),
-      q:S.q, onQ:e=>this.setState({q:e.target.value,openMore:false}),
-      chips:names.slice(0,5).map(n=>({name:this.indName(n), pick:()=>this.setState({ind:n,sel:null,picks:null,openWhy:false,openMore:false,fromRegion:false}),
-        style:chipBase+'flex:none;'+(n===S.ind?'background:var(--ink);color:var(--bg);font-weight:500':'background:var(--surface);color:var(--ink)'),
+      q:S.q, onQ:e=>this.setState({q:e.target.value}),
+      // 화면 조각(42-find.html)은 name·pick·textStyle 만 쓴다.
+      chips:names.slice(0,5).map(n=>({name:this.indName(n), pick:()=>this.setState({ind:n,sel:null,picks:null,openWhy:false,fromRegion:false}),
         // 둥근 칩 대신 글자 버튼(§15) — 고른 것만 진하게
         textStyle:'flex:none;font-size:14.5px;cursor:pointer;white-space:nowrap;transition:color .14s;'
           +(n===S.ind?'color:var(--ink);font-weight:700':'color:var(--ink2)')})),
-      hasMore:names.length>5,
-      openMore:!!S.openMore,
-      toggleMore:()=>this.setState({openMore:!S.openMore}),
-      moreLabel:S.openMore?'닫기':(names.slice(0,5).indexOf(S.ind)<0&&S.ind?this.indName(S.ind):'···'),
-      moreStyle:chipBase+'flex:none;letter-spacing:0.04em;'
-        +((names.slice(0,5).indexOf(S.ind)<0&&S.ind&&!S.openMore)
-          ? 'background:var(--ink);color:var(--bg);font-weight:500'
-          : 'background:var(--surface);color:'+(S.openMore?'var(--ink)':'var(--ink2)')),
-      moreList:names.slice(5).map(n=>({name:this.indName(n),
-        pick:()=>this.setState({ind:n,sel:null,picks:null,openWhy:false,openMore:false,fromRegion:false}),
-        style:'display:block;padding:12px 14px;border-radius:11px;cursor:pointer;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .12s;'+(n===S.ind?'background:var(--accent-3);font-weight:600':'')})),
-      chipNote: S.err? S.err : (!S.zi? '장사 목록을 불러오는 중이에요…'
-        : (q
-          ? (names.length
-            ? this.t('search.indHits',{q:q, n:names.length})
-              +(names.length>5? this.t('search.indMore',{n:names.length-5}) : '')
-            : this.tn('search.noInd',{q:q}))
-          : (S.fromRegion
-            ? '이 장사는 '+(S.homeZone||'고른 동네')+'에 데이터가 있어서 골랐어요'+(names.length>5?' · ···를 누르면 더 보여요':'')
-            : '많이 찾는 장사예요'+(names.length>5?' · ···를 누르면 더 보여요':'')))),
       // 데이터와 무관한 값 — 로딩 중과 실패 상태에서도 보여야 한다
 
       // ── 후보지 3단계: 지역 → 구 → 업종 ─────────────────────────────
@@ -1386,7 +1299,6 @@ class Component extends DCLogic {
           sidoWaitText: this.t('sido.waitFind',{region:this.placeName(sido)}),
           backToSeoulFind:()=>this.setState({sido:'서울특별시', findGu:''}),
           // 구는 25개라 접어 둔다. 편 상태에서는 스크롤이 생기게 높이를 묶는다.
-          guOpen:!!S.findGuOpen,
           guToggle:()=>this.setState({findGuOpen:!S.findGuOpen}),
           guToggleLabel:this.tr(S.findGuOpen?'접기':'구 전체 보기')+' ('+gus.length+')',
           guBoxStyle:'margin-top:12px;display:grid;gap:8px;'
@@ -1408,11 +1320,7 @@ class Component extends DCLogic {
               +'overflow:hidden;text-overflow:ellipsis;transition:background .14s,color .14s;'
               +(cur===o.v?'background:var(--accent-3);color:var(--accent-hover);font-weight:700'
                          :'background:var(--surface);color:var(--ink2)')})),
-          guNote: cur? this.t('find.guCount',{gu:this.placeName(cur), n:(guCount[cur]||0)}) : '서울 전체에서 찾아요',
           hasGu: gus.length>0,
-          indValue:S.ind,
-          indName:this.indName(S.ind),
-          scope: cur || '서울 전체',
           // 고르는 칸은 접어 둔다(§35) — 화면의 주인공은 결과다.
           // 닫혀 있을 때는 지금 조건을 한 줄로만 보여준다.
           pickOpen: !!S.findPickOpen,
@@ -1422,15 +1330,6 @@ class Component extends DCLogic {
         };
       })(),
 
-      // 지역 화면에서 업종을 이미 골라 왔으면 질문이 아니라 확인으로 말한다
-      findTitle: S.fromRegion
-        ? this.indName(S.ind)+' 기준으로 보고 있어요'
-        : '어떤 장사를 하실 건가요?',
-
-      findSub: S.fromRegion
-        ? '바꾸려면 아래에서 다른 업종을 고르세요.'
-        : '손님 많고 경쟁 적은 자리를 찾아드려요.',
-      bp:this.bp(),
       icoX:this.ui('x'), icoChevron:this.ui('chevronRight'), icoBack:this.ui('arrowLeft'),
       headerStyle:'position:sticky;top:0;z-index:50;height:'+this.L('56px','60px','64px')+';display:flex;align-items:center;'
         +'background:var(--bg-blur);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);'
@@ -1447,12 +1346,10 @@ class Component extends DCLogic {
       mapCols:this.L('1fr','1fr','minmax(0,1.35fr) minmax(300px,1fr)'),
       dashCols:this.L('1fr','1fr','minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr)'),
       navCols:this.L('1fr','200px minmax(0,1fr)','200px minmax(0,1fr)'),
-      dsCard:this.ds('card'), dsCardLg:this.ds('cardLg'), dsCardHi:this.ds('cardHi'),
+      dsCard:this.ds('card'), dsCardHi:this.ds('cardHi'),
       dsNum:this.ds('num'), dsNumSm:this.ds('numSm'),
       dsBody:this.ds('body'), dsSub:this.ds('sub'),
       dsCta:this.ds('cta'), dsGhost:this.ds('ctaGhost'), dsInput:this.ds('input'),
-      // 섹션 간격 72~96 · 카드 간격 16~20
-      dsSection:'padding:'+this.L('48px','64px','80px')+' 0 0',
       dsGrid3:'display:grid;gap:'+this.L('14px','16px','20px')+';grid-template-columns:repeat(auto-fit,minmax('+this.L('100%','260px','300px')+',1fr))',
       dsGrid4:'display:grid;gap:'+this.L('12px','16px','18px')+';grid-template-columns:repeat(auto-fit,minmax('+this.L('150px','200px','220px')+',1fr))',
       dataError:S.err, retryData:()=>location.reload(),
@@ -1482,7 +1379,6 @@ class Component extends DCLogic {
       // CTA 체계 — 주 행동 하나만 강조한다
       ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
       ctaText:'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap',
-      prosCols:this.L('1fr','1fr 1fr','1fr 1fr'),
       openWhy:S.openWhy, whyLabel:S.openWhy?'계산 방식 접기':'점수 계산 방식 보기',
       toggleWhy:()=>this.setState({openWhy:!S.openWhy}),
       openCond:S.open.cond, openMoney:S.open.money, openDay:S.open.day, openRisk:S.open.risk,
@@ -1517,10 +1413,6 @@ class Component extends DCLogic {
         presets:[], presetRail:this.rail('cmpPre',{per:5}),
         whyOpen:false, whyLabel:'', toggleWhy:()=>{}, why:{label:'',rows:[],how:''},
         bestName:'', bestSlotStyle:'', bestRanks:[], order:[]};
-      out.openMap=false; out.mapPins=[]; out.mapNote='';
-      out.cmpMap={ready:false,gus:[],pins:[],vb:'0 0 100 100',stroke:'0.5',legend:[],legendNote:''};
-      out.addZoneOptions=[{id:'',label:'동네 더하기'}]; out.addZoneFull=false; out.onAddZone=()=>{};
-      out.mapLabel='지도 보기'; out.mapBtn='display:none'; out.toggleMap=()=>{};
       out.area=this.size().area; out.onArea=()=>{}; out.areaLabel='—'; out.areaWord='';
       out.linked=[]; out.linkNote=''; out.moneyDots=[]; out.dotNote='';
       out.rg=this.region();
