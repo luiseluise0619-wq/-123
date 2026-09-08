@@ -29,6 +29,15 @@ globalThis.MysbizonParts.i18n = {
 
   locale(){ return this.state.locale || 'ko'; },
 
+  // <html lang> 을 지금 언어로 맞춘다.
+  //   왜: 스크린리더는 이 값으로 발음 규칙을 고른다. 영어 화면인데 lang="ko" 면
+  //   영어 문장을 한국어 발음으로 읽는다. 브라우저 번역·글꼴 선택도 이 값을 본다.
+  //   인쇄본(report-i18n.js)은 이미 이렇게 하고 있었는데 앱만 빠져 있었다.
+  setHtmlLang(k){
+    if(typeof document==='undefined') return;
+    try{ document.documentElement.setAttribute('lang', k==='zh-CN'?'zh-CN':(k==='en'?'en':'ko')); }catch(e){}
+  },
+
   loadLocales(){
     // ko 는 아래에 심어 두어 첫 화면이 키로 보이지 않게 한다.
     this._dict = this._dict || {ko:this.KO_BASE()};
@@ -39,6 +48,7 @@ globalThis.MysbizonParts.i18n = {
     const want = (saved && this.LOCALES().some(l=>l.k===saved)) ? saved
                : (this.locale()!=='ko' ? this.locale() : this.guessLocale());
     if(want!==this.locale()) this.setState({locale:want});
+    this.setHtmlLang(want);
     // **쓸 사전만 받는다.** 전에는 en·zh 를 늘 같이 받아, 한국어로 보는 사람도
     // gzip 60KB(전체 전송량의 9%)를 쓰지도 않을 번역에 썼다.
     this.fetchLocale(want);
@@ -86,6 +96,7 @@ globalThis.MysbizonParts.i18n = {
 
   setLocale(k){
     this._trCache={};
+    this.setHtmlLang(k);
     // 아직 안 받은 사전이면 받아 온다(첫 화면에서는 쓸 것만 받는다).
     this.fetchLocale(k);
     this.setState({locale:k});

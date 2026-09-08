@@ -4,7 +4,11 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     PROJECT_NAME: str = "AI Local Intelligence"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = "ai-local-intelligence-secret-key-2026"
+    # 🔴 시크릿은 코드에 두지 않는다(CLAUDE.md §2). 환경변수에서만 읽는다.
+    # 지금은 어디서도 쓰지 않지만(인증 기능이 아직 없다), 값이 박혀 있으면
+    # 나중에 JWT 서명에 그대로 쓰이고 저장소에 공개된 키로 서명하게 된다.
+    # 인증을 붙이는 시점에 "비어 있으면 뜨지 않게" 하는 검사를 같이 넣을 것.
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
     DEMO_MODE: bool = True
 
     # 데이터 출처 플래그.

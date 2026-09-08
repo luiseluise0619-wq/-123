@@ -142,3 +142,13 @@ test('모양이 다른 자료 파일을 걸러 낸다',()=>{
   for(const bad of [{},{ind:{}},{quarters:[]},{ind:{},quarters:'x'}]) assert.equal(c.dataShapeOk('hist',bad),false);
   assert.equal(c.dataShapeOk('hist',{ind:{'커피-음료':{}},quarters:['20261']}),true);
 });
+test('화면 언어를 바꾸면 <html lang> 도 같이 바뀐다',()=>{
+  const {instance:c,context}=component();
+  // 스크린리더는 lang 으로 발음 규칙을 고른다 — 영어 화면인데 ko 면 영어를 한국어로 읽는다.
+  const seen=[];
+  context.document.documentElement.setAttribute=(k,v)=>seen.push(k+'='+v);
+  for(const [pick,want] of [['ko','ko'],['en','en'],['zh-CN','zh-CN'],['없는값','ko']]){
+    seen.length=0; c.setHtmlLang(pick);
+    assert.deepEqual(seen,['lang='+want],pick);
+  }
+});

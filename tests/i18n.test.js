@@ -141,6 +141,9 @@ function sweep(locale) {
   const picks = [
     c => { },
     c => { c.state.sel = ids[0]; c.state.zoneId = ids[0]; c.state.picks = ids.slice(0, 3); },
+    // 담은 곳이 딱 1개일 때만 나오는 안내가 있다 — 3개만 세워 보면 그 문구를 못 본다
+    c => { c.state.picks = ids.slice(0, 1); c.state.sel = ids[0]; },
+    c => { c.state.picks = ids.slice(0, 2); c.state.sel = ids[1]; },
     c => { c.state.sel = ids[5]; c.state.zoneId = ids[5]; c.state.picks = ids.slice(2, 5); c.state.ind = '한식음식점'; },
     ...Array.from({ length: RP_STEPS }, (_, n) => surveyAt(n)),
     // 매출 시나리오(적게·잘될 때)는 눌러야 문구가 바뀐다 — 기본값만 보면 두 문장을 못 본다

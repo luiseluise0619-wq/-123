@@ -246,7 +246,11 @@ DB index · query optimization · caching · pagination · rate limit · backgro
 ### 코드 점검에서 나온 항목 (2026-09-04)
 
 **보안 — 확인·조치 필요**
-- [ ] 🔴 `frontend/building.html` 지도 SDK 호출에 **카카오 JavaScript 키가 소스에 박혀 있다**.
+- [x] ✅ (2026-09-08 확인) ~~`frontend/building.html` 에 카카오 JavaScript 키가 박혀 있다~~ —
+      **그 파일은 이미 지워졌고, 저장소 어디에도 카카오 키가 없다**(전수 grep 확인).
+      지도를 붙일 때는 아래 '지도 — 카카오지도 넣을 자리' 의 ①번을 따를 것.
+      아래 옛 설명은 기록으로 남긴다:
+- [ ] 🔴 ~~`frontend/building.html` 지도 SDK 호출에 **카카오 JavaScript 키가 소스에 박혀 있다**.~~
       JS 키는 원래 브라우저에 노출되는 종류라 즉시 위험은 아니지만, 저장소에 들어간 이상
       ① 카카오 developers 에서 **플랫폼 도메인 등록**이 되어 있는지 확인(안 돼 있으면 남이 우리 한도를 쓴다)
       ② 회사 이전 시 새 키 발급 + 이 키 폐기(§2 rotation 규칙).
@@ -335,7 +339,11 @@ DB index · query optimization · caching · pagination · rate limit · backgro
       후자는 기준이 관대해 "관성을 이겼다"가 실제보다 많이 나올 수 있다.
       → 통합하면 index.html 에 뜨는 예측 개수가 줄어들 수 있어(화면 변화) 코드는 안 건드렸다.
       둘을 build_signals 기준으로 합칠지 판단할 것.
-- [ ] 🟡 `.github/workflows/refresh-dashboard.yml` 의 **모든 수집 단계가 `continue-on-error: true`** 라
+- [x] ✅ (2026-09-08 확인) **이미 해결돼 있다.** 워크플로 마지막에 `report_freshness.py` 가 있고,
+      그 단계만 `continue-on-error` 가 없다. 파일을 직접 읽어 '무엇이 갱신됐고 무엇이 비었는지'를
+      표로 남기고, **수치 파일이 전부 죽었을 때만** exit 1 로 빨간불을 만든다.
+      돌려 봄: 수치 17/17 정상 · 보존 4 정상 · 승인 대기 2. 아래 옛 설명은 기록으로 남긴다:
+- [ ] 🟡 ~~`.github/workflows/refresh-dashboard.yml` 의 **모든 수집 단계가 `continue-on-error: true`** 라~~
       전부 실패해도 워크플로는 초록색으로 끝난다. "변경 없음 — 커밋 생략"과
       "전부 실패해서 만든 게 없음"이 로그상 구분되지 않는다.
       → 수집이 조용히 멈춰도 몇 주 동안 아무도 모를 수 있다. 마지막에 "무엇이 갱신됐고

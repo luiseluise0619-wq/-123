@@ -1290,6 +1290,7 @@
     "중앙값보다 {0}% 낮아요": "{0}% below the median",
     "중앙값보다 {0}곳 많아요": "{0} more than the median",
     "중앙값보다 {0}곳 적어요": "{0} fewer than the median",
+    "지금 1곳 담았어요. 한 곳만 더 담으면 비교가 시작돼요.": "You've saved 1 place. Save one more and the comparison starts.",
     "지금 어느 단계에 계세요?": "Where are you right now?",
     "지금 장사 환경은 어떤가요?": "How is the business climate right now?",
     "지금 조건에서는 본전에 못 미쳐요.": "Below break-even.",
