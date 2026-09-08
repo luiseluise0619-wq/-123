@@ -51,8 +51,8 @@
 | 설정 | `render.yaml` · `deploy/mysbizon.service` · `deploy/nginx.conf.example` | `frontend/vercel.json` |
 | 정적 파일 | `server/static.js` 가 서빙 | Vercel 이 서빙 |
 | `/api/*` | `server/app.js` 허용 목록(`report`·`config`·`support`) | 루트 `api/*.js` 가 함수로 뜬다 |
-| 보안 헤더·CSP | ✅ `server/security.js` 가 붙인다 | ⚠️ **`vercel.json` 에 `headers` 를 넣어야 같아진다** |
-| 요청 제한(rate limit) | ✅ 서버 안에 있다 | ❌ 없다 — 서버리스는 메모리를 공유하지 않는다 |
+| 보안 헤더·CSP | ✅ `server/security.js` 가 붙인다 | ✅ `vercel.json` 에 같은 헤더를 넣어 뒀다(2.2) |
+| 요청 제한(rate limit) | ✅ 서버 안에 있다 | ⚠️ **없다** — 서버리스는 인스턴스끼리 메모리를 공유하지 않아 이 방식이 안 통한다. 이 갈래로 가면 앞단(Vercel WAF·Cloudflare)에서 걸어야 한다 |
 
 | # | 항목 | 확인 방법 | 결과 |
 | --- | --- | --- | --- |
