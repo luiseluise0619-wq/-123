@@ -81,9 +81,10 @@
     --color-positive:#1F7A4D;
     --color-warning:#A8620F;
     --color-negative:#D93025;
-    /* 빨간 면 위 글자. 밝은 화면의 #D93025 는 흰 글자로 4.78:1 이지만,
-       어두운 화면의 #FF6B60 은 흰 글자로 2.79:1 밖에 안 나온다 — 그쪽은 먹색으로 바꾼다. */
-    --color-on-negative:#FFFFFF;
+    /* 의미 색 면 위에 얹는 글자. 밝은 화면에서는 흰 글자가 넉넉하지만
+       (초록 5.3:1 · 주황 4.8:1 · 빨강 4.8:1), 어두운 화면의 같은 색들은
+       밝아져서 흰 글자가 2.9~3.3:1 로 떨어진다 — 그쪽은 먹색으로 바꾼다. */
+    --color-on-positive:#FFFFFF; --color-on-warning:#FFFFFF; --color-on-negative:#FFFFFF;
     /* 비교 대상 색 — Okabe-Ito 팔레트. 색각 이상에서도 서로 갈린다.
        한 상권은 모든 차트에서 같은 색을 쓴다(logic/rank.js 의 colorSlot). */
     --chart-series-1:#0072B2;
@@ -100,7 +101,7 @@
     --accent-2:var(--color-primary-mid); --accent-3:var(--color-primary-soft);
     --selection:var(--color-primary-soft);
     --good:var(--color-positive); --warn:var(--color-warning); --err:var(--color-negative);
-    --on-err:var(--color-on-negative);
+    --on-good:var(--color-on-positive); --on-warn:var(--color-on-warning); --on-err:var(--color-on-negative);
     /* 카드 그림자 — 회색 배경 대신 흰 카드 + 얇은 테두리 + 아주 옅은 그림자 */
     --shadow-card:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.03);
     --shadow-pop:0 12px 32px -12px rgba(16,24,40,.18);
@@ -125,7 +126,8 @@
     --color-border-strong:#3A3A3E;
     --color-positive:#4E9E6A;
     --color-warning:#C88A3A;
-    --color-negative:#FF6B60; --color-on-negative:#1A0806;
+    --color-negative:#FF6B60;
+    --color-on-positive:#04180D; --color-on-warning:#1C1204; --color-on-negative:#1A0806;
     /* 어두운 배경에서는 같은 팔레트가 가라앉는다 — 밝기만 올린 짝을 쓴다 */
     --chart-series-1:#56B4E9;
     --chart-series-2:#F0B849;

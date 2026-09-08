@@ -921,7 +921,7 @@ class Component extends DCLogic {
           sendStyle:'width:100%;font-size:15.5px;font-weight:600;border:none;border-radius:14px;height:50px;'
             +'transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1);'
             +((ok&&!sent)?'cursor:pointer;background:var(--accent);color:var(--on-accent)'
-              :(sent?'cursor:default;background:var(--good);color:#FFFFFF'
+              :(sent?'cursor:default;background:var(--good);color:var(--on-good)'
                 :'cursor:pointer;background:var(--accent-3);color:var(--accent-hover)')),
           // ── 정부·지자체 지원사업 ────────────────────────────────────────
           // 위 '내 창업 조건'의 답으로 해당할 수 있는 공고를 앞으로 끌어온다.

@@ -376,13 +376,16 @@ globalThis.MysbizonParts.views = {
       const med=sorted[Math.floor(sorted.length/2)];
       const ratio=me.v/med;
       const mx=Math.max(me.v,med)*1.35;
-      const state=ratio<=0.7?{t:'여유',c:'var(--good)'}:(ratio<=1.3?{t:'보통',c:'var(--ink2)'}:{t:'과밀',c:'var(--warn)'});
+      // 면 색마다 그 위에 얹을 글자색이 따로 있다 — 어두운 화면에서 흰 글자는 2.9:1 까지 떨어진다
+      const state=ratio<=0.7?{t:'여유',c:'var(--good)',fg:'var(--on-good)'}
+        :(ratio<=1.3?{t:'보통',c:'var(--ink2)',fg:'var(--bg)'}
+        :{t:'과밀',c:'var(--warn)',fg:'var(--on-warn)'});
       return {
         has:true,
         lead:this.tn('sat.lead',{ind:this.tr(this.indName(S.ind)), v:me.v.toFixed(1), med:med.toFixed(1), word:this.tr(state.t)}),
         mine:me.v.toFixed(1)+'개', medText:med.toFixed(1)+'개',
         badge:state.t,
-        badgeStyle:'display:inline-block;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;white-space:nowrap;color:#FFFFFF;background:'+state.c,
+        badgeStyle:'display:inline-block;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;white-space:nowrap;color:'+state.fg+';background:'+state.c,
         bar:'display:block;width:'+(me.v/mx*100).toFixed(1)+'%;height:100%;border-radius:5px;background:'+state.c,
         medMark:'position:absolute;top:-5px;bottom:-5px;left:'+(med/mx*100).toFixed(1)+'%;width:2px;background:var(--ink);border-radius:1px',
         medLabel:'position:absolute;top:14px;left:'+(med/mx*100).toFixed(1)+'%;transform:translateX(-50%);font-size:11px;color:var(--ink3);white-space:nowrap',
@@ -1025,7 +1028,7 @@ globalThis.MysbizonParts.views = {
           +'white-space:nowrap;min-height:38px;display:inline-flex;align-items:center;'
           +'transition:background .14s,color .14s;'
           +(p.k===RK.preset.k
-            ? 'background:var(--color-primary);color:#FFFFFF;font-weight:600'
+            ? 'background:var(--color-primary);color:var(--on-accent);font-weight:600'
             : 'background:var(--color-surface);color:var(--color-text-secondary)')
       })),
       presetRail:this.rail('cmpPre',{per:5}),
@@ -1117,7 +1120,7 @@ globalThis.MysbizonParts.views = {
         best:first,
         badge:first?'🥇 종합 1위':(o._place+'위'),
         badgeStyle:'flex:none;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;'
-          +(first?'background:var(--color-primary);color:#FFFFFF'
+          +(first?'background:var(--color-primary);color:var(--on-accent)'
                  :'background:var(--color-surface);color:var(--color-text-secondary)'),
         // 카드 왼쪽 굵은 띠가 그 상권의 색이다 — 아래 차트와 같은 색
         dot:'flex:none;width:10px;height:10px;border-radius:50%;background:'+o._color,

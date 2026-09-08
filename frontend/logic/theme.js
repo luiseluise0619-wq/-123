@@ -174,7 +174,9 @@ globalThis.MysbizonParts.theme.settingsView = function(){
 
   const pill=on=>'flex:none;padding:8px 14px;border-radius:999px;font-size:13px;cursor:pointer;'
     +'white-space:nowrap;transition:background .14s,color .14s;'
-    +(on?'background:var(--color-primary);color:#FFFFFF;font-weight:600'
+    // 민트 면 위 글자색은 theme.js 가 휘도를 재서 정한다 — 흰 글자를 박으면
+    // 어두운 화면에서 2.79:1(AA 4.5 미달)이 된다.
+    +(on?'background:var(--color-primary);color:var(--on-accent);font-weight:600'
         :'background:var(--color-surface);color:var(--color-text-secondary)');
 
   const color=(field,label,fallback)=>({

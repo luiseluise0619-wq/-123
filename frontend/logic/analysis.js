@@ -198,7 +198,7 @@ globalThis.MysbizonParts.analysis = {
         const show=[...rows.slice(0,6), ...rows.slice(-6)];
         push('mv-net',{type:'hbar', title:'어떤 장사가 늘고 어떤 장사가 주나요?',
           sub:'새로 연 곳 − 문 닫은 곳 · 서울 전체', unit:'곳',
-          period:this.qtr(ST.quarter)+' · 3개월', height:300,
+          period:this.qtr(ST.quarter)+' · '+this.tr('3개월'), height:300,
           labels:show.map(o=>this.indName(o.n)),
           datasets:[{label:'순증감', data:show.map(o=>o.v),
             colors:show.map(o=>o.v>=0?'on':'warn')}]});

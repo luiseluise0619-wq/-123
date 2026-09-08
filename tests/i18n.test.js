@@ -166,7 +166,11 @@ function sweep(locale) {
     c => { Object.assign(c.state, { sp: { ok: false, configured: true, items: [] } }); },
     // 통합시세는 고른 지표 하나만 그린다 — 안 고르면 나머지 다섯 갈래의 문구를 못 본다.
     // 실제로 '자치구 20곳'·자료 출처 문단이 그렇게 한국어로 남아 있었다.
-    ...['rent', 'vacancy', 'sales', 'spend', 'churn', 'fr'].map(k => c => { c.state.mkSel = k; })
+    ...['rent', 'vacancy', 'sales', 'spend', 'churn', 'fr'].map(k => c => { c.state.mkSel = k; }),
+    // 정밀분석도 '열린 탭' 하나만 그린다 — 같은 이유로 탭을 하나씩 세워 본다
+    ...['demand', 'comp', 'sales', 'cost', 'nearby', 'grow', 'market'].map(k => c => {
+      c.state.mvTab = k; c.state.sel = ids[0]; c.state.zoneId = ids[0];
+    })
   ];
   const found = new Set();
   for (const screen of SCREEN_KEYS) {
