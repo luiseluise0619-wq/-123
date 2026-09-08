@@ -255,8 +255,10 @@ globalThis.MysbizonParts.views = {
     const ovr=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?null:this.bound(v,0,k==='staffOv'?100:100000,0)});};
 
     // 평수 하나로 규모가 움직인다
-    out.area=S.area;
-    out.onArea=e=>this.setState({area:+e.target.value});
+    // 슬라이더는 '계산에 쓰는 평수'를 보여준다. 설문에서 상한을 넘는 값을 넣었을 때
+    // 슬라이더만 다른 숫자를 들고 있으면 화면과 계산이 어긋난다.
+    out.area=c.area;
+    out.onArea=e=>this.setState({area:this.bound(e.target.value,1,1000,globalThis.MysbizonConst.BEP_DEFAULT.area)});
     out.areaLabel=c.area+'평';
     out.areaWord=c.area<=10?'작은 가게':(c.area<=25?'보통 가게':'큰 가게');
     out.linked=[
@@ -267,16 +269,19 @@ globalThis.MysbizonParts.views = {
     ];
     out.linkNote='평수를 움직이면 직원 수와 기타 운영비가 같이 바뀌어요. 10평당 1명, 평당 6만원으로 잡은 우리 기준이라 실제와 다를 수 있고, 아래 칸에 직접 넣으면 그 값을 써요. 임대료는 상권별 평당 시세가 공개되지 않아 자동으로 채울 수 없어요.';
 
+    // 어떤 경로로든 숫자가 아닌 값이 상태에 들어오면 칸을 비운다 —
+    // 'Infinity' 나 'NaN' 이 입력칸에 그대로 보이면 안 된다.
+    const numIn=v=>(v===''||v==null)? v : (Number.isFinite(Number(v))? v : '');
     out.inputs=[
-      {label:'월 임대료 (만원)', value:S.rent, onChange:num('rent'), tag:'기본 400만원 · 실제 금액으로 수정'},
-      {label:'원가율 (%)', value:S.cogs, onChange:num('cogs'), tag:'기본 가정 · 수정 가능'},
-      {label:'직원 수 (명)', value:(S.staffOv==null?'':S.staffOv), onChange:ovr('staffOv'), tag:c.staffAuto?'비우면 '+c.staff+'명':'직접 넣은 값'},
-      {label:'기타 운영비 (만원)', value:(S.etcOv==null?'':S.etcOv), onChange:ovr('etcOv'), tag:c.etcAuto?'비우면 '+c.etc+'만원':'직접 넣은 값'},
+      {label:'월 임대료 (만원)', value:numIn(S.rent), onChange:num('rent'), tag:'기본 400만원 · 실제 금액으로 수정'},
+      {label:'원가율 (%)', value:numIn(S.cogs), onChange:num('cogs'), tag:'기본 가정 · 수정 가능'},
+      {label:'직원 수 (명)', value:numIn(S.staffOv==null?'':S.staffOv), onChange:ovr('staffOv'), tag:c.staffAuto?'비우면 '+c.staff+'명':'직접 넣은 값'},
+      {label:'기타 운영비 (만원)', value:numIn(S.etcOv==null?'':S.etcOv), onChange:ovr('etcOv'), tag:c.etcAuto?'비우면 '+c.etc+'만원':'직접 넣은 값'},
       // 처음 한 번 나가는 돈 — 회수기간(초기투자 ÷ 월 영업이익)에만 쓴다.
       // 기본값을 두지 않는다. 상권별 보증금·권리금은 공개 자료가 없어 지어낼 수 없다(§1).
-      {label:'보증금 (만원)', value:(S.deposit==null?'':S.deposit), onChange:num('deposit'), tag:'나갈 때 돌려받지만 묶이는 돈이라 포함'},
-      {label:'권리금 (만원)', value:(S.premium==null?'':S.premium), onChange:num('premium'), tag:'없으면 비워 두세요'},
-      {label:'인테리어 (만원)', value:(S.interior==null?'':S.interior), onChange:num('interior'), tag:'설비·집기까지 합쳐서'}
+      {label:'보증금 (만원)', value:numIn(S.deposit==null?'':S.deposit), onChange:num('deposit'), tag:'나갈 때 돌려받지만 묶이는 돈이라 포함'},
+      {label:'권리금 (만원)', value:numIn(S.premium==null?'':S.premium), onChange:num('premium'), tag:'없으면 비워 두세요'},
+      {label:'인테리어 (만원)', value:numIn(S.interior==null?'':S.interior), onChange:num('interior'), tag:'설비·집기까지 합쳐서'}
     ];
 
 

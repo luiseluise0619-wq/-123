@@ -667,6 +667,7 @@ class Component extends DCLogic {
             // 이 설문의 목적은 본전 계산이 아니라 '신청할 수 있는 정부 창업지원사업'을
             // 찾아 주는 것이다. 그래서 매칭에 쓰지 않는 질문(자금·대출·버틸 기간)은 뺐다.
             // 남은 것은 전부 공고 자격 요건에 실제로 등장하는 조건이다.
+            const BEPD=globalThis.MysbizonConst.BEP_DEFAULT;
             const STEPS=[
               // ① 시·도 — 지자체 공고는 지역별로 따로 있다. 자료가 서울뿐이어도 지역은 다 묻는다.
               {k:'sido', q:'어느 지역에서 창업하세요?',
@@ -730,9 +731,11 @@ class Component extends DCLogic {
                hint:'리포트(PDF·메일)에만 들어가요. 모르시면 비워 두고 넘어가셔도 돼요.',
                // blank = 비웠을 때 되돌아갈 값(= 이 서비스의 기본 가정). staffOv 는 null 이면
                // 평수에서 자동으로 잡는다.
-               nums:[{label:'월 임대료 (만원)', key:'rent',    value:S.rent,    blank:400},
-                     {label:'평수 (평)',        key:'area',    value:S.area,    blank:15},
-                     {label:'직원 수 (명)',     key:'staffOv', value:S.staffOv, blank:null}],
+               // max 는 계산이 쓰는 상한과 같은 값이다(util.calc·size). 여기서 더 큰 값을 받으면
+               // 화면에는 그 숫자가 남고 계산은 상한으로 하게 되어, 넣은 값과 결과가 어긋난다.
+               nums:[{label:'월 임대료 (만원)', key:'rent',    value:S.rent,    blank:BEPD.rent, max:100000},
+                     {label:'평수 (평)',        key:'area',    value:S.area,    blank:BEPD.area, max:1000},
+                     {label:'직원 수 (명)',     key:'staffOv', value:S.staffOv, blank:null,      max:100}],
                opts:[], val:S.rp_cost},
 
               // 이메일 — 리포트를 보낼 곳. 건너뛸 수 없다.
@@ -846,7 +849,8 @@ class Component extends DCLogic {
                   const t={...(S.rp_touched||{})};
                   if(raw===''){ delete t[f.key]; }
                   else t[f.key]=true;
-                  this.setState({[f.key]: raw===''? f.blank : Number(raw), rp_sent:false, rp_touched:t}); },
+                  this.setState({[f.key]: raw===''? f.blank : Math.min(Number(raw), f.max),
+                                 rp_sent:false, rp_touched:t}); },
                 style:'width:100%;font-size:16px;font-weight:500;color:var(--ink);background:var(--surface);'
                   +'border:none;border-radius:14px;padding:0 16px;height:52px;outline:none'
               })),
@@ -1494,7 +1498,7 @@ class Component extends DCLogic {
       out.cmpMap={ready:false,gus:[],pins:[],vb:'0 0 100 100',stroke:'0.5',legend:[],legendNote:''};
       out.addZoneOptions=[{id:'',label:'동네 더하기'}]; out.addZoneFull=false; out.onAddZone=()=>{};
       out.mapLabel='지도 보기'; out.mapBtn='display:none'; out.toggleMap=()=>{};
-      out.area=S.area; out.onArea=()=>{}; out.areaLabel='—'; out.areaWord='';
+      out.area=this.size().area; out.onArea=()=>{}; out.areaLabel='—'; out.areaWord='';
       out.linked=[]; out.linkNote=''; out.moneyDots=[]; out.dotNote='';
       out.rg=this.region();
       out.mv={eyebrow:'', headline:S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.', sub:'',
