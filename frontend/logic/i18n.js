@@ -176,6 +176,7 @@ globalThis.MysbizonParts.i18n = {
       "mk.waitTitle": "{name} — 데이터 준비 중",
       "mk.waitText": "{src} 자료가 연결되면 여기에 그래프가 떠요. 아직 연결 전이라 값을 보여드리지 않아요 — 없는 숫자는 지어내지 않아요.",
       "mk.chartCount": "차트 {n}개",
+      "mk.waitingCats": "{names} 시세는 준비 중이에요.",
       "fact.dongPop": "{dong} 하루 유동인구가 {n}명이에요",
       "reason.salesBody": "비슷한 가게 한 곳이 한 달에 {amt}쯤 팔아요.",
       "reason.popSample": "유동인구 {n}명 · {dong}",

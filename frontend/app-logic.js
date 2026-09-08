@@ -381,7 +381,7 @@ class Component extends DCLogic {
     const MENU=[
       // region(동네 개요)·fineCmp(자치구 훑기)는 둘 다 '여러 곳을 훑는' 화면이라 여기 둔다.
       // 비교(담은 상권 종합순위)는 ② 정밀분석의 '정밀비교'로 옮겼다 — 입구를 둘로 두지 않는다.
-      {label:T('nav.zone'), keys:['hubZone','zone','find','region','fineCmp'], hub:'hubZone',
+      {label:T('nav.zone'), keys:['hubZone','zone','find','region','fineCmp'], hub:'find',
        items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],
               ['fineCmp',T('menu.sweep')]]},
       // 고른 상권 하나를 깊게 보는 것들이 다 여기 있다.
@@ -389,7 +389,7 @@ class Component extends DCLogic {
       //   정밀분석 왜 좋은지/나쁜지
       //   정밀비교 담아 둔 상권들의 종합순위
       //   본전 계산 이 자리 한 곳의 본전선
-      {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'hubFine',
+      {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'fineDetail',
        items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],
               ['sim',T('menu.sim')],['diag',T('menu.bep')]]},
       {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
@@ -413,6 +413,16 @@ class Component extends DCLogic {
       : [];
 
     const out={
+      // 허브 화면 대신 — 같은 메뉴 안의 화면을 본문 맨 위 알약 한 줄로 오간다. 지금 화면은 진하게.
+      sib:(()=>{
+        const g=MENU.find(m=>m.keys.indexOf(S.screen)>=0);
+        if(!g||g.items.length<2) return {has:false, list:[]};
+        return {has:true, list:g.items.map(([k,label])=>({label,
+          go:()=>this.setState({screen:k,menu:null}),
+          style:'flex:none;font-size:13.5px;padding:9px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;'
+            +'display:inline-flex;align-items:center;transition:background .14s,color .14s;'
+            +(S.screen===k?'background:var(--ink);color:var(--card);font-weight:600':'background:var(--card);color:var(--ink2);font-weight:500')}))};
+      })(),
       nav:MENU.map((g,gi)=>({
         label:g.label, isOpen:false,
         // 모바일 탭바 아이콘(Lucide 계열 선 아이콘). 순서는 MENU 와 같다.

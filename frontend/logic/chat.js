@@ -97,7 +97,7 @@ globalThis.MysbizonParts.chat = {
         };
       }),
       chips:CH.map(c=>({label:c, ask:()=>ask(c),
-        style:'flex:none;font-size:13.5px;padding:9px 15px;border-radius:999px;background:var(--surface);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:38px;display:inline-flex;align-items:center;transition:color .16s'})),
+        style:'flex:none;font-size:13.5px;padding:9px 15px;border-radius:999px;background:var(--surface);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:color .16s'})),
       draft:S.draft||'',
       onDraft:e=>this.setState({draft:e.target.value}),
       onKey:e=>{ if(e.key==='Enter'&&(S.draft||'').trim()) ask(S.draft.trim()); },

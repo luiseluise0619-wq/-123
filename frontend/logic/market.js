@@ -121,9 +121,13 @@ globalThis.MysbizonParts.market.marketView = function(){
       +'font-size:14.5px;transition:background .14s,color .14s;overflow:hidden;text-overflow:ellipsis;'
       +(on?'background:var(--accent-3);color:var(--accent-hover);font-weight:700':'color:var(--ink2)');
 
+  // 연결된 지표가 하나도 없는 갈래는 목록에 안 세운다 — 누르면 '준비 중'만 뜨는 항목 22개가
+  // 목록을 세 배로 늘리고 있었다. 대신 아래 한 줄로 무엇이 준비 중인지 말한다(지어내지 않는다 §1).
+  const readyCats=CATS.filter(c=>ALL.some(i=>i.cat===c.k&&i.ready));
+  const waitCats=CATS.filter(c=>!ALL.some(i=>i.cat===c.k&&i.ready));
   // 데스크톱 세로 목록 — 갈래를 누르면 그 갈래의 지표가 아래로 펼쳐진다
   const side=[];
-  CATS.forEach(c=>{
+  readyCats.forEach(c=>{
     const items=ALL.filter(i=>i.cat===c.k);
     side.push({label:c.label, pick:()=>this.marketPick((items[0]||sel).k), style:catStyle(c.k===cat)});
     if(c.k===cat) items.forEach(i=>{
@@ -135,7 +139,9 @@ globalThis.MysbizonParts.market.marketView = function(){
     // 모바일은 가로 탭 두 줄, 데스크톱은 왼쪽 세로 목록 — 같은 목록을 모양만 바꾼다
     horiz:mob, vert:!mob,
     side,
-    cats:CATS.map(c=>{
+    hasWaitingNote:waitCats.length>0,
+    waitingNote:this.t('mk.waitingCats',{names:waitCats.map(c=>this.tr(c.label)).join(' · ')}),
+    cats:readyCats.map(c=>{
       const items=ALL.filter(i=>i.cat===c.k);
       return {label:c.label, pick:()=>this.marketPick((items[0]||sel).k), style:catStyle(c.k===cat)};
     }),

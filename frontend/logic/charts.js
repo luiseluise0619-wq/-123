@@ -135,6 +135,9 @@ globalThis.MysbizonParts.charts = {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        // 3x 화면(대부분의 폰)에서 캔버스 픽셀이 2x 의 2.25배가 된다 — 눈으로는 차이가 없고
+        // 그리기·메모리만 는다. 발열 줄이기의 일부.
+        devicePixelRatio: Math.min((globalThis.devicePixelRatio || 1), 2),
         indexAxis: horizontal ? 'y' : 'x',
         animation: { duration: 250 },
         // 창 크기가 바뀔 때마다 막대가 0부터 다시 자라면 읽는 사람이 어지럽다

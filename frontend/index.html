@@ -275,6 +275,12 @@
   </header>
 
   <main id="main-content" data-screen="{{ screenKey }}" style="{{ mainStyle }}">
+  <!-- 같은 메뉴 안의 화면들 — 허브 화면을 거치지 않고 여기서 바로 옮겨 다닌다 -->
+  <sc-if value="{{ sib.has }}">
+    <nav aria-label="이 메뉴의 화면" data-rail="sib" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:14px 0 0;margin-bottom:-14px;min-width:0">
+      <sc-for list="{{ sib.list }}" as="s"><span role="button" tabIndex="0" onClick="{{ s.go }}" style="{{ s.style }}">{{ s.label }}</span></sc-for>
+    </nav>
+  </sc-if>
     <sc-if value="{{ dataError }}"><div role="alert" style="padding:18px;margin-top:24px;border-radius:16px;background:var(--surface)">{{ dataError }} <button onClick="{{ retryData }}">다시 불러오기</button></div></sc-if>
     <!-- HOME -->
     <sc-if value="{{ onHome }}">
@@ -440,7 +446,7 @@
 
         <!-- 선택 상태 -->
         <sc-if value="{{ picking }}">
-          <div style="position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:var(--bg-blur);backdrop-filter:blur(6px);animation:riseIn .3s cubic-bezier(.22,.7,.25,1) both">
+          <div style="position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:var(--bg-blur);animation:riseIn .3s cubic-bezier(.22,.7,.25,1) both">
             <div style="text-align:center">
               <div style="width:44px;height:44px;margin:0 auto;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite"></div>
               <div style="font-size:19px;font-weight:600;letter-spacing:-0.025em;margin-top:22px;white-space:nowrap">{{ pickingText }}</div>
@@ -482,7 +488,7 @@
                   <div style="font-size:11px;color:var(--ink3);margin-top:10px;line-height:1.6;text-wrap:pretty">{{ m.source }}</div>
                 </sc-if>
                 <sc-if value="{{ m.hasCta }}">
-                  <div role="button" tabIndex="0" onClick="{{ m.ctaGo }}" style="font-size:13px;color:var(--accent-hover);cursor:pointer;margin-top:11px;text-wrap:pretty">{{ m.cta }}</div>
+                  <div role="button" tabIndex="0" onClick="{{ m.ctaGo }}" style="display:inline-flex;align-items:center;min-height:44px;margin:-1px 0 -12px;padding-right:12px;font-size:13px;color:var(--accent-hover);cursor:pointer;text-wrap:pretty">{{ m.cta }}</div>
                 </sc-if>
               </div>
             </div>
@@ -989,6 +995,7 @@
             <span role="button" tabIndex="0" onClick="{{ i.pick }}" style="{{ i.style }}">{{ i.label }}</span>
           </sc-for>
         </nav>
+        <sc-if value="{{ mk.hasWaitingNote }}"><div class="u-note-w" style="margin-top:8px">{{ mk.waitingNote }}</div></sc-if>
       </sc-if>
 
       <section style="display:grid;gap:{{ mk.gap }};grid-template-columns:{{ mk.cols }};align-items:start">
@@ -998,6 +1005,7 @@
             <sc-for list="{{ mk.side }}" as="s">
               <span role="button" tabIndex="0" onClick="{{ s.pick }}" style="{{ s.style }}">{{ s.label }}</span>
             </sc-for>
+            <sc-if value="{{ mk.hasWaitingNote }}"><div class="u-note-w" style="margin-top:10px;padding:0 13px 4px;white-space:normal">{{ mk.waitingNote }}</div></sc-if>
           </nav>
         </sc-if>
 

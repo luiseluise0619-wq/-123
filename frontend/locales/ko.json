@@ -159,5 +159,6 @@
   "surv.y": "{y}년",
   "surv.ym": "{y}년 {m}개월",
   "zc.lead": "{ind}은(는) {gu}가 가게 한 곳당 가장 많이 팔아요.",
-  "zc.pickedTitle": "{gu} 기준으로 견주기"
+  "zc.pickedTitle": "{gu} 기준으로 견주기",
+  "mk.waitingCats": "{names} 시세는 준비 중이에요."
 }

@@ -187,11 +187,13 @@ globalThis.MysbizonParts.views = {
           ? 'background:var(--accent-3);box-shadow:inset 0 0 0 1.5px var(--accent)'
           : 'background:var(--surface)'),
       pickLabel: PICKS.indexOf(o.id)>=0 ? '비교에서 빼기' : (PICKS.length>=3? '비교 3곳 꽉 찼어요' : '비교에 담기'),
-      pickStyle: PICKS.indexOf(o.id)>=0
+      // 글자만 있는 링크지만 손가락 영역은 44px — 위아래 음수 여백으로 카드 높이는 안 바뀐다
+      pickStyle: 'display:inline-flex;align-items:center;min-height:44px;margin:-14px 0;padding-right:12px;'
+        +(PICKS.indexOf(o.id)>=0
         ? 'font-size:12.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap;font-weight:600'
         : (PICKS.length>=5
           ? 'font-size:12.5px;color:var(--ink3);white-space:nowrap'
-          : 'font-size:12.5px;color:var(--ink3);cursor:pointer;white-space:nowrap'),
+          : 'font-size:12.5px;color:var(--ink3);cursor:pointer;white-space:nowrap')),
       row:'display:flex;align-items:baseline;gap:12px;padding:13px 0;border-top:1px solid var(--line)'
     }));
     // 긴 회색 문단을 그대로 두지 않는다 — 한 줄만 보이고 나머지는 접는다(§14)

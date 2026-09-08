@@ -275,3 +275,9 @@
   </header>
 
   <main id="main-content" data-screen="{{ screenKey }}" style="{{ mainStyle }}">
+  <!-- 같은 메뉴 안의 화면들 — 허브 화면을 거치지 않고 여기서 바로 옮겨 다닌다 -->
+  <sc-if value="{{ sib.has }}">
+    <nav aria-label="이 메뉴의 화면" data-rail="sib" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:14px 0 0;margin-bottom:-14px;min-width:0">
+      <sc-for list="{{ sib.list }}" as="s"><span role="button" tabIndex="0" onClick="{{ s.go }}" style="{{ s.style }}">{{ s.label }}</span></sc-for>
+    </nav>
+  </sc-if>

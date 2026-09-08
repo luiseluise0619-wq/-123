@@ -17,6 +17,7 @@
             <span role="button" tabIndex="0" onClick="{{ i.pick }}" style="{{ i.style }}">{{ i.label }}</span>
           </sc-for>
         </nav>
+        <sc-if value="{{ mk.hasWaitingNote }}"><div class="u-note-w" style="margin-top:8px">{{ mk.waitingNote }}</div></sc-if>
       </sc-if>
 
       <section style="display:grid;gap:{{ mk.gap }};grid-template-columns:{{ mk.cols }};align-items:start">
@@ -26,6 +27,7 @@
             <sc-for list="{{ mk.side }}" as="s">
               <span role="button" tabIndex="0" onClick="{{ s.pick }}" style="{{ s.style }}">{{ s.label }}</span>
             </sc-for>
+            <sc-if value="{{ mk.hasWaitingNote }}"><div class="u-note-w" style="margin-top:10px;padding:0 13px 4px;white-space:normal">{{ mk.waitingNote }}</div></sc-if>
           </nav>
         </sc-if>
 
