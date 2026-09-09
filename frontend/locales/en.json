@@ -1390,7 +1390,13 @@
     "이 메뉴의 화면": "Screens in this menu",
     "요즘 · 근처에 뭐가 생겼나요": "Lately · what's new nearby",
     "요즘": "Lately",
-    "요즘 이 근처에 뭐가 열리고 닫혔나요?": "What opened or closed around here lately?"
+    "요즘 이 근처에 뭐가 열리고 닫혔나요?": "What opened or closed around here lately?",
+    "보기": "Open",
+    "열기": "Open",
+    "비교하기": "Compare",
+    "훑어보기": "Browse",
+    "비교 시작": "Start comparing",
+    "본전 보기": "See break-even"
   },
   "mk.waitingCats": "{names} prices are on the way.",
   "op.loading": "Loading recent openings and closures…",

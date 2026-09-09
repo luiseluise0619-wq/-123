@@ -1227,8 +1227,9 @@ class Component extends DCLogic {
             {label:'업종', value:this.indName(S.ind)},
             ...(selNm ? [{label:'고른 상권', value:selNm}] : [])
           ].map(c=>({...c,
+            // 배너(강조색 면) 위 흰 칩 — 글자색을 배너에서 물려받으면 흰 글자가 흰 칩에 묻힌다(실제로 그랬다)
             style:'display:inline-flex;align-items:baseline;gap:6px;padding:7px 12px;border-radius:999px;'
-              +'background:var(--card);white-space:nowrap;min-width:0'})),
+              +'background:var(--card);color:var(--ink);white-space:nowrap;min-width:0'})),
           // 메뉴판 대신 '다음 행동' 하나를 크게 둔다(§14·§18).
           // 나머지는 아래 한 줄짜리 목록으로 — 넷을 나란히 두면 무엇부터 눌러야 할지 모른다.
           primary:(()=>{
@@ -1242,48 +1243,46 @@ class Component extends DCLogic {
             return {has:true, label:label,
                     // 결과 한 줄이 있으면 그걸 쓰고, 없으면 '무엇을 하는 곳인지'로 내려간다.
                     peekText: peek || (first ? '한 곳을 고르면 그 자리를 뜯어봐요' : c.d),
-                    peekStyle: peek ? 'font-weight:600;color:var(--accent-text)' : 'color:var(--ink2)',
-                    style:this.ds('cta')+';display:inline-flex;align-items:center;justify-content:center;'
-                      +'gap:8px;'+this.L('width:100%','','')+';max-width:100%',
+                    // 배너 위라 글자색은 배너를 따른다(흰색). 값이 있으면 굵게.
+                    peekStyle: peek ? 'font-weight:600;color:inherit' : 'color:inherit;opacity:.85',
                     go:()=>this.setState({screen:next,menu:null})};
           })(),
-          // 나머지는 한 줄짜리 목록. 카드 셋을 나란히 두면 무게가 같아져 강조가 사라진다.
-          rest:(()=>{ const rows=(g?g.items:[]).filter(([key])=>key!==next).map(([key,label])=>{
-            const c=CARD[key]||{d:''};
-            return {
-              label:label, sub:c.d,
-              go:()=>this.setState({screen:key,menu:null}),
-              // 카드 안 목록 — 첫 줄은 윗선이 없다(카드 테두리가 그 역할)
-              row:'display:flex;align-items:center;gap:14px;padding:'+this.L('16px 0','17px 0','18px 0')
-                +';cursor:pointer;min-width:0;border-radius:8px',
-              labelStyle:'flex:0 0 auto;font-size:16px;font-weight:600;letter-spacing:-.01em;white-space:nowrap',
-              // 모바일에서는 설명을 접는다 — 칸이 좁아 어차피 말줄임으로 잘린다.
-              subStyle:this.bp()==='mobile' ? 'display:none'
-                : 'flex:1 1 auto;min-width:0;font-size:13.5px;color:var(--ink3);'
-                  +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis',
-              spacerStyle:this.bp()==='mobile' ? 'flex:1 1 auto' : 'display:none'
-            };
-          });
-          // '내 가게'를 저장해 뒀으면 맨 위에 한 줄 — 창업한 뒤에도 다시 올 이유가 되는 자리다.
-          // 자료가 없으면 없다고 적는다(§1).
-          const mineId = (!zone && S.myShop && S.zi && S.zi.zones[S.myShop]) ? S.myShop : null;
-          if(mineId && rows.length){
-            const OP=S.op, z=(OP&&OP.available&&OP.zones)?OP.zones[mineId]:null;
-            const sub = !OP ? this.t('op.loading')
-              : (!OP.available ? this.t('op.mineWait')
-                 : this.t('op.mineSub',{o:z?z.o:0, c:z?z.c:0, days:OP.days}));
-            // 다른 줄은 모바일에서 설명을 접지만, 이 줄의 설명은 숫자라 접으면 뜻이 없다 —
-            // 둘째 줄로 내려 보여준다(order 로 맨 뒤, 100% 폭).
-            rows.unshift({...rows[0], label:this.t('op.mine'),
-              sub:this.zoneLabelOf(S.zi.zones[mineId].nm)+' · '+sub,
-              row:rows[0].row+';flex-wrap:wrap',
-              subStyle:this.bp()==='mobile'
-                ? 'order:3;flex:1 1 100%;min-width:0;font-size:13px;color:var(--ink3);margin-top:4px;text-wrap:pretty'
-                : rows[0].subStyle,
-              go:()=>this.setState({screen:'fineDetail', sel:mineId, zoneId:mineId, mvTab:'recent', menu:null})});
-          }
-          return rows;
-        })()
+          // 배너(강조색 면 + 흰 글씨) — 사장님 시안: '배너+서비스 소개' 위에, 메뉴 카드 아래에.
+          bannerStyle:'background:var(--accent);color:var(--on-accent);border-radius:var(--r-lg);'
+            +'padding:'+this.L('26px 20px 24px','34px 30px 30px','40px 36px 36px')+';overflow:hidden',
+          bannerTitle:this.ds('h1')+';color:inherit',
+          bannerBody:'font-size:'+this.L('15px','16px','17px')+';line-height:1.55;margin-top:10px;max-width:560px;'
+            +'color:inherit;opacity:.9;text-wrap:pretty',
+          // 배너 안 버튼은 흰 알약(파랑 위 파랑 버튼은 안 보인다)
+          primaryInBanner:'font-size:16px;font-weight:700;color:var(--accent);background:var(--on-accent);border:none;'
+            +'border-radius:16px;padding:0 26px;height:54px;cursor:pointer;transition:filter .16s,transform .18s;'
+            +'display:inline-flex;align-items:center;justify-content:center;gap:8px;'
+            +this.L('width:100%','','')+';max-width:100%',
+          // 카드 격자 — 메뉴 전부를 같은 무게의 카드로(시안대로). 모바일 2열 · PC 3~4열.
+          gridStyle:'display:grid;gap:'+this.L('10px','12px','14px')+';margin-top:'+this.L('16px','20px','24px')
+            +';grid-template-columns:repeat(auto-fill,minmax('+this.L('150px','190px','200px')+',1fr))',
+          cards:(()=>{
+            const cardStyle='background:var(--card);border-radius:var(--r-md);padding:'+this.L('18px 16px','22px 20px','24px 22px')
+              +';cursor:pointer;display:flex;flex-direction:column;min-width:0;min-height:'+this.L('140px','160px','170px')
+              +';transition:transform .14s,box-shadow .14s';
+            const rows=(g?g.items:[]).map(([key,label])=>{
+              const c=CARD[key]||{d:'',cta:'열기'};
+              return {label:label, sub:c.d, cta:c.cta||'열기', style:cardStyle,
+                      go:()=>this.setState({screen:key,menu:null})};
+            });
+            // '내 가게'를 저장해 뒀으면 맨 앞에 카드 하나 — 창업한 뒤에도 다시 올 이유가 되는 자리다.
+            const mineId = (!zone && S.myShop && S.zi && S.zi.zones[S.myShop]) ? S.myShop : null;
+            if(mineId){
+              const OP=S.op, z=(OP&&OP.available&&OP.zones)?OP.zones[mineId]:null;
+              const sub = !OP ? this.t('op.loading')
+                : (!OP.available ? this.t('op.mineWait')
+                   : this.t('op.mineSub',{o:z?z.o:0, c:z?z.c:0, days:OP.days}));
+              rows.unshift({label:this.t('op.mine'), sub:this.zoneLabelOf(S.zi.zones[mineId].nm)+' · '+sub,
+                cta:'보기', style:cardStyle,
+                go:()=>this.setState({screen:'fineDetail', sel:mineId, zoneId:mineId, mvTab:'recent', menu:null})});
+            }
+            return rows;
+          })()
         };
       })(),
       goFind:go('find'), goCmp:go('sim'),

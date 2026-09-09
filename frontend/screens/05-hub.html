@@ -1,36 +1,38 @@
-    <!-- 허브 (상권분석 · 정밀분석) — 다음 행동 하나 + 나머지 한 줄 목록 -->
+    <!-- 허브 (상권분석 · 정밀분석) — 사장님 시안(2026-09-09): 위에 배너(서비스 소개 + 다음 행동), 아래에 메뉴 카드 격자 -->
     <sc-if value="{{ onHub }}">
-      <section style="padding:48px 0 0">
-        <h1 style="{{ ds1 }}">{{ hub.title }}</h1>
-        <p style="{{ dsBody }}; margin-top:10px;max-width:560px">{{ hub.desc }}</p>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
-          <sc-for list="{{ hub.ctx }}" as="c">
-            <span style="{{ c.style }}">
-              <span class="u-note-f">{{ c.label }}</span>
-              <span style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis">{{ c.value }}</span>
-            </span>
-          </sc-for>
+      <section style="padding:28px 0 0">
+        <div style="{{ hub.bannerStyle }}">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{ hub.ctx }}" as="c">
+              <span style="{{ c.style }}">
+                <span class="u-note-f">{{ c.label }}</span>
+                <span style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis">{{ c.value }}</span>
+              </span>
+            </sc-for>
+          </div>
+          <h1 style="{{ hub.bannerTitle }}; margin-top:18px">{{ hub.title }}</h1>
+          <p style="{{ hub.bannerBody }}">{{ hub.desc }}</p>
+          <!-- 다음 행동 하나 — 배너 안 흰 알약. 이미 계산해 둔 결과 한 줄을 그 밑에 -->
+          <sc-if value="{{ hub.primary.has }}">
+            <div style="margin-top:24px">
+              <button onClick="{{ hub.primary.go }}" style="{{ hub.primaryInBanner }}" style-hover="filter:brightness(.96)">{{ hub.primary.label }}</button>
+              <div style="font-size:13.5px;margin-top:12px;line-height:1.5;text-wrap:pretty;max-width:520px;{{ hub.primary.peekStyle }}">{{ hub.primary.peekText }}</div>
+            </div>
+          </sc-if>
         </div>
 
-        <!-- 다음 행동 하나. 채운 버튼은 화면에 이것 하나뿐이다 -->
-        <sc-if value="{{ hub.primary.has }}">
-          <div style="margin-top:28px">
-            <button onClick="{{ hub.primary.go }}" style="{{ hub.primary.style }}" style-hover="filter:brightness(1.06)">{{ hub.primary.label }}</button>
-            <!-- 이미 계산해 둔 결과 한 줄. 값이 없으면 설명 줄로 내려간다 -->
-            <div style="font-size:13.5px;margin-top:12px;line-height:1.5;text-wrap:pretty;max-width:520px;{{ hub.primary.peekStyle }}">{{ hub.primary.peekText }}</div>
-          </div>
-        </sc-if>
-
-        <div style="margin-top:32px;{{ dsCard }};padding:4px 20px">
-          <sc-for list="{{ hub.rest }}" as="c">
-            <div role="button" tabIndex="0" onClick="{{ c.go }}" class="pick-opt" style="{{ c.row }}">
-              <span style="{{ c.labelStyle }}">{{ c.label }}</span>
-              <span style="{{ c.subStyle }}">{{ c.sub }}</span>
-              <span style="{{ c.spacerStyle }}"></span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:16px;height:16px;color:var(--ink3);display:block">
-                <sc-for list="{{ icoChevron }}" as="p"><path d="{{ p.d }}"></path></sc-for>
-              </svg>
+        <!-- 메뉴 카드 — 전부 같은 무게. 누르면 그 화면으로 -->
+        <div style="{{ hub.gridStyle }}">
+          <sc-for list="{{ hub.cards }}" as="c">
+            <div role="button" tabIndex="0" onClick="{{ c.go }}" class="pick-opt" style="{{ c.style }}" style-hover="transform:translateY(-2px);box-shadow:var(--shadow-pop)">
+              <div style="font-size:17px;font-weight:700;letter-spacing:-.015em">{{ c.label }}</div>
+              <div style="flex:1;font-size:13.5px;color:var(--ink3);margin-top:8px;line-height:1.5;text-wrap:pretty">{{ c.sub }}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:14px;font-size:13.5px;font-weight:600;color:var(--accent-text)">
+                <span>{{ c.cta }}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:14px;height:14px;display:block">
+                  <sc-for list="{{ icoChevron }}" as="p"><path d="{{ p.d }}"></path></sc-for>
+                </svg>
+              </div>
             </div>
           </sc-for>
         </div>
