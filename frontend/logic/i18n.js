@@ -177,6 +177,8 @@ globalThis.MysbizonParts.i18n = {
       "mk.waitText": "{src} 자료가 연결되면 여기에 그래프가 떠요. 아직 연결 전이라 값을 보여드리지 않아요 — 없는 숫자는 지어내지 않아요.",
       "mk.chartCount": "차트 {n}개",
       "mk.waitingCats": "{names} 시세는 준비 중이에요.",
+      "mv.seoulInd": "서울 전체 · {ind}",
+      "mv.tmzSeoulSub": "{ind} · 서울 전체 매출 구성비 (추정)",
       "op.loading": "최근 개·폐업 자료를 불러오는 중이에요.",
       "op.wait": "최근 개·폐업 자료는 준비 중이에요. 연결되면 이 근처에 새로 연 가게와 닫은 가게가 여기 떠요.",
       "op.count": "{n}곳",

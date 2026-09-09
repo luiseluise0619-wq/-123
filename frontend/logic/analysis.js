@@ -76,7 +76,35 @@ globalThis.MysbizonParts.analysis = {
           datasets:[{label:'가게 한 곳당 월매출', data:rows.map(o=>Math.round(o.per/3)),
             colors:rows.map(o=>o.n===S.ind?'on':'')}]});
       }
-      missing.push('시간대별·요일별 매출은 공개 자료에 없어 아직 보여드리지 못해요.');
+      // ④ 하루 중 언제 · 무슨 요일에 파나 — 카드 매출 기반 추정(서울시 상권분석서비스).
+      //    상권 자체 값(전 업종 합계, zone_industry 의 tmz/dow)이 있으면 그걸 먼저 그리고
+      //    서울 전체 '이 업종' 값을 나란히 둔다. 둘 다 없으면 없다고 적는다(§1).
+      const I=S.sbi&&S.sbi.ind?S.sbi.ind[S.ind]:null;
+      const six=a=>Array.isArray(a)&&a.length===6&&a.every(Number.isFinite)?a:null;
+      const sev=a=>Array.isArray(a)&&a.length===7&&a.every(Number.isFinite)?a:null;
+      const zt=z?six(z.tmz):null, zd=z?sev(z.dow):null;
+      const it=I?six(I.tmzon):null, idw=I?sev(I.dow):null;
+      const seoulLbl=this.t('mv.seoulInd',{ind:this.indName(S.ind)});
+      if(zt||it){
+        const sets=[];
+        if(zt) sets.push({label:'이 상권 · 전 업종', data:zt});
+        if(it) sets.push({label:seoulLbl, data:it});
+        push('mv-tmz',{type:'bar', title:'하루 중 언제 가장 많이 팔리나요?',
+          sub: zt ? '이 상권 전 업종 합계 · 매출 구성비 (추정)' : this.t('mv.tmzSeoulSub',{ind:this.indName(S.ind)}),
+          unit:'%', period:q, height:230,
+          labels:['0~6시','6~11시','11~14시','14~17시','17~21시','21~24시'], datasets:sets});
+      }
+      if(zd||idw){
+        const sets=[];
+        if(zd) sets.push({label:'이 상권 · 전 업종', data:zd});
+        if(idw) sets.push({label:seoulLbl, data:idw});
+        push('mv-dow',{type:'bar', title:'무슨 요일에 가장 잘 팔리나요?',
+          sub: zd ? '이 상권 전 업종 합계 · 매출 구성비 (추정)' : this.t('mv.tmzSeoulSub',{ind:this.indName(S.ind)}),
+          unit:'%', period:q, height:230,
+          labels:['월','화','수','목','금','토','일'], datasets:sets});
+      }
+      if(!(zt||it||zd||idw)) missing.push('시간대별·요일별 매출 자료가 아직 없어요.');
+      else if(!zt&&!zd) missing.push('이 상권만의 시간대·요일 매출은 아직 없어서 서울 전체 이 업종 값을 보여드려요.');
     }
 
     else if(key==='demand'){
@@ -347,6 +375,21 @@ globalThis.MysbizonParts.analysis = {
     const sRows=[{label:'가게 한 곳당 월매출', value:this.won(sel.per/3), tag:'(추정)'},
       {label:'서울 중앙값', value:this.won(mp/3), tag:'이 장사 동네들의 중앙값'},
       {label:'손님이 쓴 돈 (3개월)', value:this.won(sel.sales), tag:''}];
+    // 언제 파나 — 상권 자체 값(전 업종 합계)이 있으면 그걸, 없으면 서울 전체 이 업종 값(둘 다 카드 매출 추정)
+    {
+      const I=S.sbi&&S.sbi.ind?S.sbi.ind[S.ind]:null;
+      const zz=S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
+      const six=a=>Array.isArray(a)&&a.length===6&&a.every(Number.isFinite)?a:null;
+      const sev=a=>Array.isArray(a)&&a.length===7&&a.every(Number.isFinite)?a:null;
+      const peak=a=>{ let k=0; a.forEach((v,i)=>{ if(v>a[k]) k=i; }); return k; };
+      const TL=['0~6시','6~11시','11~14시','14~17시','17~21시','21~24시'];
+      const DL=['월요일','화요일','수요일','목요일','금요일','토요일','일요일'];
+      const tm=(zz&&six(zz.tmz))||(I&&six(I.tmzon)), tmOwn=!!(zz&&six(zz.tmz));
+      const dw=(zz&&sev(zz.dow))||(I&&sev(I.dow)), dwOwn=!!(zz&&sev(zz.dow));
+      const src=own=> own ? '이 상권 · 전 업종' : this.t('mv.seoulInd',{ind:this.indName(S.ind)});
+      if(tm){ const k=peak(tm); sRows.push({label:'가장 잘 팔리는 시간', value:TL[k], tag:tm[k].toFixed(0)+'% · '+src(tmOwn)}); }
+      if(dw){ const k=peak(dw); sRows.push({label:'가장 잘 팔리는 요일', value:DL[k], tag:dw[k].toFixed(0)+'% · '+src(dwOwn)}); }
+    }
     let trend=null;
     if(HI&&HI.ind[S.ind]){
       const series=HI.ind[S.ind];

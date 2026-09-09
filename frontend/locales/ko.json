@@ -174,5 +174,7 @@
   "op.saved": "내 가게로 저장돼 있어요 · 해제",
   "op.mine": "내 가게 주변 요즘",
   "op.mineSub": "새로 연 {o}곳 · 닫은 {c}곳 · 최근 {days}일",
-  "op.mineWait": "개·폐업 자료 준비 중"
+  "op.mineWait": "개·폐업 자료 준비 중",
+  "mv.seoulInd": "서울 전체 · {ind}",
+  "mv.tmzSeoulSub": "{ind} · 서울 전체 매출 구성비 (추정)"
 }
