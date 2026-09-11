@@ -18,3 +18,36 @@ services:
         value: "false"
       - key: TRUST_PROXY_HOPS
         value: "0"
+  - type: web
+    name: mysbizon-admin
+    runtime: node
+    buildCommand: npm ci --include=dev && npm run check:html && npm run check:data && npm test && npm run build:deploy
+    startCommand: node dist/server/customer-admin.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: CUSTOMER_DATA_ENABLED
+        value: "true"
+      - key: CUSTOMER_DATA_KEY
+        sync: false
+      - key: CUSTOMER_DATABASE_URL
+        sync: false
+      - key: CUSTOMER_ADMIN_TOKEN
+        sync: false
+      - key: CUSTOMER_ADMIN_PUBLIC
+        value: "1"
+      - key: CUSTOMER_ADMIN_ALLOWED_HOSTS
+        value: "REPLACE_WITH_ADMIN_HOST"
+      - key: CUSTOMER_ADMIN_ALLOWED_ORIGINS
+        value: "https://REPLACE_WITH_ADMIN_HOST"
+      - key: CUSTOMER_ADMIN_LISTEN_HOST
+        value: "0.0.0.0"
+      - key: CUSTOMER_RETENTION_DAYS
+        value: "30"
+      - key: CUSTOMER_PRIVACY_VERSION
+        value: "v1"
+      - key: CUSTOMER_CONTROLLER
+        value: "REPLACE_WITH_COMPANY"
+      - key: CUSTOMER_CONTACT
+        value: "REPLACE_WITH_CONTACT"

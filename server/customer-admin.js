@@ -22,6 +22,7 @@ export function createAdminServer(store,token,port){
   }
   const allowedOrigins=new Set(parseCsv(process.env.CUSTOMER_ADMIN_ALLOWED_ORIGINS).map((v)=>v.replace(/^https?:\/\//,'').toLowerCase()));
   const publicMode = process.env.CUSTOMER_ADMIN_PUBLIC==='1';
+  const bindHost = process.env.CUSTOMER_ADMIN_LISTEN_HOST || (publicMode ? '0.0.0.0' : '127.0.0.1');
   return http.createServer(async(req,res)=>{
     securityHeaders(res);res.setHeader('Cache-Control','no-store');
     const send=(status,body)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));};
@@ -71,10 +72,10 @@ export function createAdminServer(store,token,port){
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
   if(!customerSettings().enabled)throw new Error('Customer data configuration is incomplete');
-  const port=Number(process.env.CUSTOMER_ADMIN_PORT||3102);
+  const port=Number(process.env.CUSTOMER_ADMIN_PORT || process.env.PORT || 3102);
   if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid admin port');
   const db=await openCustomerPool(),server=createAdminServer(new CustomerStore(db),process.env.CUSTOMER_ADMIN_TOKEN,port);
   server.requestTimeout=15000;server.headersTimeout=10000;server.setTimeout(15000,s=>s.destroy());
-  server.listen(port,'127.0.0.1',()=>console.log('Customer admin listening on loopback port '+port));
+  server.listen(port,bindHost,()=>console.log('Customer admin listening on '+bindHost+':'+port));
   for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>server.close(()=>db.end().then(()=>process.exit(0))));
 }
