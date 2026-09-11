@@ -200,7 +200,14 @@
         </sc-if>
         <sc-if value="{{ c.add.open }}">
           <div style="margin-top:14px">
-          <div class="u-h">비교할 상권 검색</div>
+          <div class="u-h">{{ c.add.browseTitle }}</div>
+          <p class="market-scope">{{ c.add.browseHint }}</p>
+          <label class="market-filter compare-gu">
+            <span>{{ c.add.guLabel }}</span>
+            <select aria-label="{{ c.add.guLabel }}" value="{{ c.add.guValue }}" onChange="{{ c.add.onGu }}">
+              <sc-for list="{{ c.add.guOptions }}" as="g"><option value="{{ g.value }}">{{ g.label }}</option></sc-for>
+            </select>
+          </label>
           <div style="display:flex;align-items:center;gap:8px;margin-top:12px;max-width:460px">
             <span style="position:relative;flex:1;min-width:0;display:block">
               <input value="{{ c.add.q }}" onChange="{{ c.add.onQ }}" onKeyDown="{{ c.add.onKey }}" maxLength="40" aria-label="비교할 상권 검색" placeholder="상권·구·동 이름 (예: 역삼)" style="{{ dsInput }}; padding-right:44px">
@@ -213,62 +220,17 @@
             <p style="font-size:13.5px;font-weight:600;color:var(--accent-text);margin-top:12px">{{ c.add.fullText }}</p>
           </sc-if>
 
-          <!-- 검색 결과 -->
-          <sc-if value="{{ c.add.hasFound }}">
-            <div class="u-note" style="margin-top:16px">누르면 담겨요 · Enter 는 첫 번째</div>
-            <div data-rail="cmpFound" style="{{ c.add.foundRail.trackStyle }}">
-              <sc-for list="{{ c.add.found }}" as="a">
-                <div style="{{ c.add.foundRail.itemStyle }}">
-                  <div role="button" tabIndex="0" onClick="{{ a.add }}" style="{{ a.style }}" style-hover="background:var(--line)">
-                    <span class="u-fill">
-                      <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
-                      <span class="u-note" style="display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
-                    </span>
-                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent-text)">+ 담기</span>
-                  </div>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
-          <sc-if value="{{ c.add.noResult }}">
-            <div style="margin-top:14px;padding:16px 18px;border-radius:var(--r-sm);background:var(--surface);font-size:14px;color:var(--ink2)">{{ c.add.noResultText }}</div>
-          </sc-if>
-
-          <!-- 최근 본 상권 -->
-          <sc-if value="{{ c.add.hasRecent }}">
-            <div class="u-note" style="margin-top:18px">최근 본 상권</div>
-            <div data-rail="cmpRecent" style="{{ c.add.recentRail.trackStyle }}">
-              <sc-for list="{{ c.add.recent }}" as="a">
-                <div style="{{ c.add.recentRail.itemStyle }}">
-                  <div role="button" tabIndex="0" onClick="{{ a.add }}" style="{{ a.style }}" style-hover="background:var(--line)">
-                    <span class="u-fill">
-                      <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
-                      <span class="u-note" style="display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
-                    </span>
-                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent-text)">+ 담기</span>
-                  </div>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
-
-          <!-- 추천 상권 (검색 전에만 보조로) -->
-          <sc-if value="{{ c.add.hasSuggest }}">
-            <div class="u-note" style="margin-top:18px">추천 상권</div>
-            <div data-rail="cmpSug" style="{{ c.add.suggestRail.trackStyle }}">
-              <sc-for list="{{ c.add.suggest }}" as="a">
-                <div style="{{ c.add.suggestRail.itemStyle }}">
-                  <div role="button" tabIndex="0" onClick="{{ a.add }}" style="{{ a.style }}" style-hover="background:var(--line)">
-                    <span class="u-fill">
-                      <span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span>
-                      <span class="u-note" style="display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis">{{ a.meta }}</span>
-                    </span>
-                    <span style="flex:none;font-size:14px;font-weight:700;color:var(--accent-text)">+ 담기</span>
-                  </div>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
+          <div class="market-scope" aria-live="polite">{{ c.add.browseCount }}</div>
+          <div class="compare-browser">
+            <sc-for list="{{ c.add.browseRows }}" as="a">
+              <button class="compare-choice" onClick="{{ a.add }}" disabled="{{ a.disabled }}">
+                <span class="compare-choice-copy"><strong>{{ a.name }}</strong><span>{{ a.meta }}</span></span>
+                <span class="compare-choice-action">{{ a.action }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ c.add.browseEmpty }}"><p role="status">{{ c.add.emptyBrowseText }}</p></sc-if>
+          <sc-if value="{{ c.add.hasMore }}"><button class="compare-more" onClick="{{ c.add.more }}">{{ c.add.moreLabel }}</button></sc-if>
           </div>
         </sc-if>
       </section>

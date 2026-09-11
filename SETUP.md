@@ -1,173 +1,40 @@
-# SETUP — 무엇을 넣으면 무엇이 살아나나
+# 실행 설정
 
-> **한 줄 요약:** 지금 상태로도 **서울 상권 1,564곳 × 업종 62가지 분석은 전부 동작**합니다.
-> 아래는 *아직 비어 있는 칸*을 채우는 방법입니다. **DB는 지금 필요 없습니다.**
->
-> 검증 방법을 항목마다 적어 뒀습니다. **넣고 나서 반드시 한 번 호출해 확인하세요** —
-> 기관마다 응답 필드 이름이 달라서, 키만 넣고 확인을 건너뛰면 조용히 비어 있게 됩니다.
+현재 기준은 Node 서버입니다. 과거 설정 설명은 docs/history/SETUP.md에 보관했습니다. 키를 프런트엔드에 넣지 마세요.
 
----
-
-## 0. 지금 무엇이 되고 무엇이 안 되나
-
-| | 상태 | 근거 |
-| --- | --- | --- |
-| 상권분석 · 정밀분석 · 정밀비교 · 본전 계산 | ✅ **완전 동작** | 수집해 둔 JSON 33개로 돈다. 키 필요 없음 |
-| 통합시세 — 상권·부동산 6지표 | ✅ **동작** | 임대료·공실·매출추이·소비구성·개폐업·프랜차이즈 |
-| 통합시세 — 나머지 22지표 | ⬜ 키 대기 | 환율·금리·물가·농축수산물·에너지 → **§2** |
-| 리포트 — 설문 | ✅ 동작 | |
-| 리포트 — 정부 창업지원사업 | ⬜ 키 대기 | **§1** (가짜 상위 API로 파이프라인은 검증 완료) |
-| 지도 | ⬜ 자리만 비워 둠 | **§3** 카카오지도 |
-| 리포트 이메일 발송 | ⬜ 키 대기 | **§4** |
-| **DB (PostgreSQL)** | **필요 없음** | 지금은 정적 JSON + 얇은 프록시. `pg` 의존성도 없다 |
-
-> **DB 이야기** — CLAUDE.md §1 의 'PostgreSQL' 은 *앞으로 계획된 스택*입니다.
-> 지금 구조(수집 → JSON → 정적 서빙)로 서울 전체가 문제없이 돌아가므로,
-> **지금 단계에서 DB 는 필요 없습니다.** 넣으면 관리할 것만 늘어납니다.
-> DB 가 필요해지는 시점은 ① 사용자가 넣은 값을 저장해야 할 때
-> ② 데이터가 수백 MB 로 커져 브라우저가 못 받을 때 ③ 전국으로 넓힐 때입니다.
-
----
-
-## 1. 정부 창업지원사업 — 가장 먼저 할 것
-
-**넣는 곳:** 서버 환경변수 (Vercel → Settings → Environment Variables / VPS → `.env`)
-
-| 이름 | 값 |
+| 환경변수 | 의미 |
 | --- | --- |
-| `DATA_GO_KR_KEY` | 공공데이터포털 **서비스키(Decoding)**. 이미 쓰는 키 그대로 — 새로 발급 안 해도 됨 |
-| `SUPPORT_API_URL` | 활용신청 승인 화면의 **'요청주소'를 그대로** 붙여넣기 |
+| NODE_ENV | 운영은 production; ALLOWED_ORIGIN 누락 시 시작 거부 |
+| HOST / PORT | Render 0.0.0.0/제공 PORT, VPS 127.0.0.1/3000 |
+| ALLOWED_ORIGIN | 정확한 https://호스트[:포트]; 여러 개면 쉼표 구분 |
+| TRUST_PROXY_HOPS | 기본 0; 검증된 단일 Nginx 뒤에서는 1 |
+| REPORT_EMAIL_ENABLED | 기본 false |
+| BREVO_API_KEY | 이메일 발송 서버 전용 키 |
+| REPORT_FROM_EMAIL / REPORT_FROM_NAME | 인증된 발신자 주소/표시 이름 |
+| DATA_GO_KR_KEY | 지원사업/관련 수집기 키 |
+| SUPPORT_API_URL | 지원사업 공고 제공자 endpoint; 실제 스키마 확인 필요 |
 
-**해야 할 일:** 공공데이터포털에서 **창업지원사업 공고 서비스 활용신청** 1건.
+`.env.example`을 참고합니다. 서버는 env 파일을 자동으로 읽지 않습니다. 로컬은 `node --env-file=.env server.js`, VPS는 systemd EnvironmentFile을 사용합니다. VPS unit은 실행 시 NODE_ENV/HOST/PORT/TRUST_PROXY_HOPS를 고정합니다. Nginx 토폴로지를 바꾸면 unit도 같이 검토하세요.
 
-**넣고 나서 확인:**
-```bash
-curl -s -X POST -H "Origin: https://내도메인" -H "content-type: application/json" \
-     -d '{"region":"서울 마포구","ind":"카페"}' https://내도메인/api/support
-```
-- `configured: true` 이고 `items` 가 차 있으면 성공
-- `configured: true` 인데 `items: []` 이면 **필드 이름이 다른 것**입니다 →
-  응답 원문을 보고 `api/support.js` 의 `FIELDS` 에 실제 필드명을 추가하세요
+## 데이터 수집
 
-**이미 검증된 것** (가짜 상위 API로 확인): 마감 지난 공고 제외 · 마감 임박순 정렬 ·
-조건 매칭 근거 표시 · 자격은 판정하지 않고 원문 링크 제공.
+운영 Node에 pip 패키지를 설치할 필요가 없습니다. 격리된 수집 환경에서 `.github/workflows/refresh-dashboard.yml`의 단계와 변수명을 따릅니다. 수집 워크플로는 pandas/requests/pyproj/pyarrow를 사용합니다. backend/requirements.txt는 FastAPI/ML 실험 의존성까지 포함하므로 운영 설치 목록이 아닙니다.
 
----
+주요 수집 키는 SEOUL_API_KEY(일부 경로 SEOUL_OPENDATA_API_KEY), DATA_GO_KR_KEY, LOCALDATA_KEY입니다. 서비스별 URL/오퍼레이션은 workflow와 backend/DATA_SOURCES.md, backend/COLLECTOR_UPGRADE.md를 참고합니다. 특정 키를 넣어도 미승인 공공 API는 활성화되지 않습니다.
 
-## 2. 통합시세 22지표
-
-셋을 한 번에 다 할 필요 없습니다. **하나씩 넣으면 그 갈래부터** 살아나고 나머지는 '준비 중'으로 남습니다.
-
-| 이름 | 어디서 | 무엇이 살아나나 |
-| --- | --- | --- |
-| `ECOS_KEY` | 한국은행 ECOS (무료, 일 10,000회) | 환율 4종 · 기준금리 · 소비자물가 · 생산자물가 |
-| `KAMIS_KEY` + `KAMIS_ID` | aT 농산물유통정보 (**둘 다** 필요) | 농·축·수산물 12종 |
-| `OPINET_KEY` | 한국석유공사 오피넷 | 휘발유 · 경유 · LPG · 국제유가 |
-
-**🔴 키만 넣으면 안 됩니다 — 코드 두 곳을 같이 열어야 합니다:**
-1. `server/app.js` 의 `PUBLIC_APIS` 에 `'market'` 추가
-   (지금은 `['report','config','support']` 만 있어 `/api/market` 이 404)
-2. `frontend/logic/market.js` 가 `/api/market?k=...` 를 실제로 호출하도록 연결
-
-> 허용 목록을 좁게 둔 건 일부러입니다 — 쓰지도 않는 엔드포인트를 열면 공격면만 넓어집니다.
-
-**확인:** `curl -s "https://내도메인/api/market?k=usdkrw"` → 값이 오는지.
-🟡 통계표 코드(ECOS `STAT_CODE`)와 품목 코드(KAMIS)는 **문서에서 찾은 값**이라
-기관 개편으로 달라질 수 있습니다. 실제 응답으로 꼭 확인하세요.
-
----
-
-## 3. 지도 (카카오)
-
-`frontend/screens/32-map.html` 의 `div#kakao-map` 이 **비어 있습니다**. 넣을 때:
-
-1. 🔴 **카카오 JS 키를 코드에 박지 마세요.** 서버가 내려 주거나 환경변수로 주입합니다.
-   JS 키는 브라우저에 노출되는 종류지만, **카카오 developers → 플랫폼 → 사이트 도메인 등록**을
-   반드시 해야 남이 우리 호출 한도를 쓰지 못합니다. **이건 코드로 못 막습니다 — 콘솔 설정입니다.**
-2. 마커 좌표는 이미 있습니다 — `logic/analysis.js` 의 `mv.map.pins`
-3. 지도 SDK 는 외부 스크립트라 **CSP 를 같이 손봐야** 합니다 (`server/app.js` 가 지금 `self` 만 허용)
-
-지도를 못 불러와도 아래 상권 목록·오른쪽 지표는 그대로 동작해야 합니다.
-
----
-
-## 4. 리포트 이메일 발송 (선택)
-
-| 이름 | 값 |
-| --- | --- |
-| `REPORT_EMAIL_ENABLED` | `true` |
-| `BREVO_API_KEY` | Brevo API 키 |
-| `REPORT_FROM_EMAIL` / `REPORT_FROM_NAME` | 보내는 사람 |
-
-안 넣으면 화면에 '메일 발송 준비 중'으로 뜨고 **미리보기·PDF·CSV 저장은 그대로 됩니다.**
-
----
-
-## 4-1. 내 가게 주변 개·폐업 (지방행정인허가 LOCALDATA) — 창업한 뒤에도 쓰는 숫자
-
-정밀분석 › **'요즘' 탭**과 정밀분석 허브의 **'내 가게 주변 요즘'** 줄이 이 자료로 산다.
-최근 30일 동안 상권 반경 500m 안에 새로 연/닫은 음식점·카페·제과점 수와 최근 항목 5개.
-
-**넣는 곳:** GitHub → Settings → Secrets / Variables (수집은 GitHub Actions 가 매주 돈다)
-
-| 이름 | 종류 | 값 |
-| --- | --- | --- |
-| `LOCALDATA_KEY` | Secret | localdata.go.kr 회원가입 → 마이페이지 → **인증키 발급** (무료) |
-| `LOCALDATA_SVCS` | Variable(선택) | 개방서비스 ID, 쉼표 구분. 기본 `07_24_04_P,07_24_05_P,07_24_03_P`(일반음식점·휴게음식점·제과점) |
-| `LOCALDATA_LOCALCODES` | Variable(선택) | 서울 자치구 개방자치단체코드(쉼표 구분). 비우면 전국을 받아 주소로 거른다(느리지만 안전) |
-| `LOCALDATA_EPSG` | Variable(선택) | 좌표계. 비우면 5174·2097 중 서울 안에 더 많이 떨어지는 쪽을 스크립트가 고른다 |
-
-**넣고 나서 확인 (CI 로그):**
-- `좌표계 EPSG:5174 → 표본 300개 중 서울 안 N개` — N 이 0 에 가까우면 좌표계가 다른 것. `LOCALDATA_EPSG` 로 지정
-- `저장: … 열림 N · 닫음 M · 상권 K` — K 가 0 이면 `응답은 왔지만 … 0` 줄을 보고 서비스 ID·필드명을 확인
-- 화면: 정밀분석 › 요즘 탭에 '{n}곳' 큰 숫자가 뜨면 성공. 안 뜨면 `openings.json` 의 `available` 을 볼 것
-
-※ 서비스 ID·필드명(`bplcNm`·`apvPermYmd`·`dcbYmd`·`x`·`y`…)·좌표계는 **문서에서 찾은 값**이다.
-  개발 환경에서 localdata.go.kr 접속이 막혀 실제 응답으로 확인하지 못했다(가짜 상위 API 로 파이프라인만 검증).
-※ 이용조건: 지방행정인허가 개방자료의 라이선스(공공누리 유형)와 상업 이용 조건을 **확인 필요**.
-
-## 5. 🔴 운영 배포 전 반드시 (키가 아니라 설정)
-
-| 이름 | 왜 |
-| --- | --- |
-| `ALLOWED_ORIGIN` | **없으면 `NODE_ENV=production` 에서 API 가 전부 막힙니다.** 실제 도메인을 넣으세요 (쉼표로 여러 개) |
-| `NODE_ENV=production` | |
-| `TRUST_PROXY_HOPS` | Nginx 뒤에 둘 때만. 앞단 프록시 개수 |
-
----
-
-## 6. 데이터 자동 갱신 (GitHub Actions)
-
-수집기 28개가 주기적으로 돌아 `frontend/*.json` 을 만듭니다.
-
-| 이름 | 종류 | 무엇 |
-| --- | --- | --- |
-| `SEOUL_API_KEY` | Secret | 서울 열린데이터광장 |
-| `LOCALDATA_KEY` | Secret | 지방행정인허가(localdata.go.kr) — §4-1 |
-| `DATA_GO_KR_KEY` | Secret | 공공데이터포털 |
-| `ZONE_RENT_SERVICE` | Variable | 상권 단위 임대료 **오퍼레이션명** (기본 `VwsmTrdarStorQq` — 미검증) |
-| `FTC_BRAND_URL` · `FTC_INDUSTRY_URL` · `FTC_COST_URL` | Variable | 공정위 가맹정보 (활용신청 필요) |
-| `BLDPRICE_URL` | Variable | 국토부 상업용 부동산 실거래가 (활용신청 필요) |
-| `BLDPRICE_YIELD` | Variable | (선택) 연 수익률 % — 넣으면 매매가에서 임대료 역산, 결과는 **추정** |
-
-🟡 **워크플로의 수집 단계가 전부 `continue-on-error: true`** 라 전부 실패해도 초록색으로 끝납니다.
-수집이 조용히 멈춰도 몇 주 동안 모를 수 있으니, **CI 로그를 가끔 보세요.**
-
----
-
-## 7. 넣은 뒤 확인 순서
-
-```bash
-npm test              # 27개 — 반드시 통과
-npm run check:data    # frontend/data/v3/*.json 스키마
-npm run check:html    # 커밋된 index.html 이 조각들과 같은지
-npm start             # http://localhost:3000
+```sh
+cd backend
+python build_v3.py
+cd ..
+npm run check:data
+npm test
+npm run build:deploy -- /tmp/mysbizon-new-release
 ```
 
-그다음 브라우저에서:
-1. 리포트 탭 → 설문 끝까지 → **지원사업이 실제로 뜨는지**
-2. 통합시세 → 환율 → **'데이터 준비 중'이 아니라 그래프가 뜨는지**
-3. 정밀분석 → 지도 → **지도가 뜨는지**
+위 build_v3는 선행 수집 산출물이 준비된 상태에서 실행합니다. 기존 자료를 보존하는 폴백이 있으므로 성공 종료만으로 최신 자료 확보를 판단하지 않습니다. workflow 마지막 report_freshness와 실제 updated/quarter를 확인하세요.
 
-**하나라도 '준비 중'이면 그건 고장이 아니라 아직 안 넣은 것입니다.**
-이 서비스는 없는 값을 지어내지 않습니다 — 비어 있으면 비어 있다고 말합니다.
+## 미연결 기능
+
+api/market.js의 ECOS_KEY, KAMIS_KEY/KAMIS_ID, OPINET_KEY는 현재 운영에서 읽히지 않습니다. 키만 넣어서 연결됐다고 표시하지 않습니다. UI의 준비 중 목록과 기존 6개 공개 통계는 유지합니다. 지도의 도로/건물/외부지도 기능, 원자료 미제공 지역은 기존 준비 중 상태를 유지합니다.
+
+실제 메일 발송·외부 공공 API 호출은 이번 검증에 포함되지 않았습니다. 모의 제공자 테스트와 키 없는 동작은 확인했습니다.

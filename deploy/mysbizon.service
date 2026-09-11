@@ -11,7 +11,7 @@ User=mysbizon
 Group=mysbizon
 WorkingDirectory=/opt/mysbizon/current
 EnvironmentFile=/etc/mysbizon.env
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/env NODE_ENV=production HOST=127.0.0.1 PORT=3000 TRUST_PROXY_HOPS=1 /usr/bin/node server.js
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=20
@@ -24,6 +24,11 @@ RestrictSUIDSGID=true
 UMask=0077
 MemoryMax=512M
 TasksMax=128
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mysbizon
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=200
 
 [Install]
 WantedBy=multi-user.target

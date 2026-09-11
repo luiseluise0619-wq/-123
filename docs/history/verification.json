@@ -1,0 +1,20 @@
+{
+  "date": "2026-09-05",
+  "node": "24.19.0",
+  "tests": {
+    "passed": 13,
+    "failed": 0,
+    "duration_ms": 9572
+  },
+  "ui_combinations": 806,
+  "javascript_syntax_files": 23,
+  "original_python_syntax_files": 85,
+  "vendor_sha384": "matched",
+  "browser_widths": [
+    320,
+    390,
+    1270
+  ],
+  "external_services": "not connected; email mocked",
+  "deployment": "Render and Cafe24 config examples; no actual deployment"
+}

@@ -5,6 +5,7 @@ import {promisify} from 'node:util';
 const gzip=promisify(compress);
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon','.woff2':'font/woff2','.txt':'text/plain; charset=utf-8'};
 const cache=new Map();let cacheBytes=0;
+const pending=new Map();
 const MAX_FILE=10*1024*1024,MAX_CACHE=24*1024*1024;
 function remember(key,value){
   const old=cache.get(key);if(old){cacheBytes-=old.bytes;cache.delete(key);}
@@ -27,9 +28,21 @@ export async function serveStatic(root,pathname,res,req){
   const stamp=info.mtimeMs+':'+info.size;
   let entry=cache.get(file);
   if(!entry||entry.stamp!==stamp){
-    const raw=await readFile(file);
-    const zipped=['.html','.js','.json','.css','.svg','.txt'].includes(ext)&&raw.length>=1024?await gzip(raw):null;
-    entry={stamp,raw,zipped,bytes:raw.length+(zipped?.length||0)};remember(file,entry);
+    const key=file+':'+stamp;
+    let loading=pending.get(key);
+    if(!loading){
+      if(pending.size>=20){res.writeHead(503,{'Retry-After':'1'});return res.end();}
+      // Concurrent cold requests share one read/compression and its memory allocation.
+      loading=(async()=>{
+        const raw=await readFile(file);
+        const zipped=['.html','.js','.json','.css','.svg','.txt'].includes(ext)&&raw.length>=1024?await gzip(raw):null;
+        const value={stamp,raw,zipped,bytes:raw.length+(zipped?.length||0)};
+        remember(file,value);
+        return value;
+      })().finally(()=>pending.delete(key));
+      pending.set(key,loading);
+    }
+    entry=await loading;
   }
   const encoding=String(req.headers['accept-encoding']||'').split(',').map(x=>x.trim());
   const useGzip=entry.zipped&&encoding.some(x=>/^gzip(?:\s*;\s*q=(?:1(?:\.0*)?|0\.[0-9]*[1-9][0-9]*))?$/i.test(x));

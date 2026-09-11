@@ -16,3 +16,10 @@ globalThis.MysbizonConst.PRICE_CATS=[
 // 처음 state 와 calc()·size() 의 폴백이 따로 적혀 있어서, 칸을 비우면
 // 임대료가 400 이 아니라 0, 원가율이 35% 가 아니라 30% 로 계산됐다.
 globalThis.MysbizonConst.BEP_DEFAULT={ rent:400, cogs:35, area:15 };
+
+// 공통 근거 행: 좋음·주의·정보(판단 없음)의 화살표 스타일.
+globalThis.MysbizonConst.TREND_STYLES = Object.freeze({
+  arrowUp:'flex:none;font-size:15px;font-weight:600;color:var(--good);width:14px',
+  arrowDn:'flex:none;font-size:15px;font-weight:600;color:var(--warn);width:14px',
+  arrowInfo:'flex:none;font-size:15px;font-weight:600;color:var(--ink3);width:14px',
+});

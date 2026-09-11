@@ -24,6 +24,13 @@
 import { fetchT, encKey, ymdLocal } from './_http.js';
 import { redact } from './_err.js';
 
+function publicLink(value) {
+  try {
+    const url = new URL(value);
+    return ['https:', 'http:'].includes(url.protocol) ? url.href : '';
+  } catch { return ''; }
+}
+
 // 우리 화면이 쓰는 모양. 여기 없는 건 화면에 안 쓴다.
 const FIELDS = {
   title:    ['intgSprtBizNm', 'pblancNm', 'bizPbancNm', 'title', '사업명', '공고명'],
@@ -73,16 +80,19 @@ export default async function handler(req, res) {
     const r = await fetchT(`${base}${base.includes('?') ? '&' : '?'}serviceKey=${encKey(key)}&${qs}`, {
       headers: { Accept: 'application/json' },
     });
-    const j = await r.json().catch(() => null);
+    if (!r.ok) throw new Error('Support upstream status ' + r.status);
+    const j = await r.json();
     // 기관마다 목록이 담기는 자리가 다르다. 흔한 자리를 훑는다.
     const rows = (j && (j.data || j.items || (j.response && j.response.body && j.response.body.items))) || [];
     const list = Array.isArray(rows) ? rows : (rows.item || []);
+    if (!Array.isArray(list)) throw new Error('Invalid support item list');
 
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const items = [];
     let expired = 0, undated = 0;
 
     for (const row of list) {
+      if (!row || typeof row !== 'object' || Array.isArray(row)) continue;
       const deadline = parseDate(pickField(row, FIELDS.deadline));
       // 마감이 지났으면 버린다 — 이 화면에서 지난 공고는 틀린 정보다.
       if (deadline && deadline < today) { expired++; continue; }
@@ -93,7 +103,7 @@ export default async function handler(req, res) {
         title,
         org: pickField(row, FIELDS.org),
         deadline: deadline ? ymdLocal(deadline) : null,
-        url: pickField(row, FIELDS.url),
+        url: publicLink(pickField(row, FIELDS.url)),
         kind: pickField(row, FIELDS.kind),
         region: pickField(row, FIELDS.region),
         target: pickField(row, FIELDS.target),

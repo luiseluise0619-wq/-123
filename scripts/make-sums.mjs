@@ -13,18 +13,31 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readdir } from 'node:fs/promises';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const FILE = path.join(ROOT, 'SHA256SUMS.json');
 const check = process.argv.includes('--check');
 
-const before = JSON.parse(await readFile(FILE, 'utf8'));
+const before = existsSync(FILE) ? JSON.parse(await readFile(FILE, 'utf8')) : {};
+async function sources(dir = '') {
+  const files = [];
+  for (const entry of await readdir(path.join(ROOT, dir), {withFileTypes:true})) {
+    if (['.git','node_modules','dist','__pycache__','scratchpad'].includes(entry.name)) continue;
+    const rel = path.posix.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...await sources(rel));
+    else if (entry.isFile() && rel !== 'SHA256SUMS.json' && !/\.pyc$|\.log$/.test(rel)
+      && (!entry.name.startsWith('.env') || entry.name === '.env.example')) files.push(rel);
+  }
+  return files;
+}
 const out = {}, gone = [];
-for (const rel of Object.keys(before).sort()) {
+for (const rel of (await sources()).sort()) {
   const abs = path.join(ROOT, rel);
   if (!existsSync(abs)) { gone.push(rel); continue; }   // 지워진 파일은 목록에서 뺀다
   out[rel] = createHash('sha256').update(await readFile(abs)).digest('hex');
 }
+for (const rel of Object.keys(before)) if (!Object.hasOwn(out, rel)) gone.push(rel);
 const changed = Object.keys(out).filter(k => before[k] !== out[k]);
 
 if (check) {

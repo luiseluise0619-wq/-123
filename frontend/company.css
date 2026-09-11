@@ -69,6 +69,26 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
 
 @media(max-width:599px){main>section{padding-top:32px !important} main h1{white-space:normal !important;overflow-wrap:anywhere} .home-hero{min-height:680px !important} }
 
+/* 통합시세·상권 선택: 절제된 면, 명확한 라벨, PC/태블릿/모바일 리플로우. */
+.market-filters { display:flex;flex-wrap:wrap;gap:16px;margin:4px 0 12px; }
+.market-filter { display:flex;flex-direction:column;gap:8px;flex:1 1 200px;min-width:0;max-width:360px; }
+.market-filter > span { font-size:13px;font-weight:600;color:var(--ink2); }
+.market-filter select { width:100%;min-height:48px;border:1px solid var(--line-strong);border-radius:14px;padding:11px 36px 11px 14px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;cursor:pointer; }
+.market-scope { font-size:13px;line-height:1.6;color:var(--ink2);margin:10px 0 16px;overflow-wrap:anywhere; }
+main[data-screen="price"] canvas { cursor:crosshair; }
+main[data-screen="price"] > section:last-of-type { margin-top:20px; }
+.compare-gu { margin-top:20px; }
+.compare-browser { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px; }
+.compare-choice { display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;min-height:84px;padding:18px;text-align:left;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer; }
+.compare-choice:hover:not(:disabled) { border-color:var(--accent);background:var(--accent-3); }
+.compare-choice-copy { display:flex;flex-direction:column;gap:6px;min-width:0;overflow-wrap:anywhere; }
+.compare-choice-copy strong { font-size:15px;font-weight:600;line-height:1.4; }
+.compare-choice-copy > span { font-size:12px;color:var(--ink2);line-height:1.5; }
+.compare-choice-action { flex:none;font-size:13px;font-weight:600;color:var(--accent-text); }
+.compare-more { display:block;margin:20px auto 0;min-height:48px;padding:12px 24px;border:0;border-radius:12px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer; }
+@media(min-width:600px) and (max-width:1099px) { .compare-browser { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:599px) { .compare-browser { grid-template-columns:1fr; } .market-filter { max-width:none;flex-basis:100%; } .market-filters { gap:12px; } }
+
 /* 넓은 표는 가로로 민다 — 밀 수 있다는 것을 그림자로 알린다.
    local 배경은 내용과 함께 움직이고 scroll 배경은 칸에 붙어 있어서,
    끝까지 밀면 그림자가 저절로 사라진다(자바스크립트 없이). */

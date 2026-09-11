@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {logicSource} from './logic-source.js';
 
 // 번역이 조용히 빠지는 걸 막는 시험.
 //   · 세 언어 사전의 키가 똑같은가
@@ -75,12 +76,8 @@ test('이름 뒤에 붙는 말은 영어 관행대로 적는다', () => {
 });
 
 // ── 실제 화면 값에 한국어가 남는지 ──────────────────────────────
-const LOGIC_PARTS = ['const', 'i18n', 'theme', 'roman', 'util', 'design', 'rank',
-  'analysis', 'screens', 'chat', 'charts', 'carousel', 'market', 'views'];
-
 function component(locale) {
-  const source = LOGIC_PARTS.map(n => read('../frontend/logic/' + n + '.js')).join('\n')
-    + '\n' + read('../frontend/app-logic.js');
+  const source = logicSource();
   const context = {
     DCLogic: class { setState(v) { this.state = { ...this.state, ...v }; } },
     window: { innerWidth: 1200 }, console, URL,

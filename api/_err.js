@@ -10,7 +10,7 @@
 //     · Postgres 오류: 테이블·컬럼·제약조건 이름이 그대로 나온다(스키마 노출).
 //
 // 원칙
-//   서버 로그에는 전부 남긴다(운영자가 원인을 봐야 한다).
+//   서버 로그에는 엔드포인트와 제한된 오류 종류만 남긴다.
 //   클라이언트에는 상황만 알린다(사용자가 할 수 있는 행동만).
 //
 // 화면 동작은 바뀌지 않는다 — 실패 시 오류 문구가 뜨는 것도, 그 자리도 그대로다.
@@ -52,7 +52,7 @@ export function redact(s) {
 }
 
 /**
- * 오류를 서버 로그에 남기고, 클라이언트에 줄 안전한 문구를 돌려준다.
+ * 오류 원문 대신 제한된 분류를 로그에 남기고 안전한 문구를 돌려준다.
  *
  *   return res.status(200).json({ ok:false, error: safeError("lead", e, "저장 실패") });
  *
@@ -61,7 +61,9 @@ export function redact(s) {
  * @param userMsg 사용자에게 보일 앞머리(각 화면이 이미 쓰던 문구를 그대로 넘긴다)
  */
 export function safeError(tag, e, userMsg) {
-  const detail = redact((e && (e.stack || e.message)) || e);
-  console.error(`[${tag}]`, detail);
+  // External errors may contain request bodies, email addresses or API credentials.
+  // Never log their message/stack; a bounded classification is enough to locate this boundary.
+  const kind = ['AbortError', 'TimeoutError', 'TypeError', 'SyntaxError'].includes(e?.name) ? e.name : 'Error';
+  console.error(`[${String(tag).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40)}]`, kind);
   return `${userMsg}. 잠시 후 다시 시도해 주세요.`;
 }

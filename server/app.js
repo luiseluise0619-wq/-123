@@ -1,14 +1,14 @@
 import http from 'node:http';
-import { stat } from 'node:fs/promises';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import report from '../api/report.js';
+import config from '../api/config.js';
+import support from '../api/support.js';
 import { vercelRes, readBody } from './response.js';
 import { serveStatic } from './static.js';
 import { clientIp, createLimiter, securityHeaders } from './security.js';
 import { isAllowedOrigin } from '../api/_origin.js';
 import { redact } from '../api/_err.js';
 
-const PUBLIC_APIS = new Set(['report','config','support']);
+const PUBLIC_APIS = new Map([['report', report], ['config', config], ['support', support]]);
 export function createServer(root) {
   const limit = createLimiter(); let inFlight = 0;
   const server = http.createServer(async (req, res) => {
@@ -24,22 +24,21 @@ export function createServer(root) {
         const name = pathname.slice(5);
         if (!PUBLIC_APIS.has(name)) return json(404,{error:'Not found'});
         const readOnly = name === 'config';
-        if (req.method !== (readOnly ? 'GET' : 'POST')) return json(405,{error:readOnly?'GET only':'POST only'});
+        if (req.method !== (readOnly ? 'GET' : 'POST')) {
+          res.setHeader('Allow', readOnly ? 'GET' : 'POST');
+          return json(405,{error:readOnly?'GET only':'POST only'});
+        }
         if (!isAllowedOrigin(req,{allowMissing:readOnly})) return json(403,{error:'허용되지 않은 요청 출처입니다.'});
         const ip = clientIp(req);
-        const wait = limit(`all:${ip}`,60,60000) || limit(`endpoint:${name}:${ip}`,(name==='report'?3:30),['lead','report'].includes(name)?3600000:60000)
+        const wait = limit(`all:${ip}`,60,60000) || limit(`endpoint:${name}:${ip}`,(name==='report'?3:30),name==='report'?3600000:60000)
           || limit(`global:${name}`,name==='report'?50:1000,3600000);
         if (wait) {res.setHeader('Retry-After',String(wait)); return json(429,{error:'요청이 많습니다. 잠시 후 다시 시도해 주세요.'});}
         if (inFlight >= 20) return json(503,{error:'요청이 많습니다. 잠시 후 다시 시도해 주세요.'});
-        const file = path.join(root,'..','api',name+'.js');
-        try { if (!(await stat(file)).isFile()) return json(404,{error:'Not found'}); }
-        catch { return json(404,{error:'Not found'}); }
         inFlight++;
         try {
           if (!readOnly && String(req.headers['content-type']||'').split(';')[0].trim().toLowerCase()!=='application/json') return json(415,{error:'application/json required'});
           const body = readOnly ? '' : await readBody(req);
-          const handler = (await import(pathToFileURL(file).href)).default;
-          if (typeof handler !== 'function') throw new Error('Missing API handler');
+          const handler = PUBLIC_APIS.get(name);
           res.setHeader('Cache-Control','no-store');
           await handler({method:req.method,headers:req.headers,body,url:req.url,ip,query:Object.fromEntries(new URL(req.url,'http://localhost').searchParams)},vercelRes(res));
         } finally { inFlight--; }
@@ -56,5 +55,7 @@ export function createServer(root) {
     }
   });
   server.requestTimeout=30000; server.headersTimeout=15000; server.keepAliveTimeout=5000;
+  // Bound inactive response sockets too; requestTimeout only covers receiving requests.
+  server.setTimeout(30000, socket => socket.destroy());
   return server;
 }

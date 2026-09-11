@@ -4,7 +4,6 @@
 // 메서드 안의 this 는 컴포넌트 인스턴스다 — 옮기기 전과 똑같이 동작한다.
 globalThis.MysbizonParts = globalThis.MysbizonParts || {};
 globalThis.MysbizonParts.util = {
-  loadData(url){return fetch(url,{signal:AbortSignal.timeout(10000)}).then(r=>{if(!r.ok)throw new Error('Data unavailable');return r;});},
 
   // 금액 표기는 언어마다 단위가 다르다(§35). 화면마다 따로 만들지 않고 여기만 쓴다.
   //   한국어  1,000만 / 3.3억          영어  KRW 10.0M / KRW 330M

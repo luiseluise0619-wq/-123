@@ -13,7 +13,9 @@ const DEFAULT_TIMEOUT_MS = 10000;
 /** fetch 에 상한 시간을 붙인 것. 시간이 지나면 TimeoutError 로 throw 된다. */
 export function fetchT(url, opts, timeoutMs) {
   const ms = Number(timeoutMs) > 0 ? Number(timeoutMs) : DEFAULT_TIMEOUT_MS;
-  return fetch(url, { ...(opts || {}), signal: AbortSignal.timeout(ms) });
+  const timeout = AbortSignal.timeout(ms);
+  const signal = opts?.signal ? AbortSignal.any([opts.signal, timeout]) : timeout;
+  return fetch(url, { ...(opts || {}), signal });
 }
 
 // data.go.kr 인증키는 Encoding(%2B…)·Decoding(원본) 두 형태로 발급된다.

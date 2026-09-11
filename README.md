@@ -1,70 +1,84 @@
-# 사장님인사이트 — 서버와 UI 통합 배포본
+# 사장님인사이트 — 소스와 배포
 
-이 폴더가 하나의 서비스입니다. `node server.js`가 화면·데이터·API를 함께 제공합니다. 화면 코드만 따로 올리거나 예전 `frontend` 폴더와 섞지 마세요.
+운영 서버는 Node.js 표준 라이브러리 기반 정적 UI + API입니다. Render와 Cafe24 Linux VPS 모두 같은 서버를 사용합니다. FastAPI/ML은 소스에 보관한 실험·개발 코드이며 운영에서 실행하지 않습니다. Vercel 정적 배포는 현재 지원 경로가 아닙니다.
 
-## 실행
+## 개발·검증
 
-Node.js 24 계열에서 검증했습니다. 외부 npm 패키지는 없어서 `npm install`이 필요 없습니다.
+Node 22~24 지원 범위, 이번 검증은 Node 24.19.0 / Windows에서 수행했습니다. 외부 npm 의존성은 없습니다.
 
 ```sh
+npm run build:html
+npm run check:html
 npm run check:data
 npm test
 npm start
 ```
 
-브라우저에서 `http://localhost:3000`을 엽니다. 환경 파일을 직접 읽으려면 `node --env-file=.env server.js`를 사용합니다. `.env.example`은 예시이며 비밀키가 들어 있지 않습니다.
+`http://localhost:3000`을 엽니다. `.env`를 자동으로 읽지 않으므로 필요하면 `node --env-file=.env server.js`로 시작합니다.
 
-## 포함 기능
+## 책임과 원본
 
-서울 상권 검색, 업종별 후보 비교, 실제 중심 좌표 지도, 상권 동향, 입력 조건별 본전 계산, 데이터 도우미, CSV 및 인쇄/PDF 리포트입니다. 프런트는 `frontend/index.html`과 `frontend/app-logic.js`, 서버 API는 공개 폴더 밖의 `api/`에 있습니다. 인쇄 페이지도 동일 서버에서 동작합니다.
+| 경로 | 역할 |
+| --- | --- |
+| `server.js` → `server/app.js` | 데이터 검증, 정적 파일, 공개 API, 종료 처리 |
+| `api/config.js`, `report.js`, `support.js` | GET 설정 / POST 메일 / POST 지원사업 |
+| `frontend/screens/*.html` | HTML 원본; `scripts/build-html.mjs`의 ORDER로 조립 |
+| `frontend/index.html` | 생성물. 직접 수정하지 않음 |
+| `frontend/app-logic.js` | state, lifecycle, 메뉴, 공통 화면 값, 모듈 결합 |
+| `frontend/logic/data.js`, `storage.js` | 요청과 필수/선택 데이터 정책, 브라우저 저장 |
+| `frontend/logic/home.js`, `screens.js` | 홈 검색, 지역 비교·지역 업종·자치구 분석 |
+| `frontend/logic/report.js` | 설문과 지원사업 표시, CSV/인쇄/메일 출력 |
+| `frontend/logic/views.js`, `diagnosis.js`, `comparison.js` | 후보·지도·상세, 본전 계산 화면, 담은 상권 비교 |
+| `frontend/logic/market.js` | 시세 갈래와 공개 통계 표시 |
+| 나머지 `frontend/logic/*.js` | 계산·순위·형식·i18n·테마·차트·carousel |
+| `frontend/report-print.html` | 저장된 리포트의 인쇄/PDF 화면 |
+| `frontend/dc-runtime.js` | 원본 TS가 없는 생성/vendor artifact. 수정하지 않음 |
+| `backend/`, `.github/workflows/` | 데이터 생성·수집 및 보관한 실험 코드 |
+| `scripts/deploy-files.mjs` | 검토한 배포 파일 경계 |
 
-데이터 도우미는 공개 집계와 계산에 기반한 규칙형 안내입니다. 외부 생성형 AI를 호출하지 않습니다. 지도는 중심 좌표와 구 경계를 보여 주며 도로·건물·실시간 경쟁점 지도는 아닙니다. 공개 집계는 개별 점포의 실제 매출이나 성공 확률이 아닙니다.
+모듈은 `globalThis.MysbizonParts`에 등록하고 Component prototype에 결합합니다. 같은 이름은 예외로 검출합니다. 새 모듈은 `_shell-head.html`과 결합 목록을 함께 갱신해야 합니다. 공통 테스트 로더는 shell 순서를 읽으며 `tests/refactor.test.js`가 실제 HTML 스크립트 순서로도 결합을 검사합니다.
 
-## Render에서 시험
+## 소스와 배포 artifact
 
-새 Web Service의 저장소 루트를 이 폴더로 지정합니다. Build는 `npm run check:data`, Start는 `node server.js`, Health Check는 `/healthz`입니다. `render.yaml`도 포함했습니다. `ALLOWED_ORIGIN`에는 Render가 부여한 정확한 HTTPS 주소를 넣습니다. Render가 제공하는 PORT를 그대로 사용하고 HOST는 `0.0.0.0`입니다.
+```sh
+npm run build:deploy
+# 또는 매번 새 빈 경로 지정
+npm run build:deploy -- /tmp/mysbizon-release-20260911
+```
 
-이전 소스 위에 덮어쓰지 말고 이 배포본으로 새 배포를 만드세요. 실제 Render 계정과 배포에는 이번 작업에서 접근하지 않았습니다.
+기본 결과는 `dist/`입니다. 기존 디렉터리가 비어 있지 않으면 덮어쓰지 않고 실패합니다. 새 릴리스 경로를 사용하세요. artifact는 `server.js`, `server/`, 공개 API와 의존 helper, `scripts/validate-data.mjs`, 필요한 frontend와 라이선스를 포함합니다. `DEPLOY-MANIFEST.json`에 각 파일 크기와 SHA-256을 기록합니다. artifact 안에서 `npm start` 또는 `node server.js`로 실행합니다. 테스트·수집·재빌드는 소스에서 실행합니다.
 
-## 카페24 VPS로 이전
+Python, ML 모델, 중간 JSON/GeoJSON, 화면 원본 조각, 테스트, 문서는 runtime artifact에서 제외합니다. source에서 `node server.js`를 바로 실행하면 frontend 안의 중간 파일도 정적 접근 가능하므로 운영은 artifact를 사용하세요.
 
-관리자 권한으로 Node와 Nginx를 설치할 수 있는 Linux VPS를 전제로 합니다. Python 전용 공유 웹호스팅 상품의 실행 가능 여부는 별도입니다. 이 웹서버의 실행 언어는 Node이며 Python 실험 서버를 함께 띄울 필요가 없습니다.
+## 데이터 갱신
 
-1. `/opt/mysbizon/releases/<버전>/`에 전체 폴더를 놓고 검사합니다. 기존 운영 폴더에서 파일을 하나씩 바꾸지 마세요.
-2. 검사한 버전을 `/opt/mysbizon/current` 심볼릭 링크로 선택합니다. 파일은 서비스 사용자에게 읽기 권한만 부여합니다.
-3. 전용 비로그인 사용자 `mysbizon`을 만들고 `.env.example`을 기준으로 `/etc/mysbizon.env`를 구성합니다. root 소유, 권한 600을 사용합니다.
-4. `deploy/mysbizon.service`를 설치합니다. 실제 Node 경로가 `/usr/bin/node`인지 확인합니다. 앱은 `127.0.0.1:3000`에서 실행합니다.
-5. `deploy/nginx.conf.example`의 도메인·인증서 경로를 실제 값으로 바꾸고 `nginx -t` 후 적용합니다. 3000번 외부 접근은 허용하지 않습니다.
-6. TLS 도메인에서 검색 → 계산 → 리포트 미리보기 → `/healthz`를 확인합니다. 실패하면 current 링크를 이전 버전으로 되돌리고 재시작합니다.
+실제 클라이언트는 최초 `data/v3` 12개와 루트 `zone_rent.json`을 요청하고, `openings.json`은 상세/내 가게 화면에서 지연 요청합니다. v3에는 총 13개 파일이 있으며 시작 검증은 핵심 10개를 검사합니다. 부가 파일은 클라이언트 shape guard/폴백을 사용합니다.
 
-프록시가 X-Forwarded-For를 덮어쓰는 예시 Nginx 구성에서는 `TRUST_PROXY_HOPS=1`입니다. 신뢰 가능한 프록시 구성 확인 전에는 0을 유지하세요. 0에서는 프록시 뒤 방문자가 같은 요청 제한을 공유합니다. Render의 실제 헤더 체인도 확인 후 변경하세요.
+수집기 → `frontend/` 중간 자료 → `backend/build_v3.py` → `frontend/data/v3/` → 검증 → 새 artifact 순서입니다. `build_seoul_dataset.py`가 `app.data.collectors.seoul_trdar_client`를 import하므로 `backend/app` 전체를 삭제하면 안 됩니다. `.github/workflows/refresh-dashboard.yml`이 세부 실행 순서를 정의합니다. 오래된 `build_bundle.py`는 과거 지도 번들 경로도 유지하며 현재 Node UI의 로드 대상은 아닙니다.
 
-## 이메일 발송
+수집기 네트워크 실행은 별도 환경에서 수행합니다. 이번 리팩토링은 원본 JSON과 계산식을 변경하지 않았습니다. 스키마 검증은 자료의 진위나 통계적 정확성을 증명하지 않습니다. 새 데이터는 새 릴리스에서 검증 후 배포합니다.
 
-기본값은 꺼짐입니다. 검색·비교·계산·CSV·PDF는 발송 설정 없이 작동합니다. 모의 발송 테스트만 수행했고 실제 이메일은 보내지 않았습니다.
+## Render
 
-이메일을 켜려면 발신자 인증, Brevo 키, 발신 주소와 실제 회사 개인정보 처리방침을 먼저 구성합니다. `REPORT_EMAIL_ENABLED=true`로 바꾸면 화면이 서버 설정을 조회하여 활성화합니다. 수신 주소와 선택한 분석 정보가 Brevo로 전달됩니다. 운영 주체·문의처·보유기간·수탁/국외 이전 정보는 실제 회사 정책을 반영해야 합니다.
+`render.yaml`: Node 24, `npm run check:html && npm run check:data && npm test && npm run build:deploy`, `node dist/server.js`, `/healthz`. `ALLOWED_ORIGIN`은 실제 HTTPS origin으로 지정하고 HOST는 `0.0.0.0`, PORT는 Render 값을 사용합니다. 생성 HTML이 원본과 다르면 배포 검사가 실패하므로 변경 후 빌드 결과도 커밋하세요.
 
-요청 제한과 중복 요청 병합은 단일 Node 프로세스 메모리에 있습니다. 재시작 시 초기화되며 여러 인스턴스가 공유하지 않습니다. 이메일 공개 규모를 늘리기 전에는 수신자 확인 또는 봇 방어, 공용 요청 제한 저장소가 필요합니다. 실패/시간초과 발송은 자동 재시도하지 않습니다. 외부 메일사의 전달 결과는 별도 모니터링합니다.
+기존 Dashboard 설정은 YAML 수정만으로 자동 변경된다고 가정하지 마세요. 실제 서비스를 확인해 위 명령을 반영해야 합니다. `TRUST_PROXY_HOPS=0`을 유지했고, 실제 Render 프록시 홉을 확인하기 전 임의로 1로 바꾸지 않습니다. 0이면 프록시 뒤 사용자가 IP 제한을 공유할 수 있습니다.
 
-## 데이터 갱신과 운영
+## Cafe24 VPS
 
-배포 데이터는 첨부된 스냅샷입니다. 상권 매출 기준은 2026년 1분기이며 임대료 등 보조 자료는 별도 기준 기간을 가집니다. 자동으로 최신 자료가 되는 서비스가 아닙니다.
+HTTPS → Nginx → `127.0.0.1:3000` → 단일 Node 프로세스입니다. Node 실행·systemd·Nginx 설치가 가능한 Linux VPS를 전제로 합니다. 제품명에 Python이 있다는 이유로 FastAPI로 이전할 필요가 없습니다. 절차·롤백은 [DEPLOYMENT.md](deploy/DEPLOYMENT.md)를 따릅니다.
 
-새 스냅샷 10개 JSON을 새 릴리스의 `frontend/data/v3`에 넣고 `npm run check:data`와 `npm test`를 모두 통과한 뒤 릴리스 전체를 교체합니다. 검증기는 형식·분기 일치·범위·개수·숫자 유효성을 확인하며 원자료의 진위나 통계적 정확성을 증명하지 않습니다. 서버 시작 때도 검사하므로 깨진 자료로 조용히 서비스하지 않습니다. 원본 스냅샷과 직전 릴리스를 보관하세요.
+## API와 보안 범위
 
-원래 Python 수집기들은 구형 데이터 구조를 생성하므로 이 UI에 자동 연결했다고 표시하지 않았습니다. 실험 API·학습/예측 모델·구형 DB 신청 API·Vercel 설정과 함께 배포 대상에서 제외했습니다. 원본 ZIP은 변경하지 않았습니다. 상세 제외 목록은 `REMOVED-FILES.json`을 확인하세요.
+| 경로 | 메서드 | 동작 |
+| --- | --- | --- |
+| `/healthz` | 상태 확인 | 프로세스 상태; 외부 제공자 상태까지 검증하지 않음 |
+| `/api/config` | GET | 이메일 기능 활성 여부; 비밀키 반환 없음 |
+| `/api/support` | POST JSON | 공개 공고. 키 없으면 configured:false |
+| `/api/report` | POST JSON | 동의·이메일·Idempotency-Key 검증; 기본 발송 꺼짐 |
 
-`/healthz` 외에 실제 첫 화면/JSON 요청도 모니터링하고 5xx·429·메모리·디스크·인증서 만료를 관찰하세요. 서비스 재시작·종료 처리를 포함했지만 장기간 무장애를 증명하는 시험은 아닙니다. systemd의 메모리 상한은 VPS 용량에 맞게 조정하세요.
+`api/market.js`는 의도적으로 미연결이며 소스에만 보관합니다. `/api/market`은 404입니다. 출처 제한은 인증/봇 방어가 아닙니다. 요청 제한과 메일 중복 방지는 단일 프로세스 메모리이며 재시작 시 초기화됩니다. 수신자 인증·다중 인스턴스 공유 제한은 구현되어 있지 않습니다.
 
-## 주요 파일
+정적 응답에는 CSP, MIME 제한, realpath 경계, no-cache 재검증, gzip이 적용됩니다. inline style은 기존 템플릿을 위해 허용합니다. 코드와 비밀 파일은 공개 frontend 밖에 둡니다. 운영 로그에는 요청 본문·메일 주소를 기록하지 않습니다.
 
-- `frontend/`: 공개 UI, 로컬 React, 검증된 JSON 스냅샷
-- `api/`: 비공개 서버 코드, config/report만 라우팅
-- `server/`: 라우터·정적 응답·보안/요청 제한·본문 크기 제한
-- `tests/`: 계산·출처·소스 노출·요청 제한·메일 모의 통합 시험
-- `scripts/validate-data.mjs`: 데이터 배포 검사
-- `deploy/`: 카페24 Linux VPS 설정 예시
-- `AUDIT.md`: 코드 검토, 수정 사항, 회사 서비스 총평과 검증 범위
-
-운영 환경 변수 변경은 재시작 후 반영합니다. 비밀키나 환경 파일을 `frontend/`에 넣지 마세요.
+설정은 [SETUP.md](SETUP.md), 변경 검토는 [AUDIT.md](AUDIT.md)를 참고하세요. `docs/history/`는 이전 시점의 증거이며 현재 배포 지침이 아닙니다.

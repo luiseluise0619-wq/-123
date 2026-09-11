@@ -10,7 +10,8 @@
     "build:html": "node scripts/build-html.mjs",
     "check:html": "node scripts/build-html.mjs --check",
     "sums": "node scripts/make-sums.mjs",
-    "check:sums": "node scripts/make-sums.mjs --check"
+    "check:sums": "node scripts/make-sums.mjs --check",
+    "build:deploy": "node scripts/build-deploy.mjs"
   },
   "engines": {
     "node": ">=22 <25"

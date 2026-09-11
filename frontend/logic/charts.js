@@ -142,9 +142,11 @@ globalThis.MysbizonParts.charts = {
         // 폰·태블릿(hover:none)에서는 막대가 자라는 애니메이션을 끈다 — 발열 줄이기.
         animation: (globalThis.matchMedia && matchMedia('(hover:none)').matches) ? false : { duration: 250 },
         // 창 크기가 바뀔 때마다 막대가 0부터 다시 자라면 읽는 사람이 어지럽다
-        transitions: { resize: { animation: { duration: 0 } } },
+        transitions: { resize: { animation: { duration: 0 } }, active: { animation: { duration: 0 } } },
         resizeDelay: 80,
-        interaction: { mode: 'index', intersect: false },
+        interaction: kind === 'doughnut'
+          ? { mode: 'nearest', intersect: true }
+          : { mode: 'index', axis: horizontal ? 'y' : 'x', intersect: false },
         layout: { padding: { top: 4, right: 4 } },
         scales: kind === 'doughnut' ? {} : (horizontal
           ? { x: valueAxis, y: catAxis }
@@ -156,9 +158,10 @@ globalThis.MysbizonParts.charts = {
             labels: { color: T.ink2, boxWidth: 10, boxHeight: 10, font: { size: 11.5 }, padding: 12, usePointStyle: true }
           },
           tooltip: {
+            animation: false,
             backgroundColor: T.ink,
-            titleColor: '#FFFFFF',
-            bodyColor: '#FFFFFF',
+            titleColor: T.bg,
+            bodyColor: T.bg,
             padding: 10,
             cornerRadius: 8,
             displayColors: (spec.datasets || []).length > 1,
@@ -179,6 +182,14 @@ globalThis.MysbizonParts.charts = {
 
   // 화면에 있는 <canvas data-chart="..."> 를 spec 과 맞춘다.
   // 같은 canvas 는 update, 사라진 것은 destroy — 다시 그릴 때마다 새로 만들면 메모리가 샌다.
+  destroyCharts(){
+    for (const inst of Object.values(this._chartInst || {})) {
+      try { inst.destroy(); } catch (e) {}
+    }
+    this._chartInst = {};
+    this._charts = {};
+  },
+
   paintCharts(){
     const Chart = globalThis.Chart;
     if (!Chart) return;

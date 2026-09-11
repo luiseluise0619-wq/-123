@@ -15,7 +15,7 @@
 //   node scripts/build-html.mjs --check  커밋된 index.html 과 다르면 실패(CI·테스트용)
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -68,4 +68,4 @@ function main() {
   console.log('만들었습니다: frontend/index.html · 조각 ' + ORDER.length + '개 · ' + html.split('\n').length + '줄');
 }
 
-if (import.meta.url === 'file://' + process.argv[1]) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main();

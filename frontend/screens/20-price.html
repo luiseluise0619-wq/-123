@@ -33,6 +33,19 @@
 
         <!-- ② 고른 지표 하나 -->
         <div style="min-width:0">
+          <div class="market-filters">
+            <sc-for list="{{ pr.filters }}" as="f">
+              <label class="market-filter">
+                <span>{{ f.label }}</span>
+                <select aria-label="{{ f.label }}" value="{{ f.value }}" onChange="{{ f.change }}">
+                  <sc-for list="{{ f.options }}" as="o">
+                    <option value="{{ o.value }}">{{ o.label }}</option>
+                  </sc-for>
+                </select>
+              </label>
+            </sc-for>
+          </div>
+          <div class="market-scope">{{ pr.filterNote }}</div>
           <h2 style="{{ ds2 }}; margin-top:18px">{{ mk.selQuestion }}</h2>
           <div class="u-note-w">{{ mk.selLabel }} · 출처 {{ mk.selSrc }}</div>
 

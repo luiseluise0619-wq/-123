@@ -2,15 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {logicSource} from './logic-source.js';
 
 // 브라우저는 index.html 의 <script> 순서대로 조각들을 먼저 읽고 app-logic.js 를 읽는다.
 // 테스트도 같은 순서로 읽어야 실제와 같은 상태가 된다.
-const LOGIC_PARTS=['const','i18n','theme','roman','util','design','rank','analysis','screens','chat','charts','carousel','market','views'];
-
 function component() {
-  const read=rel=>fs.readFileSync(new URL(rel,import.meta.url),'utf8');
-  const source=LOGIC_PARTS.map(n=>read('../frontend/logic/'+n+'.js')).join('\n')
-    +'\n'+read('../frontend/app-logic.js');
+  const source=logicSource();
   const context={DCLogic:class {setState(value){this.state={...this.state,...value};}},window:{innerWidth:1200},console,URL,document:{documentElement:{getAttribute(){return null;}}},setTimeout,clearTimeout};
   vm.createContext(context);vm.runInContext(source+';globalThis.Component=MysbizonLogic(DCLogic)',context);
   const instance=new context.Component();
