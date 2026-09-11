@@ -81,4 +81,10 @@ render.yaml의 검사/테스트/build:deploy와 node dist/server.js를 사용합
 
 ## 고객 데이터 추가 (후속 요청)
 
-고객 설문·이메일 저장, 클릭 통계, SSH 접속 관리자 표·CSV를 추가했습니다. 기본은 비활성입니다. `deploy/CUSTOMER-DATA.md`의 설정·동의·보유 기간·관리자 접근 조건을 적용한 뒤 운영하세요. 실제 카페24 DB 연결은 미실행입니다. 관리자 화면은 별도 도메인 없이 사용합니다.
+고객 설문·이메일 저장, 클릭 통계, SSH 접속 관리자 표·CSV를 추가했습니다. 기본은 비활성입니다. `deploy/CUSTOMER-DATA.md`의 설정·동의·보유 기간·관리자 접근 조건을 적용한 뒤 운영하세요. 실제 카페24 DB 연결은 미실행입니다.
+
+직원 공개 접속이 필요하면 `deploy/nginx-admin-public.example`을 사용해 관리자 전용 서브도메인을 별도 vhost로 노출하고, 아래 환경변수를 추가하세요.
+
+- `CUSTOMER_ADMIN_PUBLIC=1`
+- `CUSTOMER_ADMIN_ALLOWED_HOSTS=admin.your-domain.example,127.0.0.1:3102`
+- `CUSTOMER_ADMIN_ALLOWED_ORIGINS=https://admin.your-domain.example`

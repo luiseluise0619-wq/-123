@@ -7,24 +7,48 @@ import {customerSettings,openCustomerPool,CustomerStore,csv,tokenHash} from './c
 import {createLimiter,securityHeaders} from './security.js';
 import {readBody} from './response.js';
 
+function parseCsv(value){
+  if(!value) return [];
+  return value.split(',').map((v)=>v.trim()).filter(Boolean).map(v=>v.toLowerCase());
+}
+
 export function createAdminServer(store,token,port){
   if(!/^[a-f0-9]{64}$/i.test(token||''))throw new Error('CUSTOMER_ADMIN_TOKEN must be 32 random bytes in hex');
   const expected=tokenHash(token),limit=createLimiter();
+  const allowedHosts=new Set(parseCsv(process.env.CUSTOMER_ADMIN_ALLOWED_HOSTS).map((v)=>v.toLowerCase()));
+  if(allowedHosts.size===0){
+    allowedHosts.add(`127.0.0.1:${port}`);
+    allowedHosts.add(`localhost:${port}`);
+  }
+  const allowedOrigins=new Set(parseCsv(process.env.CUSTOMER_ADMIN_ALLOWED_ORIGINS).map((v)=>v.replace(/^https?:\/\//,'').toLowerCase()));
+  const publicMode = process.env.CUSTOMER_ADMIN_PUBLIC==='1';
   return http.createServer(async(req,res)=>{
     securityHeaders(res);res.setHeader('Cache-Control','no-store');
     const send=(status,body)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));};
     try{
       const url=new URL(req.url,'http://127.0.0.1');
-      if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress))return send(403,{error:'Local access only'});
+      if(!publicMode && !['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress))return send(403,{error:'Local access only'});
       // Fixed loopback Host protects this local service from DNS rebinding.
-      if(![`127.0.0.1:${port||req.socket.localPort}`,`localhost:${port||req.socket.localPort}`].includes(req.headers.host))return send(403,{error:'Invalid host'});
+      const host=(req.headers.host||'').toLowerCase();
+      const hostBase=(host||'').split(':')[0];
+      if(!host || (!allowedHosts.has(host) && !allowedHosts.has(hostBase))){
+        return send(403,{error:'Invalid host'});
+      }
       const wait=limit(req.socket.remoteAddress,120,60000);if(wait)return send(429,{error:'잠시 후 다시 시도해 주세요.'});
       if(['/','/admin.js','/admin.css'].includes(url.pathname)&&req.method==='GET'){
         const name=url.pathname==='/'?'index.html':url.pathname.slice(1);
         const body=await readFile(new URL('../admin/'+name,import.meta.url));
         res.writeHead(200,{'Content-Type':name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html; charset=utf-8'});return res.end(body);
       }
-      if(req.method!=='POST'||req.headers.origin!==`http://${req.headers.host}`)return send(403,{error:'허용되지 않은 요청입니다.'});
+      if(req.method!=='POST')return send(405,{error:'허용되지 않은 요청입니다.'});
+      if(req.headers.origin){
+        const originHost=req.headers.origin.replace(/^https?:\/\//,'').toLowerCase().split('/')[0];
+        if(allowedOrigins.size!==0 && !allowedOrigins.has(originHost)){
+          return send(403,{error:'허용되지 않은 요청입니다.'});
+        }
+      }else if(allowedOrigins.size!==0 && !allowedOrigins.has(host)){
+        return send(403,{error:'허용되지 않은 요청입니다.'});
+      }
       if(req.headers['content-type']!=='application/json')return send(415,{error:'JSON required'});
       const supplied=String(req.headers.authorization||'').replace(/^Bearer /,'');
       if(!timingSafeEqual(expected,tokenHash(supplied))){const blocked=limit('auth',5,60000);return send(blocked?429:401,{error:'관리자 키를 확인해 주세요.'});}

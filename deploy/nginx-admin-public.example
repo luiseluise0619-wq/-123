@@ -1,0 +1,55 @@
+limit_req_zone $binary_remote_addr zone=mysbizon_admin_requests:10m rate=6r/s;
+limit_conn_zone $binary_remote_addr zone=mysbizon_admin_connections:10m;
+
+server {
+  listen 443 ssl;
+  server_name admin.your-domain.example;
+
+  ssl_certificate /etc/letsencrypt/live/admin.your-domain.example/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/admin.your-domain.example/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
+
+  access_log /var/log/nginx/admin-access.log;
+  error_log /var/log/nginx/admin-error.log warn;
+  server_tokens off;
+  client_max_body_size 64k;
+  client_body_timeout 10s;
+  client_header_timeout 10s;
+  send_timeout 30s;
+  keepalive_timeout 40s;
+
+  limit_req zone=mysbizon_admin_requests burst=20 nodelay;
+  limit_req_status 429;
+  limit_conn mysbizon_admin_connections 12;
+
+  # 네트워크 정책으로 먼저 걸러낸 뒤 기본 인증으로 직원만 허용.
+  # 예: allow 203.0.113.0/24;
+  #      deny all;
+  # 필요한 경우 Cloudflare로 IP를 고정해 운영 정책에 맞춰 조정하세요.
+  # deny all을 임시로 써두면 즉시 차단이 됩니다.
+  # allow 0.0.0.0/0;
+
+  # 직원이 공용 PC에서 자주 쓰면 아래가 실제로 더 편합니다.
+  # allow office, vpn CIDR then deny.
+  auth_basic "MYSBIZON Admin";
+  auth_basic_user_file /etc/nginx/.htpasswd/mysbizon_admin;
+
+  add_header X-Frame-Options DENY always;
+  add_header X-Content-Type-Options nosniff always;
+  add_header Referrer-Policy no-referrer always;
+  add_header Permissions-Policy "geolocation=(),camera=(),microphone=()" always;
+
+  location / {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Connection "";
+    proxy_connect_timeout 5s;
+    proxy_read_timeout 30s;
+    proxy_send_timeout 20s;
+    proxy_pass http://127.0.0.1:3102;
+  }
+}
+
