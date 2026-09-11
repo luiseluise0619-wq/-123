@@ -88,3 +88,27 @@ render.yaml의 검사/테스트/build:deploy와 node dist/server.js를 사용합
 - `CUSTOMER_ADMIN_PUBLIC=1`
 - `CUSTOMER_ADMIN_ALLOWED_HOSTS=admin.your-domain.example,127.0.0.1:3102`
 - `CUSTOMER_ADMIN_ALLOWED_ORIGINS=https://admin.your-domain.example`
+
+### 관리자 링크 신규 발급(도메인 기반)
+
+DNS에서 아래처럼 `admin` 서브도메인을 VPS IP로 연결한 뒤, Let’s Encrypt 인증서를 발급하고 Nginx vhost만 켭니다.
+
+```sh
+# 1) 서브도메인 A/CNAME 반영 (도메인 업체 콘솔)
+# 예: admin.your-domain.example -> 1.2.3.4
+
+# 2) 관리자 vhost 활성화
+sudo cp deploy/nginx-admin-public.example /etc/nginx/sites-available/admin.your-domain.example.conf
+sudo ln -s /etc/nginx/sites-available/admin.your-domain.example.conf /etc/nginx/sites-enabled/
+sudo sed -i "s/admin\\.your-domain\\.example/admin.실제도메인.example/g" /etc/nginx/sites-available/admin.your-domain.example.conf
+
+# 3) certbot + reload
+sudo certbot --nginx -d admin.실제도메인.example
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+정상 동작 확인:
+
+```sh
+curl -I https://admin.실제도메인.example/
+```
