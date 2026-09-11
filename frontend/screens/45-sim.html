@@ -80,9 +80,9 @@
             <sc-for list="{{ c.charts }}" as="ch">
               <div style="{{ c.chartRail.itemStyle }}">
                 <div style="{{ ch.style }}">
-                  <div style="font-size:17px;font-weight:700;letter-spacing:-.02em">{{ ch.title }}</div>
+                  <div style="{{ ch.titleStyle }}">{{ ch.title }}</div>
                   <sc-if value="{{ ch.hasSub }}">
-                    <div class="u-note-t">{{ ch.sub }}</div>
+                    <div style="{{ ch.subStyle }}">{{ ch.sub }}</div>
                   </sc-if>
                   <!-- 승자 한 줄 — 색이 아니라 이름·값·배지로 말한다 -->
                   <sc-if value="{{ ch.hasWinner }}">
@@ -94,11 +94,11 @@
                     </div>
                     <div style="font-size:13.5px;color:var(--color-text-secondary);margin-top:6px;text-wrap:pretty">{{ ch.winText }}</div>
                   </sc-if>
-                  <div style="position:relative;margin-top:14px;height:{{ ch.height }}">
+                  <div style="{{ ch.chartWrapStyle }}">
                     <canvas data-chart="{{ ch.id }}" role="img" aria-label="{{ ch.title }}"></canvas>
                   </div>
                   <sc-if value="{{ ch.hasPeriod }}">
-                    <div class="u-note" style="margin-top:10px">{{ ch.periodLabel }}</div>
+                    <div style="{{ ch.periodStyle }}">{{ ch.periodLabel }}</div>
                   </sc-if>
                 </div>
               </div>

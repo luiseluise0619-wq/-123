@@ -78,15 +78,15 @@
                 <sc-for list="{{ mv.now.charts }}" as="ch">
                   <div style="{{ mv.now.rail.itemStyle }}">
                     <div style="{{ ch.style }}">
-                      <div style="font-size:17px;font-weight:700;letter-spacing:-.02em">{{ ch.title }}</div>
+                    <div style="{{ ch.titleStyle }}">{{ ch.title }}</div>
                       <sc-if value="{{ ch.hasSub }}">
-                        <div class="u-note-t">{{ ch.sub }}</div>
+                        <div style="{{ ch.subStyle }}">{{ ch.sub }}</div>
                       </sc-if>
-                      <div style="position:relative;margin-top:14px;height:{{ ch.height }}">
+                      <div style="{{ ch.chartWrapStyle }}">
                         <canvas data-chart="{{ ch.id }}" role="img" aria-label="{{ ch.title }}"></canvas>
                       </div>
                       <sc-if value="{{ ch.hasPeriod }}">
-                        <div class="u-note" style="margin-top:10px">{{ ch.periodLabel }}</div>
+                        <div style="{{ ch.periodStyle }}">{{ ch.periodLabel }}</div>
                       </sc-if>
                     </div>
                   </div>

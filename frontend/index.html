@@ -1089,19 +1089,19 @@
               <div data-rail="price" style="{{ pr.rail.trackStyle }}">
                 <sc-for list="{{ pr.charts }}" as="c">
                   <div style="{{ pr.rail.itemStyle }}">
-                    <div style="{{ c.style }}">
-                      <div style="font-size:17px;font-weight:700;letter-spacing:-.02em">{{ c.title }}</div>
-                      <sc-if value="{{ c.hasSub }}">
-                        <div class="u-note-w">{{ c.sub }}</div>
-                      </sc-if>
-                      <div style="position:relative;margin-top:14px;height:{{ c.height }}">
+                  <div style="{{ c.style }}">
+                    <div style="{{ c.titleStyle }}">{{ c.title }}</div>
+                    <sc-if value="{{ c.hasSub }}">
+                        <div style="{{ c.subStyle }}">{{ c.sub }}</div>
+                    </sc-if>
+                      <div style="{{ c.chartWrapStyle }}">
                         <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
                       </div>
-                      <sc-if value="{{ c.hasPeriod }}">
-                        <div class="u-note-w" style="margin-top:10px">{{ c.periodLabel }}</div>
-                      </sc-if>
-                    </div>
+                    <sc-if value="{{ c.hasPeriod }}">
+                        <div style="{{ c.periodStyle }}">{{ c.periodLabel }}</div>
+                    </sc-if>
                   </div>
+                </div>
                 </sc-for>
               </div>
             </sc-if>
@@ -1411,15 +1411,15 @@
                 <sc-for list="{{ mv.now.charts }}" as="ch">
                   <div style="{{ mv.now.rail.itemStyle }}">
                     <div style="{{ ch.style }}">
-                      <div style="font-size:17px;font-weight:700;letter-spacing:-.02em">{{ ch.title }}</div>
+                    <div style="{{ ch.titleStyle }}">{{ ch.title }}</div>
                       <sc-if value="{{ ch.hasSub }}">
-                        <div class="u-note-t">{{ ch.sub }}</div>
+                        <div style="{{ ch.subStyle }}">{{ ch.sub }}</div>
                       </sc-if>
-                      <div style="position:relative;margin-top:14px;height:{{ ch.height }}">
+                      <div style="{{ ch.chartWrapStyle }}">
                         <canvas data-chart="{{ ch.id }}" role="img" aria-label="{{ ch.title }}"></canvas>
                       </div>
                       <sc-if value="{{ ch.hasPeriod }}">
-                        <div class="u-note" style="margin-top:10px">{{ ch.periodLabel }}</div>
+                        <div style="{{ ch.periodStyle }}">{{ ch.periodLabel }}</div>
                       </sc-if>
                     </div>
                   </div>
@@ -1597,15 +1597,15 @@
             <sc-for list="{{ zc.charts }}" as="c">
               <div style="{{ zc.chartRail.itemStyle }}">
                 <div style="{{ c.style }}">
-                  <div style="font-size:15px;font-weight:700">{{ c.title }}</div>
+                  <div style="{{ c.titleStyle }}">{{ c.title }}</div>
                   <sc-if value="{{ c.hasSub }}">
-                    <div class="u-note-t">{{ c.sub }}</div>
+                    <div style="{{ c.subStyle }}">{{ c.sub }}</div>
                   </sc-if>
-                  <div style="position:relative;margin-top:14px;height:{{ c.height }}">
+                  <div style="{{ c.chartWrapStyle }}">
                     <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
                   </div>
                   <sc-if value="{{ c.hasPeriod }}">
-                    <div class="u-note" style="margin-top:10px">{{ c.periodLabel }}</div>
+                    <div style="{{ c.periodStyle }}">{{ c.periodLabel }}</div>
                   </sc-if>
                 </div>
               </div>
@@ -2214,9 +2214,9 @@
             <sc-for list="{{ c.charts }}" as="ch">
               <div style="{{ c.chartRail.itemStyle }}">
                 <div style="{{ ch.style }}">
-                  <div style="font-size:17px;font-weight:700;letter-spacing:-.02em">{{ ch.title }}</div>
+                  <div style="{{ ch.titleStyle }}">{{ ch.title }}</div>
                   <sc-if value="{{ ch.hasSub }}">
-                    <div class="u-note-t">{{ ch.sub }}</div>
+                    <div style="{{ ch.subStyle }}">{{ ch.sub }}</div>
                   </sc-if>
                   <!-- 승자 한 줄 — 색이 아니라 이름·값·배지로 말한다 -->
                   <sc-if value="{{ ch.hasWinner }}">
@@ -2228,11 +2228,11 @@
                     </div>
                     <div style="font-size:13.5px;color:var(--color-text-secondary);margin-top:6px;text-wrap:pretty">{{ ch.winText }}</div>
                   </sc-if>
-                  <div style="position:relative;margin-top:14px;height:{{ ch.height }}">
+                  <div style="{{ ch.chartWrapStyle }}">
                     <canvas data-chart="{{ ch.id }}" role="img" aria-label="{{ ch.title }}"></canvas>
                   </div>
                   <sc-if value="{{ ch.hasPeriod }}">
-                    <div class="u-note" style="margin-top:10px">{{ ch.periodLabel }}</div>
+                    <div style="{{ ch.periodStyle }}">{{ ch.periodLabel }}</div>
                   </sc-if>
                 </div>
               </div>

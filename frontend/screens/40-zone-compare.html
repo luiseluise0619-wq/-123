@@ -78,15 +78,15 @@
             <sc-for list="{{ zc.charts }}" as="c">
               <div style="{{ zc.chartRail.itemStyle }}">
                 <div style="{{ c.style }}">
-                  <div style="font-size:15px;font-weight:700">{{ c.title }}</div>
+                  <div style="{{ c.titleStyle }}">{{ c.title }}</div>
                   <sc-if value="{{ c.hasSub }}">
-                    <div class="u-note-t">{{ c.sub }}</div>
+                    <div style="{{ c.subStyle }}">{{ c.sub }}</div>
                   </sc-if>
-                  <div style="position:relative;margin-top:14px;height:{{ c.height }}">
+                  <div style="{{ c.chartWrapStyle }}">
                     <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
                   </div>
                   <sc-if value="{{ c.hasPeriod }}">
-                    <div class="u-note" style="margin-top:10px">{{ c.periodLabel }}</div>
+                    <div style="{{ c.periodStyle }}">{{ c.periodLabel }}</div>
                   </sc-if>
                 </div>
               </div>

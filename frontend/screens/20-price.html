@@ -82,19 +82,19 @@
               <div data-rail="price" style="{{ pr.rail.trackStyle }}">
                 <sc-for list="{{ pr.charts }}" as="c">
                   <div style="{{ pr.rail.itemStyle }}">
-                    <div style="{{ c.style }}">
-                      <div style="font-size:17px;font-weight:700;letter-spacing:-.02em">{{ c.title }}</div>
-                      <sc-if value="{{ c.hasSub }}">
-                        <div class="u-note-w">{{ c.sub }}</div>
-                      </sc-if>
-                      <div style="position:relative;margin-top:14px;height:{{ c.height }}">
+                  <div style="{{ c.style }}">
+                    <div style="{{ c.titleStyle }}">{{ c.title }}</div>
+                    <sc-if value="{{ c.hasSub }}">
+                        <div style="{{ c.subStyle }}">{{ c.sub }}</div>
+                    </sc-if>
+                      <div style="{{ c.chartWrapStyle }}">
                         <canvas data-chart="{{ c.id }}" role="img" aria-label="{{ c.title }}"></canvas>
                       </div>
-                      <sc-if value="{{ c.hasPeriod }}">
-                        <div class="u-note-w" style="margin-top:10px">{{ c.periodLabel }}</div>
-                      </sc-if>
-                    </div>
+                    <sc-if value="{{ c.hasPeriod }}">
+                        <div style="{{ c.periodStyle }}">{{ c.periodLabel }}</div>
+                    </sc-if>
                   </div>
+                </div>
                 </sc-for>
               </div>
             </sc-if>

@@ -79,7 +79,12 @@ globalThis.MysbizonParts.charts = {
         label: d.label || '',
         data: d.data,
         borderWidth: kind === 'line' ? 2.4 : 0,
-        borderRadius: kind === 'bar' ? 5 : 0,
+        borderRadius: kind === 'bar' ? 12 : 0,
+        borderSkipped: kind === 'bar' ? false : undefined,
+        barThickness: kind === 'bar' ? (many ? 16 : 26) : undefined,
+        maxBarThickness: horizontal ? 22 : 42,
+        categoryPercentage: kind === 'bar' ? (many ? 0.72 : 0.86) : undefined,
+        barPercentage: kind === 'bar' ? (many ? 0.76 : 0.9) : undefined,
         // 배열로 주면 막대마다 색이 달라진다.
         //   '#...' → 그 색 그대로 (비교 대상 고유색 — 상권마다 고정)
         //   'on'   → 강조,  'warn' → 주의색,  그 밖 → 연한 기본색
@@ -95,7 +100,7 @@ globalThis.MysbizonParts.charts = {
         pointRadius: kind === 'line' ? (many ? 0 : 2.5) : 0,
         pointHoverRadius: kind === 'line' ? 5 : 0,
         pointBackgroundColor: T.accent,
-        maxBarThickness: horizontal ? 22 : 42
+        pointBorderColor: T.accent
       };
       if (kind === 'doughnut') {
         base.backgroundColor = d.data.map((_, j) =>
@@ -105,6 +110,33 @@ globalThis.MysbizonParts.charts = {
       }
       return base;
     });
+
+    const focusLine = {
+      id: 'focusLine',
+      afterDatasetsDraw(chart){
+        const pts = chart.tooltip?.getActiveElements?.() || [];
+        if (!pts.length) return;
+        const pt = pts[0];
+        const el = pt.element;
+        if (!el) return;
+        const ctx = chart.ctx, area = chart.chartArea;
+        const x = el.x, y = el.y;
+        ctx.save();
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = T.ink3 + '88';
+        ctx.beginPath();
+        if (chart.options.indexAxis === 'y') {
+          ctx.moveTo(area.left, y);
+          ctx.lineTo(area.right, y);
+        } else {
+          ctx.moveTo(x, area.top);
+          ctx.lineTo(x, area.bottom);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+    };
 
     const axis = {
       grid: { color: T.line, drawTicks: false },
@@ -144,13 +176,19 @@ globalThis.MysbizonParts.charts = {
         // 창 크기가 바뀔 때마다 막대가 0부터 다시 자라면 읽는 사람이 어지럽다
         transitions: { resize: { animation: { duration: 0 } }, active: { animation: { duration: 0 } } },
         resizeDelay: 80,
+        // 마우스를 올리면 바로 수치가 떠야 한다(툴팁이 바로 반응하도록).
+        events: ['mousemove', 'mouseout', 'touchstart', 'touchmove', 'click'],
         interaction: kind === 'doughnut'
+          ? { mode: 'nearest', intersect: true }
+          : { mode: 'index', axis: horizontal ? 'y' : 'x', intersect: false },
+        hover: kind === 'doughnut'
           ? { mode: 'nearest', intersect: true }
           : { mode: 'index', axis: horizontal ? 'y' : 'x', intersect: false },
         layout: { padding: { top: 4, right: 4 } },
         scales: kind === 'doughnut' ? {} : (horizontal
           ? { x: valueAxis, y: catAxis }
           : { x: catAxis, y: valueAxis }),
+        // 기본 플러그인 정의 + 커스텀 포커스 라인(툴팁 동기)
         plugins: {
           legend: {
             display: (spec.datasets || []).length > 1 || kind === 'doughnut',
@@ -164,19 +202,39 @@ globalThis.MysbizonParts.charts = {
             bodyColor: T.bg,
             padding: 10,
             cornerRadius: 8,
+            caretPadding: 6,
+            caretSize: 0,
             displayColors: (spec.datasets || []).length > 1,
+            usePointStyle: true,
             callbacks: {
+              title: items => {
+                if (!items || !items.length) return '';
+                const idx = items[0].dataIndex;
+                const lab = spec.labels && spec.labels[idx];
+                return lab ? String(lab) : '';
+              },
               label: (ctx) => {
                 const v = ctx.parsed[horizontal ? 'x' : 'y'] ?? ctx.parsed;
                 const n = (unit === '원')
                   ? this.won(v)
                   : (Math.round(v * 10) / 10).toLocaleString() + unit;
                 return (ctx.dataset.label ? ctx.dataset.label + ' · ' : '') + n;
+              },
+              footer: (items) => {
+                if (!items || !items.length || !spec.unit || spec.unit === '%') return '';
+                const rows = spec.datasets?.[0]?.data || [];
+                const sum = rows.reduce((acc, cur) => acc + (typeof cur === 'number' && Number.isFinite(cur) ? cur : 0), 0);
+                if (!sum) return '';
+                const v = items[0].parsed?.[horizontal ? 'x' : 'y'];
+                if (typeof v !== 'number' || !Number.isFinite(v)) return '';
+                return this.t ? this.t('mk.compareRatio', { p: (v / sum * 100).toFixed(1) }) : ('비중 ' + (v / sum * 100).toFixed(1) + '%');
               }
             }
           }
         }
       }
+      ,
+      plugins: [focusLine]
     };
   },
 
@@ -227,11 +285,13 @@ globalThis.MysbizonParts.charts = {
     const labels = opt.labels || [];
     const sets = (opt.datasets || []).filter(d => Array.isArray(d.data) && d.data.some(v => v != null && isFinite(v)));
     if (!labels.length || !sets.length) return null;
+    const cardBase = (this.ds && this.ds('card')) || 'background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:'+this.L('18px','20px','22px')+';min-width:0';
     this._charts = this._charts || {};
     this._charts[id] = { type: opt.type || 'bar', unit: opt.unit || '', labels, datasets: sets, fill: opt.fill };
     // 승자 표시(§7) — 색이 아니라 배지와 한 줄 문장으로 말한다.
     // 낮을수록 좋은 지표(경쟁·임대료·공실)는 부르는 쪽에서 방향을 이미 뒤집어 넘긴다.
     const w = opt.winner || null;
+    const height = opt.height || 220;
     return {
       id,
       title: opt.title || '',
@@ -254,10 +314,14 @@ globalThis.MysbizonParts.charts = {
         ? this.t('asOf', {q: String(opt.period).replace(/\s*기준\s*$/, '')
             .split(' · ').map(x => this.tr(x)).join(' · ')}) : '',
       hasPeriod: !!opt.period,
-      height: (opt.height || 220) + 'px',
+      height: height + 'px',
+      titleStyle: 'font-size:18px;font-weight:700;line-height:1.34;letter-spacing:-.02em;color:var(--ink);',
+      subStyle: 'font-size:12.5px;line-height:1.55;color:var(--ink3);margin-top:4px',
+      chartWrapStyle: 'position:relative;margin-top:14px;height:' + height + 'px',
+      periodStyle: 'font-size:11.5px;color:var(--ink3);line-height:1.5;margin-top:10px',
       // 차트는 카드 안에 넣지 않는다(§2 card-in-card 금지 · §7 차트가 주인공).
-      // 테두리·그림자 없이 여백만으로 띄운다.
-      style: 'background:none;border:none;padding:0;min-width:0;display:flex;flex-direction:column'
+      // 카드에 정돈된 여백·테두리를 붙여, 질문별 차트를 빠르게 훑을 수 있게 했다.
+      style: cardBase + ';display:flex;flex-direction:column;gap:0;overflow:hidden'
     };
   }
 };
