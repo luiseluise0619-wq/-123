@@ -7,13 +7,14 @@
 소스 checkout에서 실행합니다.
 
 ```sh
+npm ci
 npm run build:html
 npm run check:data
 npm test
 npm run build:deploy -- /tmp/mysbizon-20260911
 ```
 
-결과의 모든 파일과 DEPLOY-MANIFEST.json을 전송합니다. deploy/의 service/conf 파일은 운영자가 별도로 설치할 구성 예시입니다. 서비스는 수집기/테스트/ML 없이 동작하며 외부 npm 런타임 의존성이 없습니다.
+결과의 모든 파일과 DEPLOY-MANIFEST.json을 전송합니다. deploy/의 service/conf 파일은 운영자가 별도로 설치할 구성 예시입니다. 서비스는 수집기/테스트/ML 없이 동작하며 고객 DB용 pg 의존성이 있어 운영 artifact에서 `npm ci --omit=dev`를 실행합니다.
 
 ## 최초 VPS 구성
 
@@ -77,3 +78,7 @@ curl --fail http://127.0.0.1:3000/healthz
 render.yaml의 검사/테스트/build:deploy와 node dist/server.js를 사용합니다. Node 버전 환경변수는 [Render 문서](https://render.com/docs/node-version), build 실패 시 기존 배포 유지 절차는 [배포 문서](https://render.com/docs/deploys)를 참고하세요. Render의 HOST/PORT를 VPS unit 값으로 덮어쓰지 마세요.
 
 서버 requestTimeout과 socket timeout은 서로 다른 제한입니다([Node HTTP 문서](https://nodejs.org/api/http.html)). 이번 서버는 수신 30초/헤더 15초/keepalive 5초/유휴 socket 30초, API 본문 64KiB/10초와 외부 요청 10초를 사용합니다. Nginx proxy read 20초이며 정상 API 타임아웃보다 깁니다.
+
+## 고객 데이터 추가 (후속 요청)
+
+고객 설문·이메일 저장, 클릭 통계, SSH 접속 관리자 표·CSV를 추가했습니다. 기본은 비활성입니다. `deploy/CUSTOMER-DATA.md`의 설정·동의·보유 기간·관리자 접근 조건을 적용한 뒤 운영하세요. 실제 카페24 DB 연결은 미실행입니다. 관리자 화면은 별도 도메인 없이 사용합니다.

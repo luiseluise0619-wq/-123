@@ -4,9 +4,10 @@
 
 ## 개발·검증
 
-Node 22~24 지원 범위, 이번 검증은 Node 24.19.0 / Windows에서 수행했습니다. 외부 npm 의존성은 없습니다.
+Node 22~24 지원 범위, 이번 검증은 Node 24.19.0 / Windows에서 수행했습니다. 고객 DB는 pg를 사용하고 SQL 테스트는 PGlite를 사용합니다. 먼저 `npm ci`를 실행합니다.
 
 ```sh
+npm ci
 npm run build:html
 npm run check:html
 npm run check:data
@@ -82,3 +83,7 @@ HTTPS → Nginx → `127.0.0.1:3000` → 단일 Node 프로세스입니다. Node
 정적 응답에는 CSP, MIME 제한, realpath 경계, no-cache 재검증, gzip이 적용됩니다. inline style은 기존 템플릿을 위해 허용합니다. 코드와 비밀 파일은 공개 frontend 밖에 둡니다. 운영 로그에는 요청 본문·메일 주소를 기록하지 않습니다.
 
 설정은 [SETUP.md](SETUP.md), 변경 검토는 [AUDIT.md](AUDIT.md)를 참고하세요. `docs/history/`는 이전 시점의 증거이며 현재 배포 지침이 아닙니다.
+
+## 고객 데이터 추가 (후속 요청)
+
+고객 설문·이메일 저장, 클릭 통계, SSH 접속 관리자 표·CSV를 추가했습니다. 기본은 비활성입니다. `deploy/CUSTOMER-DATA.md`의 설정·동의·보유 기간·관리자 접근 조건을 적용한 뒤 운영하세요. 실제 카페24 DB 연결은 미실행입니다. 관리자 화면은 별도 도메인 없이 사용합니다.

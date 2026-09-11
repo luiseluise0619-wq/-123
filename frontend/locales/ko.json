@@ -231,5 +231,13 @@
     "볼링장": "볼링장",
     "화방": "화방",
     "중고차 가게": "중고차 가게"
-  }
+  },
+  "customer.title": "설문을 저장할까요?",
+  "customer.explain": "동의하면 설문 답과 이메일을 운영자에게 전달해요. 저장하지 않아도 분석과 다운로드는 이용할 수 있어요.",
+  "customer.agree": "설문·이메일 저장에 동의해요 (선택)",
+  "customer.save": "설문 저장",
+  "customer.saving": "저장 중…",
+  "customer.saved": "설문을 저장했어요. 이메일 발송과는 별도예요.",
+  "customer.failed": "저장하지 못했어요. 동의와 이메일을 확인한 뒤 다시 시도해 주세요.",
+  "customer.retention": "보유 기간: {days}일 · 문의: {contact}"
 }

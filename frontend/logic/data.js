@@ -65,7 +65,7 @@ globalThis.MysbizonParts.data = {
   },
   loadConfig(){
     return this.loadData('/api/config').then(r=>r.json())
-      .then(c=>this.setState({reportEmailEnabled:!!c.reportEmailEnabled})).catch(()=>{});
+      .then(c=>this.setState({reportEmailEnabled:!!c.reportEmailEnabled,customerData:c.customerData})).catch(()=>{});
   },
 
 };

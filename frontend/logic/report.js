@@ -388,6 +388,30 @@ globalThis.MysbizonParts.report = {
           editAgain: ()=>this.setState({rp_step:0, rp_q:''})
         };
       })(),
+      customerEnabled:!!S.customerData?.enabled,
+      customerTitle:this.t('customer.title'), customerExplain:this.t('customer.explain'),
+      customerConsentLabel:this.t('customer.agree'), customerAgreed:S.customerAgree===true,
+      customerRetention:this.t('customer.retention',{days:S.customerData?.retentionDays||0,contact:S.customerData?.contact||''}),
+      customerOperator:S.customerData?.controller||'',
+      customerToggle:()=>this.setState({customerAgree:!S.customerAgree,customerNote:''}),
+      customerSaveLabel:this.t(S.customerSaving?'customer.saving':'customer.save'),
+      customerSaveDisabled:!S.customerData?.enabled||!S.customerAgree||!email||!!S.customerSaving,
+      customerNote:S.customerNote?this.t(S.customerNote):'',
+      customerSave:async()=>{
+        if(!S.customerData?.enabled||!S.customerAgree||this._customerSaving)return;
+        this._customerSaving=true;this.setState({customerSaving:true,customerNote:''});
+        try{
+          const fields={sido:'rp_sido',gu:'rp_gu',industry:'rp_ind',stage:'rp_stage',age:'rp_age',business:'rp_biz',when:'rp_when',need:'rp_need',cost:'rp_cost'};
+          const answers=Object.fromEntries(Object.entries(fields).map(([key,stateKey])=>[key,String(this.state[stateKey]||'')]));
+          const payload={email,agreed:true,privacyVersion:S.customerData.privacyVersion,answers};
+          const signature=JSON.stringify(payload);
+          if(this._customerPayload!==signature){this._customerPayload=signature;this._customerId=crypto.randomUUID();}
+          const response=await fetch('/api/customer-submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,id:this._customerId}),signal:AbortSignal.timeout(12000)});
+          if(!response.ok)throw new Error('Save failed');
+          this.setState({customerNote:'customer.saved'});
+        }catch{this.setState({customerNote:'customer.failed'});}
+        finally{this._customerSaving=false;this.setState({customerSaving:false});}
+      },
       email:email,
       onEmail:e=>{this._reportKey=null;this.setState({rp_email:e.target.value,rp_sent:false,rp_error:''});},
       agreed:!!S.rp_agree,

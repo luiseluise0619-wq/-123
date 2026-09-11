@@ -2,7 +2,7 @@ services:
   - type: web
     name: mysbizon
     runtime: node
-    buildCommand: npm run check:html && npm run check:data && npm test && npm run build:deploy
+    buildCommand: npm ci --include=dev && npm run check:html && npm run check:data && npm test && npm run build:deploy
     startCommand: node dist/server.js
     healthCheckPath: /healthz
     envVars:

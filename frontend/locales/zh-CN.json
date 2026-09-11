@@ -1527,5 +1527,13 @@
   "cmp.browseEmpty": "没有符合条件的商圈，请更换行政区或搜索词。",
   "cmp.selected": "已选",
   "cmp.add": "添加",
-  "cmp.more": "查看更多商圈"
+  "cmp.more": "查看更多商圈",
+  "customer.title": "保存问卷？",
+  "customer.explain": "经您同意后，将问卷答案和邮箱提交给运营方。不保存也可使用分析和下载。",
+  "customer.agree": "同意保存问卷和邮箱（可选）",
+  "customer.save": "保存问卷",
+  "customer.saving": "保存中…",
+  "customer.saved": "问卷已保存。这不会发送邮件。",
+  "customer.failed": "未能保存。请确认同意和邮箱后重试。",
+  "customer.retention": "保存期限：{days}天 · 联系方式：{contact}"
 }

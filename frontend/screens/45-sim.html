@@ -223,7 +223,7 @@
           <div class="market-scope" aria-live="polite">{{ c.add.browseCount }}</div>
           <div class="compare-browser">
             <sc-for list="{{ c.add.browseRows }}" as="a">
-              <button class="compare-choice" onClick="{{ a.add }}" disabled="{{ a.disabled }}">
+              <button class="compare-choice" data-track="comparison.add" onClick="{{ a.add }}" disabled="{{ a.disabled }}">
                 <span class="compare-choice-copy"><strong>{{ a.name }}</strong><span>{{ a.meta }}</span></span>
                 <span class="compare-choice-action">{{ a.action }}</span>
               </button>

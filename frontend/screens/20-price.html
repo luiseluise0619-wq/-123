@@ -37,7 +37,7 @@
             <sc-for list="{{ pr.filters }}" as="f">
               <label class="market-filter">
                 <span>{{ f.label }}</span>
-                <select aria-label="{{ f.label }}" value="{{ f.value }}" onChange="{{ f.change }}">
+                <select data-track="market.filter" aria-label="{{ f.label }}" value="{{ f.value }}" onChange="{{ f.change }}">
                   <sc-for list="{{ f.options }}" as="o">
                     <option value="{{ o.value }}">{{ o.label }}</option>
                   </sc-for>

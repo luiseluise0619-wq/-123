@@ -28,3 +28,7 @@ index.html은 screens 원본으로 재생성합니다. dc-runtime TS 원본은 �
 - 일회성 타이머 일부와 진행 중 프런트 요청의 통합 취소는 추가 개선 여지. 차트 종료 누수와 첫 paint 타이머는 정리됨.
 - 서버 오류 redaction은 보조 방어이며 임의의 모든 PII 문자열 제거를 보장하지 않음.
 - 실 VPS의 nginx -t/systemd 검증, TLS·방화벽·회전 로그·롤백·부하검증은 접근 가능한 운영 환경에서 필요.
+
+## 고객 데이터 후속 요청
+
+기존 Node 서버를 유지하며 PostgreSQL(pg)을 추가했습니다. 관리자 서버는 별도 loopback 전용이며 공개 프런트 폴더에 관리자 파일을 넣지 않습니다. DB 저장은 필수 설정과 사용자 선택 동의가 갖춰져야 작동합니다. 테스트 전에 npm ci를 실행합니다. deploy/CUSTOMER-DATA.md 참고.

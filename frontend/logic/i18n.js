@@ -44,7 +44,8 @@ globalThis.MysbizonParts.i18n = {
 
     // 고른 적이 있으면 그 값이 이긴다. 없으면 '지금 있는 위치'로 정한다.
     let saved=null;
-    try{ saved=JSON.parse(localStorage.getItem('mysbizon.theme')||'{}').locale; }catch(e){}
+    try{
+ saved=JSON.parse(localStorage.getItem('mysbizon.theme')||'{}').locale; }catch(e){}
     const want = (saved && this.LOCALES().some(l=>l.k===saved)) ? saved
                : (this.locale()!=='ko' ? this.locale() : this.guessLocale());
     if(want!==this.locale()) this.setState({locale:want});
@@ -146,6 +147,13 @@ globalThis.MysbizonParts.i18n = {
   // 한국어 원본. 이 목록이 곧 '번역해야 할 것'의 정의다.
   KO_BASE(){
     return {
+      'customer.title':'설문을 저장할까요?',
+      'customer.explain':'동의하면 설문 답과 이메일을 운영자에게 전달해요. 저장하지 않아도 분석과 다운로드는 이용할 수 있어요.',
+      'customer.agree':'설문·이메일 저장에 동의해요 (선택)',
+      'customer.save':'설문 저장','customer.saving':'저장 중…',
+      'customer.saved':'설문을 저장했어요. 이메일 발송과는 별도예요.',
+      'customer.failed':'저장하지 못했어요. 동의와 이메일을 확인한 뒤 다시 시도해 주세요.',
+      'customer.retention':'보유 기간: {days}일 · 문의: {contact}',
       'nav.zone':'상권분석','nav.fine':'정밀분석',
       'pr.seoulAll':'서울 전체','nav.market':'통합시세','nav.report':'리포트',
       'menu.zoneCompare':'지역비교','menu.find':'후보지',

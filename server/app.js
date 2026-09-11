@@ -2,14 +2,21 @@ import http from 'node:http';
 import report from '../api/report.js';
 import config from '../api/config.js';
 import support from '../api/support.js';
+import {submitCustomer,recordClick,customerHandler} from '../api/customer.js';
 import { vercelRes, readBody } from './response.js';
 import { serveStatic } from './static.js';
 import { clientIp, createLimiter, securityHeaders } from './security.js';
 import { isAllowedOrigin } from '../api/_origin.js';
-import { redact } from '../api/_err.js';
+import { safeError } from '../api/_err.js';
 
-const PUBLIC_APIS = new Map([['report', report], ['config', config], ['support', support]]);
-export function createServer(root) {
+const PUBLIC_APIS = new Map([['report', report], ['config', config], ['support', support],['customer-submit',submitCustomer],['customer-event',recordClick]]);
+export function createServer(root,{customerStore}={}) {
+  const handlers=new Map(PUBLIC_APIS);
+  if(customerStore){
+    handlers.set('customer-submit',customerHandler('submit',customerStore));
+    handlers.set('customer-event',customerHandler('event',customerStore));
+    handlers.set('config',(_req,res)=>res.status(200).json({reportEmailEnabled:false,customerData:customerStore.settings}));
+  }
   const limit = createLimiter(); let inFlight = 0;
   const server = http.createServer(async (req, res) => {
     securityHeaders(res);
@@ -38,7 +45,7 @@ export function createServer(root) {
         try {
           if (!readOnly && String(req.headers['content-type']||'').split(';')[0].trim().toLowerCase()!=='application/json') return json(415,{error:'application/json required'});
           const body = readOnly ? '' : await readBody(req);
-          const handler = PUBLIC_APIS.get(name);
+          const handler = handlers.get(name);
           res.setHeader('Cache-Control','no-store');
           await handler({method:req.method,headers:req.headers,body,url:req.url,ip,query:Object.fromEntries(new URL(req.url,'http://localhost').searchParams)},vercelRes(res));
         } finally { inFlight--; }
@@ -50,7 +57,7 @@ export function createServer(root) {
       if (res.destroyed) return;
       if (res.headersSent) return res.end();
       if (error.status) return json(error.status,{error:error.message});
-      console.error('[server]',redact(error.stack || error.message));
+      safeError('server',error,'요청 실패');
       return json(500,{error:'요청을 처리하지 못했습니다.'});
     }
   });

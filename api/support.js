@@ -22,7 +22,7 @@
 //   아래 pickField() 가 흔한 필드 이름들을 훑어 우리 모양으로 바꾼다.
 //   키를 넣고 한 번 호출해 본 뒤, 실제 필드명을 FIELDS 에 추가하는 것이 정확하다.
 import { fetchT, encKey, ymdLocal } from './_http.js';
-import { redact } from './_err.js';
+import { safeError } from './_err.js';
 
 function publicLink(value) {
   try {
@@ -122,7 +122,7 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     // 사용자에게는 상황만. 원인은 로그에만(요청 URL 에 serviceKey 가 들어 있다).
-    console.error('[support]', redact((e && e.stack) || e));
+    safeError('support',e,'조회 실패');
     return res.status(200).json({
       ok: false, configured: true, items: [],
       error: '공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',

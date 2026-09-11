@@ -33,6 +33,7 @@
 <script src="./logic/views.js"></script>
 <script src="./app-logic.js"></script>
 <script src="./dc-runtime.js?v=2"></script>
+<script src="./customer-analytics.js" defer></script>
 </head>
 <body>
 <x-dc>
@@ -257,7 +258,7 @@
       <nav style="display:flex;gap:2px;align-items:center;flex:1 1 auto;min-width:0">
         <sc-for list="{{ nav }}" as="n">
           <div style="position:relative;flex:0 1 auto;min-width:0;overflow:hidden">
-            <span role="button" tabIndex="0" onClick="{{ n.open }}" style="{{ n.style }}">
+            <span role="button" tabIndex="0" data-track="{{ n.track }}" onClick="{{ n.open }}" style="{{ n.style }}">
               <sc-if value="{{ n.hasIcon }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:22px;height:22px;display:block">
                   <sc-for list="{{ n.icon }}" as="p"><path d="{{ p.d }}"></path></sc-for>
@@ -973,12 +974,21 @@
         </sc-if>
       </section>
 
+      <sc-if value="{{ rp.customerEnabled }}">
+      <section class="customer-save">
+        <h2>{{ rp.customerTitle }}</h2><p>{{ rp.customerExplain }}</p>
+        <p>{{ rp.customerOperator }} · {{ rp.customerRetention }}</p>
+        <label><input type="checkbox" checked="{{ rp.customerAgreed }}" onChange="{{ rp.customerToggle }}">{{ rp.customerConsentLabel }}</label>
+        <button data-track="survey.save" onClick="{{ rp.customerSave }}" disabled="{{ rp.customerSaveDisabled }}">{{ rp.customerSaveLabel }}</button>
+        <p role="status" aria-live="polite">{{ rp.customerNote }}</p>
+      </section>
+      </sc-if>
       <!-- 리포트로 받기 — 결과(지원사업) 다음에 둔다 -->
       <section style="padding:36px 0 0">
         <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-          <button disabled="{{ rp.sendDisabled }}" onClick="{{ rp.submit }}" style="{{ rp.sendStyle }}">{{ rp.sendLabel }}</button>
-          <button onClick="{{ rp.preview }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--accent-text);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">미리보기 · PDF 저장</button>
-          <button onClick="{{ rp.csv }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--ink2);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">CSV 저장</button>
+          <button disabled="{{ rp.sendDisabled }}" data-track="report.email" onClick="{{ rp.submit }}" style="{{ rp.sendStyle }}">{{ rp.sendLabel }}</button>
+          <button data-track="report.preview" onClick="{{ rp.preview }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--accent-text);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">미리보기 · PDF 저장</button>
+          <button data-track="report.csv" onClick="{{ rp.csv }}" disabled="{{ rp.exportDisabled }}" style="flex:none;font-size:14.5px;font-weight:600;color:var(--ink2);background:none;border:none;padding:0;cursor:pointer;white-space:nowrap">CSV 저장</button>
         </div>
         <div style="margin-top:18px"><p role="status" aria-live="polite" style="{{ dsSub }}">{{ rp.note }}</p><a href="privacy.html" style="font-size:13px;color:var(--accent-text)">개인정보 안내</a></div>
       </section>
@@ -1023,7 +1033,7 @@
             <sc-for list="{{ pr.filters }}" as="f">
               <label class="market-filter">
                 <span>{{ f.label }}</span>
-                <select aria-label="{{ f.label }}" value="{{ f.value }}" onChange="{{ f.change }}">
+                <select data-track="market.filter" aria-label="{{ f.label }}" value="{{ f.value }}" onChange="{{ f.change }}">
                   <sc-for list="{{ f.options }}" as="o">
                     <option value="{{ o.value }}">{{ o.label }}</option>
                   </sc-for>
@@ -2336,7 +2346,7 @@
           <div class="market-scope" aria-live="polite">{{ c.add.browseCount }}</div>
           <div class="compare-browser">
             <sc-for list="{{ c.add.browseRows }}" as="a">
-              <button class="compare-choice" onClick="{{ a.add }}" disabled="{{ a.disabled }}">
+              <button class="compare-choice" data-track="comparison.add" onClick="{{ a.add }}" disabled="{{ a.disabled }}">
                 <span class="compare-choice-copy"><strong>{{ a.name }}</strong><span>{{ a.meta }}</span></span>
                 <span class="compare-choice-action">{{ a.action }}</span>
               </button>
