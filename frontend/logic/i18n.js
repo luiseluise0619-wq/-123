@@ -236,7 +236,7 @@ globalThis.MysbizonParts.i18n = {
       "bep.dayWhy": "본전 {bep} ÷ 30일 ÷ {src} {unit}원. 이 금액은 카드 1건당 결제액이라, 여러 명이 함께 결제하면 실제 손님 수와 결제 건수는 달라요. 시간대 비중은 서울 전체 {ind} 평균이에요.",
       "sat.lead": "사람 1만 명당 {ind}이(가) {v}개예요. 서울 중앙값은 {med}개라 {word}이에요(예요).",
       "rent.perNote": "{per} · {note}",
-      "find.noRecordIn": "{zone}은(는) 이 장사 기록이 없어 1위를 보여드려요",
+      "find.noRecordIn": "{zone}은(는) 이 장사 기록이 없어 1위로 표시합니다",
       "zc.pickedTitle": "{gu} 기준으로 견주기",
       "asOf": "{q} 기준",
       "surv.mo": "{n}개월",
@@ -289,7 +289,7 @@ globalThis.MysbizonParts.i18n = {
       "diag.thinAvg": "계산의 출발점인 이 자리 {ind} 평균은 {n}곳만의 평균이에요. 잘되는 한 집이 평균을 끌어올리니, 아래 ‘내 조건 바꾸기’에서 ‘보수적’으로 낮춰 보세요.",
       "find.guHint": "{gu}를(을) 한 번 더 누르면 이 구에서 찾아요",
       "pr.guMissing": "{n}개 구는 원자료에 없어 목록에서 빠졌어요({names}).",
-      "chat.hello": "안녕하세요. {ind} 기준으로 답해 드려요. 궁금한 걸 물어보시거나 아래 버튼을 눌러 주세요.",
+      "chat.hello": "{ind} 기준으로 볼 수 있는 내용을 정리했어요. 궁금한 항목을 고르거나 직접 입력해 보세요.",
       "rg.share": "{ind}은(는) 이 동네에서 손님이 쓴 돈의 {pct}%를 차지해요.",
 
       "gu.border": "{a}·{b} 경계",

@@ -96,8 +96,8 @@ globalThis.MysbizonParts.report = {
     return {
       // 담을 항목 체크박스를 없앴으니 '고른 게 0개'인 상태도 없다 — 자리만 있으면 내보낼 수 있다
       exportDisabled:!reportSelection,
-      title:'분석한 내용을 정리해 드려요',
-      sub:'몇 가지만 답하시면 조건에 해당할 수 있는 정부·지자체 창업지원사업을 찾아 한 장으로 묶어 드려요.',
+      title:'창업 지원 리포트',
+      sub:'몇 가지만 고르면 조건에 맞을 수 있는 정부·지자체 창업지원사업과 상권 분석을 한 장에 담습니다.',
       // '담을 항목 N개'는 지운 체크박스를 가리키던 말이라 뺐다
       target:(S.ind?this.indName(S.ind):'장사 미선택')+' · '+reportZone,
       // ── 리포트에 담을 내용을 한 번에 하나씩 묻는다 ──────────────────
@@ -154,7 +154,7 @@ globalThis.MysbizonParts.report = {
         const STEPS=[
           // ① 시·도 — 지자체 공고는 지역별로 따로 있다. 자료가 서울뿐이어도 지역은 다 묻는다.
           {k:'sido', q:'어느 지역에서 창업하세요?',
-           hint:'지자체마다 따로 있는 공고를 함께 찾아 드려요.',
+           hint:'지역별 공고를 함께 확인합니다.',
            opts:RP_SIDO.map(v=>({v,label:v})), grid:true,
            val:S.rp_sido, set:v=>({rp_sido:v, rp_gu:''})},
 
@@ -195,13 +195,13 @@ globalThis.MysbizonParts.report = {
 
           // ⑥ 창업 시기 — 마감이 그 안에 있는 공고를 앞으로 끌어온다
           {k:'when', q:'언제 문을 열 계획이세요?',
-           hint:'그 안에 마감인 공고를 먼저 보여드려요.',
+           hint:'선택한 시기 안에 마감되는 공고를 먼저 표시합니다.',
            opts:['3개월 안','6개월 안','1년 안','아직 미정'].map(v=>({v,label:v})),
            val:S.rp_when, set:v=>({rp_when:v})},
 
           // ⑦ 필요한 지원 — 공고의 '지원 분야'와 바로 이어진다
           {k:'need', q:'어떤 지원이 가장 필요하세요?',
-           hint:'고른 분야의 공고를 위로 올려 드려요.',
+           hint:'선택한 분야와 관련된 공고를 먼저 표시합니다.',
            opts:['사업화 자금','시설·임차 비용','교육·멘토링','융자·대출'].map(v=>({v,label:v})),
            val:S.rp_need, set:v=>({rp_need:v})},
 
@@ -210,7 +210,7 @@ globalThis.MysbizonParts.report = {
           //   리포트(PDF·CSV·메일)의 손익 계산에만 쓴다. 화면에는 결과를 그리지 않는다.
           //   비워 두고 넘어갈 수 있다 — 자리를 아직 안 정한 분은 임대료를 알 수 없다.
           //   그때는 기본 가정으로 계산하고, 리포트에 '기본 가정'이라고 적는다(§1).
-          {k:'cost', q:'가게 조건을 알려주시면 손익도 같이 계산해 드려요',
+          {k:'cost', q:'가게 조건을 넣으면 손익도 계산할 수 있어요',
            hint:'리포트(PDF·메일)에만 들어가요. 모르시면 비워 두고 넘어가셔도 돼요.',
            // blank = 비웠을 때 되돌아갈 값(= 이 서비스의 기본 가정). staffOv 는 null 이면
            // 평수에서 자동으로 잡는다.
@@ -222,8 +222,8 @@ globalThis.MysbizonParts.report = {
            opts:[], val:S.rp_cost},
 
           // 이메일 — 리포트를 보낼 곳. 건너뛸 수 없다.
-          {k:'email', q:'결과를 어디로 보내 드릴까요?',
-           hint:'찾은 지원사업과 상권 분석을 한 장으로 묶어 보내 드려요.',
+          {k:'email', q:'결과를 받을 이메일을 입력해 주세요',
+           hint:'지원사업과 상권 분석을 한 장의 리포트로 받아보세요.',
            input:'email', opts:[], val:S.rp_email||''}
         ].filter(s=>s.only!==false);
 
@@ -647,7 +647,7 @@ globalThis.MysbizonParts.report = {
         }catch(e){this.setState({rp_error:e.name==='TimeoutError'?'응답을 확인하는 데 시간이 너무 걸렸어요. 수신함을 확인한 뒤 다시 시도해 주세요.':e.message});}
         finally{this._reportSending=false;this.setState({rp_sending:false});}
       },
-      note:S.rp_error||(sent?'메일 서비스에 발송을 요청했어요. 스팸함도 확인해 주세요.':!enabled?'현재는 미리보기와 CSV 저장을 이용할 수 있어요. 이메일 발송은 준비가 끝나면 열어 드릴게요.':'이메일은 요청하신 리포트 발송에만 써요. 매출 추정치와 직접 넣으신 조건은 구분해서 담아요.')
+      note:S.rp_error||(sent?'메일 발송을 요청했습니다. 스팸함도 확인해 주세요.':!enabled?'현재는 미리보기와 CSV 저장을 이용할 수 있어요. 이메일 발송은 준비 중입니다.':'이메일은 리포트 발송에만 사용합니다. 매출 추정치와 직접 입력한 조건은 구분해 담습니다.')
     };
   }
 };

@@ -1,7 +1,7 @@
     <!-- 리포트 -->
     <sc-if value="{{ onReport }}">
       <section style="padding:56px 0 0;max-width:760px;margin:0 auto">
-        <h1 style="{{ ds1 }}">리포트로 정리해 드려요</h1>
+        <h1 style="{{ ds1 }}">내 리포트</h1>
 
         <div style="margin-top:28px;display:flex;flex-direction:column;gap:18px">
           <!-- 창업 조건 — 답할 때마다 아래 리포트가 한 칸씩 자란다. 다 답하면 카드째 사라진다 -->
@@ -43,7 +43,7 @@
                         <option value="{{ o.value }}">{{ o.label }}</option>
                       </sc-for>
                     </select>
-                    <span style="font-size:12px;color:var(--ink3)">드롭다운으로 단계별 선택을 진행해요.</span>
+                    <span style="font-size:12px;color:var(--ink3)">목록에서 하나를 고르세요.</span>
                   </div>
                 </sc-if>
                 <sc-if value="{{ rp.hasGridOpts }}">
