@@ -370,7 +370,7 @@ class Component extends DCLogic {
       onSim:S.screen==='sim',
       // 어느 장사를 보고 있는지 화면에서 바로 보이고 바꿀 수 있게 한다
       indSel:S.ind,
-      selectStyle:'font-size:15px;font-weight:500;color:var(--ink);background:var(--surface);border:none;border-radius:12px;padding:0 14px;height:44px;cursor:pointer;outline:none;max-width:200px',
+      selectStyle:'font-size:15px;font-weight:500;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 42px 0 14px;min-height:44px;line-height:1.2;cursor:pointer;outline:none;max-width:260px;appearance:none',
       indOptions:(S.zi?S.zi.inds:[]).map(n=>({raw:n,label:this.indName(n)}))
         .sort((a,b)=>a.label.localeCompare(b.label,'ko')),
       onIndSel:e=>this.setState({ind:e.target.value,sel:null,picks:null,fromRegion:false}),

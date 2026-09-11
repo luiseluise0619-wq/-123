@@ -763,6 +763,17 @@
                     <div style="margin-top:12px;padding:16px 18px;border-radius:var(--r-sm);background:var(--surface);font-size:14px;color:var(--ink3)">{{ rp.searchEmptyText }}</div>
                   </sc-if>
                 </sc-if>
+                <sc-if value="{{ rp.hasSelect }}">
+                  <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px">
+                    <select value="{{ rp.selectValue }}" onChange="{{ rp.onSelect }}" style="{{ rp.selectStyle }}" aria-label="{{ rp.curQ }}">
+                      <option value="">{{ rp.selectPlaceholder }}</option>
+                      <sc-for list="{{ rp.curOpts }}" as="o">
+                        <option value="{{ o.value }}">{{ o.label }}</option>
+                      </sc-for>
+                    </select>
+                    <span style="font-size:12px;color:var(--ink3)">드롭다운으로 단계별 선택을 진행해요.</span>
+                  </div>
+                </sc-if>
                 <sc-if value="{{ rp.hasGridOpts }}">
                 <div style="{{ rp.optsGridStyle }}">
                   <sc-for list="{{ rp.curOpts }}" as="o">

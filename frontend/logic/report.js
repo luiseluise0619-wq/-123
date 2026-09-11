@@ -246,20 +246,24 @@ globalThis.MysbizonParts.report = {
           +'width:100%;padding:17px 18px;border-radius:14px;cursor:pointer;'
           +'font-size:15.5px;line-height:1.4;text-align:left;'
           +'transition:background .14s,color .14s;'
-          +(on?'background:var(--accent-3);color:var(--accent-hover);font-weight:600'
-             :'background:var(--surface);color:var(--ink)');
+          +'border:1px solid '+(on?'var(--accent)':'var(--line)')+';'
+          +(on?'background:var(--card);color:var(--accent-hover);font-weight:700'
+             :'background:var(--card);color:var(--ink)');
         // 지역·업종처럼 항목이 많은 단계는 격자로 깐다 — 세로로 세우면 버튼 벽이 된다(§29)
         const optStyleGrid=on=>'display:flex;align-items:center;justify-content:center;'
           +'padding:13px 10px;border-radius:12px;cursor:pointer;min-width:0;'
           +'font-size:14.5px;line-height:1.3;text-align:center;white-space:nowrap;'
-          +'overflow:hidden;text-overflow:ellipsis;transition:background .14s,color .14s;'
-          +(on?'background:var(--accent-3);color:var(--accent-hover);font-weight:700'
-             :'background:var(--surface);color:var(--ink)');
+          +'overflow:hidden;text-overflow:ellipsis;transition:background .14s,color .14s,border-color .14s;'
+          +'border:1px solid '+(on?'var(--accent)':'var(--line-strong)')
+          +(on?'background:var(--card);color:var(--accent-hover);font-weight:700'
+             :'background:var(--card);color:var(--ink)');
 
         // 요약에 적을 말. 상권 단계는 코드(3001496)가 아니라 동네 이름으로 적는다.
         const shown=(v,isZone)=>Array.isArray(v)
           ? (v.length? v.map(nameOf).join(' · ') : '없음')
           : (v? (isZone? nameOf(v) : v) : '건너뜀');
+
+        const hasSelect = visible.length>0 && cur&&cur.opts && !cur.multi && !cur.nums && !cur.input && (cur.grid || visible.length>5);
 
         return {
           qsStep: cur? (step+1)+' / '+N : '',
@@ -274,9 +278,11 @@ globalThis.MysbizonParts.report = {
           // 구 25개·동네 99개를 버튼으로 늘어놓으면 화면이 버튼 벽이 된다.
           // 치는 대로 걸러 6개만 보여준다. '강'만 쳐도 강남구·강동구가 뜬다.
           // 후보가 0개면 목록 칸 자체를 안 그린다 — 안 그러면 빈 여백만 22px 뜬다
-          hasOpts: visible.length>0 && !(cur&&cur.grid),
+          // 항목이 많은 단계를 드롭다운으로 바꿔 버튼 부담을 낮춘다.
+          hasSelect,
+          hasOpts: visible.length>0 && cur&&cur.opts && !hasSelect && !cur.multi && !cur.nums && !cur.input,
           // 격자로 그릴지, 한 줄씩 그릴지
-          hasGridOpts: visible.length>0 && !!(cur&&cur.grid),
+          hasGridOpts: visible.length>0 && !!(cur&&cur.grid) && !hasSelect,
           // 칸 수는 언어를 따른다. 로마자 표기는 한글보다 두 배쯤 길어서
           // 3칸으로 두면 영어 화면에서 자치구 17개 중 15개가 말줄임으로 잘린다.
           optsGridStyle:'display:grid;gap:8px;margin-top:22px;'
@@ -302,6 +308,7 @@ globalThis.MysbizonParts.report = {
           curOpts: visible.map(o=>{
             const on=cur.multi? (PICKS.indexOf(o.v)>=0) : (cur.val===o.v);
             return {
+              value:o.v,
               label:o.label, on:on, style:(cur.grid?optStyleGrid:optStyle)(on),
               sub:o.sub||'', hasSub:!!o.sub,
               pick: cur.multi
@@ -313,6 +320,16 @@ globalThis.MysbizonParts.report = {
                     : {...cur.set(o.v), rp_step:step+1, rp_q:'', rp_sent:false, rp_error:''})
             };
           }),
+          selectStyle:'width:100%;min-height:52px;padding:0 16px;border:1px solid var(--line-strong);border-radius:14px;background:var(--card);color:var(--ink);font-family:inherit;font-size:16px;appearance:none;',
+          selectValue: cur?cur.val:'',
+          selectPlaceholder:'선택하세요',
+          onSelect:e=>{
+            const v=e.target.value;
+            if(!cur||!cur.set || !v) return;
+            this.setState(cur.stay
+              ? {...cur.set(v), rp_step:step, rp_sent:false, rp_error:''}
+              : {...cur.set(v), rp_step:step+1, rp_q:'', rp_sent:false, rp_error:''});
+          },
           // 여러 개 고르는 단계에서만 '다음'이 필요하다 — 하나 고르는 단계는 누르면 바로 넘어간다
           isMulti: !!(cur&&cur.multi),
           multiNext: ()=>this.setState({rp_step:step+1, rp_q:''}),

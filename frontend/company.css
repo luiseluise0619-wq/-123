@@ -2,6 +2,50 @@
 html { scroll-behavior:smooth; }
 body { font-feature-settings:"tnum"; }
 button,[role=button],input,select { -webkit-tap-highlight-color:transparent; }
+select{
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  padding:11px 40px 11px 14px;
+  color:var(--ink);
+  background:
+    linear-gradient(45deg, transparent 50%, var(--ink2) 50%, transparent 60%) calc(100% - 16px) calc(50% - 3px)/6px 6px no-repeat,
+    linear-gradient(-45deg, transparent 50%, var(--ink2) 50%, transparent 60%) calc(100% - 10px) calc(50% - 3px)/6px 6px no-repeat,
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) calc(100% - 30px) 50%/1px 44% no-repeat,
+    var(--surface);
+  border:1px solid var(--line);
+  border-radius:12px;
+  cursor:pointer;
+  min-height:44px;
+  transition:border-color .16s,box-shadow .16s,background-color .16s;
+}
+select:hover{
+  border-color:var(--line-strong);
+  background-color:var(--surface);
+}
+select:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(8,127,107,.12);
+}
+select:focus-visible{
+  border-color:var(--accent);
+}
+select option{
+  color:var(--ink);
+  background:var(--card);
+  padding:10px 14px;
+}
+select option:hover,
+select option:focus{
+  background:var(--accent-3);
+  color:var(--ink);
+}
+select option:checked{
+  background:var(--accent);
+  color:var(--on-accent);
+}
+
 button:disabled { cursor:not-allowed !important; opacity:.6; }
 :focus-visible { outline:3px solid var(--accent-text,#087F6B) !important; outline-offset:4px; }
 .skip-link { position:fixed;left:16px;top:-80px;z-index:1000;background:var(--accent);color:var(--on-accent);padding:12px 18px;border-radius:10px; }
@@ -73,7 +117,23 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
 .market-filters { display:flex;flex-wrap:wrap;gap:16px;margin:4px 0 12px; }
 .market-filter { display:flex;flex-direction:column;gap:8px;flex:1 1 200px;min-width:0;max-width:360px; }
 .market-filter > span { font-size:13px;font-weight:600;color:var(--ink2); }
-.market-filter select { width:100%;min-height:48px;border:1px solid var(--line-strong);border-radius:14px;padding:11px 36px 11px 14px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;cursor:pointer; }
+.market-filter select{
+  width:100%;
+  min-height:48px;
+  border:1px solid var(--line-strong);
+  border-radius:14px;
+  padding:11px 40px 11px 14px;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--ink2) 50%, transparent 60%) calc(100% - 16px) calc(50% - 3px)/6px 6px no-repeat,
+    linear-gradient(-45deg, transparent 50%, var(--ink2) 50%, transparent 60%) calc(100% - 10px) calc(50% - 3px)/6px 6px no-repeat,
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) calc(100% - 30px) 50%/1px 44% no-repeat,
+    var(--card);
+  color:var(--ink);
+  font:inherit;
+  font-size:16px;
+  cursor:pointer;
+  appearance:none;
+}
 .market-scope { font-size:13px;line-height:1.6;color:var(--ink2);margin:10px 0 16px;overflow-wrap:anywhere; }
 main[data-screen="price"] canvas { cursor:crosshair; }
 main[data-screen="price"] > section:last-of-type { margin-top:20px; }
