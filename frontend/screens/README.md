@@ -34,12 +34,13 @@ npm test              # 위 확인이 테스트에도 들어 있습니다
 | `20-price.html` | 통합시세 (왼쪽 세로 갈래·지표 · 오른쪽 가로 차트) | `onPrice` |
 | `30-fine-intro.html` | 정밀분석 소개 | `onFineIntro` |
 | `31-fine-compare.html` | 자치구 훑기 | `onFineCmp` |
-| `32-map.html` | 지도 — 위치만 | `onMapScreen` |
+| `32-map.html` | 지도 — 한 지점 선택·상권 요약·주변 경쟁점 | `onMapScreen` |
 | `33-fine-detail.html` | 정밀분석 — 왜 좋은/나쁜지 | `onFineDetail` |
 | `40-zone-compare.html` | 지역비교(자치구) | `onZoneCmp` |
 | `41-region.html` | 고른 지역의 업종 목록 | `onRegion` |
 | `42-find.html` | 후보지 | `onFind` |
 | `43-diagnosis.html` | 본전 계산 | `onDiag` |
+| `44-prep.html` | 창업 준비 — 업종별 체크리스트·근거 기반 조언 | `onPrep` |
 | `45-sim.html` | 정밀비교 — 담은 상권 종합순위 | `onSim` |
 | `50-ai.html` | 도우미 전체 화면 | `onAi` |
 | `51-soon.html` | 준비 중 화면 | `onSoon` |
@@ -73,6 +74,7 @@ npm test              # 위 확인이 테스트에도 들어 있습니다
 | `logic/analysis.js` | 순위·지도·정밀분석 섹션 계산 |
 | `logic/screens.js` | 화면별 값 묶음(홈·지역비교·후보 지역·통합시세) |
 | `logic/chat.js` | 도우미 |
+| `logic/prep.js` | 업종별 창업 체크리스트·공식 확인처·오픈 전 조언 |
 | `logic/charts.js` | Chart.js 래퍼 |
 | `logic/carousel.js` | 가로 슬라이드 |
 | `logic/market.js` | 통합시세 7갈래 28지표 · 왼쪽 세로 목록 |

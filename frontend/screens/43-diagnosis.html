@@ -23,6 +23,14 @@
           <div style="{{ d.gapStyle }}">{{ d.gap }}</div>
           </div>
         </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-top:16px;max-width:860px">
+          <sc-for list="{{ d.quick }}" as="q">
+            <div style="padding:16px 0;border-top:1px solid var(--line)">
+              <div style="font-size:12px;color:var(--ink3)">{{ q.label }}</div>
+              <div style="font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:3px">{{ q.value }}</div>
+            </div>
+          </sc-for>
+        </div>
         <div style="margin-top:26px;display:flex;flex-direction:column;gap:12px;max-width:620px">
           <sc-for list="{{ d.factors }}" as="f">
             <div style="display:flex;align-items:baseline;gap:11px">
@@ -37,6 +45,7 @@
           <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:14px">
             <span role="button" tabIndex="0" onClick="{{ goCmp }}" style="{{ ctaText }}">다른 자리와 비교하기</span>
             <span role="button" tabIndex="0" onClick="{{ goMap }}" style="{{ ctaText }}">정밀분석 다시 보기</span>
+            <span role="button" tabIndex="0" onClick="{{ goPrep }}" style="{{ ctaText }}">{{ d.prepCta }}</span>
           </div>
         </div>
       </section>
@@ -80,12 +89,14 @@
                   </label>
                 </sc-for>
               </div>
-              <div style="margin-top:26px;display:flex;gap:3px;background:var(--surface);border-radius:12px;padding:3px;width:fit-content;max-width:100%;overflow-x:auto">
-                <sc-for list="{{ scens }}" as="s">
-                  <span role="button" tabIndex="0" onClick="{{ s.pick }}" style="{{ s.style }}">{{ s.label }}</span>
-                </sc-for>
-              </div>
-              <p style="font-size:12.5px;color:var(--ink3);margin:12px 0 0;max-width:580px;text-wrap:pretty">{{ scenNote }}</p>
+              <sc-if value="{{ useScenarios }}">
+                <div style="margin-top:26px;display:flex;gap:3px;background:var(--surface);border-radius:12px;padding:3px;width:fit-content;max-width:100%;overflow-x:auto">
+                  <sc-for list="{{ scens }}" as="s">
+                    <span role="button" tabIndex="0" onClick="{{ s.pick }}" style="{{ s.style }}">{{ s.label }}</span>
+                  </sc-for>
+                </div>
+                <p style="font-size:12.5px;color:var(--ink3);margin:12px 0 0;max-width:580px;text-wrap:pretty">{{ scenNote }}</p>
+              </sc-if>
             </div>
           </sc-if>
         </div>

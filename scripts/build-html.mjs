@@ -40,6 +40,7 @@ export const ORDER = [
   '41-region',
   '42-find',
   '43-diagnosis',
+  '44-prep',
   '45-sim',
   '_shell-foot',
 ];

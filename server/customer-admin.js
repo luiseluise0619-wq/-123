@@ -1,6 +1,6 @@
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
-import {timingSafeEqual} from 'node:crypto';
+import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import path from 'node:path';
 import {openCustomerPool,CustomerStore,csv,tokenHash} from './customer-data.js';
@@ -28,7 +28,7 @@ export function customerAdminSettings(env=process.env){
 
 export function createAdminServer(store,token,port){
   if(!/^[a-f0-9]{64}$/i.test(token||''))throw new Error('CUSTOMER_ADMIN_TOKEN must be 32 random bytes in hex');
-  const expected=tokenHash(token),limit=createLimiter();
+  const expected=tokenHash(token),limit=createLimiter(),sessions=new Map();
   const allowedHosts=new Set(parseCsv(process.env.CUSTOMER_ADMIN_ALLOWED_HOSTS).map((v)=>v.toLowerCase()));
   if(allowedHosts.size===0){
     for(const host of ['127.0.0.1','localhost'])allowedHosts.add(port===0?host:`${host}:${port}`);
@@ -37,6 +37,29 @@ export function createAdminServer(store,token,port){
   if(allowedOrigins.size===0)for(const host of allowedHosts)allowedOrigins.add(host);
   const publicMode = process.env.CUSTOMER_ADMIN_PUBLIC==='1';
   const prefix=basePath(process.env.CUSTOMER_ADMIN_BASE_PATH);
+  const sessionName='mysbizon-admin-session',sessionMaxAge=15*60*1000;
+  const cookieValue=(req)=>{
+    const raw=String(req.headers.cookie||'').split(';').map((value)=>value.trim());
+    for(const item of raw)if(item.startsWith(sessionName+'='))return item.slice(sessionName.length+1);
+    return '';
+  };
+  const cookie=(req,value,maxAge=900)=>{
+    const secure=String(req.headers['x-forwarded-proto']||'').toLowerCase()==='https'?'; Secure':'';
+    return `${sessionName}=${value}; HttpOnly${secure}; SameSite=Strict; Path=${prefix||'/'}; Max-Age=${maxAge}`;
+  };
+  const purgeSessions=()=>{
+    const now=Date.now();for(const [id,expires] of sessions)if(expires<=now)sessions.delete(id);
+    while(sessions.size>=128)sessions.delete(sessions.keys().next().value);
+  };
+  const openSession=(req,res)=>{
+    purgeSessions();const id=randomBytes(32).toString('hex');sessions.set(id,Date.now()+sessionMaxAge);
+    res.setHeader('Set-Cookie',cookie(req,id));return id;
+  };
+  const resumeSession=(req,res)=>{
+    const id=cookieValue(req),expires=sessions.get(id)||0;
+    if(!id||expires<=Date.now()){if(id)sessions.delete(id);return '';}
+    sessions.set(id,Date.now()+sessionMaxAge);res.setHeader('Set-Cookie',cookie(req,id));return id;
+  };
   return http.createServer(async(req,res)=>{
     securityHeaders(res);res.setHeader('Cache-Control','no-store');
     const send=(status,body)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));};
@@ -52,10 +75,14 @@ export function createAdminServer(store,token,port){
       const wait=limit(req.socket.remoteAddress,120,60000);if(wait)return send(429,{error:'잠시 후 다시 시도해 주세요.'});
       const assetPath=prefix&&url.pathname.startsWith(prefix+'/')?url.pathname.slice(prefix.length):url.pathname;
       if(prefix&&url.pathname===prefix&&req.method==='GET'){res.writeHead(308,{Location:prefix+'/'});return res.end();}
-      if(['/','/admin.js','/admin.css'].includes(assetPath)&&req.method==='GET'){
+      if(['/','/admin.js','/admin.css','/wanted-sans.woff2'].includes(assetPath)&&req.method==='GET'){
         const name=assetPath==='/'?'index.html':assetPath.slice(1);
-        const body=await readFile(new URL('../admin/'+name,import.meta.url));
-        res.writeHead(200,{'Content-Type':name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html; charset=utf-8'});return res.end(body);
+        const assetUrl=name==='wanted-sans.woff2'
+          ? new URL('../frontend/fonts/WantedSansVariable.woff2',import.meta.url)
+          : new URL('../admin/'+name,import.meta.url);
+        const body=await readFile(assetUrl);
+        const type=name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.woff2')?'font/woff2':'text/html; charset=utf-8';
+        res.writeHead(200,{'Content-Type':type});return res.end(body);
       }
       if(req.method!=='POST')return send(405,{error:'허용되지 않은 요청입니다.'});
       if(req.headers.origin){
@@ -77,10 +104,17 @@ export function createAdminServer(store,token,port){
       // Nginx의 1차 Basic 인증도 401을 사용한다. 여기서 같은 코드를 보내면
       // 브라우저가 2차 키 실패를 1차 실패로 오해해 Basic 인증창을 다시 띄운다.
       // 2차 키는 본인 확인은 끝났지만 권한이 부족한 403으로 구분한다.
-      if(!timingSafeEqual(expected,tokenHash(supplied))){const blocked=limit('auth',5,60000);return send(blocked?429:403,{error:'2차 관리자 키가 맞지 않습니다.'});}
+      let session='';
+      if(supplied){
+        if(!timingSafeEqual(expected,tokenHash(supplied))){const blocked=limit('auth',5,60000);return send(blocked?429:403,{error:'2차 관리자 키가 맞지 않습니다.'});}
+        session=openSession(req,res);
+      }else session=resumeSession(req,res);
+      if(!session)return send(403,{error:'2차 관리자 인증이 필요합니다.'});
       if(limit('queries',60,60000))return send(429,{error:'잠시 후 다시 시도해 주세요.'});
       const body=JSON.parse(await readBody(req));
       const apiPath=prefix&&url.pathname.startsWith(prefix+'/api/')?url.pathname.slice(prefix.length):url.pathname;
+      if(apiPath==='/api/session')return send(200,{ok:true});
+      if(apiPath==='/api/logout'){sessions.delete(session);res.setHeader('Set-Cookie',cookie(req,'',0));return send(200,{ok:true});}
       if(apiPath==='/api/list'){
         await store.audit(body.reveal===true?'view-email':'view-masked');
         return send(200,await store.list({before:body.before,reveal:body.reveal===true}));

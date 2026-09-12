@@ -57,8 +57,13 @@ test('comparison can browse districts without a name and retain selections acros
   box=c.renderVals().c.add;
   const before=box.browseRows.length;
   if(box.hasMore){box.more();assert.ok(c.renderVals().c.add.browseRows.length>before);}
-  box=c.renderVals().c.add;box.browseRows.find(r=>!r.disabled).add();
-  assert.equal(c.state.picks.length,3);assert.ok(c.renderVals().c.add.browseRows.every(r=>r.disabled));
+  while(c.state.picks.length<5){
+    box=c.renderVals().c.add;
+    const next=box.browseRows.find(r=>!r.disabled);
+    assert.ok(next,'다섯 곳을 채울 비교 후보가 있어야 한다');
+    next.add();
+  }
+  assert.equal(c.state.picks.length,5);assert.ok(c.renderVals().c.add.browseRows.every(r=>r.disabled));
 });
 
 test('chart tooltip is immediate, readable in both themes and uses the horizontal category axis',()=>{

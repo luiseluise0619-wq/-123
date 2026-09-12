@@ -1,6 +1,13 @@
-/* MYSBIZON: 읽기 쉬운 숫자, 따뜻한 문장, 절제된 여백. */
+/* MYSBIZON DESIGN GRAMMAR v1.0 — Warm · Clear · Assured */
+@font-face{
+  font-family:"Wanted Sans Variable";
+  src:url("fonts/WantedSansVariable.woff2") format("woff2-variations");
+  font-style:normal;
+  font-weight:400 1000;
+  font-display:swap;
+}
 html { scroll-behavior:smooth; }
-body { font-feature-settings:"tnum"; }
+body { font-family:"Wanted Sans Variable","Wanted Sans",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;font-feature-settings:"tnum";font-weight:450; }
 button,[role=button],input,select { -webkit-tap-highlight-color:transparent; }
 select{
   -webkit-appearance:none;
@@ -17,7 +24,7 @@ select{
   border-radius:12px;
   cursor:pointer;
   min-height:44px;
-  transition:border-color .16s,box-shadow .16s,background-color .16s;
+  transition:border-color .18s,box-shadow .18s,background-color .18s;
 }
 select:hover{
   border-color:var(--line-strong);
@@ -26,7 +33,7 @@ select:hover{
 select:focus{
   outline:none;
   border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(8,127,107,.12);
+  box-shadow:0 0 0 3px rgba(50,185,154,.16);
 }
 select:focus-visible{
   border-color:var(--accent);
@@ -47,12 +54,12 @@ select option:checked{
 }
 
 button:disabled { cursor:not-allowed !important; opacity:.6; }
-:focus-visible { outline:3px solid var(--accent-text,#087F6B) !important; outline-offset:4px; }
+:focus-visible { outline:3px solid var(--accent-text,#32B99A) !important; outline-offset:4px; }
 .skip-link { position:fixed;left:16px;top:-80px;z-index:1000;background:var(--accent);color:var(--on-accent);padding:12px 18px;border-radius:10px; }
 .skip-link:focus { top:12px; }
-.hero-eyebrow { color:var(--accent-text);font-size:14px;letter-spacing:-.02em;font-weight:650;margin-bottom:20px; }
+.hero-eyebrow { color:var(--accent-text);font-size:13px;line-height:20px;letter-spacing:-.02em;font-weight:650;margin-bottom:24px; }
 .hero-title { font-weight:750 !important;letter-spacing:-.045em !important; }
-.hero-search > div:first-child { border:1px solid var(--line);box-shadow:0 10px 40px rgba(20,45,40,.07) !important;padding:12px !important; }
+.hero-search > div:first-child { border:1px solid var(--line);box-shadow:none !important;padding:8px !important; }
 .hero-search button { background:var(--accent) !important;color:var(--on-accent) !important;box-shadow:none !important; }
 /* 상단 메뉴만 가로 스크롤. 화면 안의 세로 메뉴(시세분석·정밀분석)까지 걸리면 안 된다. */
 header nav { overflow-x:auto;scrollbar-width:none; }
@@ -66,18 +73,25 @@ header [role=button] { min-height:44px;display:inline-flex;align-items:center; }
 /* 도우미 버튼(40px)에 마지막 줄이 가리지 않을 만큼만 남긴다 */
 main { padding-bottom:104px !important; }
 .site-footer{width:100%;max-width:1280px;margin:0 auto;padding:0 32px 40px}
-.site-footer-contact{min-height:116px;padding:24px;border:1px solid var(--line);border-radius:20px;background:var(--card);display:flex;align-items:center;justify-content:space-between;gap:28px}
+.site-footer-contact{min-height:116px;padding:24px;border:1px solid var(--line);border-radius:16px;background:var(--card);display:flex;align-items:center;justify-content:space-between;gap:32px}
 .site-footer-contact-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
 .site-footer-contact-eyebrow{font-size:12px;font-weight:700;color:var(--accent-text)}
 .site-footer-contact-title{font-size:19px;line-height:1.35;letter-spacing:-.025em}
 .site-footer-contact-description{font-size:13px;color:var(--ink3);line-height:1.5;text-wrap:pretty}
-.site-footer-contact-slot{min-width:310px;min-height:64px;padding:11px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px}
+.site-footer-contact-slot{min-width:310px;min-height:64px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:4px}
 .site-footer-contact-label{font-size:11.5px;font-weight:600;color:var(--ink3)}
 .site-footer-contact-value{font-size:14px;font-weight:650;color:var(--accent-text);overflow-wrap:anywhere}
 .site-footer-contact-value.is-pending{color:var(--ink2)}
 [role=button] { touch-action:manipulation; }
 [role=status] { overflow-wrap:anywhere; }
-.home-hero { min-height:720px !important; }
+.home-hero { min-height:620px !important; }
+main > section + section{padding-top:72px!important}
+main h1:not(.hero-title){font-size:32px!important;line-height:44px!important;font-weight:700!important;letter-spacing:-.03em!important}
+main h2{font-size:24px!important;line-height:34px!important;font-weight:700!important;letter-spacing:-.02em!important}
+main h3{font-size:18px!important;line-height:28px!important;font-weight:650!important;letter-spacing:-.01em!important}
+main p{font-size:16px;line-height:26px}
+main[data-screen="map"] aside{box-shadow:none!important}
+[data-rp-card]{border:1px solid var(--line)!important;box-shadow:none!important;border-radius:16px!important}
 html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-strong); }
 @media(max-width:599px) {
   /* 모바일 헤더는 두 줄(이름 줄 + 메뉴 줄)이다. 104px 은 화면의 1/8 을 먹어
@@ -102,13 +116,15 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
   header > div > [role=button]:last-child { margin-left:auto; }
   /* 탭바(≈60px) + 도우미 버튼 자리 */
   main { padding-bottom:150px !important; }
-  .home-hero { min-height:780px !important;padding-top:42px !important; }
-  .site-footer{padding:0 16px calc(92px + env(safe-area-inset-bottom,0px))}
+  .home-hero { min-height:620px !important;padding-top:48px !important; }
+  .site-footer{padding:0 20px calc(92px + env(safe-area-inset-bottom,0px))}
   .site-footer-contact{min-height:0;padding:20px;gap:16px;align-items:stretch;flex-direction:column}
   .site-footer-contact-slot{min-width:0;width:100%}
-  .hero-eyebrow { font-size:12px;margin-bottom:18px; }
-  .hero-search { margin-top:28px !important; }
-  .hero-search > div:first-child { padding:10px !important;border-radius:22px !important; }
+  .hero-eyebrow { font-size:13px;line-height:20px;margin-bottom:16px; }
+  .hero-search { margin-top:32px !important; }
+  .hero-search > div:first-child { padding:8px !important;border-radius:16px !important; }
+  main > section + section{padding-top:48px!important}
+  main h1:not(.hero-title){font-size:30px!important;line-height:40px!important}
   input,select,textarea { font-size:16px !important; }
 }
 /* PC — '읽는' 화면(허브·본전 계산·리포트·설정)은 가운데 760px 한 줄로 모은다.
@@ -125,7 +141,7 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
   *,*::before,*::after { animation:none !important;transition:none !important;scroll-behavior:auto !important; }
 }
 
-@media(max-width:599px){main>section{padding-top:32px !important} main h1{white-space:normal !important;overflow-wrap:anywhere} .home-hero{min-height:680px !important} }
+@media(max-width:599px){main>section:first-of-type{padding-top:32px !important} main h1{white-space:normal !important;overflow-wrap:anywhere} .home-hero{min-height:620px !important} }
 
 /* 통합시세·상권 선택: 절제된 면, 명확한 라벨, PC/태블릿/모바일 리플로우. */
 .market-filters { display:flex;flex-wrap:wrap;gap:16px;margin:4px 0 12px; }
@@ -161,6 +177,16 @@ main[data-screen="price"] > section:last-of-type { margin-top:20px; }
 .compare-choice-action { flex:none;font-size:13px;font-weight:600;color:var(--accent-text); }
 .compare-more { display:block;margin:20px auto 0;min-height:48px;padding:12px 24px;border:0;border-radius:12px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer; }
 @media(min-width:600px) and (max-width:1099px) { .compare-browser { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+@media(max-width:999px){
+  .map-analysis-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:599px){
+  .home-step-grid{grid-template-columns:1fr 1fr!important}
+}
+@media(max-width:799px){
+  .prep-grid{grid-template-columns:1fr!important}
+}
 @media(max-width:599px) { .compare-browser { grid-template-columns:1fr; } .market-filter { max-width:none;flex-basis:100%; } .market-filters { gap:12px; } }
 
 /* 넓은 표는 가로로 민다 — 밀 수 있다는 것을 그림자로 알린다.

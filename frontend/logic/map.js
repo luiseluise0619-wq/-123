@@ -1,164 +1,214 @@
 'use strict';
-// 카카오 지도는 지도 화면에 들어왔을 때만 받는다. 키는 서버 설정에서 오고 SDK
-// 주소는 이 파일의 고정된 Kakao 도메인만 사용한다.
+// 지도는 사용자가 고른 한 지점을 중심으로만 움직인다. 상권 통계는 가장 가까운
+// 서울시 상권 중심에 연결하고, 주변 업체는 Kakao 장소 검색 결과를 별도로 표시한다.
 globalThis.MysbizonParts = globalThis.MysbizonParts || {};
 globalThis.MysbizonParts.map = {
   kakaoMapStatus(el,text){
     if(!el) return;
     el.replaceChildren();
-    const msg=document.createElement('span');
-    msg.textContent=text;
-    Object.assign(msg.style,{padding:'14px 16px',color:'var(--ink3)',fontSize:'14px',lineHeight:'1.6'});
+    const msg=document.createElement('span'); msg.textContent=text;
+    Object.assign(msg.style,{padding:'16px',color:'var(--ink3)',fontSize:'14px',lineHeight:'1.6'});
     el.appendChild(msg);
   },
 
   loadKakaoMapsSdk(key){
-    if(globalThis.kakao?.maps?.Map) return Promise.resolve(globalThis.kakao.maps);
+    if(globalThis.kakao?.maps?.Map && globalThis.kakao?.maps?.services) return Promise.resolve(globalThis.kakao.maps);
     if(globalThis.__mysbizonKakaoMapsPromise) return globalThis.__mysbizonKakaoMapsPromise;
     globalThis.__mysbizonKakaoMapsPromise=new Promise((resolve,reject)=>{
-      const script=document.createElement('script');
-      script.id='mysbizon-kakao-maps-sdk';
-      script.async=true;
-      script.src='https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey='+encodeURIComponent(key);
+      const script=document.createElement('script'); script.id='mysbizon-kakao-maps-sdk'; script.async=true;
+      script.src='https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&libraries=services&appkey='+encodeURIComponent(key);
       script.referrerPolicy='strict-origin-when-cross-origin';
-      script.onload=()=>{
-        if(!globalThis.kakao?.maps?.load) return reject(new Error('Kakao Maps SDK unavailable'));
-        globalThis.kakao.maps.load(()=>resolve(globalThis.kakao.maps));
-      };
+      script.onload=()=>{ if(!globalThis.kakao?.maps?.load) return reject(new Error('Kakao Maps SDK unavailable'));
+        globalThis.kakao.maps.load(()=>resolve(globalThis.kakao.maps)); };
       script.onerror=()=>reject(new Error('Kakao Maps SDK failed to load'));
       document.head.appendChild(script);
-    }).catch(error=>{
-      globalThis.__mysbizonKakaoMapsPromise=null;
-      throw error;
-    });
+    }).catch(error=>{ globalThis.__mysbizonKakaoMapsPromise=null; throw error; });
     return globalThis.__mysbizonKakaoMapsPromise;
+  },
+
+  mapDistance(a,b){
+    if(!a||!b) return Infinity;
+    const R=6371000, rad=n=>Number(n)*Math.PI/180;
+    const p1=rad(a.lat),p2=rad(b.lat),dp=p2-p1,dl=rad(b.lng)-rad(a.lng);
+    const h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+    return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+  },
+
+  nearestZoneForPoint(lat,lng){
+    const lls=this.state.smap&&this.state.smap.lls;
+    if(!lls||!Number.isFinite(Number(lat))||!Number.isFinite(Number(lng))) return null;
+    const point={lat:Number(lat),lng:Number(lng)}; let best=null,distance=Infinity;
+    for(const id of Object.keys(lls)){
+      const ll=lls[id]; if(!Array.isArray(ll)||!Number.isFinite(Number(ll[0]))||!Number.isFinite(Number(ll[1]))) continue;
+      const d=this.mapDistance(point,{lat:Number(ll[0]),lng:Number(ll[1])});
+      if(d<distance){best=id;distance=d;}
+    }
+    return best?{id:best,distance}:null;
+  },
+
+  franchiseName(name){
+    const value=String(name||'').replace(/\s/g,'').toLowerCase();
+    const brands=[['스타벅스','스타벅스'],['메가커피','메가커피'],['메가엠지씨','메가커피'],
+      ['컴포즈','컴포즈커피'],['빽다방','빽다방'],['이디야','이디야'],['투썸','투썸플레이스'],
+      ['할리스','할리스'],['파스쿠찌','파스쿠찌'],['커피빈','커피빈'],['폴바셋','폴바셋'],
+      ['파리바게뜨','파리바게뜨'],['뚜레쥬르','뚜레쥬르'],['배스킨라빈스','배스킨라빈스'],
+      ['맥도날드','맥도날드'],['롯데리아','롯데리아'],['맘스터치','맘스터치'],
+      ['교촌','교촌치킨'],['bhc','BHC'],['비비큐','BBQ'],['bbq','BBQ'],
+      ['씨유','CU'],['cu','CU'],['gs25','GS25'],['세븐일레븐','세븐일레븐'],['이마트24','이마트24'],
+      ['올리브영','올리브영'],['다이소','다이소']];
+    const hit=brands.find(([needle])=>value.includes(needle)); return hit?hit[1]:'';
   },
 
   destroyKakaoMap(){
     if(this._kakaoResizeObserver){this._kakaoResizeObserver.disconnect();this._kakaoResizeObserver=null;}
     for(const overlay of this._kakaoOverlays||[]){try{overlay.setMap(null);}catch(e){}}
-    this._kakaoOverlays=[];
-    this._kakaoMap=null;
-    this._kakaoContainer=null;
-    this._kakaoBounds=null;
+    for(const marker of this._kakaoMarkers||[]){try{marker.setMap(null);}catch(e){}}
+    this._kakaoOverlays=[];this._kakaoMarkers=[];this._kakaoMap=null;this._kakaoContainer=null;
   },
 
-  kakaoInfoCard(pin){
-    const card=document.createElement('section');
-    card.setAttribute('aria-label',this.t('map.summary',{zone:pin.name}));
-    Object.assign(card.style,{
-      width:'min(292px, calc(100vw - 56px))',padding:'15px 16px',borderRadius:'16px',
-      border:'1px solid var(--line-strong)',background:'var(--card)',color:'var(--ink)',
-      boxShadow:'0 14px 34px rgba(0,0,0,.22)',fontFamily:'inherit',lineHeight:'1.35',
-      pointerEvents:'auto'
-    });
-    const title=document.createElement('strong');
-    title.textContent=pin.name;
-    Object.assign(title.style,{display:'block',fontSize:'16px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
-    const current=document.createElement('div');
-    current.textContent=this.t('map.currentIndustry',{industry:pin.industry})+' · '+pin.period;
-    Object.assign(current.style,{marginTop:'3px',fontSize:'12px',color:'var(--ink3)'});
-    const metrics=document.createElement('div');
-    Object.assign(metrics.style,{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginTop:'12px'});
-    for(const [label,value] of [[this.t('map.monthlyPerStore'),pin.monthlyPer],[this.t('map.stores'),pin.stores]]){
-      const cell=document.createElement('div');
-      Object.assign(cell.style,{minWidth:'0',padding:'9px 10px',borderRadius:'10px',background:'var(--surface)'});
-      const small=document.createElement('span');small.textContent=label;
-      Object.assign(small.style,{display:'block',fontSize:'10.5px',color:'var(--ink3)'});
-      const big=document.createElement('b');big.textContent=value;
-      Object.assign(big.style,{display:'block',marginTop:'3px',fontSize:'13px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
-      cell.append(small,big);metrics.appendChild(cell);
-    }
-    card.append(title,current,metrics);
-    if(pin.recommendations&&pin.recommendations.length){
-      const heading=document.createElement('div');
-      heading.textContent=this.t('map.recommendations');
-      Object.assign(heading.style,{marginTop:'12px',fontSize:'11px',fontWeight:'700',color:'var(--ink2)'});
-      const list=document.createElement('ol');
-      Object.assign(list.style,{listStyle:'none',margin:'6px 0 0',padding:'0',display:'grid',gap:'4px'});
-      for(const row of pin.recommendations){
-        const item=document.createElement('li');
-        Object.assign(item.style,{display:'flex',alignItems:'baseline',gap:'7px',fontSize:'12px'});
-        const rank=document.createElement('b');rank.textContent=this.t('map.rank',{n:row.rank});
-        Object.assign(rank.style,{flex:'none',color:'var(--accent-text)'});
-        const name=document.createElement('span');name.textContent=row.name;
-        Object.assign(name.style,{flex:'1',minWidth:'0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
-        const value=document.createElement('span');value.textContent=row.value;
-        Object.assign(value.style,{flex:'none',color:'var(--ink2)'});
-        item.append(rank,name,value);list.appendChild(item);
-      }
-      const basis=document.createElement('div');basis.textContent=this.t('map.recommendationBasis');
-      Object.assign(basis.style,{marginTop:'7px',fontSize:'10px',color:'var(--ink3)'});
-      card.append(heading,list,basis);
-    }
-    return card;
+  chooseMapPoint(lat,lng,label){
+    const nearest=this.nearestZoneForPoint(lat,lng), address=String(label||'').trim();
+    this.setState({mapPoint:{lat:Number(lat),lng:Number(lng)},mapAddress:address,
+      sel:nearest?nearest.id:this.state.sel,zoneId:nearest?nearest.id:this.state.zoneId,
+      competitors:null,competitorsLoading:true,competitorsOpen:false,showCompetitorPins:false,mapSearchMsg:''});
+    this.resolveMapAddress(Number(lat),Number(lng)); this.fetchNearbyCompetitors(Number(lat),Number(lng));
+  },
+
+  resolveMapAddress(lat,lng){
+    const key=String(this.state.kakaoMapKey||''); if(!key) return;
+    this.loadKakaoMapsSdk(key).then(K=>{
+      const geocoder=new K.services.Geocoder();
+      geocoder.coord2Address(lng,lat,(rows,status)=>{
+        if(status!==K.services.Status.OK||!rows||!rows[0]) return;
+        const row=rows[0],addr=(row.road_address&&row.road_address.address_name)||(row.address&&row.address.address_name)||'';
+        if(addr&&this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({mapAddress:addr});
+      });
+    }).catch(()=>{});
+  },
+
+  searchMapAddress(){
+    const q=String(this.state.mapQ||'').trim(),key=String(this.state.kakaoMapKey||'');
+    if(!q) return this.setState({mapSearchMsg:this.t('map.searchEmpty')});
+    if(!key) return this.setState({mapSearchMsg:this.t('map.unavailable')});
+    this.setState({mapSearching:true,mapSearchMsg:''});
+    this.loadKakaoMapsSdk(key).then(K=>{
+      new K.services.Places().keywordSearch(q,(rows,status)=>{
+        if(status!==K.services.Status.OK||!rows||!rows.length){this.setState({mapSearching:false,mapSearchMsg:this.t('map.searchNone')});return;}
+        const first=rows.find(row=>String(row.address_name||row.road_address_name||'').includes('서울'))||rows[0];
+        this.setState({mapSearching:false,mapQ:first.place_name||q});
+        this.chooseMapPoint(Number(first.y),Number(first.x),first.road_address_name||first.address_name||first.place_name);
+      },{size:15});
+    }).catch(()=>this.setState({mapSearching:false,mapSearchMsg:this.t('map.failed')}));
+  },
+
+  fetchNearbyCompetitors(lat,lng){
+    const key=String(this.state.kakaoMapKey||''); if(!key){this.setState({competitorsLoading:false,competitors:[]});return;}
+    this.loadKakaoMapsSdk(key).then(K=>{
+      const places=new K.services.Places(),rows=[];
+      places.keywordSearch(this.indName(this.state.ind),(data,status,pagination)=>{
+        if(status===K.services.Status.OK&&Array.isArray(data)) rows.push(...data);
+        if(status===K.services.Status.OK&&pagination&&pagination.hasNextPage&&pagination.current<3){pagination.nextPage();return;}
+        const seen=new Set();
+        const normalized=rows.filter(row=>{if(!row||seen.has(row.id)) return false;seen.add(row.id);return true;}).map(row=>{
+          const brand=this.franchiseName(row.place_name);
+          return {id:String(row.id||''),name:String(row.place_name||''),category:String(row.category_name||''),
+            address:String(row.road_address_name||row.address_name||''),phone:String(row.phone||''),
+            distance:Number(row.distance)||Math.round(this.mapDistance({lat,lng},{lat:Number(row.y),lng:Number(row.x)})),
+            lat:Number(row.y),lng:Number(row.x),franchise:!!brand,brand,placeUrl:String(row.place_url||'')};
+        }).filter(row=>Number.isFinite(row.lat)&&Number.isFinite(row.lng)&&row.distance<=500).sort((a,b)=>a.distance-b.distance);
+        if(this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({competitors:normalized,competitorsLoading:false});
+      },{location:new K.LatLng(lat,lng),radius:500,size:15,sort:K.services.SortBy.DISTANCE});
+    }).catch(()=>this.setState({competitors:[],competitorsLoading:false}));
   },
 
   paintKakaoMap(){
-    if(this.state.screen!=='map') {this.destroyKakaoMap();return;}
-    const el=document.getElementById('kakao-map');
-    if(!el) return;
+    if(this.state.screen!=='map'){this.destroyKakaoMap();return;}
+    const el=document.getElementById('kakao-map'); if(!el) return;
     const key=String(this.state.kakaoMapKey||'');
-    const pins=(this._kakaoPins||[]).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lng));
     if(!key){this.destroyKakaoMap();this.kakaoMapStatus(el,this.t('map.unavailable'));return;}
-    if(!pins.length){this.destroyKakaoMap();this.kakaoMapStatus(el,this.t('map.noPosition'));return;}
-    this.loadKakaoMapsSdk(key).then(()=>{
-      if(this.state.screen!=='map') return;
-      const current=document.getElementById('kakao-map');
-      if(!current) return;
-      this.drawKakaoMap(current,pins);
-    }).catch(()=>{
-      const current=document.getElementById('kakao-map');
-      if(current) this.kakaoMapStatus(current,this.t('map.failed'));
-    });
+    this.loadKakaoMapsSdk(key).then(()=>{if(this.state.screen==='map') this.drawKakaoMap(document.getElementById('kakao-map'));})
+      .catch(()=>this.kakaoMapStatus(document.getElementById('kakao-map'),this.t('map.failed')));
   },
 
-  drawKakaoMap(el,pins){
-    this.destroyKakaoMap();
-    el.replaceChildren();
-    const K=globalThis.kakao?.maps;
-    if(!K?.Map) return this.kakaoMapStatus(el,this.t('map.failed'));
-    const first=pins.find(p=>p.on)||pins[0];
-    const map=new K.Map(el,{center:new K.LatLng(first.lat,first.lng),level:4});
-    const bounds=new K.LatLngBounds(), overlays=[];
-    for(const p of pins){
-      const position=new K.LatLng(p.lat,p.lng);
-      bounds.extend(position);
-      const button=document.createElement('button');
-      button.type='button';
-      button.textContent=String(p.n);
-      button.title=p.name;
-      button.setAttribute('aria-label',this.t('map.pick',{zone:p.name}));
-      Object.assign(button.style,{
-        width:p.on?'38px':'32px',height:p.on?'38px':'32px',borderRadius:'50%',
-        border:'3px solid var(--card)',background:p.on?'var(--accent)':'var(--ink2)',
-        color:p.on?'var(--on-accent)':'var(--card)',fontSize:'13px',fontWeight:'700',
-        boxShadow:'0 5px 16px rgba(25,31,40,.24)',cursor:'pointer',padding:'0',
-      });
-      button.addEventListener('click',p.pick);
-      const overlay=new K.CustomOverlay({map,position,content:button,xAnchor:.5,yAnchor:.5,zIndex:p.on?10:2});
-      overlays.push(overlay);
-      if(p.on){
-        const info=new K.CustomOverlay({map,position,content:this.kakaoInfoCard(p),xAnchor:.5,yAnchor:1.22,zIndex:30});
-        overlays.push(info);
+  drawKakaoMap(el){
+    if(!el) return; this.destroyKakaoMap();el.replaceChildren();
+    const K=globalThis.kakao&&globalThis.kakao.maps; if(!K?.Map) return this.kakaoMapStatus(el,this.t('map.failed'));
+    const point=this.state.mapPoint,center=point||{lat:37.5665,lng:126.9780};
+    const map=new K.Map(el,{center:new K.LatLng(center.lat,center.lng),level:point?4:8}),markers=[],overlays=[];
+    K.event.addListener(map,'click',event=>{const p=event.latLng;this.chooseMapPoint(p.getLat(),p.getLng(),'');});
+    if(point) markers.push(new K.Marker({map,position:new K.LatLng(point.lat,point.lng)}));
+    if(point&&this.state.showCompetitorPins){
+      for(const row of (this.state.competitors||[]).slice(0,40)){
+        const dot=document.createElement('button');dot.type='button';dot.title=row.name;dot.setAttribute('aria-label',row.name);
+        Object.assign(dot.style,{width:'24px',height:'24px',borderRadius:'50%',border:'2px solid var(--card)',
+          background:row.franchise?'var(--accent)':'var(--ink2)',boxShadow:'0 3px 10px rgba(0,0,0,.22)',cursor:'pointer'});
+        dot.addEventListener('click',e=>{e.stopPropagation();this.setState({competitorsOpen:true,competitorFocus:row.id});});
+        overlays.push(new K.CustomOverlay({map,position:new K.LatLng(row.lat,row.lng),content:dot,xAnchor:.5,yAnchor:.5,zIndex:4}));
       }
     }
-    if(pins.length>1) map.setBounds(bounds,46,46,46,46);
-    else map.setLevel(4);
     try{map.addControl(new K.ZoomControl(),K.ControlPosition.RIGHT);}catch(e){}
-    this._kakaoMap=map;
-    this._kakaoContainer=el;
-    this._kakaoBounds=bounds;
-    this._kakaoOverlays=overlays;
+    this._kakaoMap=map;this._kakaoContainer=el;this._kakaoMarkers=markers;this._kakaoOverlays=overlays;
     if(typeof ResizeObserver!=='undefined'){
-      this._kakaoResizeObserver=new ResizeObserver(()=>{
-        if(this._kakaoMap&&document.body.contains(el)){
-          this._kakaoMap.relayout();
-          if(pins.length>1)this._kakaoMap.setBounds(bounds,46,46,46,46);
-          else this._kakaoMap.setCenter(new K.LatLng(first.lat,first.lng));
-        }
-      });
+      this._kakaoResizeObserver=new ResizeObserver(()=>{if(this._kakaoMap&&document.body.contains(el)){map.relayout();map.setCenter(new K.LatLng(center.lat,center.lng));}});
       this._kakaoResizeObserver.observe(el);
     }
   },
+
+  buildMapView(base,sel,L,r,pickToggle,pickLabelOf){
+    const S=this.state,point=S.mapPoint,hasPoint=!!point,comps=Array.isArray(S.competitors)?S.competitors:[];
+    const franchise=comps.filter(o=>o.franchise),independent=comps.filter(o=>!o.franchise),brands={};
+    franchise.forEach(o=>{brands[o.brand]=(brands[o.brand]||0)+1;});
+    const brandRows=Object.entries(brands).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,n])=>({name,value:n+this.t('common.place')}));
+    const lp=hasPoint&&S.zlp&&sel?S.zlp[sel.id]:null,loaded=Array.isArray(S.competitors),loading=!!S.competitorsLoading;
+    const frRatio=loaded&&comps.length?Math.round(franchise.length/comps.length*100):null;
+    const zone=hasPoint&&sel&&S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
+    const industries=((zone&&zone.rows)||[]).map(row=>({
+      name:this.indName((S.zi.inds||[])[row[0]]||('업종 '+row[0])),
+      stores:Number(row[1])||0,
+      monthlyPer:Number(row[1])>0?Number(row[2])/Number(row[1])/3:0
+    })).filter(row=>row.stores>0&&Number.isFinite(row.monthlyPer)&&row.monthlyPer>0);
+    const stable=industries.filter(row=>row.stores>5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
+    const small=industries.filter(row=>row.stores<=5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
+    const recommendations=[...stable,...small].slice(0,3).map((row,index)=>({
+      rank:this.t('map.rankLabel',{n:index+1}),name:row.name,value:this.won(row.monthlyPer),
+      sample:row.stores+this.t('common.place')
+    }));
+    const demandStrong=lp&&Number(lp.tot)>=50000,compStrong=loaded&&comps.length>=15;
+    const summary=!hasPoint?this.t('map.pickHint'):(demandStrong&&compStrong?this.t('map.summaryBoth')
+      :(demandStrong?this.t('map.summaryDemand'):(compStrong?this.t('map.summaryCompetition'):this.t('map.summaryNeutral'))));
+    const picked=sel&&(S.picks||[]).includes(sel.id);
+    const metrics=hasPoint&&sel?[
+      {label:this.t('map.referenceSales'),value:this.won(sel.per/3),note:this.t('map.salesCaution')},
+      {label:this.t('map.footTraffic'),value:lp?Math.round(lp.tot).toLocaleString()+this.t('common.people'):this.t('common.noData'),note:lp?this.t('map.dongBasis',{dong:this.placeName(lp.dong)}):''},
+      {label:this.t('map.competitorCount'),value:loading?this.t('map.loadingShort'):(loaded?comps.length+this.t('common.place'):this.t('common.beforeLookup')),note:this.t('map.radiusBasis')},
+      {label:this.t('map.franchise'),value:loaded?franchise.length+this.t('common.place'):this.t('common.beforeLookup'),note:''},
+      {label:this.t('map.independent'),value:loaded?independent.length+this.t('common.place'):this.t('common.beforeLookup'),note:''},
+      {label:this.t('map.franchiseRatio'),value:frRatio==null?this.t('common.beforeLookup'):frRatio+'%',note:this.t('map.brandEstimate')}
+    ].map((metric,index)=>({...metric,
+      valueStyle:index===0?this.ds('num'):this.ds('numSm')
+    })):[];
+    return {...base,map:{...(base.map||{}),loadingText:this.t('map.loading')},
+      labels:{majorBrands:this.t('map.majorBrands'),detail:this.t('map.detail'),nearby:this.t('map.nearby'),
+        nearbyTitle:this.t('map.nearbyTitle'),places:this.t('common.place'),radiusNote:this.t('map.radiusBasis'),
+        loadingNearby:this.t('map.loadingNearby'),noNearby:this.t('map.noNearby'),
+        recommendations:this.t('map.recommendations'),recommendationBasis:this.t('map.recommendationBasis')},
+      eyebrow:this.t('map.eyebrow'),target:this.t('map.title'),sub:this.t('map.sub'),
+      query:S.mapQ||'',onQuery:e=>this.setState({mapQ:e.target.value,mapSearchMsg:''}),
+      onSearchKey:e=>{if(e.key==='Enter'){e.preventDefault();this.searchMapAddress();}},search:()=>this.searchMapAddress(),
+      searching:!!S.mapSearching,searchLabel:S.mapSearching?this.t('map.searching'):this.t('map.searchButton'),
+      searchPlaceholder:this.t('map.searchPlaceholder'),searchMsg:S.mapSearchMsg||'',hasSearchMsg:!!S.mapSearchMsg,
+      hasPoint,needsPoint:!hasPoint,address:S.mapAddress||this.t('map.addressResolving'),
+      zone:hasPoint&&sel?this.zoneLabelOf(sel.name):'',industry:this.indName(S.ind),period:this.qtr(r.quarter),
+      metrics:metrics.slice(0,3),detailMetrics:metrics.slice(3),summary,
+      brands:brandRows,hasBrands:brandRows.length>0,recommendations,hasRecommendations:recommendations.length>0,
+      detail:()=>this.setState({screen:'fineDetail'}),togglePick:sel?pickToggle(sel):()=>{},
+      openCompetitors:()=>this.setState({competitorsOpen:!S.competitorsOpen}),competitorsOpen:!!S.competitorsOpen,
+      competitorCount:comps.length,togglePins:()=>this.setState({showCompetitorPins:!S.showCompetitorPins}),
+      pinToggleLabel:S.showCompetitorPins?this.t('map.hideCompetitorPins'):this.t('map.showCompetitorPins'),
+      competitors:comps.map(row=>({...row,kind:row.franchise?this.t('map.franchise'):this.t('map.independent'),
+        distanceLabel:Number.isFinite(row.distance)?Math.round(row.distance)+'m':'—',phoneLabel:row.phone||this.t('map.noPhone'),
+        focus:row.id===S.competitorFocus,rowStyle:'padding:15px 0;border-top:1px solid var(--line);'+(row.id===S.competitorFocus?'background:var(--accent-3)':'')})),
+      competitorLoading:loading,competitorEmpty:loaded&&!loading&&!comps.length,picked,
+      pickState:picked?this.t('map.saved'):this.t('map.save')};
+  }
 };

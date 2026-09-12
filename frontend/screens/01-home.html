@@ -170,4 +170,16 @@
           </div>
         </sc-if>
       </section>
+      <section style="padding:48px 0 72px">
+        <h2 style="{{ ds2 }};text-align:center">{{ stepTitle }}</h2>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:22px" class="home-step-grid">
+          <sc-for list="{{ steps }}" as="s">
+            <div style="padding:20px 4px;border-top:1px solid var(--line)">
+              <span style="font-size:12px;font-weight:700;color:var(--accent-text)">{{ s.n }}</span>
+              <div style="font-size:17px;font-weight:700;margin-top:7px">{{ s.title }}</div>
+              <div style="font-size:13px;color:var(--ink3);line-height:1.55;margin-top:4px">{{ s.body }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
     </sc-if>

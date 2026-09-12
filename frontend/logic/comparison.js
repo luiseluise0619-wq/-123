@@ -19,7 +19,7 @@ globalThis.MysbizonParts.comparison = {
       id:o.id,
       name:nameOfZ(o),
       meta:[this.placeName(zgu[o.id]||''), this.won(o.per/3)].filter(Boolean).join(' · '),
-      add:()=>{ const current=this.state.picks||[]; if(current.length>=3||current.includes(o.id)) return;
+      add:()=>{ const current=this.state.picks||[]; if(current.length>=5||current.includes(o.id)) return;
         // 담으면 검색어를 비우고 최근 본 목록에 남긴다
         const recent=[o.id, ...(S.cmpRecent||[]).filter(x=>x!==o.id)].slice(0,6);
         this.setState({picks:[...current,o.id], cmpQ:'', cmpRecent:recent,cmpAddOpen:true}); },
@@ -45,7 +45,7 @@ globalThis.MysbizonParts.comparison = {
       guLabel:this.t('market.gu'),guValue:String(gus.indexOf(gu)+1),
       guOptions:[{value:'0',label:this.t('pr.seoulAll')},...gus.map((g,i)=>({value:String(i+1),label:this.placeName(g)}))],
       onGu:e=>{const i=Number(e.target.value);if(Number.isInteger(i)&&i>=0&&i<=gus.length)this.setState({cmpGu:gus[i-1]||'',cmpLimit:12,cmpQ:''});},
-      browseRows:browse.slice(0,limit).map(o=>({...row(o),disabled:PICKS.includes(o.id)||PICKS.length>=3,
+      browseRows:browse.slice(0,limit).map(o=>({...row(o),disabled:PICKS.includes(o.id)||PICKS.length>=5,
         action:this.t(PICKS.includes(o.id)?'cmp.selected':'cmp.add')})),
       browseCount:this.t('cmp.browseCount',{n:browse.length}),
       browseEmpty:browse.length===0,emptyBrowseText:this.t('cmp.browseEmpty'),
@@ -55,14 +55,14 @@ globalThis.MysbizonParts.comparison = {
       onQ:e=>this.setState({cmpQ:e.target.value,cmpLimit:12}),
       // Enter 는 첫 결과를 담는다 — 검색창에서 손을 떼지 않아도 되게
       onKey:e=>{ if(e.key!=='Enter') return;
-        if(found.length&&PICKS.length<3) found[0].add(); },
+        if(found.length&&PICKS.length<5) found[0].add(); },
       clear:()=>this.setState({cmpQ:''}),
       hasQ:!!rawQ,
       searching:!!rawQ,
       noResult: !!rawQ && found.length===0,
       noResultText:this.tn('cmp.noZone',{q:rawQ}),
-      full:PICKS.length>=3,
-      fullText:'3곳까지 담을 수 있어요. 하나를 빼면 다른 곳을 담을 수 있어요.',
+      full:PICKS.length>=5,
+      fullText:'5곳까지 담을 수 있어요. 하나를 빼면 다른 곳을 담을 수 있어요.',
       // 담을 게 없을 때만 펼쳐 둔다. 이미 비교 중이면 결론이 먼저다(§19·§35).
       open: PICKS.length<2 ? true : !!S.cmpAddOpen,
       canFold: PICKS.length>=2,
@@ -73,7 +73,7 @@ globalThis.MysbizonParts.comparison = {
     if(picks.length<2){
       out.c={
         headline:'상권을 비교해 보세요',
-        sub:'관심 있는 상권을 최대 3곳까지 나란히 놓고 볼 수 있어요.',
+        sub:this.t('cmp.emptySubFive'),
         emptyCount: picks.length===1? '지금 1곳 담았어요. 한 곳만 더 담으면 비교가 시작돼요.' : '',
         // 담은 게 하나면 그 카드도 보여 준다 — 담은 게 사라진 것처럼 보이면 안 된다
         cols:picks.map(o=>({

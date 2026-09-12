@@ -21,7 +21,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <template id="__bundler_thumbnail">
   <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
-    <rect width="240" height="240" rx="36" fill="#3182F6"></rect>
+    <rect width="240" height="240" rx="36" fill="#32B99A"></rect>
     <g fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round">
       <path d="M78 168V96l34-22 34 22v72"></path>
       <path d="M60 168h120"></path>
@@ -44,33 +44,33 @@
      빠뜨린 곳이 생긴다. 새 코드는 --color-* 를 쓴다.
      사용자가 고른 테마는 <html> 의 인라인 스타일로 --color-* 만 덮어쓴다. */
   :root{
-    --color-primary:#087F6B;
+    --color-primary:#32B99A;
     /* 민트 면 위에 얹는 글자색. 흰 글자가 늘 옳은 게 아니다 —
        어두운 화면의 민트(#3FA88F)는 흰 글자와 2.91:1 밖에 안 나온다(AA 는 4.5).
        theme.js 가 실제 --color-primary 밝기를 재서 이 값을 다시 정한다. */
     --color-on-primary:#FFFFFF;
-    --color-primary-hover:#0F6B59;
-    --color-primary-mid:#7FBCAE;
-    --color-primary-soft:#E8F5F1;
+    --color-primary-hover:#299C83;
+    --color-primary-mid:#86D5C2;
+    --color-primary-soft:#EAF8F4;
     /* 바탕은 옅은 회색, 카드는 흰색(토스·애플 모델). 카드가 테두리 없이 떠 보인다.
        --color-surface 는 칩·입력칸·hover 같은 '움푹한 면' — 회색 바탕 위에서도 흰 카드 안에서도 읽혀야
        해서 바탕보다 한 단계 진하다. --color-elevated 는 카드·헤더·시트·창처럼 '떠 있는 면'. */
-    --color-background:#F5F6F8;
+    --color-background:#F6F6F2;
     --color-elevated:#FFFFFF;
-    --color-surface:#EEF0F3;
-    --color-text-primary:#191F28;
-    --color-text-secondary:#4E5968;
+    --color-surface:#FFFFFF;
+    --color-text-primary:#171A19;
+    --color-text-secondary:#707672;
     /* #687583 은 흰 바탕에서는 넉넉했지만 회색 바탕(--surface)에서 4.32:1 로
        AA(4.5) 를 아슬아슬하게 못 넘었다. 두 바탕 모두에서 넘게 한 단계 내린다. */
-    --color-text-muted:#5A6573;
-    --color-border:#E5E8EB;
-    --color-border-strong:#D2D2D7;
+    --color-text-muted:#707672;
+    --color-border:#E5E7E4;
+    --color-border-strong:#CDD2CE;
     /* 의미 색 — '+' 라서 초록이 아니라, 사장님에게 좋은 값일 때만 초록이다.
        경쟁 점포가 +30% 인 건 나쁜 값이라 주황/빨강으로 쓴다.
        비교 대상을 구분하는 색(--chart-series-*)과 절대 섞어 쓰지 않는다. */
     --color-positive:#1C6F46;
-    --color-warning:#96560B;
-    --color-negative:#BD261C;
+    --color-warning:#D8963E;
+    --color-negative:#D95B5B;
     /* 의미 색 면 위에 얹는 글자. 밝은 화면에서는 흰 글자가 넉넉하지만
        (초록 5.3:1 · 주황 4.8:1 · 빨강 4.8:1), 어두운 화면의 같은 색들은
        밝아져서 흰 글자가 2.9~3.3:1 로 떨어진다 — 그쪽은 먹색으로 바꾼다. */
@@ -96,8 +96,10 @@
     --good:var(--color-positive); --warn:var(--color-warning); --err:var(--color-negative);
     --on-good:var(--color-on-positive); --on-warn:var(--color-on-warning); --on-err:var(--color-on-negative);
     /* 카드 그림자 — 회색 배경 대신 흰 카드 + 얇은 테두리 + 아주 옅은 그림자 */
-    --shadow-pop:0 12px 32px -12px rgba(16,24,40,.18);
-    --r-lg:24px; --r-md:20px; --r-sm:12px;
+    --shadow-pop:0 16px 40px -16px rgba(23,26,25,.24);
+    --r-xl:20px; --r-lg:16px; --r-md:16px; --r-sm:12px; --r-xs:8px; --r-pill:999px;
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-6:24px; --space-8:32px; --space-12:48px; --space-18:72px;
   }
   /* 다크는 색 반전이 아니다. 같은 뜻의 토큰을 어두운 화면에서 읽히는 값으로 다시 정한다. */
   html[data-theme="dark"]{
@@ -171,7 +173,7 @@
   ::-webkit-scrollbar-corner{background:transparent}
   html[data-theme="dark"] *{scrollbar-color:rgba(255,255,255,.2) transparent}
   html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2)}
-  body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all;
+  body{font-family:"Wanted Sans Variable","Wanted Sans",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all;
   /* 로마자로 옮긴 상권 이름은 한 낱말이 아주 길다('Hongdaesosanggonginsangjeomga' 29자).
      keep-all 만 두면 390px 화면에서 제목이 116px 밖으로 밀려 나간다 — 어쩔 수 없을 때만 끊는다. */
   overflow-wrap:anywhere}
@@ -205,11 +207,9 @@
   @keyframes driftB{0%{transform:translate3d(0,0,0)}50%{transform:translate3d(-14px,10px,0)}100%{transform:translate3d(0,0,0)}}
   @keyframes driftC{0%{transform:translate3d(0,0,0)}50%{transform:translate3d(10px,14px,0)}100%{transform:translate3d(0,0,0)}}
   @keyframes areaBreathe{0%{opacity:.04}50%{opacity:.09}100%{opacity:.04}}
-  /* 가운데에서 나타나 잠시 머물고 제자리로 올라간다 */
+  /* 첫 화면은 짧게만 나타난다. 반복되거나 오래 기다리게 하는 연출은 쓰지 않는다. */
   @keyframes heroRise{
-    0%{opacity:0;transform:translateY(21vh) scale(.985)}
-    22%{opacity:1;transform:translateY(21vh) scale(1)}
-    52%{opacity:1;transform:translateY(21vh) scale(1)}
+    0%{opacity:0;transform:translateY(12px)}
     100%{opacity:1;transform:translateY(0) scale(1)}
   }
   @keyframes lateIn{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
@@ -237,7 +237,7 @@
       <div role="button" tabIndex="0" onClick="{{ goHome }}" style="font-size:15px;font-weight:700;letter-spacing:-0.02em;flex:none;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;min-height:44px">MYSBIZON</div>
       <nav style="display:flex;gap:2px;align-items:center;flex:1 1 auto;min-width:0">
         <sc-for list="{{ nav }}" as="n">
-          <div style="position:relative;flex:0 1 auto;min-width:0;overflow:hidden">
+          <div style="{{ n.wrapStyle }}">
             <span role="button" tabIndex="0" data-track="{{ n.track }}" onClick="{{ n.open }}" style="{{ n.style }}">
               <sc-if value="{{ n.hasIcon }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:22px;height:22px;display:block">

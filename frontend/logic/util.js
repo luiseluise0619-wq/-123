@@ -186,14 +186,17 @@ globalThis.MysbizonParts.util = {
     // 비운 임대료를 0 으로 치면 본전선이 1,523 → 908만원 으로 떨어지는데,
     // 화면 꼬리표는 그대로 '기본 400만원' 이라 거짓을 말하게 된다.
     const rent=this.bound(S.rent,0,100000,D.rent), etc=sz.etc, staff=sz.staff;
+    const management=this.bound(S.management,0,100000,0);
     const cogsPct=this.bound(S.cogs,0,1000,D.cogs);
     const cogs=cogsPct/100;
     const valid=cogsPct<100;
-    const labor=staff*250, fixed=rent+labor+etc;
+    const laborAuto=staff*250;
+    const labor=S.laborOv!=null?this.bound(S.laborOv,0,100000,laborAuto):laborAuto;
+    const fixed=rent+management+labor+etc;
     const bep=valid?fixed/(1-cogs):null;
     const mult=(S.scen==='적게 팔릴 때'?0.7:(S.scen==='잘될 때'?1.3:1));
     const avg=z? z.per/3/1e4 : 0;
-    const rev = avg*mult;
+    const rev = S.revOv!=null?this.bound(S.revOv,0,1000000,avg*mult):avg*mult;
     const profit = valid?rev*(1-cogs)-fixed:null;
     // 처음 한 번 나가는 돈 — 사장님이 넣은 값만 쓴다(기본 가정을 두지 않는다).
     // 회수기간 = 초기투자 ÷ 월 영업이익. 이익이 0 이하면 회수되지 않으므로 null.
@@ -201,8 +204,9 @@ globalThis.MysbizonParts.util = {
                  + this.bound(S.premium,0,1000000,0)
                  + this.bound(S.interior,0,1000000,0);
     const payback = (valid && invest>0 && profit>0) ? invest/profit : null;
-    return {rent,etc,staff,labor,cogs,fixed,bep,avg,rev,mult,area:sz.area,
-      staffAuto:sz.staffAuto, etcAuto:sz.etcAuto,
+    const days=Math.round(this.bound(S.days,1,31,30));
+    return {rent,management,etc,staff,labor,laborAuto,cogs,fixed,bep,avg,rev,mult,days,area:sz.area,
+      staffAuto:sz.staffAuto, laborIsAuto:S.laborOv==null, etcAuto:sz.etcAuto,
       invest, payback,
       valid,error:valid?'':'원가율은 100% 미만이어야 본전과 영업이익을 계산할 수 있어요.',profit};
   },

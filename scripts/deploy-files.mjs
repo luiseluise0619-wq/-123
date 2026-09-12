@@ -21,7 +21,7 @@ export async function deploymentFiles(root) {
     'api/_origin.js', 'api/_request.js', 'api/_http.js', 'api/_err.js',
     'frontend/zone_rent.json', 'THIRD-PARTY.md',
   ];
-  for (const dir of ['server','admin','frontend/vendor','frontend/locales','frontend/data/v3','licenses']) {
+  for (const dir of ['server','admin','frontend/vendor','frontend/fonts','frontend/locales','frontend/data/v3','licenses']) {
     files.push(...await filesUnder(root, dir));
   }
   for (const entry of await readdir(path.join(root, 'frontend'), {withFileTypes:true})) {

@@ -19,7 +19,7 @@ globalThis.MysbizonParts.theme = {
   THEME_PRESETS(){
     return [
       {k:'mint',   label:'MYSBIZON Mint',
-       light:{primary:'#087F6B', hover:'#0F6B59', mid:'#7FBCAE', soft:'#E8F5F1'},
+       light:{primary:'#32B99A', hover:'#299C83', mid:'#86D5C2', soft:'#EAF8F4'},
        dark: {primary:'#3FA88F', hover:'#6FC4AE', mid:'#2E7565', soft:'#12332C'}},
       {k:'ocean',  label:'Ocean Blue',
        light:{primary:'#1160C4', hover:'#0D4E9F', mid:'#8FB6E8', soft:'#E8F0FC'},
@@ -44,7 +44,7 @@ globalThis.MysbizonParts.theme = {
   themePrefs(){
     const S=this.state;
     return {
-      appearance: S.appearance || 'system',
+      appearance: S.appearance || 'light',
       preset: S.themeK || 'mint',
       custom: S.themeCustom || {}          // {primary, background, text, text2, c1, c2, c3}
     };
@@ -65,11 +65,11 @@ globalThis.MysbizonParts.theme = {
     if(okLocale.indexOf(saved.locale)>=0) patch.locale=saved.locale;
     if(Object.keys(patch).length) this.setState(patch);
     // 걸러 낸 값(patch)만 쓴다 — saved 를 다시 끼워 넣으면 위 검사가 무의미해진다
-    this.applyTheme(patch.appearance||'system', patch.themeK||'mint', patch.themeCustom||{});
+    this.applyTheme(patch.appearance||'light', patch.themeK||'mint', patch.themeCustom||{});
     // system 을 고른 사람은 OS 설정이 바뀌면 화면도 바뀌어야 한다
     if(typeof matchMedia==='function'){
       const mq=matchMedia('(prefers-color-scheme: dark)');
-      const on=()=>{ if((this.state.appearance||'system')==='system') this.applyTheme('system'); };
+      const on=()=>{ if(this.state.appearance==='system') this.applyTheme('system'); };
       if(mq.addEventListener) mq.addEventListener('change',on); else if(mq.addListener) mq.addListener(on);
       this._mq=mq; this._mqOn=on;
     }
@@ -175,7 +175,7 @@ globalThis.MysbizonParts.theme = {
     const bgNow = (cst&&cst.background) || (dark?'#000000':'#FFFFFF');
     //   배경만 보면 모자란다 — 같은 글자가 회색 면(--surface)과 hover 면(--line) 위에도 앉는다.
     //   가장 진한 면까지 통과하도록 두 번 재운다(이미 넘으면 값이 그대로 돌아온다).
-    const surfNow = dark ? '#26262B' : '#E5E8EB';
+    const surfNow = dark ? '#26262B' : '#FFFFFF';
     set('--color-primary-text', this.readableOn(this.readableOn(primaryNow, bgNow), surfNow));
 
     // 차트는 CSS 변수를 직접 못 읽는다 — 다시 그리게 표시만 바꿔 준다
@@ -196,8 +196,8 @@ globalThis.MysbizonParts.theme = {
     this.applyTheme(null,null,cst); this.saveTheme();
   },
   resetTheme(){
-    this.setState({appearance:'system', themeK:'mint', themeCustom:{}});
-    this.applyTheme('system','mint',{});
+    this.setState({appearance:'light', themeK:'mint', themeCustom:{}});
+    this.applyTheme('light','mint',{});
     this.saveTheme();
   }
 };
@@ -256,7 +256,7 @@ globalThis.MysbizonParts.theme.settingsView = function(){
           +'box-shadow:0 0 0 2px var(--color-background), 0 0 0 '+(on?'4px':'0')+' var(--color-text-primary);'
           +'transition:box-shadow .16s'};
     }),
-    customPrimary:color('primary', this.t('settings.custom'), '#087F6B'),
+    customPrimary:color('primary', this.t('settings.custom'), '#32B99A'),
 
     appearanceLabel:this.t('settings.appearance'),
     appearances:[['light','settings.light'],['dark','settings.dark'],['system','settings.system']]
@@ -271,9 +271,9 @@ globalThis.MysbizonParts.theme.settingsView = function(){
     advLabel:this.t(adv?'settings.advClose':'settings.adv'),
     advToggle:()=>this.setState({setAdv:!adv}),
     customs:[
-      color('background',this.t('settings.background'),     '#FFFFFF'),
-      color('text',      this.t('settings.textPrimary'),    '#191F28'),
-      color('text2',     this.t('settings.textSecondary'),  '#4E5968')
+      color('background',this.t('settings.background'),     '#F6F6F2'),
+      color('text',      this.t('settings.textPrimary'),    '#171A19'),
+      color('text2',     this.t('settings.textSecondary'),  '#707672')
     ],
     chartLabel:this.t('settings.chartColors'),
     chartColors:[

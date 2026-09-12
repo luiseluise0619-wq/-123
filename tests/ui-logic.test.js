@@ -44,7 +44,7 @@ test('실데이터로 모든 화면 view model 생성과 미리보기 계산을 
   const data=name=>JSON.parse(fs.readFileSync(new URL('../frontend/data/v3/'+name+'.json',import.meta.url),'utf8'));
   Object.assign(c.state,{zi:data('zone_industry'),sbi:data('sales_by_industry'),sti:data('stores_by_industry'),zgu:data('zone_gu').gu,zbd:data('zone_border').border,smap:data('seoul_map'),zlp:data('zone_livepop').zone,rentStats:data('rent'),salesHistory:data('sales_history'),income:data('income')});
   // rent state is also used as numeric user input by the original template; keep an input value here.
-  for(const screen of ['home','hubZone','hubFine','find','diag','cmp','map','fineCmp','fineIntro','zone','price','report']) {
+  for(const screen of ['home','hubZone','hubFine','find','diag','cmp','map','fineCmp','fineIntro','zone','price','report','prep']) {
     c.state.screen=screen;assert.ok(c.renderVals(),screen);
   }
   let payload;
@@ -94,10 +94,10 @@ test('자치구를 고르면 그 구의 후보만으로 점수와 순위를 다�
   assert.match(empty.findNoDataText,/다른 자치구/);
 });
 
-test('62개 업종·13개 화면을 실제 자료로 계산하며 비정상 숫자를 출력하지 않는다',()=>{
+test('62개 업종·14개 화면을 실제 자료로 계산하며 비정상 숫자를 출력하지 않는다',()=>{
   const {instance:c}=component();const data=n=>JSON.parse(fs.readFileSync(new URL('../frontend/data/v3/'+n+'.json',import.meta.url),'utf8'));
   Object.assign(c.state,{zi:data('zone_industry'),sbi:data('sales_by_industry'),sti:data('stores_by_industry'),zgu:data('zone_gu').gu,zbd:data('zone_border').border,smap:data('seoul_map'),zlp:data('zone_livepop').zone,rentStats:data('rent'),salesHistory:data('sales_history'),income:data('income')});
-  const screens=['home','hubZone','hubFine','find','diag','cmp','map','fineCmp','fineIntro','zone','price','report','region'];
+  const screens=['home','hubZone','hubFine','find','diag','cmp','map','fineCmp','fineIntro','zone','price','report','region','prep'];
   for(const ind of c.state.zi.inds){c.state.ind=ind;const ranked=c.rank();if(!ranked)continue;c.state.sel=ranked.list[0].id;c.state.zoneId=c.state.sel;
     for(const screen of screens){c.state.screen=screen;const view=c.renderVals();const json=JSON.stringify(view);assert.ok(!/NaN|Infinity|undefined/.test(json),ind+' '+screen);}
   }
@@ -132,6 +132,56 @@ test('본전 계산 입력칸을 비우면 기본 가정으로 돌아간다',()=
   // 0 을 **직접 넣은** 것은 그대로 0 이어야 한다(비운 것과 다르다)
   c.state.rent=0;
   assert.equal(c.calc(sample).rent,0,'직접 넣은 0 이 기본값으로 바뀌면 안 된다');
+});
+test('직접 입력한 관리비·인건비·영업일·예상매출이 손익 계산에 반영된다',()=>{
+  const {instance:c}=component();
+  Object.assign(c.state,{rent:400,management:80,laborOv:520,etcOv:100,cogs:30,days:26,revOv:3000});
+  const result=c.calc({per:90000000,unit:5000});
+  assert.equal(result.fixed,1100);
+  assert.equal(result.rev,3000);
+  assert.equal(result.days,26);
+  assert.equal(Math.round(result.bep),1571);
+  assert.equal(result.profit,1000);
+});
+
+test('지도에서 찍은 위치는 가장 가까운 서울 상권 한 곳에 연결된다',()=>{
+  const {instance:c}=component();
+  c.state.smap={lls:{a:[37.5,127],b:[37.6,127.1],c:[37.7,127.2]}};
+  const found=c.nearestZoneForPoint(37.6001,127.1001);
+  assert.equal(found.id,'b');
+  assert.ok(found.distance<20);
+});
+
+test('지도는 상권 업종 참고 순위 3개를 보여 주고 비교 후보는 5곳까지만 담는다',()=>{
+  const {instance:c}=component();const data=n=>JSON.parse(fs.readFileSync(new URL('../frontend/data/v3/'+n+'.json',import.meta.url),'utf8'));
+  Object.assign(c.state,{screen:'map',zi:data('zone_industry'),sbi:data('sales_by_industry'),sti:data('stores_by_industry'),
+    zgu:data('zone_gu').gu,zbd:data('zone_border').border,smap:data('seoul_map'),zlp:data('zone_livepop').zone,
+    rentStats:data('rent'),salesHistory:data('sales_history'),income:data('income'),ind:'한식음식점'});
+  const ranked=c.rank(),ids=ranked.list.slice(0,8).map(o=>o.id),ll=c.state.smap.lls[ids[0]];
+  Object.assign(c.state,{sel:ids[0],zoneId:ids[0],mapPoint:{lat:ll[0],lng:ll[1]},competitors:[]});
+  const mapView=c.renderVals().mv;
+  assert.equal(mapView.recommendations.length,3);
+  assert.equal(mapView.recommendations.map(o=>o.rank).join('|'),'1순위|2순위|3순위');
+  assert.equal(new Set(mapView.recommendations.map(o=>o.name)).size,3);
+
+  Object.assign(c.state,{screen:'sim',picks:ids.slice(0,4),sel:ids[0]});
+  let compare=c.renderVals(),candidate=compare.c.add.browseRows.find(o=>!o.disabled);
+  candidate.add();assert.equal(c.state.picks.length,5);
+  compare=c.renderVals();candidate=compare.c.add.browseRows.find(o=>!c.state.picks.includes(o.id))||compare.c.add.browseRows.find(o=>!o.disabled);
+  assert.equal(compare.c.add.full,true);
+  assert.ok(compare.c.add.browseRows.filter(o=>!c.state.picks.includes(o.id)).every(o=>o.disabled));
+});
+
+test('업종별 창업 체크는 진행률과 공식 확인 링크를 제공한다',()=>{
+  const {instance:c}=component();
+  c.state.screen='prep';c.state.ind='커피-음료';
+  let view=c.prepView();
+  const business=view.groups.flatMap(g=>g.items).find(i=>i.id==='business');
+  assert.match(business.source.url,/nts\.go\.kr/);
+  business.toggle();
+  view=c.prepView();
+  assert.match(view.progress,/\d+%/);
+  assert.ok(view.groups.flatMap(g=>g.items).find(i=>i.id==='business').checked);
 });
 test('공고 금액 글자에서 단위가 붙은 숫자만 읽는다',()=>{
   const {instance:c}=component();

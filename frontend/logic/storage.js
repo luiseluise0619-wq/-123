@@ -11,7 +11,7 @@ globalThis.MysbizonParts.storage = {
   // 저장해 둔 설문 답을 '믿을 수 있는 값만' 골라 되살린다.
   // 이 목록이 곧 '설문이 기억하는 것'의 정의다.
   SURVEY_KEYS(){
-    return ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen',
+    return ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','laborOv','etcOv','management','days','revOv','cogs','scen',
       'rp_sido','rp_gu','rp_ind','rp_stage','rp_age','rp_biz','rp_when','rp_need',
       'rp_cost','rp_email','rp_agree','rp_step'];
   },
@@ -29,6 +29,10 @@ globalThis.MysbizonParts.storage = {
       restore.rp_touched=t;
     }
     if(Array.isArray(saved.picks)) restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);
+    try{
+      const checks=JSON.parse(localStorage.getItem('mysbizon.prepChecks.'+(restore.ind||this.state.ind))||'{}');
+      if(checks&&typeof checks==='object'&&!Array.isArray(checks)) restore.prepChecks=checks;
+    }catch(e){}
     return restore;
   },
   // 새로고침을 대비해 담아 둔다. 값이 그대로면 쓰지 않는다.

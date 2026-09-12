@@ -133,7 +133,7 @@ globalThis.MysbizonParts.home = {
       {v:'제주특별자치도',label:'제주'}
     ];
     const homeSido=S.sido||'서울특별시';
-    const fieldBase='flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:'+this.L('14px','16px','16px')+';transition:background .16s;'
+    const fieldBase='flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:12px;transition:background .18s;'
       // 라벨 21px + 입력 22px 이 들어간다. 56 이면 위아래 6px 밖에 안 남아 꾸겨 보였다.
       +'padding:0 '+this.L('14px','18px','18px')+';height:'+this.L('58px','64px','64px')+';';
     const valBase='font-size:15px;font-weight:500;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
@@ -162,14 +162,14 @@ globalThis.MysbizonParts.home = {
             });
             this.startZone();
           },
-          style:'flex:none;font-size:13px;padding:11px 14px;border-radius:999px;background:var(--card);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .16s,color .16s'
+          style:'flex:none;font-size:13px;padding:11px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .18s,color .18s'
         });
       });
     }
 
     return {
-      badgeStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);background:var(--surface);border-radius:999px;padding:7px 14px;margin:0 auto 26px;'
-        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .7s cubic-bezier(.22,.7,.25,1) .5s forwards'),
+      badgeStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 14px;margin:0 auto 24px;'
+        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .22s cubic-bezier(.22,.7,.25,1) .08s forwards'),
       // 첫 줄은 표어가 아니라 '무엇을 근거로 말하는지'다.
       // 자료가 붙기 전에는 슬로건으로 두고, 붙으면 실제 개수·분기로 바꾼다.
       heroEyebrow:(S.zi && S.zi.n_zones)
@@ -177,20 +177,22 @@ globalThis.MysbizonParts.home = {
         : this.t('home.eyebrow'),
       heroTitle:this.t('home.title'),
       heroSub:this.t('home.sub'),
+      stepTitle:this.t('home.stepsTitle'),
+      steps:[1,2,3,4].map(n=>({n:String(n),title:this.t('home.step'+n),body:this.t('home.step'+n+'Body')})),
       labLocation:this.t('home.location'),
       phLocationAny:this.t('home.locationAny'),
       labIndustry:this.t('home.industry'),
       phIndustry:this.t('home.industryHint'),
       labStart:this.t('home.start'),
       labPopular:this.t('home.popular'),
-      titleStyle:'font-size:'+this.L('23px','44px','52px')+';font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin:0;white-space:nowrap',
-      tagRow:'display:flex;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;justify-content:center;'
-        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .8s cubic-bezier(.22,.7,.25,1) 2.7s forwards'),
+      titleStyle:'font-size:'+this.L('34px','42px','42px')+';font-weight:700;letter-spacing:-0.035em;line-height:'+this.L('44px','54px','54px')+';margin:0;white-space:normal;text-wrap:balance',
+      tagRow:'display:flex;align-items:center;gap:8px;margin-top:24px;flex-wrap:wrap;justify-content:center;'
+        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .22s cubic-bezier(.22,.7,.25,1) .18s forwards'),
       tags:tags,
       // 이메일을 받게 되었으니 소개의 약속 문구도 바꾼다
 
       // 드롭다운이 잘리지 않도록 세로 클리핑은 하지 않는다(배경 그래픽은 자체 마스크로 처리)
-      heroSection:'position:relative;min-height:calc(100vh - '+this.L('56px','60px','64px')+');display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:'+this.L('52px','76px','88px')+' 0 0;overflow:visible',
+      heroSection:'position:relative;min-height:calc(100vh - '+this.L('56px','60px','64px')+');display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:'+this.L('48px','72px','72px')+' 0 0;overflow:visible',
       // 아무 곳이나 누르면 도입부를 건너뛴다. 재방문·급한 사용자가 기다리지 않게.
       skipAnim:()=>{ if(!S.skip) this.setState({skip:true}); },
       // z-index:2면 스태킹 컨텍스트가 되어 드롭다운이 헤더(50) 아래로 갇힌다
@@ -200,11 +202,11 @@ globalThis.MysbizonParts.home = {
       heroInner:'position:relative;z-index:10;width:100%;max-width:'+this.L('100%','620px','740px')+';text-align:center;'
         +(S.skip
           ? 'opacity:1'
-          : 'opacity:0;will-change:transform,opacity;animation:heroRise 2.9s cubic-bezier(.22,.72,.24,1) .25s forwards'),
-      subStyle:'font-size:17px;font-weight:500;color:var(--ink2);margin:22px 0 0;line-height:1.7;white-space:normal;'
-        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .8s cubic-bezier(.22,.7,.25,1) .95s forwards'),
-      searchWrap:'position:relative;margin-top:40px;text-align:left;'
-        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .85s cubic-bezier(.22,.7,.25,1) 2.5s forwards'),
+          : 'opacity:0;will-change:transform,opacity;animation:heroRise .28s cubic-bezier(.22,.72,.24,1) forwards'),
+      subStyle:'font-size:16px;font-weight:450;color:var(--ink2);margin:16px 0 0;line-height:26px;white-space:normal;'
+        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .22s cubic-bezier(.22,.7,.25,1) .08s forwards'),
+      searchWrap:'position:relative;margin-top:32px;text-align:left;'
+        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .24s cubic-bezier(.22,.7,.25,1) .14s forwards'),
       skylineRow:'position:absolute;left:0;right:0;bottom:19%;display:flex;align-items:flex-end;justify-content:space-between;gap:'+this.L('10px','14px','18px')+';padding:0 '+this.L('18px','32px','48px'),
       // 가운데를 비우는 마스크 — 모바일에서 그래픽이 글자를 방해하지 않게 한다
       // 위로 갈수록 사라지게 해서 제목·검색창과 겹치지 않는다
@@ -215,11 +217,9 @@ globalThis.MysbizonParts.home = {
         +(S.picking?'opacity:.45;transform:scale(1.1)':''),
       // 테두리 없이 그림자만. 상자 속 상자를 만들지 않는다.
       // 모바일에서는 가로 3분할이 각 칸을 25px로 만든다 — 세로로 쌓아 전폭을 준다
-      pickerRow:'display:flex;background:var(--card);border-radius:20px;padding:6px;transition:box-shadow .22s;'
+      pickerRow:'display:flex;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px;transition:border-color .18s;'
         +this.L('flex-direction:column;align-items:stretch;gap:4px;','align-items:center;gap:0;','align-items:center;gap:0;')
-        +(open
-          ? 'box-shadow:0 16px 40px rgba(0,0,0,.12)'
-          : 'box-shadow:0 12px 32px rgba(0,0,0,.08)'),
+        +(open?'border-color:var(--accent)':''),
       // 입력칸 자체는 22px 이지만 누르는 칸은 감싼 셀(indBtn·zoneBtn, onClick=openInd/openZone)이라
       // 44px 이 넘는다. 칸을 44px 로 키우면 초점 테두리가 위아래 라벨을 가로질러 그어진다(실제로 그랬다).
       segInput:'width:100%;min-width:0;font-size:15px;font-weight:500;letter-spacing:-0.015em;color:var(--ink);'
@@ -284,9 +284,9 @@ globalThis.MysbizonParts.home = {
       // 통째로 교체되는 목록은 위치 애니메이션 대신 짧은 페이드로 바꾼다
       indGridStyle:'display:grid;grid-template-columns:'+this.L('1fr','1fr 1fr','1fr 1fr')+';gap:8px;'
         +'animation:fadeIn .14s linear both',
-      hotInds:[['커피-음료','☕'],['치킨전문점','🍗'],['편의점','🏪'],['미용실','💇'],['한식음식점','🍚'],['호프-간이주점','🍺']]
+      hotInds:[['커피-음료',''],['치킨전문점',''],['편의점',''],['미용실',''],['한식음식점',''],['호프-간이주점','']]
         .filter(([n])=>indsAll.indexOf(n)>=0)
-        .map(([n,em])=>({label:em+' '+this.indName(n),
+        .map(([n])=>({label:this.indName(n),
           pick:()=>this.setState({homeInd:n,ind:n,iq:this.indName(n),pickOpen:null}),
           style:'flex:none;font-size:13.5px;font-weight:500;padding:12px 15px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .14s,color .14s;'
             +(n===S.homeInd?'background:var(--accent);color:var(--on-accent)':'background:var(--surface);color:var(--ink2)')})),
@@ -312,8 +312,8 @@ globalThis.MysbizonParts.home = {
             else {
               const rec=zoneList.filter(z=>(S.recent||[]).indexOf(z.name)>=0);
               const hot=zoneList.filter(z=>(S.recent||[]).indexOf(z.name)<0);
-              if(rec.length){ out.push({header:true,name:'⏱️ 최근 본 동네'}); rec.forEach(push); }
-              if(hot.length){ out.push({header:true,name:'🔥 많이 찾는 동네'}); hot.forEach(push); }
+              if(rec.length){ out.push({header:true,name:'최근 본 동네'}); rec.forEach(push); }
+              if(hot.length){ out.push({header:true,name:'많이 찾는 동네'}); hot.forEach(push); }
             }
             let ri=-1;
             return out.map(o=>{
@@ -390,13 +390,13 @@ globalThis.MysbizonParts.home = {
       startDisabled:!!S.starting,
       starting:!!S.starting, notStarting:!S.starting,
       startStyle:this.L('flex:none;width:100%;margin-top:4px;','flex:none;','flex:none;')
-        +'font-size:15px;font-weight:600;border:none;border-radius:14px;height:'+this.L('46px','48px','48px')+';'
+        +'font-size:16px;font-weight:600;border:none;border-radius:12px;height:'+this.L('48px','52px','52px')+';'
         +this.L('','min-width:106px;','min-width:116px;')+'padding:0 '+this.L('18px','22px','26px')+';white-space:nowrap;'
         +'display:inline-flex;align-items:center;justify-content:center;'
-        +'transition:transform .2s cubic-bezier(.2,0,0,1),background .18s,box-shadow .2s,filter .18s;'
+        +'transition:transform .18s cubic-bezier(.2,0,0,1),background .18s,filter .18s;'
         // 비활성이어도 브랜드 컬러 글자와 옅은 배경을 남겨 누를 수 있는 요소로 읽히게 한다
         +(hasInd
-          ? 'cursor:'+(S.starting?'default':'pointer')+';background:var(--accent);color:var(--on-accent);box-shadow:0 6px 16px -6px rgba(0,0,0,.2)'
+          ? 'cursor:'+(S.starting?'default':'pointer')+';background:var(--accent);color:var(--on-accent)'
           : 'cursor:pointer;background:var(--accent-3);color:var(--accent-hover)'),
       startActive:S.starting?'':'transform:scale(.96)',
       startHover:S.starting?'':(hasInd?'filter:brightness(1.05)':'filter:brightness(.97)'),
@@ -406,7 +406,7 @@ globalThis.MysbizonParts.home = {
           const el=document.querySelectorAll('[data-search] input')[1]; if(el) el.focus(); return; }
         this.setState({starting:true,pickOpen:null});
         if(S.zoneId){ this.startZone(); return; }
-        this.setState({screen:'find',sel:null,fromRegion:false,homeZone:null,starting:false});
+        this.setState({screen:'map',sel:null,mapPoint:null,mapAddress:'',fromRegion:false,homeZone:null,starting:false});
       },
       // 흰 필드 + 아주 얕은 그림자. 회색 덩어리보다 가볍고 정확해 보인다.
       picking:!!S.picking,
@@ -421,7 +421,11 @@ globalThis.MysbizonParts.home = {
     const recent=[name,...prev].slice(0,4);
     try{ localStorage.setItem('mysbizon.recentZones',JSON.stringify(recent)); }catch(e){}
     this.setState({picking:name,pickOpen:null,recent:recent});
-    this.setState({screen:'region',picking:null,starting:false,homeZone:name,regPick:S.homeInd||null});
+    const ll=S.smap&&S.smap.lls&&S.smap.lls[S.zoneId];
+    this.setState({screen:'map',picking:null,starting:false,homeZone:name,regPick:S.homeInd||null,
+      mapPoint:Array.isArray(ll)?{lat:Number(ll[0]),lng:Number(ll[1])}:null,
+      mapAddress:this.zoneLabelOf(name||''),competitors:null,competitorsLoading:Array.isArray(ll)});
+    if(Array.isArray(ll)) this.fetchNearbyCompetitors(Number(ll[0]),Number(ll[1]));
   },
 
   // ── 지역비교 ───────────────────────────────────────────────────

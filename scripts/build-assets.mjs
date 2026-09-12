@@ -7,7 +7,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 
 const ROOT=path.join(path.dirname(fileURLToPath(import.meta.url)),'..');
 const FRONTEND=path.join(ROOT,'frontend');
-const LOGIC=['const','i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','screens','chat','charts','carousel','market','map','views'];
+const LOGIC=['const','i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','prep','screens','chat','charts','carousel','market','map','views'];
 export const BUNDLE_SOURCES=[...LOGIC.map(name=>`logic/${name}.js`),'app-logic.js','dc-runtime.js'];
 export const BUNDLE_PATH=path.join(FRONTEND,'app.bundle.js');
 export const DATA_BUNDLE_FILES=[

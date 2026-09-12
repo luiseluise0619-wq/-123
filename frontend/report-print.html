@@ -18,15 +18,16 @@
 <meta charset="utf-8">
 
 <style>
+  @font-face{font-family:"Wanted Sans Variable";src:url("fonts/WantedSansVariable.woff2") format("woff2-variations");font-style:normal;font-weight:400 1000;font-display:swap}
   doc-page:not(:defined){visibility:hidden}
-  html{--ink:#191F28;--ink2:#4E5968;--ink3:#8B95A1;--line:#EDEDF0;--line2:#D7DBE0;--accent:#167C68;--accent3:#E8F5F1;--surface:#F5F5F7;--good:#00A661;--warn:#E85A4F}
-  body{margin:0;font-family:Pretendard,-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all}
+  html{--ink:#171A19;--ink2:#707672;--ink3:#707672;--line:#E5E7E4;--line2:#CDD2CE;--accent:#32B99A;--accent3:#EAF8F4;--surface:#F6F6F2;--good:#1C6F46;--warn:#D8963E}
+  body{margin:0;font-family:"Wanted Sans Variable","Wanted Sans",-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all}
   a{color:var(--accent);text-decoration:none}
-  a:hover{color:#0F6B59}
+  a:hover{color:#299C83}
   .keep{break-inside:avoid}
 </style>
 <script src="./doc-page.js"></script>
-<style>.print-toolbar{display:flex;gap:12px;max-width:800px;margin:20px auto;padding:0 20px}.print-toolbar button{padding:12px 20px;border:1px solid #dde3e2;border-radius:12px;background:white;color:#087f6b;font:inherit;cursor:pointer}@media print{.print-toolbar{display:none}}</style>
+<style>.print-toolbar{display:flex;gap:12px;max-width:800px;margin:20px auto;padding:0 20px}.print-toolbar button{padding:12px 20px;border:1px solid #E5E7E4;border-radius:12px;background:white;color:#171A19;font:inherit;font-weight:600;cursor:pointer}@media print{.print-toolbar{display:none}}</style>
 </helmet>
 <div class="print-toolbar"><button onClick="{{ back }}">← 분석으로 돌아가기</button><button onClick="{{ print }}">인쇄 / PDF 저장</button></div>
 

@@ -21,11 +21,11 @@ globalThis.MysbizonParts.charts = {
     const cs = getComputedStyle(document.documentElement);
     const v = n => (cs.getPropertyValue(n) || '').trim();
     return {
-      accent: v('--accent') || '#087F6B',
+      accent: v('--accent') || '#32B99A',
       accent2: v('--accent-2') || '#7FBCAE',
       accent3: v('--accent-3') || '#E8F5F1',
-      ink: v('--ink') || '#191F28',
-      ink2: v('--ink2') || '#4E5968',
+      ink: v('--ink') || '#171A19',
+      ink2: v('--ink2') || '#707672',
       ink3: v('--ink3') || '#687583',
       line: v('--line') || '#EAECEC',
       bg: v('--bg') || '#FFFFFF',

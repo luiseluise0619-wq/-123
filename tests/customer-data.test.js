@@ -53,7 +53,7 @@ test('PostgreSQL storage, consent, encrypted rows, aggregates, masking, expiry a
 });
 test('CSV escapes spreadsheet formulas and quotes',()=>{assert.equal(csv([{value:'=1+1',note:'a"b'}]),'\uFEFF"value","note"\r\n"\'=1+1","a""b"');});
 
-test('admin assets and API work below the same-domain /admin path',async()=>{
+test('admin Basic auth, second key and refresh session coexist below /admin',async()=>{
   const previous={...process.env};Object.assign(process.env,{CUSTOMER_ADMIN_BASE_PATH:'/admin',CUSTOMER_ADMIN_PUBLIC:'1',CUSTOMER_ADMIN_ALLOWED_HOSTS:'127.0.0.1',CUSTOMER_ADMIN_ALLOWED_ORIGINS:'127.0.0.1'});
   const db=new PGlite();await db.exec(await readFile(new URL('../deploy/customer-schema.sql',import.meta.url),'utf8'));
   const store=new CustomerStore(db,env),token='56'.repeat(32),server=createAdminServer(store,token,0);
@@ -63,11 +63,33 @@ test('admin assets and API work below the same-domain /admin path',async()=>{
     assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'/admin/');
     assert.equal((await fetch(base+'/admin/')).status,200);
     assert.equal((await fetch(base+'/admin/admin.js')).status,200);
+    const font=await fetch(base+'/admin/wanted-sans.woff2');assert.equal(font.status,200);assert.equal(font.headers.get('content-type'),'font/woff2');
     // 실제 공개 경로에서는 Nginx가 Authorization: Basic 을 사용한다. 앱 2차 키는
     // 전용 헤더로 함께 와도 서로 덮어쓰지 않아야 한다.
-    const result=await fetch(base+'/admin/api/clicks',{method:'POST',headers:{Origin:'http://127.0.0.1','Content-Type':'application/json',Authorization:'Basic dGVzdDp0ZXN0','X-Mysbizon-Admin-Key':token},body:'{}'});
-    assert.equal(result.status,200);
+    const common={Origin:'http://127.0.0.1','Content-Type':'application/json',Authorization:'Basic dGVzdDp0ZXN0','X-Forwarded-Proto':'https'};
+    const login=await fetch(base+'/admin/api/session',{method:'POST',headers:{...common,'X-Mysbizon-Admin-Key':token},body:'{}'});
+    assert.equal(login.status,200);
+    const setCookie=login.headers.get('set-cookie')||'';
+    assert.match(setCookie,/^mysbizon-admin-session=[a-f0-9]{64};/);
+    assert.match(setCookie,/HttpOnly/);assert.match(setCookie,/Secure/);assert.match(setCookie,/SameSite=Strict/);assert.match(setCookie,/Path=\/admin/);
+    const cookie=setCookie.split(';')[0];
+    // 새 문서가 열린 것처럼 2차 키는 보내지 않고, HttpOnly 세션 쿠키만 보낸다.
+    const refreshed=await fetch(base+'/admin/api/clicks',{method:'POST',headers:{...common,Cookie:cookie},body:'{}'});
+    assert.equal(refreshed.status,200);
+    // 유효한 세션이 있어도 명시적으로 틀린 2차 키를 보내면 인증을 거부한다.
+    const wrong=await fetch(base+'/admin/api/clicks',{method:'POST',headers:{...common,Cookie:cookie,'X-Mysbizon-Admin-Key':'00'.repeat(32)},body:'{}'});
+    assert.equal(wrong.status,403);assert.equal(wrong.headers.has('www-authenticate'),false);
+    const logout=await fetch(base+'/admin/api/logout',{method:'POST',headers:{...common,Cookie:cookie},body:'{}'});
+    assert.equal(logout.status,200);assert.match(logout.headers.get('set-cookie')||'',/Max-Age=0/);
+    const afterLogout=await fetch(base+'/admin/api/clicks',{method:'POST',headers:{...common,Cookie:cookie},body:'{}'});
+    assert.equal(afterLogout.status,403);
   }finally{
     server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await db.close();restoreEnv(previous);
   }
+});
+
+test('admin frontend resumes through HttpOnly session without browser key storage',async()=>{
+  const source=await readFile(new URL('../admin/admin.js',import.meta.url),'utf8');
+  assert.match(source,/request\('session'/);assert.match(source,/credentials:'same-origin'/);
+  assert.doesNotMatch(source,/localStorage|sessionStorage/);
 });

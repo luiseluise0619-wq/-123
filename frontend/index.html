@@ -21,7 +21,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <template id="__bundler_thumbnail">
   <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
-    <rect width="240" height="240" rx="36" fill="#3182F6"></rect>
+    <rect width="240" height="240" rx="36" fill="#32B99A"></rect>
     <g fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round">
       <path d="M78 168V96l34-22 34 22v72"></path>
       <path d="M60 168h120"></path>
@@ -44,33 +44,33 @@
      빠뜨린 곳이 생긴다. 새 코드는 --color-* 를 쓴다.
      사용자가 고른 테마는 <html> 의 인라인 스타일로 --color-* 만 덮어쓴다. */
   :root{
-    --color-primary:#087F6B;
+    --color-primary:#32B99A;
     /* 민트 면 위에 얹는 글자색. 흰 글자가 늘 옳은 게 아니다 —
        어두운 화면의 민트(#3FA88F)는 흰 글자와 2.91:1 밖에 안 나온다(AA 는 4.5).
        theme.js 가 실제 --color-primary 밝기를 재서 이 값을 다시 정한다. */
     --color-on-primary:#FFFFFF;
-    --color-primary-hover:#0F6B59;
-    --color-primary-mid:#7FBCAE;
-    --color-primary-soft:#E8F5F1;
+    --color-primary-hover:#299C83;
+    --color-primary-mid:#86D5C2;
+    --color-primary-soft:#EAF8F4;
     /* 바탕은 옅은 회색, 카드는 흰색(토스·애플 모델). 카드가 테두리 없이 떠 보인다.
        --color-surface 는 칩·입력칸·hover 같은 '움푹한 면' — 회색 바탕 위에서도 흰 카드 안에서도 읽혀야
        해서 바탕보다 한 단계 진하다. --color-elevated 는 카드·헤더·시트·창처럼 '떠 있는 면'. */
-    --color-background:#F5F6F8;
+    --color-background:#F6F6F2;
     --color-elevated:#FFFFFF;
-    --color-surface:#EEF0F3;
-    --color-text-primary:#191F28;
-    --color-text-secondary:#4E5968;
+    --color-surface:#FFFFFF;
+    --color-text-primary:#171A19;
+    --color-text-secondary:#707672;
     /* #687583 은 흰 바탕에서는 넉넉했지만 회색 바탕(--surface)에서 4.32:1 로
        AA(4.5) 를 아슬아슬하게 못 넘었다. 두 바탕 모두에서 넘게 한 단계 내린다. */
-    --color-text-muted:#5A6573;
-    --color-border:#E5E8EB;
-    --color-border-strong:#D2D2D7;
+    --color-text-muted:#707672;
+    --color-border:#E5E7E4;
+    --color-border-strong:#CDD2CE;
     /* 의미 색 — '+' 라서 초록이 아니라, 사장님에게 좋은 값일 때만 초록이다.
        경쟁 점포가 +30% 인 건 나쁜 값이라 주황/빨강으로 쓴다.
        비교 대상을 구분하는 색(--chart-series-*)과 절대 섞어 쓰지 않는다. */
     --color-positive:#1C6F46;
-    --color-warning:#96560B;
-    --color-negative:#BD261C;
+    --color-warning:#D8963E;
+    --color-negative:#D95B5B;
     /* 의미 색 면 위에 얹는 글자. 밝은 화면에서는 흰 글자가 넉넉하지만
        (초록 5.3:1 · 주황 4.8:1 · 빨강 4.8:1), 어두운 화면의 같은 색들은
        밝아져서 흰 글자가 2.9~3.3:1 로 떨어진다 — 그쪽은 먹색으로 바꾼다. */
@@ -96,8 +96,10 @@
     --good:var(--color-positive); --warn:var(--color-warning); --err:var(--color-negative);
     --on-good:var(--color-on-positive); --on-warn:var(--color-on-warning); --on-err:var(--color-on-negative);
     /* 카드 그림자 — 회색 배경 대신 흰 카드 + 얇은 테두리 + 아주 옅은 그림자 */
-    --shadow-pop:0 12px 32px -12px rgba(16,24,40,.18);
-    --r-lg:24px; --r-md:20px; --r-sm:12px;
+    --shadow-pop:0 16px 40px -16px rgba(23,26,25,.24);
+    --r-xl:20px; --r-lg:16px; --r-md:16px; --r-sm:12px; --r-xs:8px; --r-pill:999px;
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-6:24px; --space-8:32px; --space-12:48px; --space-18:72px;
   }
   /* 다크는 색 반전이 아니다. 같은 뜻의 토큰을 어두운 화면에서 읽히는 값으로 다시 정한다. */
   html[data-theme="dark"]{
@@ -171,7 +173,7 @@
   ::-webkit-scrollbar-corner{background:transparent}
   html[data-theme="dark"] *{scrollbar-color:rgba(255,255,255,.2) transparent}
   html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2)}
-  body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all;
+  body{font-family:"Wanted Sans Variable","Wanted Sans",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);word-break:keep-all;
   /* 로마자로 옮긴 상권 이름은 한 낱말이 아주 길다('Hongdaesosanggonginsangjeomga' 29자).
      keep-all 만 두면 390px 화면에서 제목이 116px 밖으로 밀려 나간다 — 어쩔 수 없을 때만 끊는다. */
   overflow-wrap:anywhere}
@@ -205,11 +207,9 @@
   @keyframes driftB{0%{transform:translate3d(0,0,0)}50%{transform:translate3d(-14px,10px,0)}100%{transform:translate3d(0,0,0)}}
   @keyframes driftC{0%{transform:translate3d(0,0,0)}50%{transform:translate3d(10px,14px,0)}100%{transform:translate3d(0,0,0)}}
   @keyframes areaBreathe{0%{opacity:.04}50%{opacity:.09}100%{opacity:.04}}
-  /* 가운데에서 나타나 잠시 머물고 제자리로 올라간다 */
+  /* 첫 화면은 짧게만 나타난다. 반복되거나 오래 기다리게 하는 연출은 쓰지 않는다. */
   @keyframes heroRise{
-    0%{opacity:0;transform:translateY(21vh) scale(.985)}
-    22%{opacity:1;transform:translateY(21vh) scale(1)}
-    52%{opacity:1;transform:translateY(21vh) scale(1)}
+    0%{opacity:0;transform:translateY(12px)}
     100%{opacity:1;transform:translateY(0) scale(1)}
   }
   @keyframes lateIn{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
@@ -237,7 +237,7 @@
       <div role="button" tabIndex="0" onClick="{{ goHome }}" style="font-size:15px;font-weight:700;letter-spacing:-0.02em;flex:none;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;min-height:44px">MYSBIZON</div>
       <nav style="display:flex;gap:2px;align-items:center;flex:1 1 auto;min-width:0">
         <sc-for list="{{ nav }}" as="n">
-          <div style="position:relative;flex:0 1 auto;min-width:0;overflow:hidden">
+          <div style="{{ n.wrapStyle }}">
             <span role="button" tabIndex="0" data-track="{{ n.track }}" onClick="{{ n.open }}" style="{{ n.style }}">
               <sc-if value="{{ n.hasIcon }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:22px;height:22px;display:block">
@@ -441,6 +441,18 @@
           </div>
         </sc-if>
       </section>
+      <section style="padding:48px 0 72px">
+        <h2 style="{{ ds2 }};text-align:center">{{ stepTitle }}</h2>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:22px" class="home-step-grid">
+          <sc-for list="{{ steps }}" as="s">
+            <div style="padding:20px 4px;border-top:1px solid var(--line)">
+              <span style="font-size:12px;font-weight:700;color:var(--accent-text)">{{ s.n }}</span>
+              <div style="font-size:17px;font-weight:700;margin-top:7px">{{ s.title }}</div>
+              <div style="font-size:13px;color:var(--ink3);line-height:1.55;margin-top:4px">{{ s.body }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
     </sc-if>
     <!-- AI 도우미 — 접었다 폈다 하는 챗봇 창 -->
     <sc-if value="{{ botOpen }}">
@@ -597,6 +609,15 @@
           <span role="button" tabIndex="0" aria-label="설정 닫기" data-dialog-close="1" onClick="{{ closeSettings }}" style="flex:none;width:28px;height:28px;border-radius:50%;background:var(--color-surface);color:var(--color-text-secondary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">×</span>
         </div>
 
+        <div style="margin-top:18px;padding:14px 0;border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border)">
+          <div class="u-lab">{{ secondaryNav.title }}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+            <sc-for list="{{ secondaryNav.items }}" as="s">
+              <span role="button" tabIndex="0" onClick="{{ s.go }}" style="min-height:44px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:13px;font-weight:600;cursor:pointer;background:var(--card)">{{ s.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+
         <!-- 테마 — 색 동그라미를 누르면 바로 바뀐다 -->
         <div class="u-lab" style="margin-top:22px">{{ themeLabel2 }}</div>
         <div style="display:flex;align-items:center;gap:14px;margin-top:12px;flex-wrap:wrap">
@@ -688,7 +709,7 @@
         <!-- 메뉴 카드 — 전부 같은 무게. 누르면 그 화면으로 -->
         <div style="{{ hub.gridStyle }}">
           <sc-for list="{{ hub.cards }}" as="c">
-            <div role="button" tabIndex="0" onClick="{{ c.go }}" class="pick-opt" style="{{ c.style }}" style-hover="transform:translateY(-2px);box-shadow:var(--shadow-pop)">
+            <div role="button" tabIndex="0" onClick="{{ c.go }}" class="pick-opt" style="{{ c.style }}" style-hover="border-color:var(--line-strong);background:var(--surface)">
               <div style="font-size:17px;font-weight:700;letter-spacing:-.015em">{{ c.label }}</div>
               <div style="flex:1;font-size:13.5px;color:var(--ink3);margin-top:8px;line-height:1.5;text-wrap:pretty">{{ c.sub }}</div>
               <div style="display:flex;align-items:center;gap:6px;margin-top:14px;font-size:13.5px;font-weight:600;color:var(--accent-text)">
@@ -710,7 +731,7 @@
         <div style="margin-top:28px;display:flex;flex-direction:column;gap:18px">
           <!-- 창업 조건 — 답할 때마다 아래 리포트가 한 칸씩 자란다. 다 답하면 카드째 사라진다 -->
           <sc-if value="{{ rp.hasCur }}">
-          <div data-rp-card="1" style="padding:24px 22px;border-radius:20px;background:var(--card);box-shadow:0 0 0 1px var(--line)">
+          <div data-rp-card="1" style="padding:24px;border:1px solid var(--line);border-radius:16px;background:var(--card)">
             <div style="display:flex;align-items:center;gap:10px">
               <sc-if value="{{ rp.hasBack }}">
                 <span role="button" tabIndex="0" aria-label="이전 질문" onClick="{{ rp.curBack }}" style="flex:none;width:44px;height:44px;border-radius:50%;background:var(--surface);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .14s" style-hover="background:var(--line-strong)">←</span>
@@ -1230,70 +1251,117 @@
         </section>
       </sc-if>
     </sc-if>
-    <!-- 지도분석 -->
-    <!-- 지도 — 어디인지만. 해석은 정밀분석에서. -->
+    <!-- MAP · 사용자가 직접 고른 한 지점 -->
     <sc-if value="{{ onMapScreen }}">
-      <section class="u-sec">
-        <h1 style="{{ ds1 }}">{{ mv.target }}</h1>
-        <p style="{{ dsBody }}; margin-top:10px">상권을 바꿔 가며 매출·수요·경쟁을 한눈에 봐요.</p>
+      <section style="padding:42px 0 64px">
+        <div style="font-size:13px;color:var(--accent-text);font-weight:600">{{ mv.eyebrow }}</div>
+        <h1 style="{{ ds1 }};margin-top:8px">{{ mv.target }}</h1>
+        <p style="{{ dsBody }};margin-top:10px;max-width:720px">{{ mv.sub }}</p>
 
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:20px">
-          <select aria-label="시·도 선택" value="{{ sidoSel }}" onChange="{{ onSido }}" style="{{ selectStyle }}">
-            <sc-for list="{{ sidoOptions }}" as="o"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
-          </select>
-          <select aria-label="자치구 선택" value="{{ mv.guValue }}" onChange="{{ mv.onGu }}" style="{{ selectStyle }}">
-            <sc-for list="{{ mv.guOptions }}" as="g"><option value="{{ g.v }}">{{ g.label }}</option></sc-for>
-          </select>
-          <select aria-label="업종 선택" value="{{ indSel }}" onChange="{{ onIndSel }}" style="{{ selectStyle }}">
-            <sc-for list="{{ indOptions }}" as="o"><option value="{{ o.raw }}">{{ o.label }}</option></sc-for>
-          </select>
+        <div style="display:flex;gap:8px;margin-top:24px;max-width:760px">
+          <input value="{{ mv.query }}" onChange="{{ mv.onQuery }}" onKeyDown="{{ mv.onSearchKey }}" aria-label="{{ mv.searchPlaceholder }}" placeholder="{{ mv.searchPlaceholder }}" style="{{ dsInput }};flex:1;min-width:0">
+          <button onClick="{{ mv.search }}" style="{{ dsCta }};flex:none">{{ mv.searchLabel }}</button>
         </div>
-      </section>
+        <sc-if value="{{ mv.hasSearchMsg }}"><p role="status" style="font-size:13px;color:var(--warn);margin-top:8px">{{ mv.searchMsg }}</p></sc-if>
 
-      <sc-if value="{{ sidoReady }}">
-      <section style="padding:28px 0 0">
-        <div style="display:grid;gap:20px;grid-template-columns:{{ mapCols }}">
-          <div class="u-min">
-            <div id="kakao-map" role="region" aria-label="상권 위치 지도"
-                 style="width:100%;height:{{ mapHeight }};border-radius:var(--r-md);background:var(--surface);
-                        display:flex;align-items:center;justify-content:center;overflow:hidden">
-              <span style="{{ dsSub }};padding:14px 16px">{{ mapLoading }}</span>
+        <div class="map-analysis-grid" style="display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);gap:18px;margin-top:20px;align-items:start">
+          <div style="position:relative;min-width:0">
+            <div id="kakao-map" role="application" aria-label="{{ mv.target }}" style="height:clamp(420px,58vh,620px);width:100%;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--surface);display:flex;align-items:center;justify-content:center">
+              <span style="padding:16px;color:var(--ink3);font-size:14px">{{ mv.map.loadingText }}</span>
             </div>
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-              <sc-for list="{{ mv.map.pins }}" as="p">
-                <span role="button" tabIndex="0" onClick="{{ p.pick }}" style="{{ p.chip }}">{{ p.n }} {{ p.name }}</span>
-              </sc-for>
-            </div>
-            <p style="{{ dsSub }}; margin-top:12px">{{ mapClickHint }}</p>
+            <sc-if value="{{ mv.needsPoint }}">
+              <div style="position:absolute;left:50%;bottom:18px;transform:translateX(-50%);max-width:calc(100% - 32px);padding:10px 14px;border-radius:999px;background:var(--bg-blur);border:1px solid var(--line);box-shadow:var(--shadow-pop);font-size:13px;color:var(--ink2);white-space:nowrap">{{ mv.summary }}</div>
+            </sc-if>
           </div>
 
-          <div style="min-width:0;align-self:start">
-            <div style="font-size:19px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ mv.dash.zone }}</div>
-            <div style="{{ dsSub }}; margin-top:4px">{{ mv.dash.ind }}</div>
-            <div style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
-              <sc-for list="{{ mv.summary3 }}" as="s">
-                <div>
-                  <div class="u-lab">{{ s.label }}</div>
-                  <div style="{{ s.bigStyle }}">{{ s.big }}</div>
-                  <div style="{{ dsSub }}; margin-top:4px">{{ s.note }}</div>
+          <sc-if value="{{ mv.hasPoint }}">
+            <aside style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;min-width:0">
+              <div style="font-size:12px;font-weight:600;color:var(--ink3)">{{ mv.period }} · {{ mv.industry }}</div>
+              <div style="font-size:13px;color:var(--accent-text);font-weight:600;margin-top:13px">{{ mv.address }}</div>
+              <h2 style="font-size:21px;line-height:1.25;letter-spacing:-.025em;margin:5px 0 0">{{ mv.zone }}</h2>
+
+              <div style="display:flex;flex-direction:column;gap:0;margin-top:24px">
+                <sc-for list="{{ mv.metrics }}" as="m">
+                  <div style="padding:16px 0;border-top:1px solid var(--line);min-width:0">
+                    <div style="font-size:14px;line-height:22px;color:var(--ink3)">{{ m.label }}</div>
+                    <div style="{{ m.valueStyle }};margin-top:4px;overflow:hidden;text-overflow:ellipsis">{{ m.value }}</div>
+                    <div style="font-size:13px;color:var(--ink3);line-height:20px;margin-top:4px">{{ m.note }}</div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <p style="font-size:16px;line-height:26px;color:var(--ink2);margin:16px 0 0">{{ mv.summary }}</p>
+
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)">
+                <sc-for list="{{ mv.detailMetrics }}" as="m">
+                  <div style="min-width:0">
+                    <div style="font-size:13px;line-height:20px;color:var(--ink3)">{{ m.label }}</div>
+                    <div style="font-size:18px;line-height:28px;font-weight:650;margin-top:4px;overflow:hidden;text-overflow:ellipsis">{{ m.value }}</div>
+                    <div style="font-size:13px;color:var(--ink3);line-height:20px;margin-top:4px">{{ m.note }}</div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <sc-if value="{{ mv.hasRecommendations }}">
+                <div style="padding-top:14px;border-top:1px solid var(--line)">
+                  <div style="font-size:12px;color:var(--ink3)">{{ mv.labels.recommendations }}</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;margin-top:9px">
+                    <sc-for list="{{ mv.recommendations }}" as="r">
+                      <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:baseline;gap:9px">
+                        <span style="font-size:11px;font-weight:700;color:var(--accent-text)">{{ r.rank }}</span>
+                        <strong style="font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.name }}</strong>
+                        <span style="font-size:12px;color:var(--ink2);white-space:nowrap">{{ r.value }} · {{ r.sample }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <p style="font-size:10.5px;line-height:1.45;color:var(--ink3);margin:8px 0 0">{{ mv.labels.recommendationBasis }}</p>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ mv.hasBrands }}">
+                <div style="padding-top:14px;border-top:1px solid var(--line)">
+                  <div style="font-size:12px;color:var(--ink3);margin-bottom:7px">{{ mv.labels.majorBrands }}</div>
+                  <div style="display:flex;gap:7px;flex-wrap:wrap">
+                    <sc-for list="{{ mv.brands }}" as="b"><span style="padding:6px 9px;border-radius:999px;background:var(--surface);font-size:12px">{{ b.name }} {{ b.value }}</span></sc-for>
+                  </div>
+                </div>
+              </sc-if>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px">
+                <button onClick="{{ mv.detail }}" style="{{ dsCta }}">{{ mv.labels.detail }}</button>
+                <button onClick="{{ mv.togglePick }}" style="{{ dsGhost }}">{{ mv.pickState }}</button>
+                <button onClick="{{ mv.openCompetitors }}" style="{{ dsGhost }};grid-column:1/-1">{{ mv.labels.nearby }}</button>
+              </div>
+            </aside>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ mv.competitorsOpen }}">
+          <section style="margin-top:28px;max-width:960px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+              <div>
+                <h2 style="{{ ds2 }}">{{ mv.labels.nearbyTitle }}</h2>
+                <p style="{{ dsSub }};margin-top:4px">{{ mv.competitorCount }}{{ mv.labels.places }} · {{ mv.labels.radiusNote }}</p>
+              </div>
+              <button onClick="{{ mv.togglePins }}" style="{{ dsGhost }}">{{ mv.pinToggleLabel }}</button>
+            </div>
+            <sc-if value="{{ mv.competitorLoading }}"><p role="status" style="{{ dsBody }};margin-top:20px">{{ mv.labels.loadingNearby }}</p></sc-if>
+            <sc-if value="{{ mv.competitorEmpty }}"><p role="status" style="{{ dsBody }};margin-top:20px">{{ mv.labels.noNearby }}</p></sc-if>
+            <div style="margin-top:14px">
+              <sc-for list="{{ mv.competitors }}" as="c">
+                <div style="{{ c.rowStyle }}">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                    <a href="{{ c.placeUrl }}" target="_blank" rel="noopener noreferrer" style="font-size:15.5px;font-weight:650;color:var(--ink)">{{ c.name }}</a>
+                    <span style="font-size:12px;color:var(--accent-text);white-space:nowrap">{{ c.kind }} · {{ c.distanceLabel }}</span>
+                  </div>
+                  <div style="font-size:12.5px;color:var(--ink2);margin-top:3px">{{ c.category }}</div>
+                  <div style="font-size:12px;color:var(--ink3);margin-top:2px">{{ c.address }} · {{ c.phoneLabel }}</div>
                 </div>
               </sc-for>
             </div>
-            <button onClick="{{ goFineDetail }}" style="{{ dsCta }}; width:100%;margin-top:22px" style-hover="filter:brightness(1.06)">정밀 분석</button>
-          </div>
-        </div>
+          </section>
+        </sc-if>
       </section>
-      </sc-if>
-
-      <sc-if value="{{ sidoWait }}">
-        <section style="padding:36px 0 0;max-width:640px">
-          <div>
-            <div style="font-size:16px;font-weight:700">아직 이 지역 자료가 없어요</div>
-            <p style="{{ dsBody }}; margin-top:8px">{{ sidoNote }}</p>
-            <button onClick="{{ backToSeoul }}" style="{{ dsGhost }}; margin-top:16px">서울로 돌아가기</button>
-          </div>
-        </section>
-      </sc-if>
     </sc-if>
     <!-- 정밀분석 — 왜 좋은/나쁜 상권인지 -->
     <sc-if value="{{ onFineDetail }}">
@@ -1514,7 +1582,7 @@
         <div data-rail="zc" style="{{ zc.rail.trackStyle }}">
           <sc-for list="{{ zc.cards }}" as="c">
             <div style="{{ zc.rail.itemStyle }}">
-              <div role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="transform:translateY(-2px);box-shadow:var(--shadow-pop)">
+              <div role="button" tabIndex="0" onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="border-color:var(--line-strong);background:var(--surface)">
                 <div style="display:flex;align-items:baseline;gap:8px">
                   <span style="flex:none;font-size:11.5px;font-weight:700;color:var(--ink3);font-variant-numeric:tabular-nums">{{ c.rank }}</span>
                   <span style="flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.gu }}</span>
@@ -1897,6 +1965,14 @@
           <div style="{{ d.gapStyle }}">{{ d.gap }}</div>
           </div>
         </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-top:16px;max-width:860px">
+          <sc-for list="{{ d.quick }}" as="q">
+            <div style="padding:16px 0;border-top:1px solid var(--line)">
+              <div style="font-size:12px;color:var(--ink3)">{{ q.label }}</div>
+              <div style="font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:3px">{{ q.value }}</div>
+            </div>
+          </sc-for>
+        </div>
         <div style="margin-top:26px;display:flex;flex-direction:column;gap:12px;max-width:620px">
           <sc-for list="{{ d.factors }}" as="f">
             <div style="display:flex;align-items:baseline;gap:11px">
@@ -1911,6 +1987,7 @@
           <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:14px">
             <span role="button" tabIndex="0" onClick="{{ goCmp }}" style="{{ ctaText }}">다른 자리와 비교하기</span>
             <span role="button" tabIndex="0" onClick="{{ goMap }}" style="{{ ctaText }}">정밀분석 다시 보기</span>
+            <span role="button" tabIndex="0" onClick="{{ goPrep }}" style="{{ ctaText }}">{{ d.prepCta }}</span>
           </div>
         </div>
       </section>
@@ -1954,12 +2031,14 @@
                   </label>
                 </sc-for>
               </div>
-              <div style="margin-top:26px;display:flex;gap:3px;background:var(--surface);border-radius:12px;padding:3px;width:fit-content;max-width:100%;overflow-x:auto">
-                <sc-for list="{{ scens }}" as="s">
-                  <span role="button" tabIndex="0" onClick="{{ s.pick }}" style="{{ s.style }}">{{ s.label }}</span>
-                </sc-for>
-              </div>
-              <p style="font-size:12.5px;color:var(--ink3);margin:12px 0 0;max-width:580px;text-wrap:pretty">{{ scenNote }}</p>
+              <sc-if value="{{ useScenarios }}">
+                <div style="margin-top:26px;display:flex;gap:3px;background:var(--surface);border-radius:12px;padding:3px;width:fit-content;max-width:100%;overflow-x:auto">
+                  <sc-for list="{{ scens }}" as="s">
+                    <span role="button" tabIndex="0" onClick="{{ s.pick }}" style="{{ s.style }}">{{ s.label }}</span>
+                  </sc-for>
+                </div>
+                <p style="font-size:12.5px;color:var(--ink3);margin:12px 0 0;max-width:580px;text-wrap:pretty">{{ scenNote }}</p>
+              </sc-if>
             </div>
           </sc-if>
         </div>
@@ -2105,6 +2184,59 @@
             </sc-for>
           </div>
         </sc-if>
+      </section>
+    </sc-if>
+    <!-- 창업 준비 · 계약 전부터 오픈 직전까지 -->
+    <sc-if value="{{ onPrep }}">
+      <section style="padding:54px 0 70px;max-width:980px">
+        <div style="font-size:13px;color:var(--accent-text);font-weight:600">{{ prep.eyebrow }} · {{ prep.place }}</div>
+        <h1 style="{{ ds1 }};margin-top:8px">{{ prep.title }}</h1>
+        <p style="{{ dsBody }};margin-top:10px;max-width:720px">{{ prep.sub }}</p>
+
+        <div style="margin-top:26px;max-width:620px">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
+            <strong style="font-size:18px">{{ prep.progress }}</strong>
+            <span style="font-size:12px;color:var(--ink3)">{{ prep.progressDetail }}</span>
+          </div>
+          <div style="height:8px;border-radius:999px;background:var(--surface);margin-top:10px"><span style="{{ prep.progressBar }}"></span></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:40px;margin-top:42px" class="prep-grid">
+          <div>
+            <sc-for list="{{ prep.groups }}" as="g">
+              <section style="padding:0 0 36px">
+                <h2 style="font-size:20px;letter-spacing:-.025em;margin:0 0 8px">{{ g.title }}</h2>
+                <sc-for list="{{ g.items }}" as="i">
+                  <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-top:1px solid var(--line)">
+                    <button aria-pressed="{{ i.checked }}" onClick="{{ i.toggle }}" style="{{ i.checkStyle }}">{{ i.checkText }}</button>
+                    <div style="min-width:0;flex:1">
+                      <div style="font-size:15px;font-weight:650">{{ i.label }}</div>
+                      <div style="font-size:12.5px;color:var(--ink3);line-height:1.5;margin-top:3px">{{ i.detail }}</div>
+                      <sc-if value="{{ i.source }}"><a href="{{ i.source.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:5px;font-size:12px">{{ i.source.label }}</a></sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </section>
+            </sc-for>
+          </div>
+
+          <aside>
+            <h2 style="font-size:20px;letter-spacing:-.025em;margin:0 0 8px">{{ prep.adviceTitle }}</h2>
+            <sc-for list="{{ prep.advice }}" as="a">
+              <div style="padding:17px 0;border-top:1px solid var(--line)">
+                <div style="font-size:15px;font-weight:700">{{ a.title }}</div>
+                <div style="font-size:12.5px;color:var(--ink2);line-height:1.55;margin-top:6px">{{ a.basis }}</div>
+                <div style="font-size:13.5px;line-height:1.55;margin-top:7px">{{ a.action }}</div>
+              </div>
+            </sc-for>
+            <p style="font-size:12px;color:var(--warn);line-height:1.55;margin-top:18px">{{ prep.caution }}</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
+              <button onClick="{{ prep.goMap }}" style="{{ dsCta }}">{{ prep.mapCta }}</button>
+              <button onClick="{{ prep.goBep }}" style="{{ dsGhost }}">{{ prep.bepCta }}</button>
+              <button onClick="{{ prep.goCompare }}" style="{{ dsGhost }}">{{ prep.compareCta }}</button>
+            </div>
+          </aside>
+        </div>
       </section>
     </sc-if>
     <!-- 정밀비교 — 담아 둔 상권을 공개 데이터로 견준다. 현재 기준의 결론이 먼저다.

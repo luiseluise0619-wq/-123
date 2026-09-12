@@ -125,7 +125,7 @@ const OP_ITEMS = [['테스트분식', '분식', 'o', '2026-09-01', 120], ['옛�
 const OP_FAKE = { available: true, days: 30, radius_m: 500, since: '2026-08-09', until: '2026-09-08',
   zones: {} };
 const SCREEN_KEYS = ['home', 'hubZone', 'zone', 'find', 'region', 'fineCmp', 'hubFine',
-  'fineIntro', 'map', 'fineDetail', 'sim', 'diag', 'price', 'report'];
+  'fineIntro', 'map', 'fineDetail', 'sim', 'diag', 'price', 'report', 'prep'];
 
 // 화면·상권·업종을 바꿔 가며 화면 값을 모은다.
 function sweep(locale) {

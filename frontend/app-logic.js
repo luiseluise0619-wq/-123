@@ -8,7 +8,9 @@ class Component extends DCLogic {
     q:'', ind:'커피-음료', sel:null, picks:null, screen:'home', menu:null,
     openWhy:false, open:{cond:false,money:false,day:false,risk:false},
     scen:'보통일 때', ...MysbizonConst.BEP_DEFAULT,
-    staffOv:null, etcOv:null
+    staffOv:null, laborOv:null, etcOv:null, management:null, days:30, revOv:null,
+    mapPoint:null, mapAddress:'', competitors:null, competitorsLoading:false,
+    competitorsOpen:false, showCompetitorPins:false, prepChecks:{},
   };
 
   // 바깥을 누르면 열린 드롭다운(헤더 메뉴·지역 검색)을 닫는다
@@ -229,19 +231,12 @@ class Component extends DCLogic {
     const MENU=[
       // region(동네 개요)·fineCmp(자치구 훑기)는 둘 다 '여러 곳을 훑는' 화면이라 여기 둔다.
       // 비교(담은 상권 종합순위)는 ② 정밀분석의 '정밀비교'로 옮겼다 — 입구를 둘로 두지 않는다.
-      {label:T('nav.zone'), keys:['hubZone','zone','find','region','fineCmp'], hub:'hubZone',
-       items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],
-              ['fineCmp',T('menu.sweep')]]},
-      // 고른 상권 하나를 깊게 보는 것들이 다 여기 있다.
-      //   지도     어디인지
-      //   정밀분석 왜 좋은지/나쁜지
-      //   정밀비교 담아 둔 상권들의 종합순위
-      //   본전 계산 이 자리 한 곳의 본전선
-      {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'hubFine',
-       items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],
-              ['sim',T('menu.sim')],['diag',T('menu.bep')]]},
-      {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
+      {label:T('nav.place'), keys:['map','find','region','fineCmp','fineDetail','diag'], hub:'map',
+       items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],['diag',T('menu.bep')]]},
+      {label:T('nav.compare'), keys:['sim'], hub:'sim', items:[['sim',T('nav.compare')]]},
+      {label:T('nav.prep'), keys:['prep'], hub:'prep', items:[['prep',T('nav.prep')]]},
       {label:T('nav.report'), keys:['report'], hub:'report', items:[['report',T('nav.report')]]},
+      {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
 
     ];
 
@@ -257,6 +252,7 @@ class Component extends DCLogic {
            : [...POP.filter(n=>S.zi.inds.indexOf(n)>=0), ...S.zi.inds.filter(n=>POP.indexOf(n)<0)])
       : [];
 
+    const mobileNav=this.bp()==='mobile';
     const out={
       // 허브 화면 대신 — 같은 메뉴 안의 화면을 본문 맨 위 알약 한 줄로 오간다. 지금 화면은 진하게.
       sib:(()=>{
@@ -270,24 +266,26 @@ class Component extends DCLogic {
             +(S.screen===k?'background:var(--ink);color:var(--card);font-weight:600':'background:var(--card);color:var(--ink2);font-weight:500')}))};
       })(),
       nav:MENU.map((g,gi)=>({
-        track:["nav.zone","nav.fine","nav.price","nav.report"][gi],
+        track:["nav.place","nav.compare","nav.prep","nav.report","nav.price"][gi],
         label:g.label, isOpen:false,
         // 모바일 탭바 아이콘(Lucide 계열 선 아이콘). 순서는 MENU 와 같다.
-        hasIcon:this.bp()==='mobile',
+        hasIcon:mobileNav,
+        wrapStyle:mobileNav&&gi>=3?'display:none':'position:relative;flex:0 1 auto;min-width:0;overflow:hidden',
         icon:[
           [{d:'M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z'},{d:'m21 21-4.35-4.35'}],
           [{d:'M3 3v18h18'},{d:'M18 17V9'},{d:'M13 17V5'},{d:'M8 17v-3'}],
-          [{d:'m22 7-8.5 8.5-5-5L2 17'},{d:'M16 7h6v6'}],
-          [{d:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'},{d:'M14 2v6h6'},{d:'M16 13H8'},{d:'M16 17H8'}]
+          [{d:'M9 11l3 3L22 4'},{d:'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'}],
+          [{d:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'},{d:'M14 2v6h6'},{d:'M16 13H8'},{d:'M16 17H8'}],
+          [{d:'m22 7-8.5 8.5-5-5L2 17'},{d:'M16 7h6v6'}]
         ][gi]||[],
         open:()=>this.setState({screen:g.hub,menu:null}),
         // 모바일은 아래 탭바(company.css) — 알약 없이 글자색으로만 활성을 표시한다(토스식)
-        style:this.bp()==='mobile'
+        style:mobileNav
           ? 'font-size:11px;white-space:nowrap;cursor:pointer;padding:6px 4px;min-width:0;text-align:center;'
             +'display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden;text-overflow:ellipsis;transition:color .16s;'
             +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:700':'color:var(--ink3);font-weight:500')
-          : 'font-size:14px;white-space:nowrap;cursor:pointer;padding:11px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
-            +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:600;background:var(--surface)':'color:var(--ink2)'),
+          : (gi>=3?'font-size:13px;':'font-size:14px;')+'white-space:nowrap;cursor:pointer;padding:11px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
+            +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:600;background:var(--surface)':(gi>=3?'color:var(--ink3)':'color:var(--ink2)')),
         items:g.items.map(([k,label,tag])=>({
           label:label+(tag?'  '+tag:''),
           go:()=>this.setState({screen:k,menu:null}),
@@ -388,6 +386,8 @@ class Component extends DCLogic {
       onMapScreen:S.screen==='map',
       onFineDetail:S.screen==='fineDetail',
       goFineDetail:()=>this.setState({screen:'fineDetail',menu:null}),
+      onPrep:S.screen==='prep',
+      prep:S.screen==='prep'?this.prepView():{groups:[],advice:[]},
       onHub:S.screen==='hubZone'||S.screen==='hubFine',
       hub:(()=>{
         const zone = S.screen==='hubZone';
@@ -495,6 +495,7 @@ class Component extends DCLogic {
         };
       })(),
       goFind:go('find'), goCmp:go('sim'),
+      goPrep:go('prep'),
       // 후보지 화면은 아무것도 안 고른 상태에서 1위 상권을 보여준다(S.sel 은 null).
       // 그 상태에서 '이 상권 자세히 보기'를 누르면 화면에 보이던 상권이 그대로
       // 넘어가야 한다 — 예전에는 S.sel 이 null 이라 자치구가 '서울 전체'로 떨어지고,
@@ -504,7 +505,10 @@ class Component extends DCLogic {
         const shown = S.sel
           || ((S.homeZone && (L.find(o=>o.name===S.homeZone)||{}).id) || (L[0]||{}).id)
           || null;
+        const ll=shown&&S.smap&&S.smap.lls&&S.smap.lls[shown];
         this.setState({screen:'map', menu:null, sel:shown||S.sel,
+          mapPoint:Array.isArray(ll)?{lat:Number(ll[0]),lng:Number(ll[1])}:S.mapPoint,
+          mapAddress:Array.isArray(ll)&&S.zi&&S.zi.zones[shown]?this.zoneLabelOf(S.zi.zones[shown].nm):S.mapAddress,
           mapGu:(shown&&S.zgu&&S.zgu[shown])||'서울 전체'});
       },
       goFineCmp:go('fineCmp'),
@@ -512,6 +516,8 @@ class Component extends DCLogic {
       openReport:()=>this.setState({screen:'report',rp_sent:false}),
       // 헤더 오른쪽 — 언어 칩 + 설정(⚙). '어둡게' 하나만 있던 자리를 설정으로 키웠다(§44)
       ...this.settingsView(),
+      secondaryNav:{title:this.t('nav.more'),items:MENU.slice(3).map(g=>({label:g.label,
+        go:()=>this.setState({screen:g.hub,menu:null,setOpen:false,setAdv:false})}))},
       q:S.q, onQ:e=>this.setState({q:e.target.value}),
       // 화면 조각(42-find.html)은 name·pick·textStyle 만 쓴다.
       chips:names.slice(0,5).map(n=>({name:this.indName(n), pick:()=>this.setState({ind:n,sel:null,picks:null,openWhy:false,fromRegion:false}),
@@ -606,13 +612,13 @@ class Component extends DCLogic {
       headerStyle:'position:sticky;top:0;z-index:50;height:'+this.L('56px','60px','64px')+';display:flex;align-items:center;'
         +'background:var(--bg-blur);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);'
         +'border-bottom:1px solid rgba(0,0,0,.05);transition:all .2s ease-in-out',
-      headerInner:'width:100%;max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+';display:flex;align-items:center;gap:'+this.L('12px','20px','28px'),
+      headerInner:'width:100%;max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('20px','24px','32px')+';display:flex;align-items:center;gap:'+this.L('12px','24px','32px'),
       // 칸을 1080 으로 잡아 놨는데 안의 내용은 전부 600~660 으로 묶여 있어
       // 오른쪽 400px 이 늘 비어 있었다("왜 다 왼쪽에 있어"). 칸을 내용에 맞춘다.
       // 넓히는 쪽이 아니라 좁히는 쪽으로 맞춘 이유: 620px 짜리 본문을 1080 으로 늘리면
       // 한 줄이 너무 길어져 읽기 어려워진다.
       // 데스크톱 1280 / 좌우 32. 넓힌 만큼 각 화면의 내용도 그리드로 폭을 채운다.
-      mainStyle:'max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+' '+this.L('80px','110px','120px'),
+      mainStyle:'max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('20px','24px','32px')+' '+this.L('80px','110px','120px'),
       ds1:this.ds('h1'), ds2:this.ds('h2'), ds3:this.ds('h3'),
       // 모바일에서는 전부 1열. 세로 메뉴도 위쪽 가로 목록이 된다.
       mapCols:this.L('1fr','1fr','minmax(0,1.35fr) minmax(300px,1fr)'),
@@ -633,8 +639,8 @@ class Component extends DCLogic {
       dsNum:this.ds('num'), dsNumSm:this.ds('numSm'),
       dsBody:this.ds('body'), dsSub:this.ds('sub'),
       dsCta:this.ds('cta'), dsGhost:this.ds('ctaGhost'), dsInput:this.ds('input'),
-      dsGrid3:'display:grid;gap:'+this.L('14px','16px','20px')+';grid-template-columns:repeat(auto-fit,minmax('+this.L('100%','260px','300px')+',1fr))',
-      dsGrid4:'display:grid;gap:'+this.L('12px','16px','18px')+';grid-template-columns:repeat(auto-fit,minmax('+this.L('150px','200px','220px')+',1fr))',
+      dsGrid3:'display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax('+this.L('100%','260px','300px')+',1fr))',
+      dsGrid4:'display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax('+this.L('150px','200px','220px')+',1fr))',
       dataError:S.err, retryData:()=>location.reload(),
       ...this.home(),
       ai:this.chat(),
@@ -660,7 +666,7 @@ class Component extends DCLogic {
                 'right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));',
                 'right:28px;bottom:calc(28px + env(safe-area-inset-bottom,0px));'),
       // CTA 체계 — 주 행동 하나만 강조한다
-      ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;width:100%;max-width:420px;display:block;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
+      ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:12px;padding:0 24px;height:52px;width:100%;max-width:420px;display:block;cursor:pointer;transition:background .18s,transform .18s cubic-bezier(.2,0,0,1)',
       // 글자 버튼 — 보이는 크기는 그대로, 누를 칸만 44px (WCAG 2.5.5)
       ctaText:'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap;'
         +'display:inline-flex;align-items:center;min-height:44px',
@@ -678,8 +684,8 @@ class Component extends DCLogic {
         verdict:'', pctText:'', pctFine:'', medText:'', scoreBar:'display:none', scoreMed:'display:none', reasons:[],
         thin:false, thinWarn:'', thinBadge:''};
       out.rows=[]; out.honesty='';
-      out.d={eyebrow:'',headline:S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.',bep:'—',rev:'—',revName:'',gap:'',gapStyle:'display:none',fill:'display:none',mark:'display:none',factors:[],thin:'',thinStyle:'display:none',honesty:'',note:this.dataNote('bep','',[])};
-      out.inputs=[]; out.scens=[]; out.scenNote=''; out.stack=[]; out.moneyRows=[]; out.stackLead='';
+      out.d={eyebrow:'',headline:S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.',bep:'—',rev:'—',revName:'',gap:'',gapStyle:'display:none',fill:'display:none',mark:'display:none',factors:[],quick:[],thin:'',thinStyle:'display:none',honesty:'',note:this.dataNote('bep','',[])};
+      out.inputs=[]; out.scens=[]; out.scenNote=''; out.useScenarios=true; out.stack=[]; out.moneyRows=[]; out.stackLead='';
       out.dayStats=[]; out.dayWhy=''; out.riskStats=[]; out.riskLead='';
       out.foot={has:false,lead:'',stats:[],note:''};
       out.sat={has:false};
@@ -734,7 +740,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','screens','chat','charts','carousel','market','map','views']) {
+for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','prep','screens','chat','charts','carousel','market','map','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {

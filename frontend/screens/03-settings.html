@@ -7,6 +7,15 @@
           <span role="button" tabIndex="0" aria-label="설정 닫기" data-dialog-close="1" onClick="{{ closeSettings }}" style="flex:none;width:28px;height:28px;border-radius:50%;background:var(--color-surface);color:var(--color-text-secondary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">×</span>
         </div>
 
+        <div style="margin-top:18px;padding:14px 0;border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border)">
+          <div class="u-lab">{{ secondaryNav.title }}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+            <sc-for list="{{ secondaryNav.items }}" as="s">
+              <span role="button" tabIndex="0" onClick="{{ s.go }}" style="min-height:44px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:13px;font-weight:600;cursor:pointer;background:var(--card)">{{ s.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+
         <!-- 테마 — 색 동그라미를 누르면 바로 바뀐다 -->
         <div class="u-lab" style="margin-top:22px">{{ themeLabel2 }}</div>
         <div style="display:flex;align-items:center;gap:14px;margin-top:12px;flex-wrap:wrap">

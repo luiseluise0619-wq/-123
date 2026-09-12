@@ -45,12 +45,12 @@ globalThis.MysbizonParts.views = {
     // 비교 담기 — 빼기만 가능하면 되돌릴 수 없으므로 목록·결론 양쪽에 토글을 둔다
     const pickToggle=o=>()=>{
       const p=[...PICKS], i=p.indexOf(o.id);
-      if(i>=0) p.splice(i,1); else if(p.length<3) p.push(o.id);
+      if(i>=0) p.splice(i,1); else if(p.length<5) p.push(o.id);
       this.setState({picks:p});
     };
     const pickLabelOf=o=>{
       const inP=PICKS.indexOf(o.id)>=0;
-      return inP? '비교에서 빼기' : (PICKS.length>=3? '비교 3곳 꽉 찼어요' : '비교에 담기 ('+PICKS.length+'/3)');
+      return inP? this.t('cmp.remove') : (PICKS.length>=5? this.t('cmp.fullFive') : this.t('cmp.saveCount',{n:PICKS.length}));
     };
     const monthly=v=>this.won(v/3);
     const grade=sc=>sc>=75?[this.t('find.gradeHigh'),'var(--good)']:(sc>=60?[this.t('find.gradeUpper'),'var(--good)']:(sc>=45?[this.t('find.gradeMid'),'var(--ink2)']:[this.t('find.gradeLow'),'var(--warn)']));
@@ -206,12 +206,12 @@ globalThis.MysbizonParts.views = {
         +(o.id===sel.id
           ? 'background:var(--accent-3);box-shadow:inset 0 0 0 1.5px var(--accent)'
           : 'background:var(--surface)'),
-      pickLabel: PICKS.indexOf(o.id)>=0 ? '비교에서 빼기' : (PICKS.length>=3? '비교 3곳 꽉 찼어요' : '비교에 담기'),
+      pickLabel: pickLabelOf(o),
       // 글자만 있는 링크지만 손가락 영역은 44px — 위아래 음수 여백으로 카드 높이는 안 바뀐다
       pickStyle: 'display:inline-flex;align-items:center;min-height:44px;margin:-14px 0;padding-right:12px;'
         +(PICKS.indexOf(o.id)>=0
         ? 'font-size:12.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap;font-weight:600'
-        : (PICKS.length>=3
+        : (PICKS.length>=5
           ? 'font-size:12.5px;color:var(--ink3);white-space:nowrap'
           : 'font-size:12.5px;color:var(--ink3);cursor:pointer;white-space:nowrap')),
       row:'display:flex;align-items:baseline;gap:12px;padding:13px 0;border-top:1px solid var(--line)'
@@ -642,6 +642,9 @@ globalThis.MysbizonParts.views = {
       cta:this.t('mv.bepOf',{name:this.zoneLabelOf(sel.name)}),
       honesty:'지도에는 상권 중심 위치만 표시해요. 핀은 서울시가 공개한 동네 중심 좌표예요. 동네는 점이 아니라 면이어서 핀 하나가 동네 전체를 뜻해요. 건물 단위 임대료와 공실은 공개 데이터가 없어요.'
     };
+    // 기존 상세분석 계산은 그대로 재사용하고, 지도 첫 화면만 '직접 찍은 한 지점'에
+    // 맞게 얇게 다시 조립한다.
+    out.mv=this.buildMapView(out.mv,sel,L,r,pickToggle,pickLabelOf);
 
     return this.fillComparisonView(out, r, Lall, PICKS, pickToggle, pickLabelOf);
   }

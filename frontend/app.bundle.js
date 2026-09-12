@@ -179,6 +179,72 @@ globalThis.MysbizonParts.i18n = {
   // 한국어 원본. 이 목록이 곧 '번역해야 할 것'의 정의다.
   KO_BASE(){
     return {
+      'cmp.emptySubFive':'관심 있는 상권을 2~5곳 나란히 놓고 볼 수 있어요.',
+      'cmp.fullFive':'비교 5곳 꽉 찼어요','cmp.remove':'비교에서 빼기','cmp.saveCount':'후보지에 저장 ({n}/5)',
+      'bep.daysHint':'1~31일','bep.inputDays':'영업일 (일/월)','bep.inputLabor':'인건비 (만원)',
+      'bep.inputManagement':'관리비 (만원)','bep.inputRevenue':'예상 매출 (만원)',
+      'bep.laborAuto':'비우면 직원 수 × 250만원','bep.management':'관리비','bep.manual':'직접 넣은 값',
+      'bep.noneBlank':'없으면 비워 두세요','bep.quickBep':'손익분기 매출','bep.quickDaily':'하루 필요 매출',
+      'bep.quickFixed':'월 고정비','bep.quickProfit':'예상 영업이익','bep.quickVariable':'예상 변동비',
+      'bep.revAuto':'비우면 상권 참고 매출 시나리오 사용','bep.revMine':'내 예상 매출','prep.continue':'창업 준비로 계속',
+      'bep.dayWhyDays':'손익분기 매출 {bep} ÷ 영업일 {days}일 ÷ {src} {unit}원. 여러 명이 함께 결제하면 실제 고객 수와 결제 건수는 달라질 수 있어요. 시간대 비중은 서울 전체 {ind} 평균이에요.',
+      'common.beforeLookup':'조회 전','common.noData':'자료 없음','common.people':'명','common.place':'곳',
+      'nav.place':'자리 찾기','nav.compare':'후보 비교','nav.prep':'창업 준비','nav.more':'더 보기',
+      'home.stepsTitle':'오픈 전 판단, 네 단계면 돼요',
+      'home.step1':'자리 찾기','home.step1Body':'지도에서 직접 위치를 골라요.',
+      'home.step2':'경쟁 확인','home.step2Body':'500m 안의 동종업체를 봐요.',
+      'home.step3':'돈 되는지 계산','home.step3Body':'내 비용으로 본전선을 계산해요.',
+      'home.step4':'창업 준비','home.step4Body':'계약 전 확인사항을 체크해요.',
+      'map.addressResolving':'선택한 위치의 주소를 확인 중이에요','map.brandEstimate':'이름 기준 참고 분류',
+      'map.competitorCount':'주변 동종업체','map.detail':'정밀 분석 보기','map.dongBasis':'{dong} 행정동 기준',
+      'map.eyebrow':'1단계 · 자리 찾기','map.footTraffic':'유동인구','map.franchise':'프랜차이즈',
+      'map.franchiseRatio':'프랜차이즈 비율','map.hideCompetitorPins':'업체 핀 숨기기','map.independent':'개인점포',
+      'map.loadingNearby':'주변 업체를 확인하고 있어요.','map.loadingShort':'조회 중','map.majorBrands':'주요 프랜차이즈',
+      'map.nearby':'주변 업체 보기','map.nearbyTitle':'주변 동종업체','map.noNearby':'500m 안에서 검색된 동종업체가 없어요. 검색 결과는 실제 영업 현황과 다를 수 있어요.',
+      'map.noPhone':'전화번호 없음','map.pickHint':'지도를 눌러 분석할 위치를 정하세요.','map.radiusBasis':'선택 지점 500m · 자동 기준',
+      'map.rankLabel':'{n}순위',
+      'prep.eyebrow':'창업 준비','prep.title':'{ind} 오픈 전 체크','prep.sub':'계약 전에 확인할 것부터 오픈을 알리는 일까지 한곳에서 체크하세요.',
+      'prep.progress':'창업 준비 {pct}%','prep.progressDetail':'{done} / {total} 완료',
+      'prep.groupContract':'계약 전 확인','prep.groupOpening':'오픈 전 준비','prep.groupMarketing':'오픈 알리기',
+      'prep.itemUse':'건축물 용도 확인','prep.itemUseDetail':'선택 업종이 가능한 용도인지 건축물대장과 관할 기관에서 확인',
+      'prep.itemLease':'임대차계약 핵심 조항 확인','prep.itemLeaseDetail':'기간·갱신·원상복구·중도해지·업종 제한을 계약서에서 확인',
+      'prep.itemPremium':'권리금 범위와 근거 확인','prep.itemPremiumDetail':'시설·영업·바닥 권리금을 나눠 적고 증빙 확인',
+      'prep.itemPower':'전기 용량 확인','prep.itemPowerDetail':'필요 장비를 동시에 켤 수 있는지 계약 전에 확인',
+      'prep.itemHvac':'냉난방·환기 확인','prep.itemHvacDetail':'실외기 위치와 추가 공사 가능 여부 확인',
+      'prep.itemSign':'간판 설치 가능 여부','prep.itemSignDetail':'건물 규정과 관할 구청 기준 확인',
+      'prep.itemParking':'주차·상하차 동선 확인','prep.itemParkingDetail':'고객과 납품 차량의 실제 접근 동선 확인',
+      'prep.itemWater':'급배수 상태 확인','prep.itemWaterDetail':'싱크·제빙기·세척 장비 위치와 배수 구배 확인',
+      'prep.itemExhaust':'배기·덕트 설치 가능 여부','prep.itemExhaustDetail':'냄새·열 배출 경로와 건물 동의 여부 확인',
+      'prep.itemToilet':'화장실 위치와 상태','prep.itemToiletDetail':'고객 동선과 공용 여부 확인',
+      'prep.itemNoise':'소음·시술 설비 제한 확인','prep.itemNoiseDetail':'건물 관리규약과 이웃 점포 영향을 확인',
+      'prep.itemBusiness':'사업자등록 준비','prep.itemBusinessDetail':'사업 시작 전 또는 시작일부터 20일 안에 신청',
+      'prep.itemPermit':'업종별 신고·허가 확인','prep.itemPermitDetail':'업종과 영업 형태에 따라 관할 기관에 확인',
+      'prep.itemHygiene':'위생교육과 영업신고 준비','prep.itemHygieneDetail':'업종별 교육 대상과 신고 서류를 공식 안내에서 확인',
+      'prep.itemTerminal':'카드단말기·결제 준비','prep.itemTerminalDetail':'통신과 설치 일정을 오픈 전에 확인',
+      'prep.itemSupplier':'공급처·납품 동선 점검','prep.itemSupplierDetail':'최소 주문량·납기·보관공간을 확인',
+      'prep.itemEquipment':'장비 설치와 시운전','prep.itemEquipmentDetail':'전기·급배수·환기와 함께 실제 작동 확인',
+      'prep.itemMenu':'메뉴·서비스와 가격 확정','prep.itemMenuDetail':'원가율과 주변 경쟁 가격을 함께 확인',
+      'prep.itemNaver':'네이버 플레이스 등록','prep.itemNaverDetail':'주소·영업시간·메뉴와 오픈일을 정확히 등록',
+      'prep.itemKakao':'카카오맵 매장 등록','prep.itemKakaoDetail':'검색과 길찾기에서 매장이 확인되는지 점검',
+      'prep.itemWalk':'현장 보행 동선 확인','prep.itemWalkDetail':'출근·점심·저녁과 평일·주말을 나눠 직접 확인',
+      'prep.itemOpening':'오픈 첫 2주 안내 준비','prep.itemOpeningDetail':'주변 수요와 경쟁을 확인한 뒤 시간대와 대상을 좁혀 실행',
+      'prep.sourceNts':'국세청 사업자등록 안내','prep.sourceFoodSafety':'식품안전나라 위생교육 안내',
+      'prep.adviceProfit':'가격과 수익 기준부터 정하기','prep.adviceProfitBasis':'이 상권의 점포당 참고 월매출은 {sales}이에요(예요).','prep.adviceProfitAction':'미래 매출 보장값으로 쓰지 말고, 내 임대료·인건비를 넣어 본전선과 비교하세요.',
+      'prep.adviceWalk':'현장 동선 확인하기','prep.adviceWalkBasis':'{dong} 행정동 하루 유동인구는 {people}명이고, {age} 비중이 가장 커요.','prep.adviceWalkAction':'이 수치는 행정동 전체 값이에요. 계약 전 출근·점심·저녁 시간의 점포 앞 보행을 직접 확인하세요.',
+      'prep.adviceCompete':'경쟁과 정면 가격승부 피하기','prep.adviceGap':'가까운 경쟁점의 빈틈 확인하기','prep.adviceCompetitorBasis':'선택 지점 500m 안에서 검색된 동종업체는 {total}곳이고, 이름 기준 프랜차이즈 추정은 {fr}곳입니다.',
+      'prep.adviceCompeteAction':'가까운 점포의 메뉴·가격·대기시간을 직접 보고 차별화할 한 가지를 정하세요.','prep.adviceGapAction':'가까운 점포의 영업시간·메뉴·리뷰를 확인해 비어 있는 시간이나 상품을 찾으세요.',
+      'prep.advicePick':'분석할 자리를 먼저 고르기','prep.advicePickBasis':'아직 위치에 연결된 상권 자료가 없어요.','prep.advicePickAction':'지도에서 위치를 찍으면 이 자리의 수요와 경쟁을 근거로 준비 순서를 바꿔 드려요.',
+      'prep.adviceListings':'검색 지도에 오픈 정보 맞추기','prep.adviceListingsBasis':'선택한 업종과 주소는 검색 지도에서 고객이 확인할 기본 정보예요.','prep.adviceListingsAction':'오픈 전에 네이버 플레이스와 카카오맵의 주소·영업시간·대표 메뉴를 같은 내용으로 등록하세요.',
+      'prep.adviceTitle':'이 자리에서 먼저 할 일','prep.caution':'인허가·건축물 용도는 업종, 건물, 관할 기관에 따라 달라질 수 있어요. 계약 전에 관할 구청과 공식 안내를 다시 확인하세요.',
+      'prep.mapCta':'자리 다시 보기','prep.bepCta':'손익 계산','prep.compareCta':'후보 비교','prep.noPlace':'선택한 자리 없음',
+      'map.referenceSales':'상권 참고 월매출','map.salesCaution':'새 가게 매출 예측 아님','map.save':'후보지에 저장','map.saved':'저장됨 · 빼기',
+      'map.searchButton':'위치 찾기','map.searchEmpty':'주소나 건물명을 입력해 주세요.','map.searching':'찾는 중…','map.searchNone':'서울에서 해당 위치를 찾지 못했어요.',
+      'map.searchPlaceholder':'주소 또는 건물명 검색','map.showCompetitorPins':'지도에서 업체 보기',
+      'map.sub':'주소를 찾거나 지도를 눌러 위치를 고르세요. 분석 반경은 자동으로 적용돼요.',
+      'map.summaryBoth':'유동은 강한 편이지만 주변 동종업체 경쟁도 높은 위치입니다.',
+      'map.summaryCompetition':'주변 동종업체가 많은 편입니다. 가까운 점포의 가격과 영업시간을 확인하세요.',
+      'map.summaryDemand':'행정동 유동인구는 높은 편입니다. 실제 점포 앞 시간대별 보행은 현장에서 확인하세요.',
+      'map.summaryNeutral':'수요와 경쟁 수치를 함께 보고 현장 동선을 확인할 위치입니다.','map.title':'분석할 자리를 찍어 주세요',
       'customer.title':'설문을 저장할까요?',
       'customer.explain':'동의하면 설문 답과 이메일을 운영자에게 전달해요. 저장하지 않아도 분석과 다운로드는 이용할 수 있어요.',
       'customer.agree':'설문·이메일 저장에 동의해요 (선택)',
@@ -216,11 +282,11 @@ globalThis.MysbizonParts.i18n = {
       'hub.peekTop':'{ind} · {n}곳 중 1위 {zone}',
       'home.stamp':'서울 상권 {n}곳 · {q} 기준',
       'home.eyebrow':'내 장사의 시작, 데이터로 한 걸음 더',
-      'home.title':'어떤 동네에서 시작해 볼까요?',
-      'home.sub':'업종을 고르면 동네를 비교하고, 내 조건에 맞는 본전선을 확인할 수 있어요.',
+      'home.title':'어디에서 장사할지 고민되세요?',
+      'home.sub':'업종을 고르고 지도에서 자리를 찍으면 경쟁과 손익, 계약 전 준비까지 이어서 확인할 수 있어요.',
       'home.location':'위치','home.locationAny':'서울 전체',
       'home.industry':'어떤 장사를 생각하시나요?','home.industryHint':'예: 카페, 편의점',
-      'home.start':'동네 찾아보기','home.popular':'인기 검색',
+      'home.start':'내 가게 자리 찾기','home.popular':'인기 검색',
       'common.reset':'기본값으로 복원',
       'common.preparing':'데이터 준비 중',
 
@@ -357,7 +423,7 @@ globalThis.MysbizonParts.i18n = {
       "market.seoulScope": "서울 전체 업종별 자료예요. 자치구별 시계열은 아직 제공되지 않아요.",
       "market.spendScope": "자료가 있는 자치구를 고를 수 있어요. 소비 구성은 가구 기준이에요.",
       "cmp.browseTitle": "어느 상권을 비교해 볼까요?",
-      "cmp.browseHint": "상권 이름을 몰라도 괜찮아요. 구를 고르고 목록에서 최대 3곳을 담아 보세요.",
+      "cmp.browseHint": "상권 이름을 몰라도 괜찮아요. 구를 고르고 목록에서 최대 5곳을 담아 보세요.",
       "cmp.browseCount": "이 업종으로 비교할 수 있는 상권 {n}곳",
       "cmp.browseEmpty": "이 조건에 맞는 상권이 없어요. 구나 검색어를 바꿔 보세요.",
       "cmp.selected": "선택됨",
@@ -571,7 +637,7 @@ globalThis.MysbizonParts.theme = {
   THEME_PRESETS(){
     return [
       {k:'mint',   label:'MYSBIZON Mint',
-       light:{primary:'#087F6B', hover:'#0F6B59', mid:'#7FBCAE', soft:'#E8F5F1'},
+       light:{primary:'#32B99A', hover:'#299C83', mid:'#86D5C2', soft:'#EAF8F4'},
        dark: {primary:'#3FA88F', hover:'#6FC4AE', mid:'#2E7565', soft:'#12332C'}},
       {k:'ocean',  label:'Ocean Blue',
        light:{primary:'#1160C4', hover:'#0D4E9F', mid:'#8FB6E8', soft:'#E8F0FC'},
@@ -596,7 +662,7 @@ globalThis.MysbizonParts.theme = {
   themePrefs(){
     const S=this.state;
     return {
-      appearance: S.appearance || 'system',
+      appearance: S.appearance || 'light',
       preset: S.themeK || 'mint',
       custom: S.themeCustom || {}          // {primary, background, text, text2, c1, c2, c3}
     };
@@ -617,11 +683,11 @@ globalThis.MysbizonParts.theme = {
     if(okLocale.indexOf(saved.locale)>=0) patch.locale=saved.locale;
     if(Object.keys(patch).length) this.setState(patch);
     // 걸러 낸 값(patch)만 쓴다 — saved 를 다시 끼워 넣으면 위 검사가 무의미해진다
-    this.applyTheme(patch.appearance||'system', patch.themeK||'mint', patch.themeCustom||{});
+    this.applyTheme(patch.appearance||'light', patch.themeK||'mint', patch.themeCustom||{});
     // system 을 고른 사람은 OS 설정이 바뀌면 화면도 바뀌어야 한다
     if(typeof matchMedia==='function'){
       const mq=matchMedia('(prefers-color-scheme: dark)');
-      const on=()=>{ if((this.state.appearance||'system')==='system') this.applyTheme('system'); };
+      const on=()=>{ if(this.state.appearance==='system') this.applyTheme('system'); };
       if(mq.addEventListener) mq.addEventListener('change',on); else if(mq.addListener) mq.addListener(on);
       this._mq=mq; this._mqOn=on;
     }
@@ -727,7 +793,7 @@ globalThis.MysbizonParts.theme = {
     const bgNow = (cst&&cst.background) || (dark?'#000000':'#FFFFFF');
     //   배경만 보면 모자란다 — 같은 글자가 회색 면(--surface)과 hover 면(--line) 위에도 앉는다.
     //   가장 진한 면까지 통과하도록 두 번 재운다(이미 넘으면 값이 그대로 돌아온다).
-    const surfNow = dark ? '#26262B' : '#E5E8EB';
+    const surfNow = dark ? '#26262B' : '#FFFFFF';
     set('--color-primary-text', this.readableOn(this.readableOn(primaryNow, bgNow), surfNow));
 
     // 차트는 CSS 변수를 직접 못 읽는다 — 다시 그리게 표시만 바꿔 준다
@@ -748,8 +814,8 @@ globalThis.MysbizonParts.theme = {
     this.applyTheme(null,null,cst); this.saveTheme();
   },
   resetTheme(){
-    this.setState({appearance:'system', themeK:'mint', themeCustom:{}});
-    this.applyTheme('system','mint',{});
+    this.setState({appearance:'light', themeK:'mint', themeCustom:{}});
+    this.applyTheme('light','mint',{});
     this.saveTheme();
   }
 };
@@ -808,7 +874,7 @@ globalThis.MysbizonParts.theme.settingsView = function(){
           +'box-shadow:0 0 0 2px var(--color-background), 0 0 0 '+(on?'4px':'0')+' var(--color-text-primary);'
           +'transition:box-shadow .16s'};
     }),
-    customPrimary:color('primary', this.t('settings.custom'), '#087F6B'),
+    customPrimary:color('primary', this.t('settings.custom'), '#32B99A'),
 
     appearanceLabel:this.t('settings.appearance'),
     appearances:[['light','settings.light'],['dark','settings.dark'],['system','settings.system']]
@@ -823,9 +889,9 @@ globalThis.MysbizonParts.theme.settingsView = function(){
     advLabel:this.t(adv?'settings.advClose':'settings.adv'),
     advToggle:()=>this.setState({setAdv:!adv}),
     customs:[
-      color('background',this.t('settings.background'),     '#FFFFFF'),
-      color('text',      this.t('settings.textPrimary'),    '#191F28'),
-      color('text2',     this.t('settings.textSecondary'),  '#4E5968')
+      color('background',this.t('settings.background'),     '#F6F6F2'),
+      color('text',      this.t('settings.textPrimary'),    '#171A19'),
+      color('text2',     this.t('settings.textSecondary'),  '#707672')
     ],
     chartLabel:this.t('settings.chartColors'),
     chartColors:[
@@ -1163,14 +1229,17 @@ globalThis.MysbizonParts.util = {
     // 비운 임대료를 0 으로 치면 본전선이 1,523 → 908만원 으로 떨어지는데,
     // 화면 꼬리표는 그대로 '기본 400만원' 이라 거짓을 말하게 된다.
     const rent=this.bound(S.rent,0,100000,D.rent), etc=sz.etc, staff=sz.staff;
+    const management=this.bound(S.management,0,100000,0);
     const cogsPct=this.bound(S.cogs,0,1000,D.cogs);
     const cogs=cogsPct/100;
     const valid=cogsPct<100;
-    const labor=staff*250, fixed=rent+labor+etc;
+    const laborAuto=staff*250;
+    const labor=S.laborOv!=null?this.bound(S.laborOv,0,100000,laborAuto):laborAuto;
+    const fixed=rent+management+labor+etc;
     const bep=valid?fixed/(1-cogs):null;
     const mult=(S.scen==='적게 팔릴 때'?0.7:(S.scen==='잘될 때'?1.3:1));
     const avg=z? z.per/3/1e4 : 0;
-    const rev = avg*mult;
+    const rev = S.revOv!=null?this.bound(S.revOv,0,1000000,avg*mult):avg*mult;
     const profit = valid?rev*(1-cogs)-fixed:null;
     // 처음 한 번 나가는 돈 — 사장님이 넣은 값만 쓴다(기본 가정을 두지 않는다).
     // 회수기간 = 초기투자 ÷ 월 영업이익. 이익이 0 이하면 회수되지 않으므로 null.
@@ -1178,8 +1247,9 @@ globalThis.MysbizonParts.util = {
                  + this.bound(S.premium,0,1000000,0)
                  + this.bound(S.interior,0,1000000,0);
     const payback = (valid && invest>0 && profit>0) ? invest/profit : null;
-    return {rent,etc,staff,labor,cogs,fixed,bep,avg,rev,mult,area:sz.area,
-      staffAuto:sz.staffAuto, etcAuto:sz.etcAuto,
+    const days=Math.round(this.bound(S.days,1,31,30));
+    return {rent,management,etc,staff,labor,laborAuto,cogs,fixed,bep,avg,rev,mult,days,area:sz.area,
+      staffAuto:sz.staffAuto, laborIsAuto:S.laborOv==null, etcAuto:sz.etcAuto,
       invest, payback,
       valid,error:valid?'':'원가율은 100% 미만이어야 본전과 영업이익을 계산할 수 있어요.',profit};
   },
@@ -1300,34 +1370,33 @@ globalThis.MysbizonParts.design = {
   ds(kind){
     // 카드는 '정말 강조가 필요한 것'에만 쓴다(§2). 그림자는 쓰지 않는다(§3) —
     // 정보 구분은 여백 → 글자 크기 → 구분선 → 테두리 순으로 푼다.
-    const CARD='background:var(--card);border:1px solid transparent;';
+    const CARD='background:var(--card);border:1px solid var(--line);';
     const M={
-      card:      CARD+'border-radius:var(--r-md);padding:'+this.L('16px','18px','20px'),
-      cardLg:    CARD+'border-radius:var(--r-lg);padding:'+this.L('18px','24px','28px'),
+      card:      CARD+'border-radius:var(--r-md);padding:'+this.L('20px','24px','24px'),
+      cardLg:    CARD+'border-radius:var(--r-lg);padding:'+this.L('20px','24px','24px'),
       // 카드 없이 여백으로만 묶는 그룹. 카드를 걷어낼 때 자리에 넣는다.
       plain:     'background:none;border:none;padding:0;min-width:0',
       // 가로 구분선 — 카드를 대신한다
       divider:   'height:1px;background:var(--line);border:none;margin:0',
       // 강조 카드. 민트로 면을 칠하지 않는다(§1: 민트는 화면당 1~2곳) —
       // 흰 바탕에 민트 테두리 한 줄로만 구분한다.
-      cardHi:    'background:var(--card);border:1.5px solid var(--accent-2);'
-                 +'border-radius:var(--r-lg);padding:'+this.L('18px','24px','28px'),
-      h1:        'font-size:'+this.L('28px','32px','36px')+';font-weight:700;letter-spacing:-.03em;line-height:1.18;margin:0;text-wrap:pretty',
-      h2:        'font-size:'+this.L('20px','22px','24px')+';font-weight:700;letter-spacing:-.02em;line-height:1.3;margin:0',
-      h3:        'font-size:17px;font-weight:700;letter-spacing:-.01em;margin:0',
-      num:       'font-size:'+this.L('30px','34px','38px')+';font-weight:700;letter-spacing:-.03em;'
-                 +'line-height:1.08;font-variant-numeric:tabular-nums',
-      numSm:     'font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15',
-      body:      'font-size:'+this.L('15px','15.5px','16px')+';line-height:1.6;color:var(--ink2);margin:0;text-wrap:pretty',
-      sub:       'font-size:13.5px;line-height:1.55;color:var(--ink3);margin:0;text-wrap:pretty',
+      cardHi:    'background:var(--card);border:1px solid var(--accent);'
+                 +'border-radius:var(--r-lg);padding:'+this.L('20px','24px','24px'),
+      h1:        'font-size:'+this.L('30px','32px','32px')+';font-weight:700;letter-spacing:-.03em;line-height:'+this.L('40px','44px','44px')+';margin:0;text-wrap:pretty',
+      h2:        'font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:34px;margin:0',
+      h3:        'font-size:18px;font-weight:650;letter-spacing:-.01em;line-height:28px;margin:0',
+      num:       'font-size:40px;font-weight:700;letter-spacing:-.035em;line-height:44px;font-variant-numeric:tabular-nums',
+      numSm:     'font-size:26px;font-weight:700;letter-spacing:-.025em;font-variant-numeric:tabular-nums;line-height:32px',
+      body:      'font-size:16px;font-weight:450;line-height:26px;color:var(--ink2);margin:0;text-wrap:pretty',
+      sub:       'font-size:14px;font-weight:450;line-height:22px;color:var(--ink3);margin:0;text-wrap:pretty',
       // 화면마다 강한 버튼은 하나뿐이다
       cta:       'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;'
-                 +'border-radius:16px;padding:0 26px;height:54px;cursor:pointer;'
-                 +'box-shadow:0 8px 20px -10px rgba(8,127,107,.55);transition:filter .16s,transform .18s',
-      ctaGhost:  'font-size:15px;font-weight:600;color:var(--accent-hover);background:var(--accent-3);border:none;'
+                 +'border-radius:12px;padding:0 24px;height:52px;cursor:pointer;'
+                 +'transition:background .18s,transform .18s',
+      ctaGhost:  'font-size:15px;font-weight:600;color:var(--ink);background:var(--card);border:1px solid var(--line);'
                  +'border-radius:var(--r-sm);padding:0 20px;height:48px;cursor:pointer;transition:filter .16s',
       input:     'width:100%;font-size:16px;font-weight:500;color:var(--ink);background:var(--surface);'
-                 +'border:1px solid transparent;border-radius:var(--r-sm);padding:0 16px;height:52px;outline:none'
+                 +'border:1px solid var(--line);border-radius:var(--r-sm);padding:0 16px;height:52px;outline:none'
     };
     return M[kind]||'';
   },
@@ -1343,11 +1412,11 @@ globalThis.MysbizonParts.design = {
     const C={good:'var(--good)', warn:'var(--warn)', bad:'var(--err)', flat:'var(--ink3)'};
     return {
       label:label, value:value, meaning:meaning||'', hasMeaning:!!meaning,
-      labelStyle:'font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis',
-      valueStyle:'font-size:'+this.L('22px','24px','26px')+';font-weight:700;letter-spacing:-.02em;'
-        +'font-variant-numeric:tabular-nums;line-height:1.15;margin-top:6px;'
+      labelStyle:'font-size:14px;line-height:22px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis',
+      valueStyle:'font-size:26px;font-weight:700;letter-spacing:-.02em;'
+        +'font-variant-numeric:tabular-nums;line-height:32px;margin-top:4px;'
         +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis',
-      meaningStyle:'font-size:12.5px;font-weight:600;line-height:1.45;margin-top:6px;text-wrap:pretty;'
+      meaningStyle:'font-size:13px;font-weight:500;line-height:20px;margin-top:4px;text-wrap:pretty;'
         +'color:'+(C[tone]||C.flat)
     };
   },
@@ -2279,7 +2348,7 @@ globalThis.MysbizonParts.storage = {
   // 저장해 둔 설문 답을 '믿을 수 있는 값만' 골라 되살린다.
   // 이 목록이 곧 '설문이 기억하는 것'의 정의다.
   SURVEY_KEYS(){
-    return ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','etcOv','cogs','scen',
+    return ['ind','sel','zoneId','homeZoneName','area','rent','staffOv','laborOv','etcOv','management','days','revOv','cogs','scen',
       'rp_sido','rp_gu','rp_ind','rp_stage','rp_age','rp_biz','rp_when','rp_need',
       'rp_cost','rp_email','rp_agree','rp_step'];
   },
@@ -2297,6 +2366,10 @@ globalThis.MysbizonParts.storage = {
       restore.rp_touched=t;
     }
     if(Array.isArray(saved.picks)) restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);
+    try{
+      const checks=JSON.parse(localStorage.getItem('mysbizon.prepChecks.'+(restore.ind||this.state.ind))||'{}');
+      if(checks&&typeof checks==='object'&&!Array.isArray(checks)) restore.prepChecks=checks;
+    }catch(e){}
     return restore;
   },
   // 새로고침을 대비해 담아 둔다. 값이 그대로면 쓰지 않는다.
@@ -2450,7 +2523,7 @@ globalThis.MysbizonParts.home = {
       {v:'제주특별자치도',label:'제주'}
     ];
     const homeSido=S.sido||'서울특별시';
-    const fieldBase='flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:'+this.L('14px','16px','16px')+';transition:background .16s;'
+    const fieldBase='flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:12px;transition:background .18s;'
       // 라벨 21px + 입력 22px 이 들어간다. 56 이면 위아래 6px 밖에 안 남아 꾸겨 보였다.
       +'padding:0 '+this.L('14px','18px','18px')+';height:'+this.L('58px','64px','64px')+';';
     const valBase='font-size:15px;font-weight:500;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
@@ -2479,14 +2552,14 @@ globalThis.MysbizonParts.home = {
             });
             this.startZone();
           },
-          style:'flex:none;font-size:13px;padding:11px 14px;border-radius:999px;background:var(--card);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .16s,color .16s'
+          style:'flex:none;font-size:13px;padding:11px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .18s,color .18s'
         });
       });
     }
 
     return {
-      badgeStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);background:var(--surface);border-radius:999px;padding:7px 14px;margin:0 auto 26px;'
-        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .7s cubic-bezier(.22,.7,.25,1) .5s forwards'),
+      badgeStyle:'display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 14px;margin:0 auto 24px;'
+        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .22s cubic-bezier(.22,.7,.25,1) .08s forwards'),
       // 첫 줄은 표어가 아니라 '무엇을 근거로 말하는지'다.
       // 자료가 붙기 전에는 슬로건으로 두고, 붙으면 실제 개수·분기로 바꾼다.
       heroEyebrow:(S.zi && S.zi.n_zones)
@@ -2494,20 +2567,22 @@ globalThis.MysbizonParts.home = {
         : this.t('home.eyebrow'),
       heroTitle:this.t('home.title'),
       heroSub:this.t('home.sub'),
+      stepTitle:this.t('home.stepsTitle'),
+      steps:[1,2,3,4].map(n=>({n:String(n),title:this.t('home.step'+n),body:this.t('home.step'+n+'Body')})),
       labLocation:this.t('home.location'),
       phLocationAny:this.t('home.locationAny'),
       labIndustry:this.t('home.industry'),
       phIndustry:this.t('home.industryHint'),
       labStart:this.t('home.start'),
       labPopular:this.t('home.popular'),
-      titleStyle:'font-size:'+this.L('23px','44px','52px')+';font-weight:700;letter-spacing:-0.025em;line-height:1.15;margin:0;white-space:nowrap',
-      tagRow:'display:flex;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;justify-content:center;'
-        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .8s cubic-bezier(.22,.7,.25,1) 2.7s forwards'),
+      titleStyle:'font-size:'+this.L('34px','42px','42px')+';font-weight:700;letter-spacing:-0.035em;line-height:'+this.L('44px','54px','54px')+';margin:0;white-space:normal;text-wrap:balance',
+      tagRow:'display:flex;align-items:center;gap:8px;margin-top:24px;flex-wrap:wrap;justify-content:center;'
+        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .22s cubic-bezier(.22,.7,.25,1) .18s forwards'),
       tags:tags,
       // 이메일을 받게 되었으니 소개의 약속 문구도 바꾼다
 
       // 드롭다운이 잘리지 않도록 세로 클리핑은 하지 않는다(배경 그래픽은 자체 마스크로 처리)
-      heroSection:'position:relative;min-height:calc(100vh - '+this.L('56px','60px','64px')+');display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:'+this.L('52px','76px','88px')+' 0 0;overflow:visible',
+      heroSection:'position:relative;min-height:calc(100vh - '+this.L('56px','60px','64px')+');display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:'+this.L('48px','72px','72px')+' 0 0;overflow:visible',
       // 아무 곳이나 누르면 도입부를 건너뛴다. 재방문·급한 사용자가 기다리지 않게.
       skipAnim:()=>{ if(!S.skip) this.setState({skip:true}); },
       // z-index:2면 스태킹 컨텍스트가 되어 드롭다운이 헤더(50) 아래로 갇힌다
@@ -2517,11 +2592,11 @@ globalThis.MysbizonParts.home = {
       heroInner:'position:relative;z-index:10;width:100%;max-width:'+this.L('100%','620px','740px')+';text-align:center;'
         +(S.skip
           ? 'opacity:1'
-          : 'opacity:0;will-change:transform,opacity;animation:heroRise 2.9s cubic-bezier(.22,.72,.24,1) .25s forwards'),
-      subStyle:'font-size:17px;font-weight:500;color:var(--ink2);margin:22px 0 0;line-height:1.7;white-space:normal;'
-        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .8s cubic-bezier(.22,.7,.25,1) .95s forwards'),
-      searchWrap:'position:relative;margin-top:40px;text-align:left;'
-        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .85s cubic-bezier(.22,.7,.25,1) 2.5s forwards'),
+          : 'opacity:0;will-change:transform,opacity;animation:heroRise .28s cubic-bezier(.22,.72,.24,1) forwards'),
+      subStyle:'font-size:16px;font-weight:450;color:var(--ink2);margin:16px 0 0;line-height:26px;white-space:normal;'
+        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .22s cubic-bezier(.22,.7,.25,1) .08s forwards'),
+      searchWrap:'position:relative;margin-top:32px;text-align:left;'
+        +(S.skip?'opacity:1':'opacity:0;animation:lateIn .24s cubic-bezier(.22,.7,.25,1) .14s forwards'),
       skylineRow:'position:absolute;left:0;right:0;bottom:19%;display:flex;align-items:flex-end;justify-content:space-between;gap:'+this.L('10px','14px','18px')+';padding:0 '+this.L('18px','32px','48px'),
       // 가운데를 비우는 마스크 — 모바일에서 그래픽이 글자를 방해하지 않게 한다
       // 위로 갈수록 사라지게 해서 제목·검색창과 겹치지 않는다
@@ -2532,11 +2607,9 @@ globalThis.MysbizonParts.home = {
         +(S.picking?'opacity:.45;transform:scale(1.1)':''),
       // 테두리 없이 그림자만. 상자 속 상자를 만들지 않는다.
       // 모바일에서는 가로 3분할이 각 칸을 25px로 만든다 — 세로로 쌓아 전폭을 준다
-      pickerRow:'display:flex;background:var(--card);border-radius:20px;padding:6px;transition:box-shadow .22s;'
+      pickerRow:'display:flex;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px;transition:border-color .18s;'
         +this.L('flex-direction:column;align-items:stretch;gap:4px;','align-items:center;gap:0;','align-items:center;gap:0;')
-        +(open
-          ? 'box-shadow:0 16px 40px rgba(0,0,0,.12)'
-          : 'box-shadow:0 12px 32px rgba(0,0,0,.08)'),
+        +(open?'border-color:var(--accent)':''),
       // 입력칸 자체는 22px 이지만 누르는 칸은 감싼 셀(indBtn·zoneBtn, onClick=openInd/openZone)이라
       // 44px 이 넘는다. 칸을 44px 로 키우면 초점 테두리가 위아래 라벨을 가로질러 그어진다(실제로 그랬다).
       segInput:'width:100%;min-width:0;font-size:15px;font-weight:500;letter-spacing:-0.015em;color:var(--ink);'
@@ -2601,9 +2674,9 @@ globalThis.MysbizonParts.home = {
       // 통째로 교체되는 목록은 위치 애니메이션 대신 짧은 페이드로 바꾼다
       indGridStyle:'display:grid;grid-template-columns:'+this.L('1fr','1fr 1fr','1fr 1fr')+';gap:8px;'
         +'animation:fadeIn .14s linear both',
-      hotInds:[['커피-음료','☕'],['치킨전문점','🍗'],['편의점','🏪'],['미용실','💇'],['한식음식점','🍚'],['호프-간이주점','🍺']]
+      hotInds:[['커피-음료',''],['치킨전문점',''],['편의점',''],['미용실',''],['한식음식점',''],['호프-간이주점','']]
         .filter(([n])=>indsAll.indexOf(n)>=0)
-        .map(([n,em])=>({label:em+' '+this.indName(n),
+        .map(([n])=>({label:this.indName(n),
           pick:()=>this.setState({homeInd:n,ind:n,iq:this.indName(n),pickOpen:null}),
           style:'flex:none;font-size:13.5px;font-weight:500;padding:12px 15px;border-radius:999px;cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:background .14s,color .14s;'
             +(n===S.homeInd?'background:var(--accent);color:var(--on-accent)':'background:var(--surface);color:var(--ink2)')})),
@@ -2629,8 +2702,8 @@ globalThis.MysbizonParts.home = {
             else {
               const rec=zoneList.filter(z=>(S.recent||[]).indexOf(z.name)>=0);
               const hot=zoneList.filter(z=>(S.recent||[]).indexOf(z.name)<0);
-              if(rec.length){ out.push({header:true,name:'⏱️ 최근 본 동네'}); rec.forEach(push); }
-              if(hot.length){ out.push({header:true,name:'🔥 많이 찾는 동네'}); hot.forEach(push); }
+              if(rec.length){ out.push({header:true,name:'최근 본 동네'}); rec.forEach(push); }
+              if(hot.length){ out.push({header:true,name:'많이 찾는 동네'}); hot.forEach(push); }
             }
             let ri=-1;
             return out.map(o=>{
@@ -2707,13 +2780,13 @@ globalThis.MysbizonParts.home = {
       startDisabled:!!S.starting,
       starting:!!S.starting, notStarting:!S.starting,
       startStyle:this.L('flex:none;width:100%;margin-top:4px;','flex:none;','flex:none;')
-        +'font-size:15px;font-weight:600;border:none;border-radius:14px;height:'+this.L('46px','48px','48px')+';'
+        +'font-size:16px;font-weight:600;border:none;border-radius:12px;height:'+this.L('48px','52px','52px')+';'
         +this.L('','min-width:106px;','min-width:116px;')+'padding:0 '+this.L('18px','22px','26px')+';white-space:nowrap;'
         +'display:inline-flex;align-items:center;justify-content:center;'
-        +'transition:transform .2s cubic-bezier(.2,0,0,1),background .18s,box-shadow .2s,filter .18s;'
+        +'transition:transform .18s cubic-bezier(.2,0,0,1),background .18s,filter .18s;'
         // 비활성이어도 브랜드 컬러 글자와 옅은 배경을 남겨 누를 수 있는 요소로 읽히게 한다
         +(hasInd
-          ? 'cursor:'+(S.starting?'default':'pointer')+';background:var(--accent);color:var(--on-accent);box-shadow:0 6px 16px -6px rgba(0,0,0,.2)'
+          ? 'cursor:'+(S.starting?'default':'pointer')+';background:var(--accent);color:var(--on-accent)'
           : 'cursor:pointer;background:var(--accent-3);color:var(--accent-hover)'),
       startActive:S.starting?'':'transform:scale(.96)',
       startHover:S.starting?'':(hasInd?'filter:brightness(1.05)':'filter:brightness(.97)'),
@@ -2723,7 +2796,7 @@ globalThis.MysbizonParts.home = {
           const el=document.querySelectorAll('[data-search] input')[1]; if(el) el.focus(); return; }
         this.setState({starting:true,pickOpen:null});
         if(S.zoneId){ this.startZone(); return; }
-        this.setState({screen:'find',sel:null,fromRegion:false,homeZone:null,starting:false});
+        this.setState({screen:'map',sel:null,mapPoint:null,mapAddress:'',fromRegion:false,homeZone:null,starting:false});
       },
       // 흰 필드 + 아주 얕은 그림자. 회색 덩어리보다 가볍고 정확해 보인다.
       picking:!!S.picking,
@@ -2738,7 +2811,11 @@ globalThis.MysbizonParts.home = {
     const recent=[name,...prev].slice(0,4);
     try{ localStorage.setItem('mysbizon.recentZones',JSON.stringify(recent)); }catch(e){}
     this.setState({picking:name,pickOpen:null,recent:recent});
-    this.setState({screen:'region',picking:null,starting:false,homeZone:name,regPick:S.homeInd||null});
+    const ll=S.smap&&S.smap.lls&&S.smap.lls[S.zoneId];
+    this.setState({screen:'map',picking:null,starting:false,homeZone:name,regPick:S.homeInd||null,
+      mapPoint:Array.isArray(ll)?{lat:Number(ll[0]),lng:Number(ll[1])}:null,
+      mapAddress:this.zoneLabelOf(name||''),competitors:null,competitorsLoading:Array.isArray(ll)});
+    if(Array.isArray(ll)) this.fetchNearbyCompetitors(Number(ll[0]),Number(ll[1]));
   },
 
   // ── 지역비교 ───────────────────────────────────────────────────
@@ -3423,7 +3500,7 @@ globalThis.MysbizonParts.comparison = {
       id:o.id,
       name:nameOfZ(o),
       meta:[this.placeName(zgu[o.id]||''), this.won(o.per/3)].filter(Boolean).join(' · '),
-      add:()=>{ const current=this.state.picks||[]; if(current.length>=3||current.includes(o.id)) return;
+      add:()=>{ const current=this.state.picks||[]; if(current.length>=5||current.includes(o.id)) return;
         // 담으면 검색어를 비우고 최근 본 목록에 남긴다
         const recent=[o.id, ...(S.cmpRecent||[]).filter(x=>x!==o.id)].slice(0,6);
         this.setState({picks:[...current,o.id], cmpQ:'', cmpRecent:recent,cmpAddOpen:true}); },
@@ -3449,7 +3526,7 @@ globalThis.MysbizonParts.comparison = {
       guLabel:this.t('market.gu'),guValue:String(gus.indexOf(gu)+1),
       guOptions:[{value:'0',label:this.t('pr.seoulAll')},...gus.map((g,i)=>({value:String(i+1),label:this.placeName(g)}))],
       onGu:e=>{const i=Number(e.target.value);if(Number.isInteger(i)&&i>=0&&i<=gus.length)this.setState({cmpGu:gus[i-1]||'',cmpLimit:12,cmpQ:''});},
-      browseRows:browse.slice(0,limit).map(o=>({...row(o),disabled:PICKS.includes(o.id)||PICKS.length>=3,
+      browseRows:browse.slice(0,limit).map(o=>({...row(o),disabled:PICKS.includes(o.id)||PICKS.length>=5,
         action:this.t(PICKS.includes(o.id)?'cmp.selected':'cmp.add')})),
       browseCount:this.t('cmp.browseCount',{n:browse.length}),
       browseEmpty:browse.length===0,emptyBrowseText:this.t('cmp.browseEmpty'),
@@ -3459,14 +3536,14 @@ globalThis.MysbizonParts.comparison = {
       onQ:e=>this.setState({cmpQ:e.target.value,cmpLimit:12}),
       // Enter 는 첫 결과를 담는다 — 검색창에서 손을 떼지 않아도 되게
       onKey:e=>{ if(e.key!=='Enter') return;
-        if(found.length&&PICKS.length<3) found[0].add(); },
+        if(found.length&&PICKS.length<5) found[0].add(); },
       clear:()=>this.setState({cmpQ:''}),
       hasQ:!!rawQ,
       searching:!!rawQ,
       noResult: !!rawQ && found.length===0,
       noResultText:this.tn('cmp.noZone',{q:rawQ}),
-      full:PICKS.length>=3,
-      fullText:'3곳까지 담을 수 있어요. 하나를 빼면 다른 곳을 담을 수 있어요.',
+      full:PICKS.length>=5,
+      fullText:'5곳까지 담을 수 있어요. 하나를 빼면 다른 곳을 담을 수 있어요.',
       // 담을 게 없을 때만 펼쳐 둔다. 이미 비교 중이면 결론이 먼저다(§19·§35).
       open: PICKS.length<2 ? true : !!S.cmpAddOpen,
       canFold: PICKS.length>=2,
@@ -3477,7 +3554,7 @@ globalThis.MysbizonParts.comparison = {
     if(picks.length<2){
       out.c={
         headline:'상권을 비교해 보세요',
-        sub:'관심 있는 상권을 최대 3곳까지 나란히 놓고 볼 수 있어요.',
+        sub:this.t('cmp.emptySubFive'),
         emptyCount: picks.length===1? '지금 1곳 담았어요. 한 곳만 더 담으면 비교가 시작돼요.' : '',
         // 담은 게 하나면 그 카드도 보여 준다 — 담은 게 사라진 것처럼 보이면 안 된다
         cols:picks.map(o=>({
@@ -3715,12 +3792,12 @@ globalThis.MysbizonParts.diagnosis = {
     const {arrowUp,arrowDn,arrowInfo}=MysbizonConst.TREND_STYLES;
     // ── 진단
     const c=this.calc(sel), valid=c.valid!==false, over=valid&&c.profit>=0;
-    const revName = S.scen==='적게 팔릴 때'?'참고 매출의 70%':(S.scen==='잘될 때'?'참고 매출의 130%':'상권 참고 매출');
+    const revName = S.revOv!=null?this.t('bep.revMine'):(S.scen==='적게 팔릴 때'?'참고 매출의 70%':(S.scen==='잘될 때'?'참고 매출의 130%':'상권 참고 매출'));
     const mx=valid?(Math.max(c.rev,c.bep)*1.18||1):1;
     const I=S.sbi&&S.sbi.ind?S.sbi.ind[S.ind]:null;
     const unit=sel.unit||(I&&I.unit);
     const unitSrc=sel.unit?'이 자리에서 손님 1명이 쓰는 돈':'서울 전체에서 손님 1명이 쓰는 돈';
-    const dailyAmt=valid?c.bep/30:null, dailyCnt=(valid&&unit)?Math.ceil(dailyAmt*1e4/unit):null;
+    const dailyAmt=valid?c.bep/c.days:null, dailyCnt=(valid&&unit)?Math.ceil(dailyAmt*1e4/unit):null;
     const TL=['00–06','06–11','11–14','14–17','17–21','21–24'], TH=[6,5,3,3,4,3];
     const tm=I&&I.tmzon; let pk=0;
     if(tm) tm.forEach((v,i)=>{ if(v>tm[pk]) pk=i; });
@@ -3765,9 +3842,18 @@ globalThis.MysbizonParts.diagnosis = {
         +'매출은 이 자리에서 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아니에요. 보수적 70%·낙관적 130%는 우리가 정한 배수예요. '
         +'세금·대출 이자는 넣지 않았어요. 회수기간은 초기투자(보증금+권리금+인테리어) ÷ 월 영업이익이고, 보증금은 나갈 때 돌려받지만 묶이는 돈이라 포함했어요.'
     };
+    out.d.quick=valid?[
+      {label:this.t('bep.quickFixed'),value:this.man(c.fixed)},
+      {label:this.t('bep.quickVariable'),value:this.man(c.rev*c.cogs)},
+      {label:this.t('bep.quickBep'),value:this.man(c.bep)},
+      {label:this.t('bep.quickProfit'),value:this.man(c.profit)},
+      {label:this.t('bep.quickDaily'),value:this.man(dailyAmt)}
+    ]:[];
+    out.d.prepCta=this.t('prep.continue');
 
     const num=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?'':this.bound(v,0,k==='cogs'?1000:100000,0)});};
-    const ovr=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?null:this.bound(v,0,k==='staffOv'?100:100000,0)});};
+    const ovr=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?null:this.bound(v,0,k==='staffOv'?100:1000000,0)});};
+    const dayInput=e=>{const v=e.target.value;this.setState({days:v===''?'':Math.round(this.bound(v,1,31,30))});};
 
     // 다른 화면과 같은 방식으로 접는다 — 문장은 그대로 두고 '데이터 기준 보기' 안으로 넣는다.
     out.d.note=this.dataNote('bep', '본전 = 고정비 ÷ (1 − 원가율) 로 계산해요. 원가율이 100% 이상이면 계산하지 않아요.', [['계산 기준', out.d.honesty]]);
@@ -3791,9 +3877,13 @@ globalThis.MysbizonParts.diagnosis = {
     const numIn=v=>(v===''||v==null)? v : (Number.isFinite(Number(v))? v : '');
     out.inputs=[
       {label:'월 임대료 (만원)', value:numIn(S.rent), onChange:num('rent'), tag:'기본 400만원 · 실제 금액으로 수정'},
+      {label:this.t('bep.inputManagement'), value:numIn(S.management==null?'':S.management), onChange:ovr('management'), tag:this.t('bep.noneBlank')},
+      {label:this.t('bep.inputLabor'), value:numIn(S.laborOv==null?'':S.laborOv), onChange:ovr('laborOv'), tag:c.laborIsAuto?this.t('bep.laborAuto'):this.t('bep.manual')},
       {label:'원가율 (%)', value:numIn(S.cogs), onChange:num('cogs'), tag:'기본 가정 · 수정 가능'},
       {label:'직원 수 (명)', value:numIn(S.staffOv==null?'':S.staffOv), onChange:ovr('staffOv'), tag:c.staffAuto?'비우면 '+c.staff+'명':'직접 넣은 값'},
       {label:'기타 운영비 (만원)', value:numIn(S.etcOv==null?'':S.etcOv), onChange:ovr('etcOv'), tag:c.etcAuto?'비우면 '+c.etc+'만원':'직접 넣은 값'},
+      {label:this.t('bep.inputDays'), value:numIn(S.days), onChange:dayInput, tag:this.t('bep.daysHint')},
+      {label:this.t('bep.inputRevenue'), value:numIn(S.revOv==null?'':S.revOv), onChange:ovr('revOv'), tag:this.t('bep.revAuto')},
       // 처음 한 번 나가는 돈 — 회수기간(초기투자 ÷ 월 영업이익)에만 쓴다.
       // 기본값을 두지 않는다. 상권별 보증금·권리금은 공개 자료가 없어 지어낼 수 없다(§1).
       {label:'보증금 (만원)', value:numIn(S.deposit==null?'':S.deposit), onChange:num('deposit'), tag:'나갈 때 돌려받지만 묶이는 돈이라 포함'},
@@ -3807,7 +3897,7 @@ globalThis.MysbizonParts.diagnosis = {
       const n=c.rev>0? Math.max(Math.round(v/c.rev*20),0) : 0;
       return {n:Math.min(n,20), col:col};
     };
-    const dotSets=valid?[['원가',c.rev*c.cogs,'var(--accent)'],['임대료',c.rent,'var(--accent-2)'],['인건비',c.labor,'var(--accent-3)'],['기타',c.etc,'var(--ink2)']]:[];
+    const dotSets=valid?[['원가',c.rev*c.cogs,'var(--accent)'],['임대료',c.rent,'var(--accent-2)'],[this.t('bep.management'),c.management,'var(--ink3)'],['인건비',c.labor,'var(--accent-3)'],['기타',c.etc,'var(--ink2)']]:[];
     out.moneyDots=dotSets.map(([label,v,col])=>{
       const d=dotOf(v,col);
       const cells=[];
@@ -3816,7 +3906,7 @@ globalThis.MysbizonParts.diagnosis = {
         word: c.rev>0? (v/c.rev>=0.4?'가장 무거워요':(v/c.rev>=0.2?'부담돼요':'가벼워요')) : ''};
     });
     // 항목별 독립 막대다 — 한 예산을 나눠 쓰는 그림이 아니라고 분명히 쓴다
-    const totPct=valid&&c.rev>0? Math.round((c.rev*c.cogs+c.rent+c.labor+c.etc)/c.rev*100) : 0;
+    const totPct=valid&&c.rev>0? Math.round((c.rev*c.cogs+c.rent+c.management+c.labor+c.etc)/c.rev*100) : 0;
     out.dotNote = !valid?c.error:(c.rev>0
       ? (totPct>100
         ? '한 줄이 매출 전체(20칸)이고, 칠한 칸이 그 항목이 가져가는 몫이에요. 네 항목을 더하면 '+totPct+'%로 매출을 넘어서 남는 게 없어요.'
@@ -3824,14 +3914,15 @@ globalThis.MysbizonParts.diagnosis = {
       : '');
     out.scens=['적게 팔릴 때','보통일 때','잘될 때'].map(p=>({
       label:p, pick:()=>this.setState({scen:p}),
-      style:'font-size:14px;padding:9px 18px;border-radius:9px;cursor:pointer;white-space:nowrap;min-height:40px;display:inline-flex;align-items:center;transition:background .16s;'+(S.scen===p?'background:var(--card);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)':'color:var(--ink2)')
+      style:'font-size:14px;padding:8px 16px;border-radius:12px;cursor:pointer;white-space:nowrap;min-height:40px;display:inline-flex;align-items:center;transition:background .18s;'+(S.scen===p?'background:var(--card);color:var(--ink);font-weight:500;border:1px solid var(--line)':'color:var(--ink2);border:1px solid transparent')
     }));
     out.scenNote = S.scen==='적게 팔릴 때'? '상권 참고 매출의 70%를 매출 가정으로 써요. 70%는 우리가 정한 값이에요.'
       : (S.scen==='잘될 때'? '상권 참고 매출의 130%를 매출 가정으로 써요. 130%는 우리가 정한 값이에요.'
       : this.t('bep.scenNote',{ind:this.tr(this.indName(S.ind))}));
+    out.useScenarios=S.revOv==null;
     out.condHint=this.t('diag.cond',{area:c.area, rent:this.man(c.rent), n:c.staff});
 
-    const parts=valid?[['원가',c.rev*c.cogs,'var(--accent)'],['임대료',c.rent,'var(--accent-2)'],['인건비',c.labor,'var(--accent-3)'],['기타',c.etc,'var(--ink2)']]:[];
+    const parts=valid?[['원가',c.rev*c.cogs,'var(--accent)'],['임대료',c.rent,'var(--accent-2)'],[this.t('bep.management'),c.management,'var(--ink3)'],['인건비',c.labor,'var(--accent-3)'],['기타',c.etc,'var(--ink2)']]:[];
     if(valid&&c.profit>0) parts.push(['남는 돈',c.profit,'var(--good)']);
     // 1만원 기준으로 바꿔 말한다 — 금액보다 비중이 바로 읽힌다
     const tot=parts.reduce((a,[,v])=>a+Math.max(v,0),0)||1;
@@ -3854,6 +3945,7 @@ globalThis.MysbizonParts.diagnosis = {
       {label:revName, value:this.man(c.rev), style:rowS, valStyle:vS},
       {label:'− 원가 '+Math.round(c.cogs*100)+'%', value:this.man(c.rev*c.cogs), style:rowS, valStyle:vS},
       {label:'− 임대료', value:this.man(c.rent), style:rowS, valStyle:vS},
+      {label:'− '+this.t('bep.management'), value:this.man(c.management), style:rowS, valStyle:vS},
       {label:'− 인건비 '+c.staff+'명', value:this.man(c.labor), style:rowS, valStyle:vS},
       {label:'− 기타', value:this.man(c.etc), style:rowS, valStyle:vS},
       {label:'남는 돈', value:this.man(c.profit), style:rowS+';border-top:1px solid var(--line-strong);padding-top:15px;font-weight:600', valStyle:vS+';font-weight:600;color:'+(over?'var(--good)':'var(--warn)')}
@@ -3870,7 +3962,7 @@ globalThis.MysbizonParts.diagnosis = {
     ];
     out.dayHint = dailyCnt? '하루 '+dailyCnt.toLocaleString()+'건':'—';
     out.dayWhy = !valid?c.error:(dailyCnt
-      ? this.t('bep.dayWhy',{bep:this.man(c.bep), src:this.tr(unitSrc), unit:unit.toLocaleString(), ind:this.tr(this.indName(S.ind))})
+      ? this.t('bep.dayWhyDays',{bep:this.man(c.bep),days:c.days,src:this.tr(unitSrc),unit:unit.toLocaleString(),ind:this.tr(this.indName(S.ind))})
       : '이 장사는 결제 1건당 추정 금액이 자료에 없어 건수를 낼 수 없어요.');
 
     const R=S.sti&&S.sti.ind?S.sti.ind[S.ind]:null;
@@ -3934,6 +4026,94 @@ globalThis.MysbizonParts.diagnosis = {
       : '가게가 늘고 있어요. 지금 계산한 한 집당 매출은 앞으로 더 나뉠 수 있어요.') : '';
     out.riskHint = R? (R.closed>R.opened? '줄고 있음':'늘고 있음') : '—';
 
+  }
+};
+
+/* source: logic/prep.js */
+'use strict';
+// 계약 전부터 오픈 직전까지만 다룬다. 체크리스트와 조언은 고른 업종·상권 자료에
+// 연결하고, 인허가 내용은 공식 확인 링크를 함께 둔다.
+globalThis.MysbizonParts = globalThis.MysbizonParts || {};
+globalThis.MysbizonParts.prep = {
+  prepView(){
+    const S=this.state,ind=String(S.ind||''),prefix=ind+'::';
+    const food=/음식점|커피|호프|치킨|분식|제과|패스트푸드|주점|반찬|일식|중식|양식|한식/.test(ind);
+    const service=/미용|네일|피부|세탁|수리|강습|학원|의원|치과|한의원/.test(ind);
+    const item=(id,labelKey,detailKey,source)=>{const storageId=prefix+id,checked=!!S.prepChecks[storageId];return {id,label:this.t(labelKey),detail:detailKey?this.t(detailKey):'',source:source||null,
+      checked,checkText:checked?'✓':'',checkStyle:'width:24px;height:24px;border-radius:7px;border:1px solid var(--line-strong);color:var(--on-accent);font-weight:700;flex:none;cursor:pointer;background:'+(checked?'var(--accent)':'var(--card)'),
+      toggle:()=>this.togglePrepCheck(storageId)};};
+    const nts={label:this.t('prep.sourceNts'),url:'https://ems.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7777&mi=2444'};
+    const foodSafety={label:this.t('prep.sourceFoodSafety'),url:'https://www.foodsafetykorea.go.kr/portal/board/boardDetail.do?bbs_no=bbs1021&menu_grp=MENU_NEW04&menu_no=3504'};
+    const contract=[
+      item('use','prep.itemUse','prep.itemUseDetail'),
+      item('lease','prep.itemLease','prep.itemLeaseDetail'),
+      item('premium','prep.itemPremium','prep.itemPremiumDetail'),
+      item('power','prep.itemPower','prep.itemPowerDetail'),
+      item('hvac','prep.itemHvac','prep.itemHvacDetail'),
+      item('sign','prep.itemSign','prep.itemSignDetail'),
+      item('parking','prep.itemParking','prep.itemParkingDetail')
+    ];
+    if(food) contract.splice(4,0,
+      item('water','prep.itemWater','prep.itemWaterDetail'),
+      item('exhaust','prep.itemExhaust','prep.itemExhaustDetail'),
+      item('toilet','prep.itemToilet','prep.itemToiletDetail'));
+    if(service) contract.push(item('noise','prep.itemNoise','prep.itemNoiseDetail'));
+    const opening=[
+      item('business','prep.itemBusiness','prep.itemBusinessDetail',nts),
+      item('permit','prep.itemPermit','prep.itemPermitDetail'),
+      ...(food?[item('hygiene','prep.itemHygiene','prep.itemHygieneDetail',foodSafety)]:[]),
+      item('terminal','prep.itemTerminal','prep.itemTerminalDetail'),
+      item('supplier','prep.itemSupplier','prep.itemSupplierDetail'),
+      item('equipment','prep.itemEquipment','prep.itemEquipmentDetail'),
+      item('menu','prep.itemMenu','prep.itemMenuDetail')
+    ];
+    const marketing=[
+      item('naver','prep.itemNaver','prep.itemNaverDetail'),
+      item('kakao','prep.itemKakao','prep.itemKakaoDetail'),
+      item('walk','prep.itemWalk','prep.itemWalkDetail'),
+      item('opening','prep.itemOpening','prep.itemOpeningDetail')
+    ];
+    const groups=[{title:this.t('prep.groupContract'),items:contract},{title:this.t('prep.groupOpening'),items:opening},{title:this.t('prep.groupMarketing'),items:marketing}];
+    const all=groups.flatMap(g=>g.items),done=all.filter(o=>o.checked).length,pct=all.length?Math.round(done/all.length*100):0;
+
+    let sel=null,rank=null;
+    try{rank=this.rank();sel=rank&&rank.list.find(o=>o.id===S.sel);}catch(e){}
+    const lp=sel&&S.zlp&&S.zlp[sel.id],comps=Array.isArray(S.competitors)?S.competitors:null;
+    const advice=[];
+    if(sel){
+      advice.push({title:this.t('prep.adviceProfit'),basis:this.tn('prep.adviceProfitBasis',{sales:this.won(sel.per/3)}),
+        action:this.t('prep.adviceProfitAction')});
+    }
+    if(lp){
+      const ages=['10대','20대','30대','40대','50대','60대 이상'];let hi=0;lp.age.forEach((v,i)=>{if(v>lp.age[hi])hi=i;});
+      advice.push({title:this.t('prep.adviceWalk'),basis:this.t('prep.adviceWalkBasis',{dong:this.placeName(lp.dong),people:this.nfmt(Math.round(lp.tot)),age:this.tr(ages[hi])}),
+        action:this.t('prep.adviceWalkAction')});
+    }
+    if(comps){
+      const fr=comps.filter(o=>o.franchise).length;
+      advice.push({title:this.t(comps.length>=15?'prep.adviceCompete':'prep.adviceGap'),
+        basis:this.t('prep.adviceCompetitorBasis',{total:this.nfmt(comps.length),fr:this.nfmt(fr)}),
+        action:this.t(comps.length>=15?'prep.adviceCompeteAction':'prep.adviceGapAction')});
+    }
+    if(!advice.length) advice.push({title:this.t('prep.advicePick'),basis:this.t('prep.advicePickBasis'),action:this.t('prep.advicePickAction')});
+    advice.push({title:this.t('prep.adviceListings'),basis:this.t('prep.adviceListingsBasis'),
+      action:this.t('prep.adviceListingsAction')});
+
+    return {eyebrow:this.t('prep.eyebrow'),title:this.t('prep.title',{ind:this.indName(ind)}),
+      sub:this.t('prep.sub'),
+      progress:this.t('prep.progress',{pct}),progressDetail:this.t('prep.progressDetail',{done,total:all.length}),
+      progressBar:'display:block;width:'+pct+'%;height:100%;border-radius:999px;background:var(--accent);transition:width .2s',
+      groups,advice:advice.slice(0,5),adviceTitle:this.t('prep.adviceTitle'),
+      caution:this.t('prep.caution'),
+      mapCta:this.t('prep.mapCta'),bepCta:this.t('prep.bepCta'),compareCta:this.t('prep.compareCta'),
+      goMap:()=>this.setState({screen:'map'}),goCompare:()=>this.setState({screen:'sim'}),goBep:()=>this.setState({screen:'diag'}),
+      hasPlace:!!sel,place:sel?this.zoneLabelOf(sel.name):this.t('prep.noPlace')};
+  },
+
+  togglePrepCheck(id){
+    const checks={...(this.state.prepChecks||{}),[id]:!this.state.prepChecks[id]};
+    this.setState({prepChecks:checks});
+    try{localStorage.setItem('mysbizon.prepChecks.'+this.state.ind,JSON.stringify(checks));}catch(e){}
   }
 };
 
@@ -4392,11 +4572,11 @@ globalThis.MysbizonParts.charts = {
     const cs = getComputedStyle(document.documentElement);
     const v = n => (cs.getPropertyValue(n) || '').trim();
     return {
-      accent: v('--accent') || '#087F6B',
+      accent: v('--accent') || '#32B99A',
       accent2: v('--accent-2') || '#7FBCAE',
       accent3: v('--accent-3') || '#E8F5F1',
-      ink: v('--ink') || '#191F28',
-      ink2: v('--ink2') || '#4E5968',
+      ink: v('--ink') || '#171A19',
+      ink2: v('--ink2') || '#707672',
       ink3: v('--ink3') || '#687583',
       line: v('--line') || '#EAECEC',
       bg: v('--bg') || '#FFFFFF',
@@ -5360,168 +5540,218 @@ globalThis.MysbizonParts.market.priceView = function(){
 
 /* source: logic/map.js */
 'use strict';
-// 카카오 지도는 지도 화면에 들어왔을 때만 받는다. 키는 서버 설정에서 오고 SDK
-// 주소는 이 파일의 고정된 Kakao 도메인만 사용한다.
+// 지도는 사용자가 고른 한 지점을 중심으로만 움직인다. 상권 통계는 가장 가까운
+// 서울시 상권 중심에 연결하고, 주변 업체는 Kakao 장소 검색 결과를 별도로 표시한다.
 globalThis.MysbizonParts = globalThis.MysbizonParts || {};
 globalThis.MysbizonParts.map = {
   kakaoMapStatus(el,text){
     if(!el) return;
     el.replaceChildren();
-    const msg=document.createElement('span');
-    msg.textContent=text;
-    Object.assign(msg.style,{padding:'14px 16px',color:'var(--ink3)',fontSize:'14px',lineHeight:'1.6'});
+    const msg=document.createElement('span'); msg.textContent=text;
+    Object.assign(msg.style,{padding:'16px',color:'var(--ink3)',fontSize:'14px',lineHeight:'1.6'});
     el.appendChild(msg);
   },
 
   loadKakaoMapsSdk(key){
-    if(globalThis.kakao?.maps?.Map) return Promise.resolve(globalThis.kakao.maps);
+    if(globalThis.kakao?.maps?.Map && globalThis.kakao?.maps?.services) return Promise.resolve(globalThis.kakao.maps);
     if(globalThis.__mysbizonKakaoMapsPromise) return globalThis.__mysbizonKakaoMapsPromise;
     globalThis.__mysbizonKakaoMapsPromise=new Promise((resolve,reject)=>{
-      const script=document.createElement('script');
-      script.id='mysbizon-kakao-maps-sdk';
-      script.async=true;
-      script.src='https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey='+encodeURIComponent(key);
+      const script=document.createElement('script'); script.id='mysbizon-kakao-maps-sdk'; script.async=true;
+      script.src='https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&libraries=services&appkey='+encodeURIComponent(key);
       script.referrerPolicy='strict-origin-when-cross-origin';
-      script.onload=()=>{
-        if(!globalThis.kakao?.maps?.load) return reject(new Error('Kakao Maps SDK unavailable'));
-        globalThis.kakao.maps.load(()=>resolve(globalThis.kakao.maps));
-      };
+      script.onload=()=>{ if(!globalThis.kakao?.maps?.load) return reject(new Error('Kakao Maps SDK unavailable'));
+        globalThis.kakao.maps.load(()=>resolve(globalThis.kakao.maps)); };
       script.onerror=()=>reject(new Error('Kakao Maps SDK failed to load'));
       document.head.appendChild(script);
-    }).catch(error=>{
-      globalThis.__mysbizonKakaoMapsPromise=null;
-      throw error;
-    });
+    }).catch(error=>{ globalThis.__mysbizonKakaoMapsPromise=null; throw error; });
     return globalThis.__mysbizonKakaoMapsPromise;
+  },
+
+  mapDistance(a,b){
+    if(!a||!b) return Infinity;
+    const R=6371000, rad=n=>Number(n)*Math.PI/180;
+    const p1=rad(a.lat),p2=rad(b.lat),dp=p2-p1,dl=rad(b.lng)-rad(a.lng);
+    const h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+    return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+  },
+
+  nearestZoneForPoint(lat,lng){
+    const lls=this.state.smap&&this.state.smap.lls;
+    if(!lls||!Number.isFinite(Number(lat))||!Number.isFinite(Number(lng))) return null;
+    const point={lat:Number(lat),lng:Number(lng)}; let best=null,distance=Infinity;
+    for(const id of Object.keys(lls)){
+      const ll=lls[id]; if(!Array.isArray(ll)||!Number.isFinite(Number(ll[0]))||!Number.isFinite(Number(ll[1]))) continue;
+      const d=this.mapDistance(point,{lat:Number(ll[0]),lng:Number(ll[1])});
+      if(d<distance){best=id;distance=d;}
+    }
+    return best?{id:best,distance}:null;
+  },
+
+  franchiseName(name){
+    const value=String(name||'').replace(/\s/g,'').toLowerCase();
+    const brands=[['스타벅스','스타벅스'],['메가커피','메가커피'],['메가엠지씨','메가커피'],
+      ['컴포즈','컴포즈커피'],['빽다방','빽다방'],['이디야','이디야'],['투썸','투썸플레이스'],
+      ['할리스','할리스'],['파스쿠찌','파스쿠찌'],['커피빈','커피빈'],['폴바셋','폴바셋'],
+      ['파리바게뜨','파리바게뜨'],['뚜레쥬르','뚜레쥬르'],['배스킨라빈스','배스킨라빈스'],
+      ['맥도날드','맥도날드'],['롯데리아','롯데리아'],['맘스터치','맘스터치'],
+      ['교촌','교촌치킨'],['bhc','BHC'],['비비큐','BBQ'],['bbq','BBQ'],
+      ['씨유','CU'],['cu','CU'],['gs25','GS25'],['세븐일레븐','세븐일레븐'],['이마트24','이마트24'],
+      ['올리브영','올리브영'],['다이소','다이소']];
+    const hit=brands.find(([needle])=>value.includes(needle)); return hit?hit[1]:'';
   },
 
   destroyKakaoMap(){
     if(this._kakaoResizeObserver){this._kakaoResizeObserver.disconnect();this._kakaoResizeObserver=null;}
     for(const overlay of this._kakaoOverlays||[]){try{overlay.setMap(null);}catch(e){}}
-    this._kakaoOverlays=[];
-    this._kakaoMap=null;
-    this._kakaoContainer=null;
-    this._kakaoBounds=null;
+    for(const marker of this._kakaoMarkers||[]){try{marker.setMap(null);}catch(e){}}
+    this._kakaoOverlays=[];this._kakaoMarkers=[];this._kakaoMap=null;this._kakaoContainer=null;
   },
 
-  kakaoInfoCard(pin){
-    const card=document.createElement('section');
-    card.setAttribute('aria-label',this.t('map.summary',{zone:pin.name}));
-    Object.assign(card.style,{
-      width:'min(292px, calc(100vw - 56px))',padding:'15px 16px',borderRadius:'16px',
-      border:'1px solid var(--line-strong)',background:'var(--card)',color:'var(--ink)',
-      boxShadow:'0 14px 34px rgba(0,0,0,.22)',fontFamily:'inherit',lineHeight:'1.35',
-      pointerEvents:'auto'
-    });
-    const title=document.createElement('strong');
-    title.textContent=pin.name;
-    Object.assign(title.style,{display:'block',fontSize:'16px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
-    const current=document.createElement('div');
-    current.textContent=this.t('map.currentIndustry',{industry:pin.industry})+' · '+pin.period;
-    Object.assign(current.style,{marginTop:'3px',fontSize:'12px',color:'var(--ink3)'});
-    const metrics=document.createElement('div');
-    Object.assign(metrics.style,{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginTop:'12px'});
-    for(const [label,value] of [[this.t('map.monthlyPerStore'),pin.monthlyPer],[this.t('map.stores'),pin.stores]]){
-      const cell=document.createElement('div');
-      Object.assign(cell.style,{minWidth:'0',padding:'9px 10px',borderRadius:'10px',background:'var(--surface)'});
-      const small=document.createElement('span');small.textContent=label;
-      Object.assign(small.style,{display:'block',fontSize:'10.5px',color:'var(--ink3)'});
-      const big=document.createElement('b');big.textContent=value;
-      Object.assign(big.style,{display:'block',marginTop:'3px',fontSize:'13px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
-      cell.append(small,big);metrics.appendChild(cell);
-    }
-    card.append(title,current,metrics);
-    if(pin.recommendations&&pin.recommendations.length){
-      const heading=document.createElement('div');
-      heading.textContent=this.t('map.recommendations');
-      Object.assign(heading.style,{marginTop:'12px',fontSize:'11px',fontWeight:'700',color:'var(--ink2)'});
-      const list=document.createElement('ol');
-      Object.assign(list.style,{listStyle:'none',margin:'6px 0 0',padding:'0',display:'grid',gap:'4px'});
-      for(const row of pin.recommendations){
-        const item=document.createElement('li');
-        Object.assign(item.style,{display:'flex',alignItems:'baseline',gap:'7px',fontSize:'12px'});
-        const rank=document.createElement('b');rank.textContent=this.t('map.rank',{n:row.rank});
-        Object.assign(rank.style,{flex:'none',color:'var(--accent-text)'});
-        const name=document.createElement('span');name.textContent=row.name;
-        Object.assign(name.style,{flex:'1',minWidth:'0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
-        const value=document.createElement('span');value.textContent=row.value;
-        Object.assign(value.style,{flex:'none',color:'var(--ink2)'});
-        item.append(rank,name,value);list.appendChild(item);
-      }
-      const basis=document.createElement('div');basis.textContent=this.t('map.recommendationBasis');
-      Object.assign(basis.style,{marginTop:'7px',fontSize:'10px',color:'var(--ink3)'});
-      card.append(heading,list,basis);
-    }
-    return card;
+  chooseMapPoint(lat,lng,label){
+    const nearest=this.nearestZoneForPoint(lat,lng), address=String(label||'').trim();
+    this.setState({mapPoint:{lat:Number(lat),lng:Number(lng)},mapAddress:address,
+      sel:nearest?nearest.id:this.state.sel,zoneId:nearest?nearest.id:this.state.zoneId,
+      competitors:null,competitorsLoading:true,competitorsOpen:false,showCompetitorPins:false,mapSearchMsg:''});
+    this.resolveMapAddress(Number(lat),Number(lng)); this.fetchNearbyCompetitors(Number(lat),Number(lng));
+  },
+
+  resolveMapAddress(lat,lng){
+    const key=String(this.state.kakaoMapKey||''); if(!key) return;
+    this.loadKakaoMapsSdk(key).then(K=>{
+      const geocoder=new K.services.Geocoder();
+      geocoder.coord2Address(lng,lat,(rows,status)=>{
+        if(status!==K.services.Status.OK||!rows||!rows[0]) return;
+        const row=rows[0],addr=(row.road_address&&row.road_address.address_name)||(row.address&&row.address.address_name)||'';
+        if(addr&&this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({mapAddress:addr});
+      });
+    }).catch(()=>{});
+  },
+
+  searchMapAddress(){
+    const q=String(this.state.mapQ||'').trim(),key=String(this.state.kakaoMapKey||'');
+    if(!q) return this.setState({mapSearchMsg:this.t('map.searchEmpty')});
+    if(!key) return this.setState({mapSearchMsg:this.t('map.unavailable')});
+    this.setState({mapSearching:true,mapSearchMsg:''});
+    this.loadKakaoMapsSdk(key).then(K=>{
+      new K.services.Places().keywordSearch(q,(rows,status)=>{
+        if(status!==K.services.Status.OK||!rows||!rows.length){this.setState({mapSearching:false,mapSearchMsg:this.t('map.searchNone')});return;}
+        const first=rows.find(row=>String(row.address_name||row.road_address_name||'').includes('서울'))||rows[0];
+        this.setState({mapSearching:false,mapQ:first.place_name||q});
+        this.chooseMapPoint(Number(first.y),Number(first.x),first.road_address_name||first.address_name||first.place_name);
+      },{size:15});
+    }).catch(()=>this.setState({mapSearching:false,mapSearchMsg:this.t('map.failed')}));
+  },
+
+  fetchNearbyCompetitors(lat,lng){
+    const key=String(this.state.kakaoMapKey||''); if(!key){this.setState({competitorsLoading:false,competitors:[]});return;}
+    this.loadKakaoMapsSdk(key).then(K=>{
+      const places=new K.services.Places(),rows=[];
+      places.keywordSearch(this.indName(this.state.ind),(data,status,pagination)=>{
+        if(status===K.services.Status.OK&&Array.isArray(data)) rows.push(...data);
+        if(status===K.services.Status.OK&&pagination&&pagination.hasNextPage&&pagination.current<3){pagination.nextPage();return;}
+        const seen=new Set();
+        const normalized=rows.filter(row=>{if(!row||seen.has(row.id)) return false;seen.add(row.id);return true;}).map(row=>{
+          const brand=this.franchiseName(row.place_name);
+          return {id:String(row.id||''),name:String(row.place_name||''),category:String(row.category_name||''),
+            address:String(row.road_address_name||row.address_name||''),phone:String(row.phone||''),
+            distance:Number(row.distance)||Math.round(this.mapDistance({lat,lng},{lat:Number(row.y),lng:Number(row.x)})),
+            lat:Number(row.y),lng:Number(row.x),franchise:!!brand,brand,placeUrl:String(row.place_url||'')};
+        }).filter(row=>Number.isFinite(row.lat)&&Number.isFinite(row.lng)&&row.distance<=500).sort((a,b)=>a.distance-b.distance);
+        if(this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({competitors:normalized,competitorsLoading:false});
+      },{location:new K.LatLng(lat,lng),radius:500,size:15,sort:K.services.SortBy.DISTANCE});
+    }).catch(()=>this.setState({competitors:[],competitorsLoading:false}));
   },
 
   paintKakaoMap(){
-    if(this.state.screen!=='map') {this.destroyKakaoMap();return;}
-    const el=document.getElementById('kakao-map');
-    if(!el) return;
+    if(this.state.screen!=='map'){this.destroyKakaoMap();return;}
+    const el=document.getElementById('kakao-map'); if(!el) return;
     const key=String(this.state.kakaoMapKey||'');
-    const pins=(this._kakaoPins||[]).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lng));
     if(!key){this.destroyKakaoMap();this.kakaoMapStatus(el,this.t('map.unavailable'));return;}
-    if(!pins.length){this.destroyKakaoMap();this.kakaoMapStatus(el,this.t('map.noPosition'));return;}
-    this.loadKakaoMapsSdk(key).then(()=>{
-      if(this.state.screen!=='map') return;
-      const current=document.getElementById('kakao-map');
-      if(!current) return;
-      this.drawKakaoMap(current,pins);
-    }).catch(()=>{
-      const current=document.getElementById('kakao-map');
-      if(current) this.kakaoMapStatus(current,this.t('map.failed'));
-    });
+    this.loadKakaoMapsSdk(key).then(()=>{if(this.state.screen==='map') this.drawKakaoMap(document.getElementById('kakao-map'));})
+      .catch(()=>this.kakaoMapStatus(document.getElementById('kakao-map'),this.t('map.failed')));
   },
 
-  drawKakaoMap(el,pins){
-    this.destroyKakaoMap();
-    el.replaceChildren();
-    const K=globalThis.kakao?.maps;
-    if(!K?.Map) return this.kakaoMapStatus(el,this.t('map.failed'));
-    const first=pins.find(p=>p.on)||pins[0];
-    const map=new K.Map(el,{center:new K.LatLng(first.lat,first.lng),level:4});
-    const bounds=new K.LatLngBounds(), overlays=[];
-    for(const p of pins){
-      const position=new K.LatLng(p.lat,p.lng);
-      bounds.extend(position);
-      const button=document.createElement('button');
-      button.type='button';
-      button.textContent=String(p.n);
-      button.title=p.name;
-      button.setAttribute('aria-label',this.t('map.pick',{zone:p.name}));
-      Object.assign(button.style,{
-        width:p.on?'38px':'32px',height:p.on?'38px':'32px',borderRadius:'50%',
-        border:'3px solid var(--card)',background:p.on?'var(--accent)':'var(--ink2)',
-        color:p.on?'var(--on-accent)':'var(--card)',fontSize:'13px',fontWeight:'700',
-        boxShadow:'0 5px 16px rgba(25,31,40,.24)',cursor:'pointer',padding:'0',
-      });
-      button.addEventListener('click',p.pick);
-      const overlay=new K.CustomOverlay({map,position,content:button,xAnchor:.5,yAnchor:.5,zIndex:p.on?10:2});
-      overlays.push(overlay);
-      if(p.on){
-        const info=new K.CustomOverlay({map,position,content:this.kakaoInfoCard(p),xAnchor:.5,yAnchor:1.22,zIndex:30});
-        overlays.push(info);
+  drawKakaoMap(el){
+    if(!el) return; this.destroyKakaoMap();el.replaceChildren();
+    const K=globalThis.kakao&&globalThis.kakao.maps; if(!K?.Map) return this.kakaoMapStatus(el,this.t('map.failed'));
+    const point=this.state.mapPoint,center=point||{lat:37.5665,lng:126.9780};
+    const map=new K.Map(el,{center:new K.LatLng(center.lat,center.lng),level:point?4:8}),markers=[],overlays=[];
+    K.event.addListener(map,'click',event=>{const p=event.latLng;this.chooseMapPoint(p.getLat(),p.getLng(),'');});
+    if(point) markers.push(new K.Marker({map,position:new K.LatLng(point.lat,point.lng)}));
+    if(point&&this.state.showCompetitorPins){
+      for(const row of (this.state.competitors||[]).slice(0,40)){
+        const dot=document.createElement('button');dot.type='button';dot.title=row.name;dot.setAttribute('aria-label',row.name);
+        Object.assign(dot.style,{width:'24px',height:'24px',borderRadius:'50%',border:'2px solid var(--card)',
+          background:row.franchise?'var(--accent)':'var(--ink2)',boxShadow:'0 3px 10px rgba(0,0,0,.22)',cursor:'pointer'});
+        dot.addEventListener('click',e=>{e.stopPropagation();this.setState({competitorsOpen:true,competitorFocus:row.id});});
+        overlays.push(new K.CustomOverlay({map,position:new K.LatLng(row.lat,row.lng),content:dot,xAnchor:.5,yAnchor:.5,zIndex:4}));
       }
     }
-    if(pins.length>1) map.setBounds(bounds,46,46,46,46);
-    else map.setLevel(4);
     try{map.addControl(new K.ZoomControl(),K.ControlPosition.RIGHT);}catch(e){}
-    this._kakaoMap=map;
-    this._kakaoContainer=el;
-    this._kakaoBounds=bounds;
-    this._kakaoOverlays=overlays;
+    this._kakaoMap=map;this._kakaoContainer=el;this._kakaoMarkers=markers;this._kakaoOverlays=overlays;
     if(typeof ResizeObserver!=='undefined'){
-      this._kakaoResizeObserver=new ResizeObserver(()=>{
-        if(this._kakaoMap&&document.body.contains(el)){
-          this._kakaoMap.relayout();
-          if(pins.length>1)this._kakaoMap.setBounds(bounds,46,46,46,46);
-          else this._kakaoMap.setCenter(new K.LatLng(first.lat,first.lng));
-        }
-      });
+      this._kakaoResizeObserver=new ResizeObserver(()=>{if(this._kakaoMap&&document.body.contains(el)){map.relayout();map.setCenter(new K.LatLng(center.lat,center.lng));}});
       this._kakaoResizeObserver.observe(el);
     }
   },
+
+  buildMapView(base,sel,L,r,pickToggle,pickLabelOf){
+    const S=this.state,point=S.mapPoint,hasPoint=!!point,comps=Array.isArray(S.competitors)?S.competitors:[];
+    const franchise=comps.filter(o=>o.franchise),independent=comps.filter(o=>!o.franchise),brands={};
+    franchise.forEach(o=>{brands[o.brand]=(brands[o.brand]||0)+1;});
+    const brandRows=Object.entries(brands).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,n])=>({name,value:n+this.t('common.place')}));
+    const lp=hasPoint&&S.zlp&&sel?S.zlp[sel.id]:null,loaded=Array.isArray(S.competitors),loading=!!S.competitorsLoading;
+    const frRatio=loaded&&comps.length?Math.round(franchise.length/comps.length*100):null;
+    const zone=hasPoint&&sel&&S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
+    const industries=((zone&&zone.rows)||[]).map(row=>({
+      name:this.indName((S.zi.inds||[])[row[0]]||('업종 '+row[0])),
+      stores:Number(row[1])||0,
+      monthlyPer:Number(row[1])>0?Number(row[2])/Number(row[1])/3:0
+    })).filter(row=>row.stores>0&&Number.isFinite(row.monthlyPer)&&row.monthlyPer>0);
+    const stable=industries.filter(row=>row.stores>5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
+    const small=industries.filter(row=>row.stores<=5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
+    const recommendations=[...stable,...small].slice(0,3).map((row,index)=>({
+      rank:this.t('map.rankLabel',{n:index+1}),name:row.name,value:this.won(row.monthlyPer),
+      sample:row.stores+this.t('common.place')
+    }));
+    const demandStrong=lp&&Number(lp.tot)>=50000,compStrong=loaded&&comps.length>=15;
+    const summary=!hasPoint?this.t('map.pickHint'):(demandStrong&&compStrong?this.t('map.summaryBoth')
+      :(demandStrong?this.t('map.summaryDemand'):(compStrong?this.t('map.summaryCompetition'):this.t('map.summaryNeutral'))));
+    const picked=sel&&(S.picks||[]).includes(sel.id);
+    const metrics=hasPoint&&sel?[
+      {label:this.t('map.referenceSales'),value:this.won(sel.per/3),note:this.t('map.salesCaution')},
+      {label:this.t('map.footTraffic'),value:lp?Math.round(lp.tot).toLocaleString()+this.t('common.people'):this.t('common.noData'),note:lp?this.t('map.dongBasis',{dong:this.placeName(lp.dong)}):''},
+      {label:this.t('map.competitorCount'),value:loading?this.t('map.loadingShort'):(loaded?comps.length+this.t('common.place'):this.t('common.beforeLookup')),note:this.t('map.radiusBasis')},
+      {label:this.t('map.franchise'),value:loaded?franchise.length+this.t('common.place'):this.t('common.beforeLookup'),note:''},
+      {label:this.t('map.independent'),value:loaded?independent.length+this.t('common.place'):this.t('common.beforeLookup'),note:''},
+      {label:this.t('map.franchiseRatio'),value:frRatio==null?this.t('common.beforeLookup'):frRatio+'%',note:this.t('map.brandEstimate')}
+    ].map((metric,index)=>({...metric,
+      valueStyle:index===0?this.ds('num'):this.ds('numSm')
+    })):[];
+    return {...base,map:{...(base.map||{}),loadingText:this.t('map.loading')},
+      labels:{majorBrands:this.t('map.majorBrands'),detail:this.t('map.detail'),nearby:this.t('map.nearby'),
+        nearbyTitle:this.t('map.nearbyTitle'),places:this.t('common.place'),radiusNote:this.t('map.radiusBasis'),
+        loadingNearby:this.t('map.loadingNearby'),noNearby:this.t('map.noNearby'),
+        recommendations:this.t('map.recommendations'),recommendationBasis:this.t('map.recommendationBasis')},
+      eyebrow:this.t('map.eyebrow'),target:this.t('map.title'),sub:this.t('map.sub'),
+      query:S.mapQ||'',onQuery:e=>this.setState({mapQ:e.target.value,mapSearchMsg:''}),
+      onSearchKey:e=>{if(e.key==='Enter'){e.preventDefault();this.searchMapAddress();}},search:()=>this.searchMapAddress(),
+      searching:!!S.mapSearching,searchLabel:S.mapSearching?this.t('map.searching'):this.t('map.searchButton'),
+      searchPlaceholder:this.t('map.searchPlaceholder'),searchMsg:S.mapSearchMsg||'',hasSearchMsg:!!S.mapSearchMsg,
+      hasPoint,needsPoint:!hasPoint,address:S.mapAddress||this.t('map.addressResolving'),
+      zone:hasPoint&&sel?this.zoneLabelOf(sel.name):'',industry:this.indName(S.ind),period:this.qtr(r.quarter),
+      metrics:metrics.slice(0,3),detailMetrics:metrics.slice(3),summary,
+      brands:brandRows,hasBrands:brandRows.length>0,recommendations,hasRecommendations:recommendations.length>0,
+      detail:()=>this.setState({screen:'fineDetail'}),togglePick:sel?pickToggle(sel):()=>{},
+      openCompetitors:()=>this.setState({competitorsOpen:!S.competitorsOpen}),competitorsOpen:!!S.competitorsOpen,
+      competitorCount:comps.length,togglePins:()=>this.setState({showCompetitorPins:!S.showCompetitorPins}),
+      pinToggleLabel:S.showCompetitorPins?this.t('map.hideCompetitorPins'):this.t('map.showCompetitorPins'),
+      competitors:comps.map(row=>({...row,kind:row.franchise?this.t('map.franchise'):this.t('map.independent'),
+        distanceLabel:Number.isFinite(row.distance)?Math.round(row.distance)+'m':'—',phoneLabel:row.phone||this.t('map.noPhone'),
+        focus:row.id===S.competitorFocus,rowStyle:'padding:15px 0;border-top:1px solid var(--line);'+(row.id===S.competitorFocus?'background:var(--accent-3)':'')})),
+      competitorLoading:loading,competitorEmpty:loaded&&!loading&&!comps.length,picked,
+      pickState:picked?this.t('map.saved'):this.t('map.save')};
+  }
 };
 
 /* source: logic/views.js */
@@ -5572,12 +5802,12 @@ globalThis.MysbizonParts.views = {
     // 비교 담기 — 빼기만 가능하면 되돌릴 수 없으므로 목록·결론 양쪽에 토글을 둔다
     const pickToggle=o=>()=>{
       const p=[...PICKS], i=p.indexOf(o.id);
-      if(i>=0) p.splice(i,1); else if(p.length<3) p.push(o.id);
+      if(i>=0) p.splice(i,1); else if(p.length<5) p.push(o.id);
       this.setState({picks:p});
     };
     const pickLabelOf=o=>{
       const inP=PICKS.indexOf(o.id)>=0;
-      return inP? '비교에서 빼기' : (PICKS.length>=3? '비교 3곳 꽉 찼어요' : '비교에 담기 ('+PICKS.length+'/3)');
+      return inP? this.t('cmp.remove') : (PICKS.length>=5? this.t('cmp.fullFive') : this.t('cmp.saveCount',{n:PICKS.length}));
     };
     const monthly=v=>this.won(v/3);
     const grade=sc=>sc>=75?[this.t('find.gradeHigh'),'var(--good)']:(sc>=60?[this.t('find.gradeUpper'),'var(--good)']:(sc>=45?[this.t('find.gradeMid'),'var(--ink2)']:[this.t('find.gradeLow'),'var(--warn)']));
@@ -5733,12 +5963,12 @@ globalThis.MysbizonParts.views = {
         +(o.id===sel.id
           ? 'background:var(--accent-3);box-shadow:inset 0 0 0 1.5px var(--accent)'
           : 'background:var(--surface)'),
-      pickLabel: PICKS.indexOf(o.id)>=0 ? '비교에서 빼기' : (PICKS.length>=3? '비교 3곳 꽉 찼어요' : '비교에 담기'),
+      pickLabel: pickLabelOf(o),
       // 글자만 있는 링크지만 손가락 영역은 44px — 위아래 음수 여백으로 카드 높이는 안 바뀐다
       pickStyle: 'display:inline-flex;align-items:center;min-height:44px;margin:-14px 0;padding-right:12px;'
         +(PICKS.indexOf(o.id)>=0
         ? 'font-size:12.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap;font-weight:600'
-        : (PICKS.length>=3
+        : (PICKS.length>=5
           ? 'font-size:12.5px;color:var(--ink3);white-space:nowrap'
           : 'font-size:12.5px;color:var(--ink3);cursor:pointer;white-space:nowrap')),
       row:'display:flex;align-items:baseline;gap:12px;padding:13px 0;border-top:1px solid var(--line)'
@@ -6169,6 +6399,9 @@ globalThis.MysbizonParts.views = {
       cta:this.t('mv.bepOf',{name:this.zoneLabelOf(sel.name)}),
       honesty:'지도에는 상권 중심 위치만 표시해요. 핀은 서울시가 공개한 동네 중심 좌표예요. 동네는 점이 아니라 면이어서 핀 하나가 동네 전체를 뜻해요. 건물 단위 임대료와 공실은 공개 데이터가 없어요.'
     };
+    // 기존 상세분석 계산은 그대로 재사용하고, 지도 첫 화면만 '직접 찍은 한 지점'에
+    // 맞게 얇게 다시 조립한다.
+    out.mv=this.buildMapView(out.mv,sel,L,r,pickToggle,pickLabelOf);
 
     return this.fillComparisonView(out, r, Lall, PICKS, pickToggle, pickLabelOf);
   }
@@ -6185,7 +6418,9 @@ class Component extends DCLogic {
     q:'', ind:'커피-음료', sel:null, picks:null, screen:'home', menu:null,
     openWhy:false, open:{cond:false,money:false,day:false,risk:false},
     scen:'보통일 때', ...MysbizonConst.BEP_DEFAULT,
-    staffOv:null, etcOv:null
+    staffOv:null, laborOv:null, etcOv:null, management:null, days:30, revOv:null,
+    mapPoint:null, mapAddress:'', competitors:null, competitorsLoading:false,
+    competitorsOpen:false, showCompetitorPins:false, prepChecks:{},
   };
 
   // 바깥을 누르면 열린 드롭다운(헤더 메뉴·지역 검색)을 닫는다
@@ -6406,19 +6641,12 @@ class Component extends DCLogic {
     const MENU=[
       // region(동네 개요)·fineCmp(자치구 훑기)는 둘 다 '여러 곳을 훑는' 화면이라 여기 둔다.
       // 비교(담은 상권 종합순위)는 ② 정밀분석의 '정밀비교'로 옮겼다 — 입구를 둘로 두지 않는다.
-      {label:T('nav.zone'), keys:['hubZone','zone','find','region','fineCmp'], hub:'hubZone',
-       items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],
-              ['fineCmp',T('menu.sweep')]]},
-      // 고른 상권 하나를 깊게 보는 것들이 다 여기 있다.
-      //   지도     어디인지
-      //   정밀분석 왜 좋은지/나쁜지
-      //   정밀비교 담아 둔 상권들의 종합순위
-      //   본전 계산 이 자리 한 곳의 본전선
-      {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'hubFine',
-       items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],
-              ['sim',T('menu.sim')],['diag',T('menu.bep')]]},
-      {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
+      {label:T('nav.place'), keys:['map','find','region','fineCmp','fineDetail','diag'], hub:'map',
+       items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],['diag',T('menu.bep')]]},
+      {label:T('nav.compare'), keys:['sim'], hub:'sim', items:[['sim',T('nav.compare')]]},
+      {label:T('nav.prep'), keys:['prep'], hub:'prep', items:[['prep',T('nav.prep')]]},
       {label:T('nav.report'), keys:['report'], hub:'report', items:[['report',T('nav.report')]]},
+      {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
 
     ];
 
@@ -6434,6 +6662,7 @@ class Component extends DCLogic {
            : [...POP.filter(n=>S.zi.inds.indexOf(n)>=0), ...S.zi.inds.filter(n=>POP.indexOf(n)<0)])
       : [];
 
+    const mobileNav=this.bp()==='mobile';
     const out={
       // 허브 화면 대신 — 같은 메뉴 안의 화면을 본문 맨 위 알약 한 줄로 오간다. 지금 화면은 진하게.
       sib:(()=>{
@@ -6447,24 +6676,26 @@ class Component extends DCLogic {
             +(S.screen===k?'background:var(--ink);color:var(--card);font-weight:600':'background:var(--card);color:var(--ink2);font-weight:500')}))};
       })(),
       nav:MENU.map((g,gi)=>({
-        track:["nav.zone","nav.fine","nav.price","nav.report"][gi],
+        track:["nav.place","nav.compare","nav.prep","nav.report","nav.price"][gi],
         label:g.label, isOpen:false,
         // 모바일 탭바 아이콘(Lucide 계열 선 아이콘). 순서는 MENU 와 같다.
-        hasIcon:this.bp()==='mobile',
+        hasIcon:mobileNav,
+        wrapStyle:mobileNav&&gi>=3?'display:none':'position:relative;flex:0 1 auto;min-width:0;overflow:hidden',
         icon:[
           [{d:'M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z'},{d:'m21 21-4.35-4.35'}],
           [{d:'M3 3v18h18'},{d:'M18 17V9'},{d:'M13 17V5'},{d:'M8 17v-3'}],
-          [{d:'m22 7-8.5 8.5-5-5L2 17'},{d:'M16 7h6v6'}],
-          [{d:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'},{d:'M14 2v6h6'},{d:'M16 13H8'},{d:'M16 17H8'}]
+          [{d:'M9 11l3 3L22 4'},{d:'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'}],
+          [{d:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'},{d:'M14 2v6h6'},{d:'M16 13H8'},{d:'M16 17H8'}],
+          [{d:'m22 7-8.5 8.5-5-5L2 17'},{d:'M16 7h6v6'}]
         ][gi]||[],
         open:()=>this.setState({screen:g.hub,menu:null}),
         // 모바일은 아래 탭바(company.css) — 알약 없이 글자색으로만 활성을 표시한다(토스식)
-        style:this.bp()==='mobile'
+        style:mobileNav
           ? 'font-size:11px;white-space:nowrap;cursor:pointer;padding:6px 4px;min-width:0;text-align:center;'
             +'display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden;text-overflow:ellipsis;transition:color .16s;'
             +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:700':'color:var(--ink3);font-weight:500')
-          : 'font-size:14px;white-space:nowrap;cursor:pointer;padding:11px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
-            +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:600;background:var(--surface)':'color:var(--ink2)'),
+          : (gi>=3?'font-size:13px;':'font-size:14px;')+'white-space:nowrap;cursor:pointer;padding:11px 10px;border-radius:9px;display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;transition:background .16s,color .16s;'
+            +(g.keys.indexOf(S.screen)>=0?'color:var(--ink);font-weight:600;background:var(--surface)':(gi>=3?'color:var(--ink3)':'color:var(--ink2)')),
         items:g.items.map(([k,label,tag])=>({
           label:label+(tag?'  '+tag:''),
           go:()=>this.setState({screen:k,menu:null}),
@@ -6565,6 +6796,8 @@ class Component extends DCLogic {
       onMapScreen:S.screen==='map',
       onFineDetail:S.screen==='fineDetail',
       goFineDetail:()=>this.setState({screen:'fineDetail',menu:null}),
+      onPrep:S.screen==='prep',
+      prep:S.screen==='prep'?this.prepView():{groups:[],advice:[]},
       onHub:S.screen==='hubZone'||S.screen==='hubFine',
       hub:(()=>{
         const zone = S.screen==='hubZone';
@@ -6672,6 +6905,7 @@ class Component extends DCLogic {
         };
       })(),
       goFind:go('find'), goCmp:go('sim'),
+      goPrep:go('prep'),
       // 후보지 화면은 아무것도 안 고른 상태에서 1위 상권을 보여준다(S.sel 은 null).
       // 그 상태에서 '이 상권 자세히 보기'를 누르면 화면에 보이던 상권이 그대로
       // 넘어가야 한다 — 예전에는 S.sel 이 null 이라 자치구가 '서울 전체'로 떨어지고,
@@ -6681,7 +6915,10 @@ class Component extends DCLogic {
         const shown = S.sel
           || ((S.homeZone && (L.find(o=>o.name===S.homeZone)||{}).id) || (L[0]||{}).id)
           || null;
+        const ll=shown&&S.smap&&S.smap.lls&&S.smap.lls[shown];
         this.setState({screen:'map', menu:null, sel:shown||S.sel,
+          mapPoint:Array.isArray(ll)?{lat:Number(ll[0]),lng:Number(ll[1])}:S.mapPoint,
+          mapAddress:Array.isArray(ll)&&S.zi&&S.zi.zones[shown]?this.zoneLabelOf(S.zi.zones[shown].nm):S.mapAddress,
           mapGu:(shown&&S.zgu&&S.zgu[shown])||'서울 전체'});
       },
       goFineCmp:go('fineCmp'),
@@ -6689,6 +6926,8 @@ class Component extends DCLogic {
       openReport:()=>this.setState({screen:'report',rp_sent:false}),
       // 헤더 오른쪽 — 언어 칩 + 설정(⚙). '어둡게' 하나만 있던 자리를 설정으로 키웠다(§44)
       ...this.settingsView(),
+      secondaryNav:{title:this.t('nav.more'),items:MENU.slice(3).map(g=>({label:g.label,
+        go:()=>this.setState({screen:g.hub,menu:null,setOpen:false,setAdv:false})}))},
       q:S.q, onQ:e=>this.setState({q:e.target.value}),
       // 화면 조각(42-find.html)은 name·pick·textStyle 만 쓴다.
       chips:names.slice(0,5).map(n=>({name:this.indName(n), pick:()=>this.setState({ind:n,sel:null,picks:null,openWhy:false,fromRegion:false}),
@@ -6783,13 +7022,13 @@ class Component extends DCLogic {
       headerStyle:'position:sticky;top:0;z-index:50;height:'+this.L('56px','60px','64px')+';display:flex;align-items:center;'
         +'background:var(--bg-blur);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);'
         +'border-bottom:1px solid rgba(0,0,0,.05);transition:all .2s ease-in-out',
-      headerInner:'width:100%;max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+';display:flex;align-items:center;gap:'+this.L('12px','20px','28px'),
+      headerInner:'width:100%;max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('20px','24px','32px')+';display:flex;align-items:center;gap:'+this.L('12px','24px','32px'),
       // 칸을 1080 으로 잡아 놨는데 안의 내용은 전부 600~660 으로 묶여 있어
       // 오른쪽 400px 이 늘 비어 있었다("왜 다 왼쪽에 있어"). 칸을 내용에 맞춘다.
       // 넓히는 쪽이 아니라 좁히는 쪽으로 맞춘 이유: 620px 짜리 본문을 1080 으로 늘리면
       // 한 줄이 너무 길어져 읽기 어려워진다.
       // 데스크톱 1280 / 좌우 32. 넓힌 만큼 각 화면의 내용도 그리드로 폭을 채운다.
-      mainStyle:'max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('16px','24px','32px')+' '+this.L('80px','110px','120px'),
+      mainStyle:'max-width:'+this.L('100%','860px','1280px')+';margin:0 auto;padding:0 '+this.L('20px','24px','32px')+' '+this.L('80px','110px','120px'),
       ds1:this.ds('h1'), ds2:this.ds('h2'), ds3:this.ds('h3'),
       // 모바일에서는 전부 1열. 세로 메뉴도 위쪽 가로 목록이 된다.
       mapCols:this.L('1fr','1fr','minmax(0,1.35fr) minmax(300px,1fr)'),
@@ -6810,8 +7049,8 @@ class Component extends DCLogic {
       dsNum:this.ds('num'), dsNumSm:this.ds('numSm'),
       dsBody:this.ds('body'), dsSub:this.ds('sub'),
       dsCta:this.ds('cta'), dsGhost:this.ds('ctaGhost'), dsInput:this.ds('input'),
-      dsGrid3:'display:grid;gap:'+this.L('14px','16px','20px')+';grid-template-columns:repeat(auto-fit,minmax('+this.L('100%','260px','300px')+',1fr))',
-      dsGrid4:'display:grid;gap:'+this.L('12px','16px','18px')+';grid-template-columns:repeat(auto-fit,minmax('+this.L('150px','200px','220px')+',1fr))',
+      dsGrid3:'display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax('+this.L('100%','260px','300px')+',1fr))',
+      dsGrid4:'display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax('+this.L('150px','200px','220px')+',1fr))',
       dataError:S.err, retryData:()=>location.reload(),
       ...this.home(),
       ai:this.chat(),
@@ -6837,7 +7076,7 @@ class Component extends DCLogic {
                 'right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));',
                 'right:28px;bottom:calc(28px + env(safe-area-inset-bottom,0px));'),
       // CTA 체계 — 주 행동 하나만 강조한다
-      ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:16px;padding:0 26px;height:54px;width:100%;max-width:420px;display:block;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.18);transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)',
+      ctaPrimary:'font-size:16px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:12px;padding:0 24px;height:52px;width:100%;max-width:420px;display:block;cursor:pointer;transition:background .18s,transform .18s cubic-bezier(.2,0,0,1)',
       // 글자 버튼 — 보이는 크기는 그대로, 누를 칸만 44px (WCAG 2.5.5)
       ctaText:'font-size:14.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap;'
         +'display:inline-flex;align-items:center;min-height:44px',
@@ -6855,8 +7094,8 @@ class Component extends DCLogic {
         verdict:'', pctText:'', pctFine:'', medText:'', scoreBar:'display:none', scoreMed:'display:none', reasons:[],
         thin:false, thinWarn:'', thinBadge:''};
       out.rows=[]; out.honesty='';
-      out.d={eyebrow:'',headline:S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.',bep:'—',rev:'—',revName:'',gap:'',gapStyle:'display:none',fill:'display:none',mark:'display:none',factors:[],thin:'',thinStyle:'display:none',honesty:'',note:this.dataNote('bep','',[])};
-      out.inputs=[]; out.scens=[]; out.scenNote=''; out.stack=[]; out.moneyRows=[]; out.stackLead='';
+      out.d={eyebrow:'',headline:S.err?'데이터를 읽지 못했어요.':'불러오는 중이에요.',bep:'—',rev:'—',revName:'',gap:'',gapStyle:'display:none',fill:'display:none',mark:'display:none',factors:[],quick:[],thin:'',thinStyle:'display:none',honesty:'',note:this.dataNote('bep','',[])};
+      out.inputs=[]; out.scens=[]; out.scenNote=''; out.useScenarios=true; out.stack=[]; out.moneyRows=[]; out.stackLead='';
       out.dayStats=[]; out.dayWhy=''; out.riskStats=[]; out.riskLead='';
       out.foot={has:false,lead:'',stats:[],note:''};
       out.sat={has:false};
@@ -6911,7 +7150,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','screens','chat','charts','carousel','market','map','views']) {
+for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','prep','screens','chat','charts','carousel','market','map','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {

@@ -1,1 +1,31 @@
-:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172523;background:#f5f7f8}*{box-sizing:border-box}body{max-width:1440px;margin:0 auto;padding:40px 32px}header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}h1{font-size:32px;letter-spacing:-1px;margin:8px 0}small{color:#4c625e}section{background:white;border:1px solid #e3e9e7;border-radius:20px;padding:24px;margin:18px 0}button,input{font:inherit;min-height:44px;border:1px solid #d5dfdc;border-radius:10px;padding:10px 14px}button{background:white;color:#183d34;cursor:pointer}button:hover,button[aria-pressed=true]{background:#e4f4ed}button:focus-visible,input:focus-visible{outline:3px solid #14755b;outline-offset:2px}label{display:flex;flex-direction:column;gap:6px;font-size:14px}.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.check{flex-direction:row;align-items:center;min-height:44px}.check input{min-height:0;width:18px;height:18px}.table-wrap{overflow:auto;max-height:65vh}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:14px;text-align:left;border-bottom:1px solid #e5ebe8;white-space:nowrap}th{background:#f3f7f5;position:sticky;top:0}p{color:#52645f;line-height:1.65}#key{width:min(600px,100%)}form{display:grid;gap:18px;max-width:600px}[hidden]{display:none!important}@media(max-width:600px){body{padding:24px 14px}section{padding:16px}h1{font-size:26px}.toolbar>*{max-width:100%}}
+@font-face{font-family:"Wanted Sans Variable";src:url("wanted-sans.woff2") format("woff2-variations");font-style:normal;font-weight:400 1000;font-display:swap}
+:root{font-family:"Wanted Sans Variable","Wanted Sans",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:#171A19;background:#F6F6F2;--mint:#32B99A;--mint-hover:#299C83;--ink:#171A19;--secondary:#707672;--paper:#F6F6F2;--surface:#FFFFFF;--border:#E5E7E4;--error:#D95B5B}
+*{box-sizing:border-box}
+body{max-width:1280px;margin:0 auto;padding:48px 32px 72px;font-size:16px;line-height:26px;font-weight:450}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+h1{font-size:32px;line-height:44px;font-weight:700;letter-spacing:-.03em;margin:4px 0 0}
+h2{font-size:24px;line-height:34px;font-weight:700;letter-spacing:-.02em;margin:0 0 12px}
+small{font-size:13px;line-height:20px;font-weight:500;color:var(--secondary)}
+section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin:16px 0}
+button,input{font:inherit;min-height:48px;border:1px solid var(--border);border-radius:12px;padding:10px 16px}
+button{background:var(--surface);color:var(--ink);font-weight:600;cursor:pointer;transition:background .18s,border-color .18s}
+button:hover,button[aria-pressed=true]{border-color:var(--mint);background:#EAF8F4}
+button:focus-visible,input:focus-visible{outline:3px solid rgba(50,185,154,.28);outline-offset:2px}
+label{display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:22px;color:var(--secondary)}
+.toolbar{display:flex;gap:12px;align-items:end;flex-wrap:wrap}
+.check{flex-direction:row;align-items:center;min-height:48px;color:var(--ink)}
+.check input{min-height:0;width:18px;height:18px;accent-color:var(--mint)}
+.table-wrap{overflow:auto;max-height:65vh;border:1px solid var(--border);border-radius:12px;margin-top:16px}
+table{border-collapse:collapse;width:100%;font-size:14px;line-height:22px}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{background:var(--paper);position:sticky;top:0;font-weight:650}
+p{color:var(--secondary);line-height:26px}
+#key{width:min(600px,100%)}
+form{display:grid;gap:16px;max-width:600px}
+#login-form button{background:var(--mint);border-color:var(--mint);color:#10241F;justify-self:start}
+#login-form button:hover{background:var(--mint-hover);border-color:var(--mint-hover);color:#FFFFFF}
+#status{min-height:26px;color:var(--error)}
+[hidden]{display:none!important}
+@media(max-width:999px){body{padding:32px 24px 72px}}
+@media(max-width:599px){body{padding:32px 20px 48px}section{padding:20px}h1{font-size:30px;line-height:40px}.toolbar>*{max-width:100%}.table-wrap{margin-left:-20px;margin-right:-20px;border-left:0;border-right:0;border-radius:0}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
