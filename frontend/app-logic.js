@@ -9,8 +9,8 @@ class Component extends DCLogic {
     openWhy:false, open:{cond:false,money:false,day:false,risk:false},
     scen:'보통일 때', ...MysbizonConst.BEP_DEFAULT,
     staffOv:null, laborOv:null, etcOv:null, management:null, days:30, revOv:null,
-    mapPoint:null, mapAddress:'', competitors:null, competitorsLoading:false,
-    competitorsOpen:false, showCompetitorPins:false, prepChecks:{},
+    mapPoint:null, mapAddress:'', mapZoneId:null, mapZoneDistance:null, competitors:null, competitorsLoading:false,
+    competitorsOpen:false, showCompetitorPins:false, prepChecks:{}, prepOpen:'contract',
   };
 
   // 바깥을 누르면 열린 드롭다운(헤더 메뉴·지역 검색)을 닫는다
@@ -231,9 +231,10 @@ class Component extends DCLogic {
     const MENU=[
       // region(동네 개요)·fineCmp(자치구 훑기)는 둘 다 '여러 곳을 훑는' 화면이라 여기 둔다.
       // 비교(담은 상권 종합순위)는 ② 정밀분석의 '정밀비교'로 옮겼다 — 입구를 둘로 두지 않는다.
-      {label:T('nav.place'), keys:['map','find','region','fineCmp','fineDetail','diag'], hub:'map',
-       items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],['diag',T('menu.bep')]]},
-      {label:T('nav.compare'), keys:['sim'], hub:'sim', items:[['sim',T('nav.compare')]]},
+      {label:T('nav.zone'), keys:['hubZone','zone','find','region','fineCmp'], hub:'hubZone',
+       items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],['fineCmp',T('menu.sweep')]]},
+      {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'hubFine',
+       items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],['sim',T('menu.sim')],['diag',T('menu.bep')]]},
       {label:T('nav.prep'), keys:['prep'], hub:'prep', items:[['prep',T('nav.prep')]]},
       {label:T('nav.report'), keys:['report'], hub:'report', items:[['report',T('nav.report')]]},
       {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
@@ -266,7 +267,7 @@ class Component extends DCLogic {
             +(S.screen===k?'background:var(--ink);color:var(--card);font-weight:600':'background:var(--card);color:var(--ink2);font-weight:500')}))};
       })(),
       nav:MENU.map((g,gi)=>({
-        track:["nav.place","nav.compare","nav.prep","nav.report","nav.price"][gi],
+        track:["nav.zone","nav.fine","nav.prep","nav.report","nav.price"][gi],
         label:g.label, isOpen:false,
         // 모바일 탭바 아이콘(Lucide 계열 선 아이콘). 순서는 MENU 와 같다.
         hasIcon:mobileNav,
@@ -508,6 +509,7 @@ class Component extends DCLogic {
         const ll=shown&&S.smap&&S.smap.lls&&S.smap.lls[shown];
         this.setState({screen:'map', menu:null, sel:shown||S.sel,
           mapPoint:Array.isArray(ll)?{lat:Number(ll[0]),lng:Number(ll[1])}:S.mapPoint,
+          mapZoneId:Array.isArray(ll)?shown:null,mapZoneDistance:Array.isArray(ll)?0:null,
           mapAddress:Array.isArray(ll)&&S.zi&&S.zi.zones[shown]?this.zoneLabelOf(S.zi.zones[shown].nm):S.mapAddress,
           mapGu:(shown&&S.zgu&&S.zgu[shown])||'서울 전체'});
       },

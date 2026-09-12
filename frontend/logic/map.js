@@ -61,17 +61,83 @@ globalThis.MysbizonParts.map = {
 
   destroyKakaoMap(){
     if(this._kakaoResizeObserver){this._kakaoResizeObserver.disconnect();this._kakaoResizeObserver=null;}
+    if(this._kakaoSelectionOverlay){try{this._kakaoSelectionOverlay.setMap(null);}catch(e){} this._kakaoSelectionOverlay=null;}
     for(const overlay of this._kakaoOverlays||[]){try{overlay.setMap(null);}catch(e){}}
     for(const marker of this._kakaoMarkers||[]){try{marker.setMap(null);}catch(e){}}
     this._kakaoOverlays=[];this._kakaoMarkers=[];this._kakaoMap=null;this._kakaoContainer=null;
+    this._kakaoLayerSignature='';this._kakaoPointSignature='';
+  },
+
+  nearestZoneForIndustry(lat,lng,industry){
+    const zi=this.state.zi,lls=this.state.smap&&this.state.smap.lls;
+    if(!zi||!lls||!Array.isArray(zi.inds)) return this.nearestZoneForPoint(lat,lng);
+    const indIndex=zi.inds.indexOf(industry),point={lat:Number(lat),lng:Number(lng)};
+    if(indIndex<0) return this.nearestZoneForPoint(lat,lng);
+    let best=null,distance=Infinity;
+    for(const [id,zone] of Object.entries(zi.zones||{})){
+      const ll=lls[id],has=(zone.rows||[]).some(row=>row[0]===indIndex&&row[1]>0&&row[2]>0);
+      if(!has||!Array.isArray(ll)) continue;
+      const d=this.mapDistance(point,{lat:Number(ll[0]),lng:Number(ll[1])});
+      if(d<distance){best=id;distance=d;}
+    }
+    return best?{id:best,distance}:null;
+  },
+
+  kakaoSelectedPin(){
+    const wrap=document.createElement('div');wrap.setAttribute('aria-label',this.t('map.selectedPoint'));
+    Object.assign(wrap.style,{display:'flex',flexDirection:'column',alignItems:'center',gap:'5px',pointerEvents:'none'});
+    const label=document.createElement('span');label.textContent=this.t('map.selectedPoint');
+    Object.assign(label.style,{padding:'5px 9px',borderRadius:'999px',background:'var(--card)',color:'var(--ink)',border:'1px solid var(--line-strong)',boxShadow:'0 4px 14px rgba(0,0,0,.14)',fontSize:'12px',fontWeight:'700',whiteSpace:'nowrap'});
+    const pin=document.createElement('span');
+    Object.assign(pin.style,{display:'block',width:'30px',height:'30px',borderRadius:'50% 50% 50% 0',transform:'rotate(-45deg)',background:'var(--accent)',border:'4px solid white',boxShadow:'0 5px 15px rgba(0,0,0,.28)'});
+    const dot=document.createElement('span');Object.assign(dot.style,{display:'block',width:'8px',height:'8px',borderRadius:'50%',background:'white',margin:'7px'});
+    pin.appendChild(dot);wrap.append(label,pin);return wrap;
+  },
+
+  syncKakaoMapLayers(pointOverride){
+    const K=globalThis.kakao&&globalThis.kakao.maps,map=this._kakaoMap;if(!K?.CustomOverlay||!map) return;
+    const point=pointOverride||this.state.mapPoint,pointSig=point?Number(point.lat).toFixed(6)+','+Number(point.lng).toFixed(6):'';
+    if(point){
+      const pos=new K.LatLng(point.lat,point.lng);
+      if(!this._kakaoSelectionOverlay) this._kakaoSelectionOverlay=new K.CustomOverlay({map,position:pos,content:this.kakaoSelectedPin(),xAnchor:.5,yAnchor:1.08,zIndex:20});
+      else{this._kakaoSelectionOverlay.setPosition(pos);this._kakaoSelectionOverlay.setMap(map);}
+      if(pointSig!==this._kakaoPointSignature){map.setCenter(pos);if(map.getLevel&&map.getLevel()>4) map.setLevel(4);}
+    }else if(this._kakaoSelectionOverlay){this._kakaoSelectionOverlay.setMap(null);this._kakaoSelectionOverlay=null;}
+    this._kakaoPointSignature=pointSig;
+    const rows=this.state.showCompetitorPins?(this.state.competitors||[]).slice(0,40):[];
+    const signature=(this.state.showCompetitorPins?'1:':'0:')+rows.map(row=>row.id+':'+(row.id===this.state.competitorFocus?'1':'0')).join(',');
+    if(signature===this._kakaoLayerSignature) return;
+    for(const overlay of this._kakaoOverlays||[]){try{overlay.setMap(null);}catch(e){}}this._kakaoOverlays=[];
+    for(const row of rows){
+      const marker=document.createElement('button');marker.type='button';marker.title=row.name;marker.setAttribute('aria-label',row.name);
+      Object.assign(marker.style,{width:'24px',height:'24px',borderRadius:'50%',border:'2px solid var(--card)',background:row.franchise?'var(--accent)':'var(--ink2)',boxShadow:'0 3px 10px rgba(0,0,0,.22)',cursor:'pointer'});
+      marker.addEventListener('click',e=>{e.stopPropagation();this.setState({competitorsOpen:true,competitorFocus:row.id});});
+      this._kakaoOverlays.push(new K.CustomOverlay({map,position:new K.LatLng(row.lat,row.lng),content:marker,xAnchor:.5,yAnchor:.5,zIndex:4}));
+    }
+    this._kakaoLayerSignature=signature;
+  },
+
+  previewKakaoPoint(lat,lng){
+    if(!this._kakaoMap) return;this._kakaoPointSignature='';
+    this.syncKakaoMapLayers({lat:Number(lat),lng:Number(lng)});
   },
 
   chooseMapPoint(lat,lng,label){
-    const nearest=this.nearestZoneForPoint(lat,lng), address=String(label||'').trim();
+    this.previewKakaoPoint(lat,lng);
+    const closest=this.nearestZoneForIndustry(lat,lng,this.state.ind),nearest=closest&&closest.distance<=500?closest:null;
+    const address=String(label||'').trim();
     this.setState({mapPoint:{lat:Number(lat),lng:Number(lng)},mapAddress:address,
-      sel:nearest?nearest.id:this.state.sel,zoneId:nearest?nearest.id:this.state.zoneId,
+      sel:nearest?nearest.id:null,zoneId:nearest?nearest.id:null,mapZoneId:nearest?nearest.id:null,mapZoneDistance:closest?Math.round(closest.distance):null,
       competitors:null,competitorsLoading:true,competitorsOpen:false,showCompetitorPins:false,mapSearchMsg:''});
     this.resolveMapAddress(Number(lat),Number(lng)); this.fetchNearbyCompetitors(Number(lat),Number(lng));
+  },
+
+  changeMapIndustry(value){
+    const industry=String(value||''),point=this.state.mapPoint;
+    const closest=point?this.nearestZoneForIndustry(point.lat,point.lng,industry):null,nearest=closest&&closest.distance<=500?closest:null;
+    this.setState({ind:industry,sel:nearest?nearest.id:null,zoneId:nearest?nearest.id:null,mapZoneId:nearest?nearest.id:null,mapZoneDistance:closest?Math.round(closest.distance):null,
+      competitors:null,competitorsLoading:!!point,competitorsOpen:false,showCompetitorPins:false,mapSearchMsg:''});
+    if(point) this.fetchNearbyCompetitors(point.lat,point.lng);
   },
 
   resolveMapAddress(lat,lng){
@@ -103,9 +169,10 @@ globalThis.MysbizonParts.map = {
 
   fetchNearbyCompetitors(lat,lng){
     const key=String(this.state.kakaoMapKey||''); if(!key){this.setState({competitorsLoading:false,competitors:[]});return;}
+    const industry=this.state.ind;
     this.loadKakaoMapsSdk(key).then(K=>{
       const places=new K.services.Places(),rows=[];
-      places.keywordSearch(this.indName(this.state.ind),(data,status,pagination)=>{
+      places.keywordSearch(this.indName(industry),(data,status,pagination)=>{
         if(status===K.services.Status.OK&&Array.isArray(data)) rows.push(...data);
         if(status===K.services.Status.OK&&pagination&&pagination.hasNextPage&&pagination.current<3){pagination.nextPage();return;}
         const seen=new Set();
@@ -116,7 +183,7 @@ globalThis.MysbizonParts.map = {
             distance:Number(row.distance)||Math.round(this.mapDistance({lat,lng},{lat:Number(row.y),lng:Number(row.x)})),
             lat:Number(row.y),lng:Number(row.x),franchise:!!brand,brand,placeUrl:String(row.place_url||'')};
         }).filter(row=>Number.isFinite(row.lat)&&Number.isFinite(row.lng)&&row.distance<=500).sort((a,b)=>a.distance-b.distance);
-        if(this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({competitors:normalized,competitorsLoading:false});
+        if(this.state.ind===industry&&this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({competitors:normalized,competitorsLoading:false});
       },{location:new K.LatLng(lat,lng),radius:500,size:15,sort:K.services.SortBy.DISTANCE});
     }).catch(()=>this.setState({competitors:[],competitorsLoading:false}));
   },
@@ -126,42 +193,44 @@ globalThis.MysbizonParts.map = {
     const el=document.getElementById('kakao-map'); if(!el) return;
     const key=String(this.state.kakaoMapKey||'');
     if(!key){this.destroyKakaoMap();this.kakaoMapStatus(el,this.t('map.unavailable'));return;}
-    this.loadKakaoMapsSdk(key).then(()=>{if(this.state.screen==='map') this.drawKakaoMap(document.getElementById('kakao-map'));})
-      .catch(()=>this.kakaoMapStatus(document.getElementById('kakao-map'),this.t('map.failed')));
+    if(this._kakaoMap&&this._kakaoContainer){
+      if(el!==this._kakaoContainer) el.replaceWith(this._kakaoContainer);
+      this.syncKakaoMapLayers();
+      requestAnimationFrame(()=>{if(this._kakaoMap&&document.body.contains(this._kakaoContainer)) this._kakaoMap.relayout();});
+      return;
+    }
+    if(this._kakaoDrawPending) return;
+    this._kakaoDrawPending=true;
+    this.loadKakaoMapsSdk(key).then(()=>{if(this.state.screen==='map'&&!this._kakaoMap) this.drawKakaoMap(document.getElementById('kakao-map'));})
+      .catch(()=>this.kakaoMapStatus(document.getElementById('kakao-map'),this.t('map.failed')))
+      .finally(()=>{this._kakaoDrawPending=false;});
   },
 
   drawKakaoMap(el){
     if(!el) return; this.destroyKakaoMap();el.replaceChildren();
     const K=globalThis.kakao&&globalThis.kakao.maps; if(!K?.Map) return this.kakaoMapStatus(el,this.t('map.failed'));
     const point=this.state.mapPoint,center=point||{lat:37.5665,lng:126.9780};
-    const map=new K.Map(el,{center:new K.LatLng(center.lat,center.lng),level:point?4:8}),markers=[],overlays=[];
+    const map=new K.Map(el,{center:new K.LatLng(center.lat,center.lng),level:point?4:8}),markers=[];
     K.event.addListener(map,'click',event=>{const p=event.latLng;this.chooseMapPoint(p.getLat(),p.getLng(),'');});
-    if(point) markers.push(new K.Marker({map,position:new K.LatLng(point.lat,point.lng)}));
-    if(point&&this.state.showCompetitorPins){
-      for(const row of (this.state.competitors||[]).slice(0,40)){
-        const dot=document.createElement('button');dot.type='button';dot.title=row.name;dot.setAttribute('aria-label',row.name);
-        Object.assign(dot.style,{width:'24px',height:'24px',borderRadius:'50%',border:'2px solid var(--card)',
-          background:row.franchise?'var(--accent)':'var(--ink2)',boxShadow:'0 3px 10px rgba(0,0,0,.22)',cursor:'pointer'});
-        dot.addEventListener('click',e=>{e.stopPropagation();this.setState({competitorsOpen:true,competitorFocus:row.id});});
-        overlays.push(new K.CustomOverlay({map,position:new K.LatLng(row.lat,row.lng),content:dot,xAnchor:.5,yAnchor:.5,zIndex:4}));
-      }
-    }
     try{map.addControl(new K.ZoomControl(),K.ControlPosition.RIGHT);}catch(e){}
-    this._kakaoMap=map;this._kakaoContainer=el;this._kakaoMarkers=markers;this._kakaoOverlays=overlays;
+    this._kakaoMap=map;this._kakaoContainer=el;this._kakaoMarkers=markers;this._kakaoOverlays=[];
+    this.syncKakaoMapLayers();
     if(typeof ResizeObserver!=='undefined'){
-      this._kakaoResizeObserver=new ResizeObserver(()=>{if(this._kakaoMap&&document.body.contains(el)){map.relayout();map.setCenter(new K.LatLng(center.lat,center.lng));}});
+      this._kakaoResizeObserver=new ResizeObserver(()=>{if(this._kakaoMap&&document.body.contains(el)){map.relayout();const p=this.state.mapPoint||center;map.setCenter(new K.LatLng(p.lat,p.lng));}});
       this._kakaoResizeObserver.observe(el);
     }
   },
 
   buildMapView(base,sel,L,r,pickToggle,pickLabelOf){
     const S=this.state,point=S.mapPoint,hasPoint=!!point,comps=Array.isArray(S.competitors)?S.competitors:[];
+    const mapZoneId=S.mapZoneId,hasZone=hasPoint&&!!mapZoneId&&!!sel&&sel.id===mapZoneId;
     const franchise=comps.filter(o=>o.franchise),independent=comps.filter(o=>!o.franchise),brands={};
-    franchise.forEach(o=>{brands[o.brand]=(brands[o.brand]||0)+1;});
-    const brandRows=Object.entries(brands).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,n])=>({name,value:n+this.t('common.place')}));
-    const lp=hasPoint&&S.zlp&&sel?S.zlp[sel.id]:null,loaded=Array.isArray(S.competitors),loading=!!S.competitorsLoading;
+    franchise.forEach(o=>{const b=brands[o.brand]||(brands[o.brand]={count:0,distance:Infinity});b.count++;b.distance=Math.min(b.distance,Number(o.distance)||Infinity);});
+    const brandRows=Object.entries(brands).sort((a,b)=>b[1].count-a[1].count).slice(0,5).map(([name,b])=>({name,
+      value:b.count+this.t('common.place')+' · '+this.t('map.nearestDistance',{distance:Number.isFinite(b.distance)?Math.round(b.distance):'—'})}));
+    const lp=hasZone&&S.zlp&&sel?S.zlp[sel.id]:null,loaded=Array.isArray(S.competitors),loading=!!S.competitorsLoading;
     const frRatio=loaded&&comps.length?Math.round(franchise.length/comps.length*100):null;
-    const zone=hasPoint&&sel&&S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
+    const zone=hasZone&&sel&&S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
     const industries=((zone&&zone.rows)||[]).map(row=>({
       name:this.indName((S.zi.inds||[])[row[0]]||('업종 '+row[0])),
       stores:Number(row[1])||0,
@@ -174,11 +243,11 @@ globalThis.MysbizonParts.map = {
       sample:row.stores+this.t('common.place')
     }));
     const demandStrong=lp&&Number(lp.tot)>=50000,compStrong=loaded&&comps.length>=15;
-    const summary=!hasPoint?this.t('map.pickHint'):(demandStrong&&compStrong?this.t('map.summaryBoth')
-      :(demandStrong?this.t('map.summaryDemand'):(compStrong?this.t('map.summaryCompetition'):this.t('map.summaryNeutral'))));
+    const summary=!hasPoint?this.t('map.pickHint'):(!hasZone?this.t('map.noZoneNearby'):(demandStrong&&compStrong?this.t('map.summaryBoth')
+      :(demandStrong?this.t('map.summaryDemand'):(compStrong?this.t('map.summaryCompetition'):this.t('map.summaryNeutral')))));
     const picked=sel&&(S.picks||[]).includes(sel.id);
-    const metrics=hasPoint&&sel?[
-      {label:this.t('map.referenceSales'),value:this.won(sel.per/3),note:this.t('map.salesCaution')},
+    const metrics=hasZone&&sel?[
+      {label:this.t('map.referenceSales'),value:this.won(sel.per/3),note:this.t('map.salesFormula',{stores:sel.stores.toLocaleString()})},
       {label:this.t('map.footTraffic'),value:lp?Math.round(lp.tot).toLocaleString()+this.t('common.people'):this.t('common.noData'),note:lp?this.t('map.dongBasis',{dong:this.placeName(lp.dong)}):''},
       {label:this.t('map.competitorCount'),value:loading?this.t('map.loadingShort'):(loaded?comps.length+this.t('common.place'):this.t('common.beforeLookup')),note:this.t('map.radiusBasis')},
       {label:this.t('map.franchise'),value:loaded?franchise.length+this.t('common.place'):this.t('common.beforeLookup'),note:''},
@@ -193,12 +262,14 @@ globalThis.MysbizonParts.map = {
         loadingNearby:this.t('map.loadingNearby'),noNearby:this.t('map.noNearby'),
         recommendations:this.t('map.recommendations'),recommendationBasis:this.t('map.recommendationBasis')},
       eyebrow:this.t('map.eyebrow'),target:this.t('map.title'),sub:this.t('map.sub'),
+      indOptions:(S.zi?S.zi.inds:[]).map(n=>({raw:n,label:this.indName(n)})).sort((a,b)=>a.label.localeCompare(b.label,'ko')),
+      indSel:S.ind,onIndSel:e=>this.changeMapIndustry(e.target.value),industryLabel:this.t('map.industryLabel'),
       query:S.mapQ||'',onQuery:e=>this.setState({mapQ:e.target.value,mapSearchMsg:''}),
       onSearchKey:e=>{if(e.key==='Enter'){e.preventDefault();this.searchMapAddress();}},search:()=>this.searchMapAddress(),
       searching:!!S.mapSearching,searchLabel:S.mapSearching?this.t('map.searching'):this.t('map.searchButton'),
       searchPlaceholder:this.t('map.searchPlaceholder'),searchMsg:S.mapSearchMsg||'',hasSearchMsg:!!S.mapSearchMsg,
-      hasPoint,needsPoint:!hasPoint,address:S.mapAddress||this.t('map.addressResolving'),
-      zone:hasPoint&&sel?this.zoneLabelOf(sel.name):'',industry:this.indName(S.ind),period:this.qtr(r.quarter),
+      hasPoint,hasZone,showResult:hasZone,noZone:hasPoint&&!hasZone,needsPoint:!hasPoint,address:S.mapAddress||this.t('map.addressResolving'),
+      noZoneTitle:this.t('map.noZoneTitle'),zone:hasZone&&sel?this.zoneLabelOf(sel.name):'',industry:this.indName(S.ind),period:this.qtr(r.quarter),
       metrics:metrics.slice(0,3),detailMetrics:metrics.slice(3),summary,
       brands:brandRows,hasBrands:brandRows.length>0,recommendations,hasRecommendations:recommendations.length>0,
       detail:()=>this.setState({screen:'fineDetail'}),togglePick:sel?pickToggle(sel):()=>{},

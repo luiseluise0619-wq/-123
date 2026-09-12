@@ -72,7 +72,7 @@ globalThis.MysbizonParts.charts = {
     const unit = spec.unit || '';
     const horizontal = spec.type === 'hbar';
     const kind = (spec.type === 'line') ? 'line' : (spec.type === 'doughnut' ? 'doughnut' : 'bar');
-    const many = (spec.labels || []).length > 12;
+    const many = (spec.labels || []).length >= 10;
 
     const ds = (spec.datasets || []).map((d, i) => {
       const base = {
@@ -81,10 +81,10 @@ globalThis.MysbizonParts.charts = {
         borderWidth: kind === 'line' ? 2.4 : 0,
         borderRadius: kind === 'bar' ? 12 : 0,
         borderSkipped: kind === 'bar' ? false : undefined,
-        barThickness: kind === 'bar' ? (many ? 16 : 26) : undefined,
+        barThickness: kind === 'bar' ? (many ? 14 : 24) : undefined,
         maxBarThickness: horizontal ? 22 : 42,
-        categoryPercentage: kind === 'bar' ? (many ? 0.72 : 0.86) : undefined,
-        barPercentage: kind === 'bar' ? (many ? 0.76 : 0.9) : undefined,
+        categoryPercentage: kind === 'bar' ? (many ? 0.62 : 0.82) : undefined,
+        barPercentage: kind === 'bar' ? (many ? 0.7 : 0.86) : undefined,
         // 배열로 주면 막대마다 색이 달라진다.
         //   '#...' → 그 색 그대로 (비교 대상 고유색 — 상권마다 고정)
         //   'on'   → 강조,  'warn' → 주의색,  그 밖 → 연한 기본색

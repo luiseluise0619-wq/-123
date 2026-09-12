@@ -199,13 +199,15 @@ globalThis.MysbizonParts.i18n = {
       'map.competitorCount':'주변 동종업체','map.detail':'정밀 분석 보기','map.dongBasis':'{dong} 행정동 기준',
       'map.eyebrow':'1단계 · 자리 찾기','map.footTraffic':'유동인구','map.franchise':'프랜차이즈',
       'map.franchiseRatio':'프랜차이즈 비율','map.hideCompetitorPins':'업체 핀 숨기기','map.independent':'개인점포',
-      'map.loadingNearby':'주변 업체를 확인하고 있어요.','map.loadingShort':'조회 중','map.majorBrands':'주요 프랜차이즈',
+      'map.loadingNearby':'주변 업체를 확인하고 있어요.','map.loadingShort':'조회 중','map.majorBrands':'주요 프랜차이즈 · 선택 지점 반경 500m',
       'map.nearby':'주변 업체 보기','map.nearbyTitle':'주변 동종업체','map.noNearby':'500m 안에서 검색된 동종업체가 없어요. 검색 결과는 실제 영업 현황과 다를 수 있어요.',
       'map.noPhone':'전화번호 없음','map.pickHint':'지도를 눌러 분석할 위치를 정하세요.','map.radiusBasis':'선택 지점 500m · 자동 기준',
-      'map.rankLabel':'{n}순위',
+      'map.noZoneTitle':'연결할 상권 자료가 없어요','map.noZoneNearby':'선택 지점 500m 안에 이 업종의 유효한 상권 자료가 없어요. 다른 위치를 찍어 주세요.',
+      'map.rankLabel':'{n}순위','map.selectedPoint':'선택한 위치','map.industryLabel':'분석 업종',
+      'map.nearestDistance':'가장 가까운 곳 {distance}m','map.salesFormula':'분기 추정매출 합계 ÷ 같은 업종 점포 {stores}곳 ÷ 3개월 · 한 가게 실적 아님',
       'prep.eyebrow':'창업 준비','prep.title':'{ind} 오픈 전 체크','prep.sub':'계약 전에 확인할 것부터 오픈을 알리는 일까지 한곳에서 체크하세요.',
       'prep.progress':'창업 준비 {pct}%','prep.progressDetail':'{done} / {total} 완료',
-      'prep.groupContract':'계약 전 확인','prep.groupOpening':'오픈 전 준비','prep.groupMarketing':'오픈 알리기',
+      'prep.groupContract':'계약 전 확인','prep.groupOpening':'오픈 전 준비','prep.groupMarketing':'오픈 알리기','prep.groupProgress':'{done}/{total} 완료',
       'prep.itemUse':'건축물 용도 확인','prep.itemUseDetail':'선택 업종이 가능한 용도인지 건축물대장과 관할 기관에서 확인',
       'prep.itemLease':'임대차계약 핵심 조항 확인','prep.itemLeaseDetail':'기간·갱신·원상복구·중도해지·업종 제한을 계약서에서 확인',
       'prep.itemPremium':'권리금 범위와 근거 확인','prep.itemPremiumDetail':'시설·영업·바닥 권리금을 나눠 적고 증빙 확인',
@@ -238,7 +240,7 @@ globalThis.MysbizonParts.i18n = {
       'prep.adviceListings':'검색 지도에 오픈 정보 맞추기','prep.adviceListingsBasis':'선택한 업종과 주소는 검색 지도에서 고객이 확인할 기본 정보예요.','prep.adviceListingsAction':'오픈 전에 네이버 플레이스·카카오맵·Google 비즈니스 프로필의 주소·영업시간·대표 메뉴를 같은 내용으로 등록하세요.',
       'prep.adviceTitle':'이 자리에서 먼저 할 일','prep.caution':'인허가·건축물 용도는 업종, 건물, 관할 기관에 따라 달라질 수 있어요. 계약 전에 관할 구청과 공식 안내를 다시 확인하세요.',
       'prep.mapCta':'자리 다시 보기','prep.bepCta':'손익 계산','prep.compareCta':'후보 비교','prep.noPlace':'선택한 자리 없음',
-      'map.referenceSales':'상권 참고 월매출','map.salesCaution':'새 가게 매출 예측 아님','map.save':'후보지에 저장','map.saved':'저장됨 · 빼기',
+      'map.referenceSales':'점포당 참고 월매출 (추정)','map.salesCaution':'새 가게 매출 예측 아님','map.save':'후보지에 저장','map.saved':'저장됨 · 빼기',
       'map.searchButton':'위치 찾기','map.searchEmpty':'주소나 건물명을 입력해 주세요.','map.searching':'찾는 중…','map.searchNone':'서울에서 해당 위치를 찾지 못했어요.',
       'map.searchPlaceholder':'주소 또는 건물명 검색','map.showCompetitorPins':'지도에서 업체 보기',
       'map.sub':'주소를 찾거나 지도를 눌러 위치를 고르세요. 분석 반경은 자동으로 적용돼요.',
@@ -1815,11 +1817,11 @@ globalThis.MysbizonParts.analysis = {
           datasets:[{label:'점포 수', data:[r.opened, r.closed], colors:['on','warn']}]});
         const rows=Object.keys(ST.ind).map(n=>({n, v:ST.ind[n].close_rate}))
           .filter(o=>isFinite(o.v)).sort((a,b)=>b.v-a.v).slice(0,12);
-        push('mv-close-rate',{type:'hbar', title:'어떤 장사가 많이 문을 닫나요?', sub:'전체 점포 대비 폐업 비율',
-          unit:'%', period:this.qtr(ST.quarter), height:280,
+        push('mv-close-rate',{type:'hbar', title:'어떤 장사가 많이 문을 닫나요?', sub:'서울 전체 · 3개월 폐업 점포 ÷ 전체 점포',
+          unit:'%', period:this.qtr(ST.quarter), height:340,
           labels:rows.map(o=>this.indName(o.n)),
           datasets:[{label:'폐업률', data:rows.map(o=>o.v),
-            colors:rows.map(o=>o.n===S.ind?'on':'warn')}]});
+            colors:rows.map(o=>o.n===S.ind?'on':'')}]});
       }
       missing.push('상권별 점포 수 추이는 아직 없어서 최근 분기 수치만 보여줘요.');
     }
@@ -2797,7 +2799,7 @@ globalThis.MysbizonParts.home = {
           const el=document.querySelectorAll('[data-search] input')[1]; if(el) el.focus(); return; }
         this.setState({starting:true,pickOpen:null});
         if(S.zoneId){ this.startZone(); return; }
-        this.setState({screen:'map',sel:null,mapPoint:null,mapAddress:'',fromRegion:false,homeZone:null,starting:false});
+        this.setState({screen:'map',sel:null,mapPoint:null,mapAddress:'',mapZoneId:null,mapZoneDistance:null,fromRegion:false,homeZone:null,starting:false});
       },
       // 흰 필드 + 아주 얕은 그림자. 회색 덩어리보다 가볍고 정확해 보인다.
       picking:!!S.picking,
@@ -2815,6 +2817,7 @@ globalThis.MysbizonParts.home = {
     const ll=S.smap&&S.smap.lls&&S.smap.lls[S.zoneId];
     this.setState({screen:'map',picking:null,starting:false,homeZone:name,regPick:S.homeInd||null,
       mapPoint:Array.isArray(ll)?{lat:Number(ll[0]),lng:Number(ll[1])}:null,
+      mapZoneId:Array.isArray(ll)?S.zoneId:null,mapZoneDistance:Array.isArray(ll)?0:null,
       mapAddress:this.zoneLabelOf(name||''),competitors:null,competitorsLoading:Array.isArray(ll)});
     if(Array.isArray(ll)) this.fetchNearbyCompetitors(Number(ll[0]),Number(ll[1]));
   },
@@ -4076,7 +4079,10 @@ globalThis.MysbizonParts.prep = {
       item('walk','prep.itemWalk','prep.itemWalkDetail'),
       item('opening','prep.itemOpening','prep.itemOpeningDetail')
     ];
-    const groups=[{title:this.t('prep.groupContract'),items:contract},{title:this.t('prep.groupOpening'),items:opening},{title:this.t('prep.groupMarketing'),items:marketing}];
+    const groups=[{id:'contract',title:this.t('prep.groupContract'),items:contract},{id:'opening',title:this.t('prep.groupOpening'),items:opening},{id:'marketing',title:this.t('prep.groupMarketing'),items:marketing}]
+      .map(group=>{const done=group.items.filter(item=>item.checked).length,open=S.prepOpen===group.id;return {...group,done,open,
+        summary:this.t('prep.groupProgress',{done,total:group.items.length}),caret:open?'−':'+',
+        toggle:()=>this.setState({prepOpen:open?'':group.id})};});
     const all=groups.flatMap(g=>g.items),done=all.filter(o=>o.checked).length,pct=all.length?Math.round(done/all.length*100):0;
 
     let sel=null,rank=null;
@@ -4626,7 +4632,7 @@ globalThis.MysbizonParts.charts = {
     const unit = spec.unit || '';
     const horizontal = spec.type === 'hbar';
     const kind = (spec.type === 'line') ? 'line' : (spec.type === 'doughnut' ? 'doughnut' : 'bar');
-    const many = (spec.labels || []).length > 12;
+    const many = (spec.labels || []).length >= 10;
 
     const ds = (spec.datasets || []).map((d, i) => {
       const base = {
@@ -4635,10 +4641,10 @@ globalThis.MysbizonParts.charts = {
         borderWidth: kind === 'line' ? 2.4 : 0,
         borderRadius: kind === 'bar' ? 12 : 0,
         borderSkipped: kind === 'bar' ? false : undefined,
-        barThickness: kind === 'bar' ? (many ? 16 : 26) : undefined,
+        barThickness: kind === 'bar' ? (many ? 14 : 24) : undefined,
         maxBarThickness: horizontal ? 22 : 42,
-        categoryPercentage: kind === 'bar' ? (many ? 0.72 : 0.86) : undefined,
-        barPercentage: kind === 'bar' ? (many ? 0.76 : 0.9) : undefined,
+        categoryPercentage: kind === 'bar' ? (many ? 0.62 : 0.82) : undefined,
+        barPercentage: kind === 'bar' ? (many ? 0.7 : 0.86) : undefined,
         // 배열로 주면 막대마다 색이 달라진다.
         //   '#...' → 그 색 그대로 (비교 대상 고유색 — 상권마다 고정)
         //   'on'   → 강조,  'warn' → 주의색,  그 밖 → 연한 기본색
@@ -5605,17 +5611,83 @@ globalThis.MysbizonParts.map = {
 
   destroyKakaoMap(){
     if(this._kakaoResizeObserver){this._kakaoResizeObserver.disconnect();this._kakaoResizeObserver=null;}
+    if(this._kakaoSelectionOverlay){try{this._kakaoSelectionOverlay.setMap(null);}catch(e){} this._kakaoSelectionOverlay=null;}
     for(const overlay of this._kakaoOverlays||[]){try{overlay.setMap(null);}catch(e){}}
     for(const marker of this._kakaoMarkers||[]){try{marker.setMap(null);}catch(e){}}
     this._kakaoOverlays=[];this._kakaoMarkers=[];this._kakaoMap=null;this._kakaoContainer=null;
+    this._kakaoLayerSignature='';this._kakaoPointSignature='';
+  },
+
+  nearestZoneForIndustry(lat,lng,industry){
+    const zi=this.state.zi,lls=this.state.smap&&this.state.smap.lls;
+    if(!zi||!lls||!Array.isArray(zi.inds)) return this.nearestZoneForPoint(lat,lng);
+    const indIndex=zi.inds.indexOf(industry),point={lat:Number(lat),lng:Number(lng)};
+    if(indIndex<0) return this.nearestZoneForPoint(lat,lng);
+    let best=null,distance=Infinity;
+    for(const [id,zone] of Object.entries(zi.zones||{})){
+      const ll=lls[id],has=(zone.rows||[]).some(row=>row[0]===indIndex&&row[1]>0&&row[2]>0);
+      if(!has||!Array.isArray(ll)) continue;
+      const d=this.mapDistance(point,{lat:Number(ll[0]),lng:Number(ll[1])});
+      if(d<distance){best=id;distance=d;}
+    }
+    return best?{id:best,distance}:null;
+  },
+
+  kakaoSelectedPin(){
+    const wrap=document.createElement('div');wrap.setAttribute('aria-label',this.t('map.selectedPoint'));
+    Object.assign(wrap.style,{display:'flex',flexDirection:'column',alignItems:'center',gap:'5px',pointerEvents:'none'});
+    const label=document.createElement('span');label.textContent=this.t('map.selectedPoint');
+    Object.assign(label.style,{padding:'5px 9px',borderRadius:'999px',background:'var(--card)',color:'var(--ink)',border:'1px solid var(--line-strong)',boxShadow:'0 4px 14px rgba(0,0,0,.14)',fontSize:'12px',fontWeight:'700',whiteSpace:'nowrap'});
+    const pin=document.createElement('span');
+    Object.assign(pin.style,{display:'block',width:'30px',height:'30px',borderRadius:'50% 50% 50% 0',transform:'rotate(-45deg)',background:'var(--accent)',border:'4px solid white',boxShadow:'0 5px 15px rgba(0,0,0,.28)'});
+    const dot=document.createElement('span');Object.assign(dot.style,{display:'block',width:'8px',height:'8px',borderRadius:'50%',background:'white',margin:'7px'});
+    pin.appendChild(dot);wrap.append(label,pin);return wrap;
+  },
+
+  syncKakaoMapLayers(pointOverride){
+    const K=globalThis.kakao&&globalThis.kakao.maps,map=this._kakaoMap;if(!K?.CustomOverlay||!map) return;
+    const point=pointOverride||this.state.mapPoint,pointSig=point?Number(point.lat).toFixed(6)+','+Number(point.lng).toFixed(6):'';
+    if(point){
+      const pos=new K.LatLng(point.lat,point.lng);
+      if(!this._kakaoSelectionOverlay) this._kakaoSelectionOverlay=new K.CustomOverlay({map,position:pos,content:this.kakaoSelectedPin(),xAnchor:.5,yAnchor:1.08,zIndex:20});
+      else{this._kakaoSelectionOverlay.setPosition(pos);this._kakaoSelectionOverlay.setMap(map);}
+      if(pointSig!==this._kakaoPointSignature){map.setCenter(pos);if(map.getLevel&&map.getLevel()>4) map.setLevel(4);}
+    }else if(this._kakaoSelectionOverlay){this._kakaoSelectionOverlay.setMap(null);this._kakaoSelectionOverlay=null;}
+    this._kakaoPointSignature=pointSig;
+    const rows=this.state.showCompetitorPins?(this.state.competitors||[]).slice(0,40):[];
+    const signature=(this.state.showCompetitorPins?'1:':'0:')+rows.map(row=>row.id+':'+(row.id===this.state.competitorFocus?'1':'0')).join(',');
+    if(signature===this._kakaoLayerSignature) return;
+    for(const overlay of this._kakaoOverlays||[]){try{overlay.setMap(null);}catch(e){}}this._kakaoOverlays=[];
+    for(const row of rows){
+      const marker=document.createElement('button');marker.type='button';marker.title=row.name;marker.setAttribute('aria-label',row.name);
+      Object.assign(marker.style,{width:'24px',height:'24px',borderRadius:'50%',border:'2px solid var(--card)',background:row.franchise?'var(--accent)':'var(--ink2)',boxShadow:'0 3px 10px rgba(0,0,0,.22)',cursor:'pointer'});
+      marker.addEventListener('click',e=>{e.stopPropagation();this.setState({competitorsOpen:true,competitorFocus:row.id});});
+      this._kakaoOverlays.push(new K.CustomOverlay({map,position:new K.LatLng(row.lat,row.lng),content:marker,xAnchor:.5,yAnchor:.5,zIndex:4}));
+    }
+    this._kakaoLayerSignature=signature;
+  },
+
+  previewKakaoPoint(lat,lng){
+    if(!this._kakaoMap) return;this._kakaoPointSignature='';
+    this.syncKakaoMapLayers({lat:Number(lat),lng:Number(lng)});
   },
 
   chooseMapPoint(lat,lng,label){
-    const nearest=this.nearestZoneForPoint(lat,lng), address=String(label||'').trim();
+    this.previewKakaoPoint(lat,lng);
+    const closest=this.nearestZoneForIndustry(lat,lng,this.state.ind),nearest=closest&&closest.distance<=500?closest:null;
+    const address=String(label||'').trim();
     this.setState({mapPoint:{lat:Number(lat),lng:Number(lng)},mapAddress:address,
-      sel:nearest?nearest.id:this.state.sel,zoneId:nearest?nearest.id:this.state.zoneId,
+      sel:nearest?nearest.id:null,zoneId:nearest?nearest.id:null,mapZoneId:nearest?nearest.id:null,mapZoneDistance:closest?Math.round(closest.distance):null,
       competitors:null,competitorsLoading:true,competitorsOpen:false,showCompetitorPins:false,mapSearchMsg:''});
     this.resolveMapAddress(Number(lat),Number(lng)); this.fetchNearbyCompetitors(Number(lat),Number(lng));
+  },
+
+  changeMapIndustry(value){
+    const industry=String(value||''),point=this.state.mapPoint;
+    const closest=point?this.nearestZoneForIndustry(point.lat,point.lng,industry):null,nearest=closest&&closest.distance<=500?closest:null;
+    this.setState({ind:industry,sel:nearest?nearest.id:null,zoneId:nearest?nearest.id:null,mapZoneId:nearest?nearest.id:null,mapZoneDistance:closest?Math.round(closest.distance):null,
+      competitors:null,competitorsLoading:!!point,competitorsOpen:false,showCompetitorPins:false,mapSearchMsg:''});
+    if(point) this.fetchNearbyCompetitors(point.lat,point.lng);
   },
 
   resolveMapAddress(lat,lng){
@@ -5647,9 +5719,10 @@ globalThis.MysbizonParts.map = {
 
   fetchNearbyCompetitors(lat,lng){
     const key=String(this.state.kakaoMapKey||''); if(!key){this.setState({competitorsLoading:false,competitors:[]});return;}
+    const industry=this.state.ind;
     this.loadKakaoMapsSdk(key).then(K=>{
       const places=new K.services.Places(),rows=[];
-      places.keywordSearch(this.indName(this.state.ind),(data,status,pagination)=>{
+      places.keywordSearch(this.indName(industry),(data,status,pagination)=>{
         if(status===K.services.Status.OK&&Array.isArray(data)) rows.push(...data);
         if(status===K.services.Status.OK&&pagination&&pagination.hasNextPage&&pagination.current<3){pagination.nextPage();return;}
         const seen=new Set();
@@ -5660,7 +5733,7 @@ globalThis.MysbizonParts.map = {
             distance:Number(row.distance)||Math.round(this.mapDistance({lat,lng},{lat:Number(row.y),lng:Number(row.x)})),
             lat:Number(row.y),lng:Number(row.x),franchise:!!brand,brand,placeUrl:String(row.place_url||'')};
         }).filter(row=>Number.isFinite(row.lat)&&Number.isFinite(row.lng)&&row.distance<=500).sort((a,b)=>a.distance-b.distance);
-        if(this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({competitors:normalized,competitorsLoading:false});
+        if(this.state.ind===industry&&this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({competitors:normalized,competitorsLoading:false});
       },{location:new K.LatLng(lat,lng),radius:500,size:15,sort:K.services.SortBy.DISTANCE});
     }).catch(()=>this.setState({competitors:[],competitorsLoading:false}));
   },
@@ -5670,42 +5743,44 @@ globalThis.MysbizonParts.map = {
     const el=document.getElementById('kakao-map'); if(!el) return;
     const key=String(this.state.kakaoMapKey||'');
     if(!key){this.destroyKakaoMap();this.kakaoMapStatus(el,this.t('map.unavailable'));return;}
-    this.loadKakaoMapsSdk(key).then(()=>{if(this.state.screen==='map') this.drawKakaoMap(document.getElementById('kakao-map'));})
-      .catch(()=>this.kakaoMapStatus(document.getElementById('kakao-map'),this.t('map.failed')));
+    if(this._kakaoMap&&this._kakaoContainer){
+      if(el!==this._kakaoContainer) el.replaceWith(this._kakaoContainer);
+      this.syncKakaoMapLayers();
+      requestAnimationFrame(()=>{if(this._kakaoMap&&document.body.contains(this._kakaoContainer)) this._kakaoMap.relayout();});
+      return;
+    }
+    if(this._kakaoDrawPending) return;
+    this._kakaoDrawPending=true;
+    this.loadKakaoMapsSdk(key).then(()=>{if(this.state.screen==='map'&&!this._kakaoMap) this.drawKakaoMap(document.getElementById('kakao-map'));})
+      .catch(()=>this.kakaoMapStatus(document.getElementById('kakao-map'),this.t('map.failed')))
+      .finally(()=>{this._kakaoDrawPending=false;});
   },
 
   drawKakaoMap(el){
     if(!el) return; this.destroyKakaoMap();el.replaceChildren();
     const K=globalThis.kakao&&globalThis.kakao.maps; if(!K?.Map) return this.kakaoMapStatus(el,this.t('map.failed'));
     const point=this.state.mapPoint,center=point||{lat:37.5665,lng:126.9780};
-    const map=new K.Map(el,{center:new K.LatLng(center.lat,center.lng),level:point?4:8}),markers=[],overlays=[];
+    const map=new K.Map(el,{center:new K.LatLng(center.lat,center.lng),level:point?4:8}),markers=[];
     K.event.addListener(map,'click',event=>{const p=event.latLng;this.chooseMapPoint(p.getLat(),p.getLng(),'');});
-    if(point) markers.push(new K.Marker({map,position:new K.LatLng(point.lat,point.lng)}));
-    if(point&&this.state.showCompetitorPins){
-      for(const row of (this.state.competitors||[]).slice(0,40)){
-        const dot=document.createElement('button');dot.type='button';dot.title=row.name;dot.setAttribute('aria-label',row.name);
-        Object.assign(dot.style,{width:'24px',height:'24px',borderRadius:'50%',border:'2px solid var(--card)',
-          background:row.franchise?'var(--accent)':'var(--ink2)',boxShadow:'0 3px 10px rgba(0,0,0,.22)',cursor:'pointer'});
-        dot.addEventListener('click',e=>{e.stopPropagation();this.setState({competitorsOpen:true,competitorFocus:row.id});});
-        overlays.push(new K.CustomOverlay({map,position:new K.LatLng(row.lat,row.lng),content:dot,xAnchor:.5,yAnchor:.5,zIndex:4}));
-      }
-    }
     try{map.addControl(new K.ZoomControl(),K.ControlPosition.RIGHT);}catch(e){}
-    this._kakaoMap=map;this._kakaoContainer=el;this._kakaoMarkers=markers;this._kakaoOverlays=overlays;
+    this._kakaoMap=map;this._kakaoContainer=el;this._kakaoMarkers=markers;this._kakaoOverlays=[];
+    this.syncKakaoMapLayers();
     if(typeof ResizeObserver!=='undefined'){
-      this._kakaoResizeObserver=new ResizeObserver(()=>{if(this._kakaoMap&&document.body.contains(el)){map.relayout();map.setCenter(new K.LatLng(center.lat,center.lng));}});
+      this._kakaoResizeObserver=new ResizeObserver(()=>{if(this._kakaoMap&&document.body.contains(el)){map.relayout();const p=this.state.mapPoint||center;map.setCenter(new K.LatLng(p.lat,p.lng));}});
       this._kakaoResizeObserver.observe(el);
     }
   },
 
   buildMapView(base,sel,L,r,pickToggle,pickLabelOf){
     const S=this.state,point=S.mapPoint,hasPoint=!!point,comps=Array.isArray(S.competitors)?S.competitors:[];
+    const mapZoneId=S.mapZoneId,hasZone=hasPoint&&!!mapZoneId&&!!sel&&sel.id===mapZoneId;
     const franchise=comps.filter(o=>o.franchise),independent=comps.filter(o=>!o.franchise),brands={};
-    franchise.forEach(o=>{brands[o.brand]=(brands[o.brand]||0)+1;});
-    const brandRows=Object.entries(brands).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,n])=>({name,value:n+this.t('common.place')}));
-    const lp=hasPoint&&S.zlp&&sel?S.zlp[sel.id]:null,loaded=Array.isArray(S.competitors),loading=!!S.competitorsLoading;
+    franchise.forEach(o=>{const b=brands[o.brand]||(brands[o.brand]={count:0,distance:Infinity});b.count++;b.distance=Math.min(b.distance,Number(o.distance)||Infinity);});
+    const brandRows=Object.entries(brands).sort((a,b)=>b[1].count-a[1].count).slice(0,5).map(([name,b])=>({name,
+      value:b.count+this.t('common.place')+' · '+this.t('map.nearestDistance',{distance:Number.isFinite(b.distance)?Math.round(b.distance):'—'})}));
+    const lp=hasZone&&S.zlp&&sel?S.zlp[sel.id]:null,loaded=Array.isArray(S.competitors),loading=!!S.competitorsLoading;
     const frRatio=loaded&&comps.length?Math.round(franchise.length/comps.length*100):null;
-    const zone=hasPoint&&sel&&S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
+    const zone=hasZone&&sel&&S.zi&&S.zi.zones?S.zi.zones[sel.id]:null;
     const industries=((zone&&zone.rows)||[]).map(row=>({
       name:this.indName((S.zi.inds||[])[row[0]]||('업종 '+row[0])),
       stores:Number(row[1])||0,
@@ -5718,11 +5793,11 @@ globalThis.MysbizonParts.map = {
       sample:row.stores+this.t('common.place')
     }));
     const demandStrong=lp&&Number(lp.tot)>=50000,compStrong=loaded&&comps.length>=15;
-    const summary=!hasPoint?this.t('map.pickHint'):(demandStrong&&compStrong?this.t('map.summaryBoth')
-      :(demandStrong?this.t('map.summaryDemand'):(compStrong?this.t('map.summaryCompetition'):this.t('map.summaryNeutral'))));
+    const summary=!hasPoint?this.t('map.pickHint'):(!hasZone?this.t('map.noZoneNearby'):(demandStrong&&compStrong?this.t('map.summaryBoth')
+      :(demandStrong?this.t('map.summaryDemand'):(compStrong?this.t('map.summaryCompetition'):this.t('map.summaryNeutral')))));
     const picked=sel&&(S.picks||[]).includes(sel.id);
-    const metrics=hasPoint&&sel?[
-      {label:this.t('map.referenceSales'),value:this.won(sel.per/3),note:this.t('map.salesCaution')},
+    const metrics=hasZone&&sel?[
+      {label:this.t('map.referenceSales'),value:this.won(sel.per/3),note:this.t('map.salesFormula',{stores:sel.stores.toLocaleString()})},
       {label:this.t('map.footTraffic'),value:lp?Math.round(lp.tot).toLocaleString()+this.t('common.people'):this.t('common.noData'),note:lp?this.t('map.dongBasis',{dong:this.placeName(lp.dong)}):''},
       {label:this.t('map.competitorCount'),value:loading?this.t('map.loadingShort'):(loaded?comps.length+this.t('common.place'):this.t('common.beforeLookup')),note:this.t('map.radiusBasis')},
       {label:this.t('map.franchise'),value:loaded?franchise.length+this.t('common.place'):this.t('common.beforeLookup'),note:''},
@@ -5737,12 +5812,14 @@ globalThis.MysbizonParts.map = {
         loadingNearby:this.t('map.loadingNearby'),noNearby:this.t('map.noNearby'),
         recommendations:this.t('map.recommendations'),recommendationBasis:this.t('map.recommendationBasis')},
       eyebrow:this.t('map.eyebrow'),target:this.t('map.title'),sub:this.t('map.sub'),
+      indOptions:(S.zi?S.zi.inds:[]).map(n=>({raw:n,label:this.indName(n)})).sort((a,b)=>a.label.localeCompare(b.label,'ko')),
+      indSel:S.ind,onIndSel:e=>this.changeMapIndustry(e.target.value),industryLabel:this.t('map.industryLabel'),
       query:S.mapQ||'',onQuery:e=>this.setState({mapQ:e.target.value,mapSearchMsg:''}),
       onSearchKey:e=>{if(e.key==='Enter'){e.preventDefault();this.searchMapAddress();}},search:()=>this.searchMapAddress(),
       searching:!!S.mapSearching,searchLabel:S.mapSearching?this.t('map.searching'):this.t('map.searchButton'),
       searchPlaceholder:this.t('map.searchPlaceholder'),searchMsg:S.mapSearchMsg||'',hasSearchMsg:!!S.mapSearchMsg,
-      hasPoint,needsPoint:!hasPoint,address:S.mapAddress||this.t('map.addressResolving'),
-      zone:hasPoint&&sel?this.zoneLabelOf(sel.name):'',industry:this.indName(S.ind),period:this.qtr(r.quarter),
+      hasPoint,hasZone,showResult:hasZone,noZone:hasPoint&&!hasZone,needsPoint:!hasPoint,address:S.mapAddress||this.t('map.addressResolving'),
+      noZoneTitle:this.t('map.noZoneTitle'),zone:hasZone&&sel?this.zoneLabelOf(sel.name):'',industry:this.indName(S.ind),period:this.qtr(r.quarter),
       metrics:metrics.slice(0,3),detailMetrics:metrics.slice(3),summary,
       brands:brandRows,hasBrands:brandRows.length>0,recommendations,hasRecommendations:recommendations.length>0,
       detail:()=>this.setState({screen:'fineDetail'}),togglePick:sel?pickToggle(sel):()=>{},
@@ -6422,8 +6499,8 @@ class Component extends DCLogic {
     openWhy:false, open:{cond:false,money:false,day:false,risk:false},
     scen:'보통일 때', ...MysbizonConst.BEP_DEFAULT,
     staffOv:null, laborOv:null, etcOv:null, management:null, days:30, revOv:null,
-    mapPoint:null, mapAddress:'', competitors:null, competitorsLoading:false,
-    competitorsOpen:false, showCompetitorPins:false, prepChecks:{},
+    mapPoint:null, mapAddress:'', mapZoneId:null, mapZoneDistance:null, competitors:null, competitorsLoading:false,
+    competitorsOpen:false, showCompetitorPins:false, prepChecks:{}, prepOpen:'contract',
   };
 
   // 바깥을 누르면 열린 드롭다운(헤더 메뉴·지역 검색)을 닫는다
@@ -6644,9 +6721,10 @@ class Component extends DCLogic {
     const MENU=[
       // region(동네 개요)·fineCmp(자치구 훑기)는 둘 다 '여러 곳을 훑는' 화면이라 여기 둔다.
       // 비교(담은 상권 종합순위)는 ② 정밀분석의 '정밀비교'로 옮겼다 — 입구를 둘로 두지 않는다.
-      {label:T('nav.place'), keys:['map','find','region','fineCmp','fineDetail','diag'], hub:'map',
-       items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],['diag',T('menu.bep')]]},
-      {label:T('nav.compare'), keys:['sim'], hub:'sim', items:[['sim',T('nav.compare')]]},
+      {label:T('nav.zone'), keys:['hubZone','zone','find','region','fineCmp'], hub:'hubZone',
+       items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],['fineCmp',T('menu.sweep')]]},
+      {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'hubFine',
+       items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],['sim',T('menu.sim')],['diag',T('menu.bep')]]},
       {label:T('nav.prep'), keys:['prep'], hub:'prep', items:[['prep',T('nav.prep')]]},
       {label:T('nav.report'), keys:['report'], hub:'report', items:[['report',T('nav.report')]]},
       {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
@@ -6679,7 +6757,7 @@ class Component extends DCLogic {
             +(S.screen===k?'background:var(--ink);color:var(--card);font-weight:600':'background:var(--card);color:var(--ink2);font-weight:500')}))};
       })(),
       nav:MENU.map((g,gi)=>({
-        track:["nav.place","nav.compare","nav.prep","nav.report","nav.price"][gi],
+        track:["nav.zone","nav.fine","nav.prep","nav.report","nav.price"][gi],
         label:g.label, isOpen:false,
         // 모바일 탭바 아이콘(Lucide 계열 선 아이콘). 순서는 MENU 와 같다.
         hasIcon:mobileNav,
@@ -6921,6 +6999,7 @@ class Component extends DCLogic {
         const ll=shown&&S.smap&&S.smap.lls&&S.smap.lls[shown];
         this.setState({screen:'map', menu:null, sel:shown||S.sel,
           mapPoint:Array.isArray(ll)?{lat:Number(ll[0]),lng:Number(ll[1])}:S.mapPoint,
+          mapZoneId:Array.isArray(ll)?shown:null,mapZoneDistance:Array.isArray(ll)?0:null,
           mapAddress:Array.isArray(ll)&&S.zi&&S.zi.zones[shown]?this.zoneLabelOf(S.zi.zones[shown].nm):S.mapAddress,
           mapGu:(shown&&S.zgu&&S.zgu[shown])||'서울 전체'});
       },

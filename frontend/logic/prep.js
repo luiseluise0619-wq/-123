@@ -43,7 +43,10 @@ globalThis.MysbizonParts.prep = {
       item('walk','prep.itemWalk','prep.itemWalkDetail'),
       item('opening','prep.itemOpening','prep.itemOpeningDetail')
     ];
-    const groups=[{title:this.t('prep.groupContract'),items:contract},{title:this.t('prep.groupOpening'),items:opening},{title:this.t('prep.groupMarketing'),items:marketing}];
+    const groups=[{id:'contract',title:this.t('prep.groupContract'),items:contract},{id:'opening',title:this.t('prep.groupOpening'),items:opening},{id:'marketing',title:this.t('prep.groupMarketing'),items:marketing}]
+      .map(group=>{const done=group.items.filter(item=>item.checked).length,open=S.prepOpen===group.id;return {...group,done,open,
+        summary:this.t('prep.groupProgress',{done,total:group.items.length}),caret:open?'−':'+',
+        toggle:()=>this.setState({prepOpen:open?'':group.id})};});
     const all=groups.flatMap(g=>g.items),done=all.filter(o=>o.checked).length,pct=all.length?Math.round(done/all.length*100):0;
 
     let sel=null,rank=null;

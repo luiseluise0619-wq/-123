@@ -151,11 +151,11 @@ globalThis.MysbizonParts.analysis = {
           datasets:[{label:'점포 수', data:[r.opened, r.closed], colors:['on','warn']}]});
         const rows=Object.keys(ST.ind).map(n=>({n, v:ST.ind[n].close_rate}))
           .filter(o=>isFinite(o.v)).sort((a,b)=>b.v-a.v).slice(0,12);
-        push('mv-close-rate',{type:'hbar', title:'어떤 장사가 많이 문을 닫나요?', sub:'전체 점포 대비 폐업 비율',
-          unit:'%', period:this.qtr(ST.quarter), height:280,
+        push('mv-close-rate',{type:'hbar', title:'어떤 장사가 많이 문을 닫나요?', sub:'서울 전체 · 3개월 폐업 점포 ÷ 전체 점포',
+          unit:'%', period:this.qtr(ST.quarter), height:340,
           labels:rows.map(o=>this.indName(o.n)),
           datasets:[{label:'폐업률', data:rows.map(o=>o.v),
-            colors:rows.map(o=>o.n===S.ind?'on':'warn')}]});
+            colors:rows.map(o=>o.n===S.ind?'on':'')}]});
       }
       missing.push('상권별 점포 수 추이는 아직 없어서 최근 분기 수치만 보여줘요.');
     }

@@ -152,17 +152,45 @@ test('지도에서 찍은 위치는 가장 가까운 서울 상권 한 곳에 �
   assert.ok(found.distance<20);
 });
 
+test('지도 업종을 바꾸면 그 업종 자료가 있는 가장 가까운 상권을 고른다',()=>{
+  const {instance:c}=component();
+  c.state.smap={lls:{a:[37.5,127],b:[37.5002,127.0002]}};
+  c.state.zi={inds:['카페','한식'],zones:{a:{rows:[[0,3,9000]]},b:{rows:[[1,4,12000]]}}};
+  assert.equal(c.nearestZoneForIndustry(37.5,127,'한식').id,'b');
+  assert.equal(c.nearestZoneForIndustry(37.5,127,'카페').id,'a');
+  c.state.ind='카페';c.chooseMapPoint(35,129,'산');
+  assert.equal(c.state.mapZoneId,null,'500m 밖 상권을 클릭 지점에 강제로 붙이면 안 된다');
+});
+
+test('지도 상태가 바뀌어도 기존 지도 컨테이너와 지도 객체를 다시 쓴다',()=>{
+  const {instance:c,context}=component();let replaced=null,synced=0,relayout=0;
+  const old={id:'old'},placeholder={replaceWith(value){replaced=value;}};
+  Object.assign(c.state,{screen:'map',kakaoMapKey:'configured'});
+  c._kakaoContainer=old;c._kakaoMap={relayout(){relayout++;}};
+  c.syncKakaoMapLayers=()=>{synced++;};
+  context.document.getElementById=()=>placeholder;
+  context.document.body={contains:value=>value===old};
+  context.requestAnimationFrame=fn=>fn();
+  c.paintKakaoMap();
+  assert.equal(replaced,old);
+  assert.equal(synced,1);
+  assert.equal(relayout,1);
+});
+
 test('지도는 상권 업종 참고 순위 3개를 보여 주고 비교 후보는 5곳까지만 담는다',()=>{
   const {instance:c}=component();const data=n=>JSON.parse(fs.readFileSync(new URL('../frontend/data/v3/'+n+'.json',import.meta.url),'utf8'));
   Object.assign(c.state,{screen:'map',zi:data('zone_industry'),sbi:data('sales_by_industry'),sti:data('stores_by_industry'),
     zgu:data('zone_gu').gu,zbd:data('zone_border').border,smap:data('seoul_map'),zlp:data('zone_livepop').zone,
     rentStats:data('rent'),salesHistory:data('sales_history'),income:data('income'),ind:'한식음식점'});
   const ranked=c.rank(),ids=ranked.list.slice(0,8).map(o=>o.id),ll=c.state.smap.lls[ids[0]];
-  Object.assign(c.state,{sel:ids[0],zoneId:ids[0],mapPoint:{lat:ll[0],lng:ll[1]},competitors:[]});
+  Object.assign(c.state,{sel:ids[0],zoneId:ids[0],mapZoneId:ids[0],mapPoint:{lat:ll[0],lng:ll[1]},competitors:[]});
   const mapView=c.renderVals().mv;
   assert.equal(mapView.recommendations.length,3);
   assert.equal(mapView.recommendations.map(o=>o.rank).join('|'),'1순위|2순위|3순위');
   assert.equal(new Set(mapView.recommendations.map(o=>o.name)).size,3);
+  assert.match(mapView.metrics[0].label,/점포당/);
+  assert.match(mapView.metrics[0].note,/점포 .+곳 ÷ 3개월/);
+  assert.equal(mapView.indOptions.length,62);
 
   Object.assign(c.state,{screen:'sim',picks:ids.slice(0,4),sel:ids[0]});
   let compare=c.renderVals(),candidate=compare.c.add.browseRows.find(o=>!o.disabled);
@@ -176,6 +204,8 @@ test('업종별 창업 체크는 진행률과 공식 확인 링크를 제공한�
   const {instance:c}=component();
   c.state.screen='prep';c.state.ind='커피-음료';
   let view=c.prepView();
+  assert.equal(view.groups.filter(g=>g.open).length,1);
+  assert.equal(view.groups[0].open,true);
   const items=view.groups.flatMap(g=>g.items),business=items.find(i=>i.id==='business'),google=items.find(i=>i.id==='google');
   assert.match(business.source.url,/nts\.go\.kr/);
   assert.match(google.source.url,/support\.google\.com\/business/);

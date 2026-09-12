@@ -129,14 +129,14 @@
   "map.independent": "Independent",
   "map.loadingNearby": "Checking nearby businesses.",
   "map.loadingShort": "Checking",
-  "map.majorBrands": "Main franchises",
+  "map.majorBrands": "Main franchises · within 500 m",
   "map.nearby": "View nearby businesses",
   "map.nearbyTitle": "Nearby similar businesses",
   "map.noNearby": "No similar business was found within 500 m. Search results may differ from current operating status.",
   "map.noPhone": "No phone number",
   "map.pickHint": "Tap the map to choose a point to analyse.",
   "map.radiusBasis": "500 m from the point · automatic",
-  "map.referenceSales": "Monthly area reference sales",
+  "map.referenceSales": "Estimated monthly sales per business",
   "map.salesCaution": "Not a forecast for a new shop",
   "map.save": "Save candidate",
   "map.saved": "Saved · remove",
@@ -1698,7 +1698,8 @@
     "수요·경쟁·참고 매출을 서울 비교군과 견주고, 무엇을 더 확인해야 하는지 보여드려요.": "Compares demand, competition and reference sales with the Seoul comparison set and shows what to verify next.",
     "점포당 참고 매출이 서울 비교군 중앙값보다 높아요.": "Reference sales per shop are above the Seoul comparison-set median.",
     "점포당 참고 매출이 서울 비교군 중앙값보다 낮아요.": "Reference sales per shop are below the Seoul comparison-set median.",
-    "원가율을 {0}% 미만으로 입력해 주세요": "Enter a cost ratio below {0}%."
+    "원가율을 {0}% 미만으로 입력해 주세요": "Enter a cost ratio below {0}%.",
+    "서울 전체 · 3개월 폐업 점포 ÷ 전체 점포": "Seoul · closed businesses ÷ all businesses over 3 months"
   },
   "mk.waitingCats": "{names} prices are on the way.",
   "op.loading": "Loading recent openings and closures…",
@@ -1780,5 +1781,12 @@
   "find.whySalesLow": "Area spending is below the median for the {scope} comparison set",
   "find.whyCompLow": "There are fewer competing shops than the median for the {scope} comparison set",
   "find.whyCompHigh": "There are more competing shops than the median for the {scope} comparison set",
-  "find.whyPerHigh": "Reference sales per shop are high in the {scope} comparison set"
+  "find.whyPerHigh": "Reference sales per shop are high in the {scope} comparison set",
+  "map.selectedPoint": "Selected point",
+  "map.industryLabel": "Business type",
+  "map.nearestDistance": "nearest {distance} m",
+  "map.salesFormula": "Quarterly spend ÷ {stores} businesses ÷ 3 months · not one store’s sales",
+  "prep.groupProgress": "{done}/{total} complete",
+  "map.noZoneTitle": "No area data is linked here",
+  "map.noZoneNearby": "No valid area data for this business was found within 500 m. Choose another point."
 }

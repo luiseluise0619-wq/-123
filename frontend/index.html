@@ -1258,7 +1258,14 @@
         <h1 style="{{ ds1 }};margin-top:8px">{{ mv.target }}</h1>
         <p style="{{ dsBody }};margin-top:10px;max-width:720px">{{ mv.sub }}</p>
 
-        <div style="display:flex;gap:8px;margin-top:24px;max-width:760px">
+        <div style="display:flex;align-items:center;gap:10px;margin-top:24px;max-width:760px;flex-wrap:wrap">
+          <label for="map-industry" style="font-size:13px;font-weight:650;color:var(--ink2)">{{ mv.industryLabel }}</label>
+          <select id="map-industry" aria-label="{{ mv.industryLabel }}" value="{{ mv.indSel }}" onChange="{{ mv.onIndSel }}" style="{{ selectStyle }};min-width:180px;max-width:240px">
+            <sc-for list="{{ mv.indOptions }}" as="o"><option value="{{ o.raw }}">{{ o.label }}</option></sc-for>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;max-width:760px">
           <input value="{{ mv.query }}" onChange="{{ mv.onQuery }}" onKeyDown="{{ mv.onSearchKey }}" aria-label="{{ mv.searchPlaceholder }}" placeholder="{{ mv.searchPlaceholder }}" style="{{ dsInput }};flex:1;min-width:0">
           <button onClick="{{ mv.search }}" style="{{ dsCta }};flex:none">{{ mv.searchLabel }}</button>
         </div>
@@ -1266,7 +1273,7 @@
 
         <div class="map-analysis-grid" style="display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);gap:18px;margin-top:20px;align-items:start">
           <div style="position:relative;min-width:0">
-            <div id="kakao-map" role="application" aria-label="{{ mv.target }}" style="height:clamp(420px,58vh,620px);width:100%;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--surface);display:flex;align-items:center;justify-content:center">
+            <div id="kakao-map" class="map-click-cursor" role="application" aria-label="{{ mv.target }}" style="height:clamp(420px,58vh,620px);width:100%;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--surface);display:flex;align-items:center;justify-content:center">
               <span style="padding:16px;color:var(--ink3);font-size:14px">{{ mv.map.loadingText }}</span>
             </div>
             <sc-if value="{{ mv.needsPoint }}">
@@ -1274,7 +1281,7 @@
             </sc-if>
           </div>
 
-          <sc-if value="{{ mv.hasPoint }}">
+          <sc-if value="{{ mv.showResult }}">
             <aside style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;min-width:0">
               <div style="font-size:12px;font-weight:600;color:var(--ink3)">{{ mv.period }} · {{ mv.industry }}</div>
               <div style="font-size:13px;color:var(--accent-text);font-weight:600;margin-top:13px">{{ mv.address }}</div>
@@ -1332,6 +1339,13 @@
                 <button onClick="{{ mv.togglePick }}" style="{{ dsGhost }}">{{ mv.pickState }}</button>
                 <button onClick="{{ mv.openCompetitors }}" style="{{ dsGhost }};grid-column:1/-1">{{ mv.labels.nearby }}</button>
               </div>
+            </aside>
+          </sc-if>
+          <sc-if value="{{ mv.noZone }}">
+            <aside role="status" style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;min-width:0">
+              <div style="font-size:13px;color:var(--accent-text);font-weight:600">{{ mv.address }}</div>
+              <h2 style="font-size:21px;line-height:1.3;letter-spacing:-.025em;margin:10px 0 0">{{ mv.noZoneTitle }}</h2>
+              <p style="font-size:14px;line-height:22px;color:var(--ink2);margin:10px 0 0">{{ mv.summary }}</p>
             </aside>
           </sc-if>
         </div>
@@ -2202,20 +2216,30 @@
         </div>
 
         <div style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:40px;margin-top:42px" class="prep-grid">
-          <div>
+          <div style="border-top:1px solid var(--line)">
             <sc-for list="{{ prep.groups }}" as="g">
-              <section style="padding:0 0 36px">
-                <h2 style="font-size:20px;letter-spacing:-.025em;margin:0 0 8px">{{ g.title }}</h2>
-                <sc-for list="{{ g.items }}" as="i">
-                  <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-top:1px solid var(--line)">
-                    <button aria-pressed="{{ i.checked }}" onClick="{{ i.toggle }}" style="{{ i.checkStyle }}">{{ i.checkText }}</button>
-                    <div style="min-width:0;flex:1">
-                      <div style="font-size:15px;font-weight:650">{{ i.label }}</div>
-                      <div style="font-size:12.5px;color:var(--ink3);line-height:1.5;margin-top:3px">{{ i.detail }}</div>
-                      <sc-if value="{{ i.source }}"><a href="{{ i.source.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:5px;font-size:12px">{{ i.source.label }}</a></sc-if>
-                    </div>
+              <section style="border-bottom:1px solid var(--line)">
+                <button onClick="{{ g.toggle }}" aria-expanded="{{ g.open }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 2px;background:transparent;text-align:left;cursor:pointer">
+                  <span>
+                    <strong style="display:block;font-size:18px;letter-spacing:-.02em">{{ g.title }}</strong>
+                    <span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:4px">{{ g.summary }}</span>
+                  </span>
+                  <span aria-hidden="true" style="width:28px;height:28px;border:1px solid var(--line);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:18px;color:var(--ink2);flex:none">{{ g.caret }}</span>
+                </button>
+                <sc-if value="{{ g.open }}">
+                  <div style="padding:0 0 12px 16px;border-left:2px solid var(--accent-2);margin-bottom:16px">
+                    <sc-for list="{{ g.items }}" as="i">
+                      <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0">
+                        <button aria-pressed="{{ i.checked }}" onClick="{{ i.toggle }}" style="{{ i.checkStyle }}">{{ i.checkText }}</button>
+                        <div style="min-width:0;flex:1">
+                          <div style="font-size:15px;font-weight:650">{{ i.label }}</div>
+                          <div style="font-size:12.5px;color:var(--ink3);line-height:1.5;margin-top:3px">{{ i.detail }}</div>
+                          <sc-if value="{{ i.source }}"><a href="{{ i.source.url }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:5px;font-size:12px">{{ i.source.label }}</a></sc-if>
+                        </div>
+                      </div>
+                    </sc-for>
                   </div>
-                </sc-for>
+                </sc-if>
               </section>
             </sc-for>
           </div>

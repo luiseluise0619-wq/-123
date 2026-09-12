@@ -129,14 +129,14 @@
   "map.independent": "独立店铺",
   "map.loadingNearby": "正在查询周边商家。",
   "map.loadingShort": "查询中",
-  "map.majorBrands": "主要连锁品牌",
+  "map.majorBrands": "主要连锁品牌 · 所选位置500米内",
   "map.nearby": "查看周边商家",
   "map.nearbyTitle": "周边同类商家",
   "map.noNearby": "500米内未搜索到同类商家。搜索结果可能与实际营业状态不同。",
   "map.noPhone": "暂无电话",
   "map.pickHint": "点击地图选择要分析的位置。",
   "map.radiusBasis": "所选位置500米 · 自动标准",
-  "map.referenceSales": "商圈参考月销售额",
+  "map.referenceSales": "单店月参考销售额（推算）",
   "map.salesCaution": "并非新店销售预测",
   "map.save": "保存候选位置",
   "map.saved": "已保存 · 移除",
@@ -1730,7 +1730,8 @@
     "수요·경쟁·참고 매출을 서울 비교군과 견주고, 무엇을 더 확인해야 하는지 보여드려요.": "将需求、竞争和参考销售额与首尔比较组对照，并显示接下来需要核实的事项。",
     "점포당 참고 매출이 서울 비교군 중앙값보다 높아요.": "单店参考销售额高于首尔比较组中位数。",
     "점포당 참고 매출이 서울 비교군 중앙값보다 낮아요.": "单店参考销售额低于首尔比较组中位数。",
-    "원가율을 {0}% 미만으로 입력해 주세요": "请输入低于{0}%的成本率。"
+    "원가율을 {0}% 미만으로 입력해 주세요": "请输入低于{0}%的成本率。",
+    "서울 전체 · 3개월 폐업 점포 ÷ 전체 점포": "首尔全市 · 3个月关店数 ÷ 全部店铺数"
   },
   "mk.waitingCats": "{names}行情正在准备中。",
   "op.loading": "正在加载最近的开业·歇业信息…",
@@ -1812,5 +1813,12 @@
   "find.whySalesLow": "商圈消费规模低于{scope}比较组中位数",
   "find.whyCompLow": "同业竞争店铺数少于{scope}比较组中位数",
   "find.whyCompHigh": "同业竞争店铺数多于{scope}比较组中位数",
-  "find.whyPerHigh": "单店参考销售额在{scope}比较组中较高"
+  "find.whyPerHigh": "单店参考销售额在{scope}比较组中较高",
+  "map.selectedPoint": "所选位置",
+  "map.industryLabel": "分析行业",
+  "map.nearestDistance": "最近 {distance}米",
+  "map.salesFormula": "季度消费额 ÷ 同行业{stores}家 ÷ 3个月 · 非单店业绩",
+  "prep.groupProgress": "已完成 {done}/{total}",
+  "map.noZoneTitle": "此处没有可关联的商圈数据",
+  "map.noZoneNearby": "所选位置500米内没有该行业的有效商圈数据，请选择其他位置。"
 }

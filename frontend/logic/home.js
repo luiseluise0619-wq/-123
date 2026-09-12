@@ -406,7 +406,7 @@ globalThis.MysbizonParts.home = {
           const el=document.querySelectorAll('[data-search] input')[1]; if(el) el.focus(); return; }
         this.setState({starting:true,pickOpen:null});
         if(S.zoneId){ this.startZone(); return; }
-        this.setState({screen:'map',sel:null,mapPoint:null,mapAddress:'',fromRegion:false,homeZone:null,starting:false});
+        this.setState({screen:'map',sel:null,mapPoint:null,mapAddress:'',mapZoneId:null,mapZoneDistance:null,fromRegion:false,homeZone:null,starting:false});
       },
       // 흰 필드 + 아주 얕은 그림자. 회색 덩어리보다 가볍고 정확해 보인다.
       picking:!!S.picking,
@@ -424,6 +424,7 @@ globalThis.MysbizonParts.home = {
     const ll=S.smap&&S.smap.lls&&S.smap.lls[S.zoneId];
     this.setState({screen:'map',picking:null,starting:false,homeZone:name,regPick:S.homeInd||null,
       mapPoint:Array.isArray(ll)?{lat:Number(ll[0]),lng:Number(ll[1])}:null,
+      mapZoneId:Array.isArray(ll)?S.zoneId:null,mapZoneDistance:Array.isArray(ll)?0:null,
       mapAddress:this.zoneLabelOf(name||''),competitors:null,competitorsLoading:Array.isArray(ll)});
     if(Array.isArray(ll)) this.fetchNearbyCompetitors(Number(ll[0]),Number(ll[1]));
   },
