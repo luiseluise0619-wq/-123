@@ -48,6 +48,12 @@ globalThis.MysbizonReportI18n = (function(){
       var loc='ko';
       try{ loc=(JSON.parse(localStorage.getItem('mysbizon.theme')||'{}').locale)||'ko'; }catch(e){}
       if(loc==='ko' || (loc!=='en' && loc!=='zh-CN')) return Promise.resolve(false);
+      var embedded=globalThis.MysbizonBootstrap && globalThis.MysbizonBootstrap.locales && globalThis.MysbizonBootstrap.locales[loc];
+      if(embedded){
+        table=embedded['@phrases'] || null;
+        if(table) document.documentElement.setAttribute('lang', loc==='zh-CN'?'zh-CN':'en');
+        return Promise.resolve(!!table);
+      }
       return fetch('./locales/'+loc+'.json')
         .then(function(r){ return r.ok? r.json() : null; })
         .then(function(j){

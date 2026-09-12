@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import vm from 'node:vm';
 import {buildDeployment} from '../scripts/build-deploy.mjs';
-import {BUNDLE_SOURCES} from '../scripts/build-assets.mjs';
+import {BUNDLE_SOURCES,DATA_BUNDLE_FILES} from '../scripts/build-assets.mjs';
 import {createServer} from '../server/app.js';
 import support from '../api/support.js';
 import {fetchT} from '../api/_http.js';
@@ -22,7 +22,10 @@ test('HTML build CLI actually runs on Windows and Linux',()=>{
 test('browser script order loads every prototype part; unmount destroys charts',async()=>{
   const html=await readFile(path.join(root,'frontend/index.html'),'utf8');
   const publicScripts=[...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(m=>m[1]);
-  assert.ok(publicScripts.includes('./app.bundle.js?v=1'));assert.ok(publicScripts.length<=8);
+  assert.ok(publicScripts.includes('./app.bundle.js?v=1'));assert.ok(publicScripts.includes('./data.bundle.js?v=1'));assert.ok(publicScripts.length<=8);
+  const dataContext=vm.createContext({});
+  vm.runInContext(await readFile(path.join(root,'frontend/data.bundle.js'),'utf8'),dataContext);
+  assert.deepEqual(Object.keys(dataContext.MysbizonBootstrap.data).sort(),[...DATA_BUNDLE_FILES].sort());
   const context=vm.createContext({console,window:{},document:{},clearTimeout,
     DCLogic:class {setState(v){this.state={...this.state,...v};}}});
   for(const src of BUNDLE_SOURCES.filter(src=>src!=='dc-runtime.js')) {
@@ -74,7 +77,7 @@ test('deploy artifact starts independently and excludes collectors, templates an
   await new Promise(r=>server.listen(0,'127.0.0.1',r));
   t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));});
   const base='http://127.0.0.1:'+server.address().port;
-  for(const url of ['/','/healthz','/api/config','/api/integrations','/report-print.html','/privacy','/app.bundle.js','/data/v3/zone_industry.json']) {
+  for(const url of ['/','/healthz','/api/config','/api/integrations','/report-print.html','/privacy','/app.bundle.js','/data.bundle.js','/data/v3/zone_industry.json']) {
     const response=await fetch(base+url);assert.equal(response.status,200,url);await response.arrayBuffer();
   }
   for(const url of ['/api/market','/vercel.json','/zone_intel.json','/screens/01-home.html','/logic/home.js']) {

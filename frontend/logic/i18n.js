@@ -60,6 +60,8 @@ globalThis.MysbizonParts.i18n = {
     if(!k || k==='ko') return Promise.resolve();
     this._dict = this._dict || {ko:this.KO_BASE()};
     if(this._dict[k]) return Promise.resolve();
+    const embedded=globalThis.MysbizonBootstrap&&globalThis.MysbizonBootstrap.locales&&globalThis.MysbizonBootstrap.locales[k];
+    if(embedded){this._dict[k]=embedded;this._trCache={};return Promise.resolve();}
     this._fetching = this._fetching || {};
     if(this._fetching[k]) return this._fetching[k];
     const done = fetch('./locales/'+k+'.json')
