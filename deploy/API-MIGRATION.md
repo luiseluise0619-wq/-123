@@ -13,7 +13,7 @@
 |추가 연동|[한국은행 ECOS Open API](https://ecos.bok.or.kr/api/) → 인증키 신청 안내|ECOS 인증키|미공개 `api/market.js`의 `ECOS_KEY`. 키만 넣어도 현재 화면에 연결되지는 않음|
 |추가 연동|[KAMIS Open API](https://www.kamis.or.kr/customer/reference/openapi_list.do) → 사용신청|인증키 + 요청자 ID|미공개 `api/market.js`의 `KAMIS_KEY`, `KAMIS_ID`. 공공데이터포털을 통한 신청 경로도 공식 안내에 있음|
 |추가 연동|[오피넷 Open API](https://www.opinet.co.kr/user/custapi/custApiInfo.do) → 인증키 발급|오피넷 인증키|미공개 `api/market.js`의 `OPINET_KEY`. 국내 석유제품 가격용; 국제유가까지 된다고 단정하지 않음|
-|임대통계 자동화|[한국부동산원 R-ONE Open API](https://www.reb.or.kr/r-one/portal/openapi/openApiIntroPage.do) → 로그인 → 인증키 발급내역/목록|인증키와 통계표·주기·지역·항목 코드|Node `api/integrations.js`의 고정 서버 어댑터. 현재 정적 임대료 자료를 보완하는 조회 경로|
+|임대통계 자동화|[한국부동산원 R-ONE Open API](https://www.reb.or.kr/r-one/portal/openapi/openApiIntroPage.do) → 로그인 → 인증키 발급내역/목록|인증키|Node `api/integrations.js`의 고정 서버 어댑터. 소규모·중대형·집합상가의 임대료·공실률·임대가격지수를 허용 목록에서 조회|
 |환율|[한국수출입은행 환율 API](https://www.data.go.kr/data/3068846/openapi.do) → 회사 계정 활용신청|수출입은행 인증키|Node `api/integrations.js`; 새 `oapi.koreaexim.go.kr` 주소 사용|
 |AI 해설|[Google AI Studio API 키](https://ai.google.dev/gemini-api/docs/api-key) → 회사 Cloud 프로젝트|Gemini API 키와 프로젝트 권한|Node `api/integrations.js`; 서버 헤더 인증, 저장 비활성, 입력 크기·개인정보 모양·호출 수 제한|
 

@@ -40,15 +40,7 @@ read_secret GEMINI_API_KEY "Gemini 키"
 upsert GEMINI_MODEL "gemini-3.8-flash"
 
 if grep -q '^RONE_API_KEY=.' "$ENV_FILE"; then
-  echo "R-ONE은 키 외에 조회할 통계표·지역·항목 코드가 필요합니다. 모르면 Enter로 건너뛰세요."
-  for spec in \
-    'RONE_STATBL_ID:R-ONE 통계표 코드' \
-    'RONE_CYCLE:R-ONE 주기 코드(예: QY)' \
-    'RONE_CLS_ID:R-ONE 지역 코드' \
-    'RONE_ITM_ID:R-ONE 항목 코드'; do
-    name=${spec%%:*}; label=${spec#*:}; read -r -p "$label: " value </dev/tty
-    [[ -z "$value" ]] || upsert "$name" "$value"
-  done
+  echo "R-ONE 공식 코드는 앱에 고정했습니다. 소규모·중대형·집합상가의 임대료·공실률·임대가격지수를 모두 선택 조회할 수 있습니다."
 fi
 
 systemctl restart mysbizon-node

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import support from '../api/support.js';
-import {integrationStatus,publicDataHandler,geminiHandler,endpoints} from '../api/integrations.js';
+import {integrationStatus,publicDataHandler,geminiHandler,endpoints,ronePresets} from '../api/integrations.js';
 
 function response(){
   return {statusCode:0,body:null,status(code){this.statusCode=code;return this;},json(body){this.body=body;return body;}};
@@ -10,7 +10,7 @@ function restoreEnv(snapshot){for(const key of Object.keys(process.env))if(!(key
 
 test('integration status exposes readiness but never credential values',()=>{
   const env={SEOUL_API_KEY:'seoul-secret',DATA_GO_KR_KEY:'data-secret',GEMINI_API_KEY:'gemini-secret',EXIM_API_KEY:'exim-secret',
-    RONE_API_KEY:'rone-secret',RONE_STATBL_ID:'TABLE',RONE_CYCLE:'QY',RONE_CLS_ID:'1',RONE_ITM_ID:'2'};
+    RONE_API_KEY:'rone-secret'};
   const status=integrationStatus(env),encoded=JSON.stringify(status);
   assert.equal(status.seoul.configured,true);assert.equal(status.rOne.configured,true);
   for(const secret of Object.values(env))assert.equal(encoded.includes(secret),false);
@@ -46,9 +46,35 @@ test('Gemini sends the key only in a header, disables storage and blocks obvious
   assert.equal(res.body.answer,'근거를 먼저 확인하세요.');assert.equal(JSON.stringify(res.body).includes('AIza-test-secret'),false);
 });
 
-test('R-ONE does not pretend a key alone identifies a statistic',async t=>{
-  const env={...process.env};t.after(()=>restoreEnv(env));
-  process.env.RONE_API_KEY='key';for(const name of ['RONE_STATBL_ID','RONE_CYCLE','RONE_CLS_ID','RONE_ITM_ID'])delete process.env[name];
-  const res=response();await publicDataHandler({body:{provider:'rOne'}},res);
-  assert.equal(res.statusCode,200);assert.equal(res.body.configured,false);assert.ok(res.body.needs.includes('RONE_STATBL_ID'));
+test('R-ONE key exposes the fixed retail catalog without an upstream call',async t=>{
+  const oldFetch=global.fetch,env={...process.env};t.after(()=>{global.fetch=oldFetch;restoreEnv(env);});
+  process.env.RONE_API_KEY='key';global.fetch=async()=>{throw new Error('unexpected fetch');};
+  const res=response();await publicDataHandler({body:{provider:'rOne',action:'catalog'}},res);
+  assert.equal(res.statusCode,200);assert.equal(res.body.configured,true);assert.equal(res.body.defaultRegionCode,'500002');
+  assert.deepEqual(res.body.catalog.map(v=>v.buildingType),['small','medium','collective']);
+  assert.ok(res.body.catalog.every(v=>v.metrics.length===3));
+});
+
+test('R-ONE all selection queries only the nine allowlisted current tables',async t=>{
+  const oldFetch=global.fetch,env={...process.env};t.after(()=>{global.fetch=oldFetch;restoreEnv(env);});
+  process.env.RONE_API_KEY='key';const called=[];
+  global.fetch=async url=>{
+    const parsed=new URL(String(url));called.push(parsed);
+    const row={WRTTIME_IDTFR_ID:'202601',WRTTIME_DESC:'2026년 1분기',DTA_VAL:'12.3',UI_NM:'%',CLS_NM:'서울',ITM_NM:'값'};
+    return new Response(JSON.stringify({SttsApiTblData:[{head:[{list_total_count:1},{RESULT:{CODE:'INFO-000'}}]},{row:[row]}]}),{status:200});
+  };
+  const res=response();await publicDataHandler({body:{provider:'rOne',startYear:'2026',endYear:'2026'}},res);
+  assert.equal(res.statusCode,200);assert.equal(res.body.datasets.length,9);assert.equal(called.length,9);
+  const allowed=new Set(Object.values(ronePresets).flatMap(v=>Object.values(v.metrics).map(m=>m.statblId)));
+  assert.deepEqual(new Set(called.map(v=>v.searchParams.get('STATBL_ID'))),allowed);
+  assert.ok(called.every(v=>v.origin==='https://www.reb.or.kr'&&v.searchParams.get('DTACYCLE_CD')==='QY'
+    &&v.searchParams.get('CLS_ID')==='500002'&&v.searchParams.get('ITM_ID')==='100001'));
+  assert.equal(JSON.stringify(res.body).includes('key'),false);
+});
+
+test('R-ONE rejects table names outside the fixed catalog',async t=>{
+  const oldFetch=global.fetch,env={...process.env};t.after(()=>{global.fetch=oldFetch;restoreEnv(env);});
+  process.env.RONE_API_KEY='key';let fetched=false;global.fetch=async()=>{fetched=true;throw new Error('unexpected fetch');};
+  const res=response();await publicDataHandler({body:{provider:'rOne',buildingType:'other'}},res);
+  assert.equal(res.statusCode,400);assert.equal(fetched,false);
 });

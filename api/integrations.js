@@ -13,6 +13,31 @@ const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/interactions'
 const DATAGO_STORE_URL='https://apis.data.go.kr/B553077/api/open/sdsc2/storeListInDong';
 const SEOUL_BASE='http://openapi.seoul.go.kr:8088';
 
+// R-ONE publishes separate tables for each building type and metric. Keep the
+// official, current (2024 Q3 onward) identifiers on the server so operators
+// only need to configure the API key. Public callers select from this allowlist
+// and cannot make the server query an arbitrary table or upstream URL.
+const RONE_CYCLE='QY';
+const RONE_ITEM_ID='100001';
+const RONE_DEFAULT_REGION='500002'; // 서울
+const RONE_SERIES=Object.freeze({
+  small:Object.freeze({label:'소규모 상가',metrics:Object.freeze({
+    rent:Object.freeze({label:'임대료',statblId:'T248223134698125'}),
+    vacancy:Object.freeze({label:'공실률',statblId:'T241833134686576'}),
+    rentIndex:Object.freeze({label:'임대가격지수',statblId:'T241273134677393'}),
+  })}),
+  medium:Object.freeze({label:'중대형 상가',metrics:Object.freeze({
+    rent:Object.freeze({label:'임대료',statblId:'T244363134858603'}),
+    vacancy:Object.freeze({label:'공실률',statblId:'T249633134845544'}),
+    rentIndex:Object.freeze({label:'임대가격지수',statblId:'T249863134832916'}),
+  })}),
+  collective:Object.freeze({label:'집합 상가',metrics:Object.freeze({
+    rent:Object.freeze({label:'임대료',statblId:'T244913134948657'}),
+    vacancy:Object.freeze({label:'공실률',statblId:'T243283134931290'}),
+    rentIndex:Object.freeze({label:'임대가격지수',statblId:'T242433134965708'}),
+  })}),
+});
+
 const SEOUL_DATASETS=Object.freeze({
   sales:'VwsmTrdarSelngQq',
   stores:'VwsmTrdarStorQq',
@@ -45,12 +70,11 @@ function validYmd(value){return /^20\d{6}$/.test(String(value||''))?String(value
 
 export function integrationStatus(env=process.env){
   const dataGo=!!keyFor('DATA_GO_KR_KEY',env),roneKey=!!keyFor('RONE_API_KEY',env);
-  const roneSeries=['RONE_STATBL_ID','RONE_CYCLE','RONE_CLS_ID','RONE_ITM_ID'].every(k=>!!keyFor(k,env));
   return {
     seoul:{configured:!!keyFor('SEOUL_API_KEY',env),keyOnly:true},
     dataGoKr:{configured:dataGo,keyOnly:false,note:'이용 신청한 API별 주소가 필요합니다. 상가정보 어댑터는 포함되어 있습니다.'},
     kStartup:{configured:!!(keyFor('KSTARTUP_API_KEY',env)||keyFor('DATA_GO_KR_KEY',env)),keyOnly:true},
-    rOne:{configured:roneKey&&roneSeries,keyOnly:false,note:'인증키와 조회할 통계표·지역·항목 코드가 필요합니다.'},
+    rOne:{configured:roneKey,keyOnly:true,note:'소규모·중대형·집합상가의 임대료·공실률·임대가격지수를 선택 조회합니다.'},
     exportImportBank:{configured:!!keyFor('EXIM_API_KEY',env),keyOnly:true},
     gemini:{configured:!!keyFor('GEMINI_API_KEY',env),keyOnly:true},
   };
@@ -114,21 +138,55 @@ async function exportImportBank(body){
   return saveCache(cacheKey,{ok:true,configured:true,provider:'exportImportBank',date,rates},60*60*1000);
 }
 
-async function rOne(body){
-  const key=keyFor('RONE_API_KEY'),stat=keyFor('RONE_STATBL_ID'),cycle=keyFor('RONE_CYCLE'),cls=keyFor('RONE_CLS_ID'),item=keyFor('RONE_ITM_ID');
-  if(!key||!stat||!cycle||!cls||!item)return {ok:false,configured:false,provider:'rOne',needs:['RONE_API_KEY','RONE_STATBL_ID','RONE_CYCLE','RONE_CLS_ID','RONE_ITM_ID']};
-  if(!/^[A-Z0-9_]{3,40}$/i.test(stat)||!/^[A-Z0-9]{1,8}$/i.test(cycle)||!/^[0-9A-Z_-]{1,30}$/i.test(cls)||!/^[0-9A-Z_*-]{1,30}$/i.test(item))throw new Error('INVALID_RONE_CONFIG');
-  const year=new Date().getFullYear(),start=String(body.startYear||year-2),end=String(body.endYear||year);
-  if(!/^20\d{2}$/.test(start)||!/^20\d{2}$/.test(end))throw new Error('INVALID_YEAR');
-  const cacheKey=`rone:${stat}:${cycle}:${cls}:${item}:${start}:${end}`;const cached=fromCache(cacheKey);if(cached)return {...cached,cached:true};
-  const query=new URLSearchParams({Type:'json',pIndex:'1',pSize:'400',STATBL_ID:stat,DTACYCLE_CD:cycle,CLS_ID:cls,ITM_ID:item,START_WRTTIME:start,END_WRTTIME:end});
+function selection(value,one,allowed){
+  const raw=Array.isArray(value)?value:(one?[one]:[]);
+  if(!raw.length)return [...allowed];
+  const out=[...new Set(raw.map(v=>String(v||'').trim()))];
+  if(!out.length||out.some(v=>!allowed.includes(v)))throw new Error('INVALID_RONE_SELECTION');
+  return out;
+}
+
+function rOneCatalog(){
+  return Object.entries(RONE_SERIES).map(([buildingType,entry])=>({
+    buildingType,label:entry.label,
+    metrics:Object.entries(entry.metrics).map(([metric,value])=>({metric,label:value.label})),
+  }));
+}
+
+async function fetchRoneSeries(key,{buildingType,metric,regionCode,start,end}){
+  const entry=RONE_SERIES[buildingType],definition=entry.metrics[metric],stat=definition.statblId;
+  const cacheKey=`rone:${stat}:${RONE_CYCLE}:${regionCode}:${RONE_ITEM_ID}:${start}:${end}`;
+  const cached=fromCache(cacheKey);if(cached)return {...cached,cached:true};
+  const query=new URLSearchParams({Type:'json',pIndex:'1',pSize:'400',STATBL_ID:stat,DTACYCLE_CD:RONE_CYCLE,
+    CLS_ID:regionCode,ITM_ID:RONE_ITEM_ID,START_WRTTIME:start,END_WRTTIME:end});
   const response=await fetchT(`${RONE_URL}?KEY=${encKey(key)}&${query}`);
   if(!response.ok)throw new Error('RONE_HTTP_'+response.status);
   const json=await boundedJson(response),parts=json?.SttsApiTblData||[];
   if(json?.RESULT?.CODE||parts?.[0]?.head?.find?.(v=>v.RESULT)?.RESULT?.CODE?.startsWith('ERROR'))throw new Error('RONE_RESULT_ERROR');
   const rows=parts?.[1]?.row||[];
-  const series=(Array.isArray(rows)?rows:[]).map(v=>({time:String(v.WRTTIME_IDTFR_ID||''),value:Number(v.DTA_VAL),unit:String(v.UI_NM||''),region:String(v.CLS_NM||''),item:String(v.ITM_NM||'')})).filter(v=>v.time&&Number.isFinite(v.value));
-  return saveCache(cacheKey,{ok:true,configured:true,provider:'rOne',series},60*60*1000);
+  const series=(Array.isArray(rows)?rows:[]).map(v=>({time:String(v.WRTTIME_IDTFR_ID||''),description:String(v.WRTTIME_DESC||''),
+    value:Number(v.DTA_VAL),unit:String(v.UI_NM||''),region:String(v.CLS_NM||''),item:String(v.ITM_NM||'')})).filter(v=>v.time&&Number.isFinite(v.value));
+  return saveCache(cacheKey,{buildingType,buildingLabel:entry.label,metric,metricLabel:definition.label,statblId:stat,series},60*60*1000);
+}
+
+async function rOne(body){
+  const key=keyFor('RONE_API_KEY');
+  if(!key)return {ok:false,configured:false,provider:'rOne',needs:['RONE_API_KEY']};
+  const catalog=rOneCatalog();
+  if(body.action==='catalog')return {ok:true,configured:true,provider:'rOne',defaultRegionCode:RONE_DEFAULT_REGION,catalog};
+  const buildingTypes=selection(body.buildingTypes,body.buildingType,Object.keys(RONE_SERIES));
+  const metricNames=Object.keys(RONE_SERIES.small.metrics);
+  const metrics=selection(body.metrics,body.metric,metricNames);
+  const regionCode=String(body.regionCode||RONE_DEFAULT_REGION);
+  if(!/^\d{6}$/.test(regionCode))throw new Error('INVALID_RONE_REGION');
+  const year=new Date().getFullYear(),start=String(body.startYear||year-2),end=String(body.endYear||year);
+  if(!/^20\d{2}$/.test(start)||!/^20\d{2}$/.test(end))throw new Error('INVALID_YEAR');
+  if(Number(start)>Number(end))throw new Error('INVALID_YEAR');
+  const requests=buildingTypes.flatMap(buildingType=>metrics.map(metric=>({buildingType,metric,regionCode,start,end})));
+  const settled=await Promise.allSettled(requests.map(request=>fetchRoneSeries(key,request)));
+  const datasets=settled.filter(v=>v.status==='fulfilled').map(v=>v.value),failed=settled.length-datasets.length;
+  if(!datasets.length)throw new Error('RONE_RESULT_ERROR');
+  return {ok:true,configured:true,provider:'rOne',regionCode,startYear:start,endYear:end,datasets,partial:failed>0,failed};
 }
 
 export async function publicDataHandler(req,res){
@@ -180,3 +238,4 @@ export async function geminiHandler(req,res){
 }
 
 export const endpoints=Object.freeze({KSTARTUP_URL,RONE_URL,EXIM_URL,GEMINI_URL,DATAGO_STORE_URL,SEOUL_BASE});
+export const ronePresets=RONE_SERIES;
