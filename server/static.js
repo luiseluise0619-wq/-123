@@ -6,7 +6,7 @@ const gzip=promisify(compress);
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon','.woff2':'font/woff2','.txt':'text/plain; charset=utf-8'};
 const cache=new Map();let cacheBytes=0;
 const pending=new Map();
-const MAX_FILE=10*1024*1024,MAX_CACHE=24*1024*1024;
+const MAX_FILE=10*1024*1024,MAX_CACHE=24*1024*1024,MAX_PENDING=64;
 function remember(key,value){
   const old=cache.get(key);if(old){cacheBytes-=old.bytes;cache.delete(key);}
   while(cache.size && cacheBytes+value.bytes>MAX_CACHE){const oldest=cache.keys().next().value;cacheBytes-=cache.get(oldest).bytes;cache.delete(oldest);}
@@ -31,7 +31,10 @@ export async function serveStatic(root,pathname,res,req){
     const key=file+':'+stamp;
     let loading=pending.get(key);
     if(!loading){
-      if(pending.size>=20){res.writeHead(503,{'Retry-After':'1'});return res.end();}
+      // The initial page loads more than 20 distinct scripts in parallel. The
+      // deployment is only a few MB, so 64 cold reads stay within the service's
+      // memory limit while still bounding work from burst traffic.
+      if(pending.size>=MAX_PENDING){res.writeHead(503,{'Retry-After':'1'});return res.end();}
       // Concurrent cold requests share one read/compression and its memory allocation.
       loading=(async()=>{
         const raw=await readFile(file);

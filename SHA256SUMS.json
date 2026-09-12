@@ -273,7 +273,7 @@
   "server/customer-data.js": "e64a91e817a99c0588760bb4ecfe4ca92205e4004919c199dd0941abced77c22",
   "server/response.js": "0ac44b7cccbe9e5a9e6f5adb30541fe31d14cedd83e259e8d01684b4461d5f84",
   "server/security.js": "a03379ba227eb0cf4481af68cba600a92df37c0a246eb8c2a67d2daaafe3554f",
-  "server/static.js": "8d3ac144ae78c17ec98e1f878dd5739efc70b5b48f8cbeb11452da0dd25eb768",
+  "server/static.js": "31b493302bc4e08b940a4bd61b498991ba33300e280153397766434c791d6896",
   "tests/build.test.js": "e1cc065dc7cd7686d6813c415aa15339344fc9e3d440b33d1767b6f0fa2fc080",
   "tests/customer-data.test.js": "9f6af2ac36c6c1c35c37fabee515a83c50502317a4febd9e08984a8101c2e6dc",
   "tests/error-privacy.test.js": "34f7306a5a1086c5f463af2f0d9df9aeccfaa465af37c414dcc99ceb3bb89153",
@@ -284,5 +284,6 @@
   "tests/market-ux.test.js": "6fa8bb0367c58d2f38412f49ea06be8507be03055ac7ea5cd19e9804fb5fc7dd",
   "tests/refactor.test.js": "19502c4cd0f77968f1af7a9d26ed6e33c5f1029f8ccb84325a3ffbf34a2682e4",
   "tests/security.test.js": "6200db53aa5a8b8fbda96b710229a8579afde12d77877f9a158138eb36af68c6",
+  "tests/static-concurrency.test.js": "8fb1611da8c4c0e4a9473feebeca2a6a1dcba7c990430b5fd23ce951107d52e4",
   "tests/ui-logic.test.js": "cd1271c99077a75254a0eb9405cef502f58a710d157a414e081eaadeaaaf10d7"
 }
