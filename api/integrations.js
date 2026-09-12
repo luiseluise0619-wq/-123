@@ -158,7 +158,7 @@ async function fetchRoneSeries(key,{buildingType,metric,regionCode,start,end}){
   const cacheKey=`rone:${stat}:${RONE_CYCLE}:${regionCode}:${RONE_ITEM_ID}:${start}:${end}`;
   const cached=fromCache(cacheKey);if(cached)return {...cached,cached:true};
   const query=new URLSearchParams({Type:'json',pIndex:'1',pSize:'400',STATBL_ID:stat,DTACYCLE_CD:RONE_CYCLE,
-    CLS_ID:regionCode,ITM_ID:RONE_ITEM_ID,START_WRTTIME:start,END_WRTTIME:end});
+    CLS_ID:regionCode,ITM_ID:RONE_ITEM_ID,START_WRTTIME:start+'01',END_WRTTIME:end+'04'});
   const response=await fetchT(`${RONE_URL}?KEY=${encKey(key)}&${query}`);
   if(!response.ok)throw new Error('RONE_HTTP_'+response.status);
   const json=await boundedJson(response),parts=json?.SttsApiTblData||[];

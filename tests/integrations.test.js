@@ -68,7 +68,8 @@ test('R-ONE all selection queries only the nine allowlisted current tables',asyn
   const allowed=new Set(Object.values(ronePresets).flatMap(v=>Object.values(v.metrics).map(m=>m.statblId)));
   assert.deepEqual(new Set(called.map(v=>v.searchParams.get('STATBL_ID'))),allowed);
   assert.ok(called.every(v=>v.origin==='https://www.reb.or.kr'&&v.searchParams.get('DTACYCLE_CD')==='QY'
-    &&v.searchParams.get('CLS_ID')==='500002'&&v.searchParams.get('ITM_ID')==='100001'));
+    &&v.searchParams.get('CLS_ID')==='500002'&&v.searchParams.get('ITM_ID')==='100001'
+    &&v.searchParams.get('START_WRTTIME')==='202601'&&v.searchParams.get('END_WRTTIME')==='202604'));
   assert.equal(JSON.stringify(res.body).includes('key'),false);
 });
 
