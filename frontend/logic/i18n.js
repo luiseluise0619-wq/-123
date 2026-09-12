@@ -236,7 +236,7 @@ globalThis.MysbizonParts.i18n = {
       "bep.dayWhy": "본전 {bep} ÷ 30일 ÷ {src} {unit}원. 이 금액은 카드 1건당 결제액이라, 여러 명이 함께 결제하면 실제 손님 수와 결제 건수는 달라요. 시간대 비중은 서울 전체 {ind} 평균이에요.",
       "sat.lead": "사람 1만 명당 {ind}이(가) {v}개예요. 서울 중앙값은 {med}개라 {word}이에요(예요).",
       "rent.perNote": "{per} · {note}",
-      "find.noRecordIn": "{zone}은(는) 이 장사 기록이 없어 1위로 표시합니다",
+      "find.noRecordIn": "{zone}은(는) 이 장사 기록이 없어 1위로 보여줘요",
       "zc.pickedTitle": "{gu} 기준으로 견주기",
       "asOf": "{q} 기준",
       "surv.mo": "{n}개월",

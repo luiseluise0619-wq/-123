@@ -104,7 +104,7 @@ globalThis.MysbizonParts.analysis = {
           labels:['월','화','수','목','금','토','일'], datasets:sets});
       }
       if(!(zt||it||zd||idw)) missing.push('시간대별·요일별 매출 자료가 아직 없어요.');
-      else if(!zt&&!zd) missing.push('이 상권만의 시간대·요일 매출은 아직 없어 서울 전체 이 업종 수치를 표시합니다.');
+      else if(!zt&&!zd) missing.push('이 상권의 시간대·요일 매출은 아직 없어서 서울 전체의 이 업종 수치를 보여줘요.');
     }
 
     else if(key==='demand'){
@@ -157,7 +157,7 @@ globalThis.MysbizonParts.analysis = {
           datasets:[{label:'폐업률', data:rows.map(o=>o.v),
             colors:rows.map(o=>o.n===S.ind?'on':'warn')}]});
       }
-      missing.push('상권 단위 점포 수 시계열은 아직 없어 최근 분기 수치만 표시합니다.');
+      missing.push('상권별 점포 수 추이는 아직 없어서 최근 분기 수치만 보여줘요.');
     }
 
     else if(key==='cost'){
@@ -187,7 +187,7 @@ globalThis.MysbizonParts.analysis = {
           labels:rank.map(o=>o.nm),
           datasets:[{label:'㎡당 월 임대료', data:rank.map(o=>o.rent),
             colors:rank.map(o=>(hitZ&&o.nm===hitZ.nm)?'on':'')}]});
-        if(!hitZ) missing.push('이 상권은 임대료 조사 대상이 아니어서 권역 참고값을 표시합니다.');
+        if(!hitZ) missing.push('이 상권은 임대료 조사 대상이 아니라 권역 참고값을 보여줘요.');
       } else missing.push('임대료 자료를 아직 불러오지 못했어요.');
       missing.push('권리금·인테리어 비용은 공개 통계에 없어요.');
     }
@@ -437,7 +437,7 @@ globalThis.MysbizonParts.analysis = {
         ? '이 값은 조사 기준 상권 평균이에요. 실제 계약은 층·면적·위치로 크게 달라져요.'
         : '상권 단위 임대료는 아직 없어요. 중개인에게 확인한 금액을 본전 계산에 직접 넣으세요.',
       rows:kRows, bars:[],
-      note:'한국부동산원 상업용부동산 임대동향조사(중대형 상가) 기준입니다. 조사 상권 구획이 이 앱의 상권 1,564곳과 달라, 이름이 정확히 맞는 곳만 해당 상권 값을 쓰고 나머지는 서울 평균을 사용합니다.'});
+      note:'한국부동산원 상업용부동산 임대동향조사(중대형 상가) 기준이에요. 조사 상권 구획이 이 앱의 상권 1,564곳과 달라, 이름이 정확히 맞는 곳만 그 상권 값을 쓰고 나머지는 서울 평균을 보여드려요.'});
 
     // 시장 구조
     //

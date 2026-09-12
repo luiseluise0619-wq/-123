@@ -17,12 +17,11 @@ export function createAdminServer(store,token,port){
   const expected=tokenHash(token),limit=createLimiter();
   const allowedHosts=new Set(parseCsv(process.env.CUSTOMER_ADMIN_ALLOWED_HOSTS).map((v)=>v.toLowerCase()));
   if(allowedHosts.size===0){
-    allowedHosts.add(`127.0.0.1:${port}`);
-    allowedHosts.add(`localhost:${port}`);
+    for(const host of ['127.0.0.1','localhost'])allowedHosts.add(port===0?host:`${host}:${port}`);
   }
   const allowedOrigins=new Set(parseCsv(process.env.CUSTOMER_ADMIN_ALLOWED_ORIGINS).map((v)=>v.replace(/^https?:\/\//,'').toLowerCase()));
+  if(allowedOrigins.size===0)for(const host of allowedHosts)allowedOrigins.add(host);
   const publicMode = process.env.CUSTOMER_ADMIN_PUBLIC==='1';
-  const bindHost = process.env.CUSTOMER_ADMIN_LISTEN_HOST || (publicMode ? '0.0.0.0' : '127.0.0.1');
   return http.createServer(async(req,res)=>{
     securityHeaders(res);res.setHeader('Cache-Control','no-store');
     const send=(status,body)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));};
@@ -44,10 +43,11 @@ export function createAdminServer(store,token,port){
       if(req.method!=='POST')return send(405,{error:'허용되지 않은 요청입니다.'});
       if(req.headers.origin){
         const originHost=req.headers.origin.replace(/^https?:\/\//,'').toLowerCase().split('/')[0];
-        if(allowedOrigins.size!==0 && !allowedOrigins.has(originHost)){
+        const originBase=originHost.split(':')[0];
+        if(!allowedOrigins.has(originHost) && !allowedOrigins.has(originBase)){
           return send(403,{error:'허용되지 않은 요청입니다.'});
         }
-      }else if(allowedOrigins.size!==0 && !allowedOrigins.has(host)){
+      }else if(!allowedOrigins.has(host) && !allowedOrigins.has(hostBase)){
         return send(403,{error:'허용되지 않은 요청입니다.'});
       }
       if(req.headers['content-type']!=='application/json')return send(415,{error:'JSON required'});
@@ -74,6 +74,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   if(!customerSettings().enabled)throw new Error('Customer data configuration is incomplete');
   const port=Number(process.env.CUSTOMER_ADMIN_PORT || process.env.PORT || 3102);
   if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid admin port');
+  const bindHost=process.env.CUSTOMER_ADMIN_LISTEN_HOST || '127.0.0.1';
   const db=await openCustomerPool(),server=createAdminServer(new CustomerStore(db),process.env.CUSTOMER_ADMIN_TOKEN,port);
   server.requestTimeout=15000;server.headersTimeout=10000;server.setTimeout(15000,s=>s.destroy());
   server.listen(port,bindHost,()=>console.log('Customer admin listening on '+bindHost+':'+port));

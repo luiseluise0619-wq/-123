@@ -97,7 +97,7 @@ globalThis.MysbizonParts.report = {
       // 담을 항목 체크박스를 없앴으니 '고른 게 0개'인 상태도 없다 — 자리만 있으면 내보낼 수 있다
       exportDisabled:!reportSelection,
       title:'창업 지원 리포트',
-      sub:'몇 가지만 고르면 조건에 맞을 수 있는 정부·지자체 창업지원사업과 상권 분석을 한 장에 담습니다.',
+      sub:'몇 가지만 고르면 조건에 맞는 지원사업과 상권 분석을 한 장으로 정리해요.',
       // '담을 항목 N개'는 지운 체크박스를 가리키던 말이라 뺐다
       target:(S.ind?this.indName(S.ind):'장사 미선택')+' · '+reportZone,
       // ── 리포트에 담을 내용을 한 번에 하나씩 묻는다 ──────────────────
@@ -154,7 +154,7 @@ globalThis.MysbizonParts.report = {
         const STEPS=[
           // ① 시·도 — 지자체 공고는 지역별로 따로 있다. 자료가 서울뿐이어도 지역은 다 묻는다.
           {k:'sido', q:'어느 지역에서 창업하세요?',
-           hint:'지역별 공고를 함께 확인합니다.',
+           hint:'지역별 공고도 함께 확인해요.',
            opts:RP_SIDO.map(v=>({v,label:v})), grid:true,
            val:S.rp_sido, set:v=>({rp_sido:v, rp_gu:''})},
 
@@ -195,13 +195,13 @@ globalThis.MysbizonParts.report = {
 
           // ⑥ 창업 시기 — 마감이 그 안에 있는 공고를 앞으로 끌어온다
           {k:'when', q:'언제 문을 열 계획이세요?',
-           hint:'선택한 시기 안에 마감되는 공고를 먼저 표시합니다.',
+           hint:'고른 시기 안에 마감되는 공고를 먼저 보여줘요.',
            opts:['3개월 안','6개월 안','1년 안','아직 미정'].map(v=>({v,label:v})),
            val:S.rp_when, set:v=>({rp_when:v})},
 
           // ⑦ 필요한 지원 — 공고의 '지원 분야'와 바로 이어진다
           {k:'need', q:'어떤 지원이 가장 필요하세요?',
-           hint:'선택한 분야와 관련된 공고를 먼저 표시합니다.',
+           hint:'고른 분야와 가까운 공고를 먼저 보여줘요.',
            opts:['사업화 자금','시설·임차 비용','교육·멘토링','융자·대출'].map(v=>({v,label:v})),
            val:S.rp_need, set:v=>({rp_need:v})},
 
@@ -647,7 +647,7 @@ globalThis.MysbizonParts.report = {
         }catch(e){this.setState({rp_error:e.name==='TimeoutError'?'응답을 확인하는 데 시간이 너무 걸렸어요. 수신함을 확인한 뒤 다시 시도해 주세요.':e.message});}
         finally{this._reportSending=false;this.setState({rp_sending:false});}
       },
-      note:S.rp_error||(sent?'메일 발송을 요청했습니다. 스팸함도 확인해 주세요.':!enabled?'현재는 미리보기와 CSV 저장을 이용할 수 있어요. 이메일 발송은 준비 중입니다.':'이메일은 리포트 발송에만 사용합니다. 매출 추정치와 직접 입력한 조건은 구분해 담습니다.')
+      note:S.rp_error||(sent?'메일 발송을 요청했어요. 스팸함도 확인해 주세요.':!enabled?'지금은 미리보기와 CSV 저장을 이용할 수 있어요. 이메일 발송은 준비 중이에요.':'이메일은 리포트 발송에만 써요. 매출 추정치와 직접 입력한 조건은 구분해서 담아요.')
     };
   }
 };

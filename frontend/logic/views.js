@@ -593,7 +593,7 @@ globalThis.MysbizonParts.views = {
           +(o.id===sel.id?'background:var(--surface);margin:0 -14px;padding-left:14px;padding-right:14px;border-radius:12px;border-top-color:transparent':'')
       })),
       cta:this.t('mv.bepOf',{name:this.zoneLabelOf(sel.name)}),
-      honesty:'지도는 상권 중심 위치를 표시합니다. 핀은 서울시가 공개한 동네 중심 좌표입니다. 동네는 점이 아니라 면이어서 핀 하나가 동네 전체를 뜻합니다. 건물 단위 임대료와 공실은 공개 데이터가 없습니다.'
+      honesty:'지도에는 상권 중심 위치만 표시해요. 핀은 서울시가 공개한 동네 중심 좌표예요. 동네는 점이 아니라 면이어서 핀 하나가 동네 전체를 뜻해요. 건물 단위 임대료와 공실은 공개 데이터가 없어요.'
     };
 
     return this.fillComparisonView(out, r, Lall, PICKS, pickToggle, pickLabelOf);

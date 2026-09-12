@@ -58,7 +58,7 @@
   "fc.note": "{gu} 안에서 자료가 있는 상권 {n}곳을 가게 한 곳당 매출로 줄 세웠어요.",
   "fc.pickOther": "다른 자치구를 골라 보세요.",
   "find.guHint": "{gu}를(을) 한 번 더 누르면 이 구에서 찾아요",
-  "find.noRecordIn": "{zone}은(는) 이 장사 기록이 없어 1위로 표시합니다",
+  "find.noRecordIn": "{zone}은(는) 이 장사 기록이 없어 1위로 보여줘요",
   "find.ok": "{ind} 후보로는 괜찮은 자리예요.",
   "find.rank": "{ind} · {n}곳 중 {r}위",
   "gu.border": "{a}·{b} 경계",
