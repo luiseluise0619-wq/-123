@@ -11,7 +11,11 @@ import {logicSource} from './logic-source.js';
 //   · 실제 화면 값(view model)에 번역 안 된 한국어가 남지 않았는가
 
 const read = rel => fs.readFileSync(new URL(rel, import.meta.url), 'utf8');
-const j = rel => JSON.parse(read(rel));
+const parsedFiles = new Map();
+const j = rel => {
+  if (!parsedFiles.has(rel)) parsedFiles.set(rel, JSON.parse(read(rel)));
+  return parsedFiles.get(rel);
+};
 
 const KO = j('../frontend/locales/ko.json');
 const EN = j('../frontend/locales/en.json');

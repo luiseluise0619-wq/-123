@@ -16,11 +16,12 @@ export async function filesUnder(root, dir) {
 export async function deploymentFiles(root) {
   const files = [
     'package.json', 'package-lock.json', 'server.js', 'scripts/validate-data.mjs','scripts/customer-purge.mjs',
-    'api/config.js', 'api/report.js', 'api/support.js', 'api/customer.js',
+    'deploy/customer-schema.sql', 'deploy/configure-integrations.sh', 'deploy/install-customer-admin.sh',
+    'api/config.js', 'api/report.js', 'api/support.js', 'api/customer.js', 'api/integrations.js',
     'api/_origin.js', 'api/_request.js', 'api/_http.js', 'api/_err.js',
     'frontend/zone_rent.json', 'THIRD-PARTY.md',
   ];
-  for (const dir of ['server','admin','frontend/logic','frontend/vendor','frontend/locales','frontend/data/v3','licenses']) {
+  for (const dir of ['server','admin','frontend/vendor','frontend/locales','frontend/data/v3','licenses']) {
     files.push(...await filesUnder(root, dir));
   }
   for (const entry of await readdir(path.join(root, 'frontend'), {withFileTypes:true})) {

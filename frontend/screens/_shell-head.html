@@ -9,30 +9,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./vendor/react.production.min.js"></script>
 <script src="./vendor/react-dom.production.min.js"></script>
-<!-- 로직은 책임별로 나눠 둔다. app-logic.js 가 마지막에 이들을 프로토타입에 합친다. -->
+<!-- 편집할 때는 logic/의 책임별 파일을 쓰고, 공개 화면은 요청 폭주를 피하도록 한 파일로 묶는다. -->
 <script src="./vendor/chart.umd.js"></script>
-<script src="./logic/const.js"></script>
-<script src="./logic/i18n.js"></script>
-<script src="./logic/theme.js"></script>
-<script src="./logic/roman.js"></script>
-<script src="./logic/util.js"></script>
-<script src="./logic/design.js"></script>
-<script src="./logic/rank.js"></script>
-<script src="./logic/analysis.js"></script>
-<script src="./logic/data.js"></script>
-<script src="./logic/storage.js"></script>
-<script src="./logic/home.js"></script>
-<script src="./logic/report.js"></script>
-<script src="./logic/comparison.js"></script>
-<script src="./logic/diagnosis.js"></script>
-<script src="./logic/screens.js"></script>
-<script src="./logic/chat.js"></script>
-<script src="./logic/charts.js"></script>
-<script src="./logic/carousel.js"></script>
-<script src="./logic/market.js"></script>
-<script src="./logic/views.js"></script>
-<script src="./app-logic.js"></script>
-<script src="./dc-runtime.js?v=2"></script>
+<script src="./app.bundle.js?v=1"></script>
 <script src="./customer-analytics.js" defer></script>
 </head>
 <body>

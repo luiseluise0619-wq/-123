@@ -22,7 +22,7 @@ npm start
 | 경로 | 역할 |
 | --- | --- |
 | `server.js` → `server/app.js` | 데이터 검증, 정적 파일, 공개 API, 종료 처리 |
-| `api/config.js`, `report.js`, `support.js` | GET 설정 / POST 메일 / POST 지원사업 |
+| `api/config.js`, `report.js`, `support.js`, `integrations.js` | 설정·메일·K-Startup·공공 데이터·Gemini API |
 | `frontend/screens/*.html` | HTML 원본; `scripts/build-html.mjs`의 ORDER로 조립 |
 | `frontend/index.html` | 생성물. 직접 수정하지 않음 |
 | `frontend/app-logic.js` | state, lifecycle, 메뉴, 공통 화면 값, 모듈 결합 |
@@ -75,7 +75,10 @@ HTTPS → Nginx → `127.0.0.1:3000` → 단일 Node 프로세스입니다. Node
 | --- | --- | --- |
 | `/healthz` | 상태 확인 | 프로세스 상태; 외부 제공자 상태까지 검증하지 않음 |
 | `/api/config` | GET | 이메일 기능 활성 여부; 비밀키 반환 없음 |
+| `/api/integrations` | GET | 서울·공공데이터·K-Startup·R-ONE·수출입은행·Gemini 연결 여부만 반환 |
 | `/api/support` | POST JSON | 공개 공고. 키 없으면 configured:false |
+| `/api/public-data` | POST JSON | 고정된 서울·공공데이터·R-ONE·수출입은행 어댑터 조회 |
+| `/api/gemini` | POST JSON | 근거 데이터 해설. 개인정보 모양 입력 차단, 요청 제한, 저장 비활성 |
 | `/api/report` | POST JSON | 동의·이메일·Idempotency-Key 검증; 기본 발송 꺼짐 |
 
 `api/market.js`는 의도적으로 미연결이며 소스에만 보관합니다. `/api/market`은 404입니다. 출처 제한은 인증/봇 방어가 아닙니다. 요청 제한과 메일 중복 방지는 단일 프로세스 메모리이며 재시작 시 초기화됩니다. 수신자 인증·다중 인스턴스 공유 제한은 구현되어 있지 않습니다.
@@ -86,4 +89,4 @@ HTTPS → Nginx → `127.0.0.1:3000` → 단일 Node 프로세스입니다. Node
 
 ## 고객 데이터 추가 (후속 요청)
 
-고객 설문·이메일 저장, 클릭 통계, SSH 접속 관리자 표·CSV를 추가했습니다. 기본은 비활성입니다. `deploy/CUSTOMER-DATA.md`의 설정·동의·보유 기간·관리자 접근 조건을 적용한 뒤 운영하세요. 실제 카페24 DB 연결은 미실행입니다. 관리자 화면은 별도 도메인 없이 사용합니다.
+고객 설문·이메일 저장, 클릭 통계, 관리자 표·CSV를 추가했습니다. `deploy/install-customer-admin.sh`는 전용 PostgreSQL DB·최소 권한 계정·매일 삭제 타이머와 `https://서비스도메인/admin/`을 구성합니다. 고객 수집은 회사명·문의처·개인정보 문구를 확정할 때까지 꺼 둡니다. 자세한 조건은 `deploy/CUSTOMER-DATA.md`를 따릅니다.

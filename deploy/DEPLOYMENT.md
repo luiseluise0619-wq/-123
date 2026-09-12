@@ -1,6 +1,6 @@
 # Render / Cafe24 Linux VPS 배포
 
-이 문서는 실행 절차이며 이번 작업에서 운영 서버에 실행하지 않았습니다. Node 24, systemd와 Nginx를 사용할 수 있는 Linux VPS를 전제로 합니다.
+Node 22~24, systemd와 Nginx를 사용할 수 있는 Linux VPS를 전제로 합니다.
 
 ## 릴리스 생성
 
@@ -79,36 +79,6 @@ render.yaml의 검사/테스트/build:deploy와 node dist/server.js를 사용합
 
 서버 requestTimeout과 socket timeout은 서로 다른 제한입니다([Node HTTP 문서](https://nodejs.org/api/http.html)). 이번 서버는 수신 30초/헤더 15초/keepalive 5초/유휴 socket 30초, API 본문 64KiB/10초와 외부 요청 10초를 사용합니다. Nginx proxy read 20초이며 정상 API 타임아웃보다 깁니다.
 
-## 고객 데이터 추가 (후속 요청)
+## 고객 데이터와 관리자 화면
 
-고객 설문·이메일 저장, 클릭 통계, SSH 접속 관리자 표·CSV를 추가했습니다. 기본은 비활성입니다. `deploy/CUSTOMER-DATA.md`의 설정·동의·보유 기간·관리자 접근 조건을 적용한 뒤 운영하세요. 실제 카페24 DB 연결은 미실행입니다.
-
-직원 공개 접속이 필요하면 `deploy/nginx-admin-public.example`을 사용해 관리자 전용 서브도메인을 별도 vhost로 노출하고, 아래 환경변수를 추가하세요.
-
-- `CUSTOMER_ADMIN_PUBLIC=1`
-- `CUSTOMER_ADMIN_ALLOWED_HOSTS=admin.your-domain.example,127.0.0.1:3102`
-- `CUSTOMER_ADMIN_ALLOWED_ORIGINS=https://admin.your-domain.example`
-
-### 관리자 링크 신규 발급(도메인 기반)
-
-DNS에서 아래처럼 `admin` 서브도메인을 VPS IP로 연결한 뒤, Let’s Encrypt 인증서를 발급하고 Nginx vhost만 켭니다.
-
-```sh
-# 1) 서브도메인 A/CNAME 반영 (도메인 업체 콘솔)
-# 예: admin.your-domain.example -> 1.2.3.4
-
-# 2) 관리자 vhost 활성화
-sudo cp deploy/nginx-admin-public.example /etc/nginx/sites-available/admin.your-domain.example.conf
-sudo ln -s /etc/nginx/sites-available/admin.your-domain.example.conf /etc/nginx/sites-enabled/
-sudo sed -i "s/admin\\.your-domain\\.example/admin.실제도메인.example/g" /etc/nginx/sites-available/admin.your-domain.example.conf
-
-# 3) certbot + reload
-sudo certbot --nginx -d admin.실제도메인.example
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-정상 동작 확인:
-
-```sh
-curl -I https://admin.실제도메인.example/
-```
+`sudo bash deploy/install-customer-admin.sh`가 같은 도메인의 `/admin/` 경로, 전용 PostgreSQL 역할, 관리자 서비스와 보존기간 삭제 타이머를 구성합니다. 고객 수집은 개인정보 문구와 운영 주체를 확정할 때까지 비활성으로 둡니다. 자세한 내용은 `deploy/CUSTOMER-DATA.md`를 확인합니다.

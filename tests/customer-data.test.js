@@ -6,6 +6,7 @@ import {CustomerStore,customerSettings,validateSubmission,encrypt,decrypt,csv} f
 import {createAdminServer} from '../server/customer-admin.js';
 const env={CUSTOMER_DATA_ENABLED:'true',CUSTOMER_DATABASE_URL:'postgresql://localhost/test',CUSTOMER_DATA_KEY:'12'.repeat(32),CUSTOMER_RETENTION_DAYS:'30',CUSTOMER_PRIVACY_VERSION:'test-v1',CUSTOMER_CONTROLLER:'Test operator',CUSTOMER_CONTACT:'test@example.invalid'};
 const record={id:'12345678-1234-4234-8234-123456789abc',email:'person@example.invalid',agreed:true,privacyVersion:'test-v1',answers:{gu:'마포구',industry:'커피-음료',need:'=HYPERLINK("invalid")'}};
+function restoreEnv(snapshot){for(const key of Object.keys(process.env))if(!(key in snapshot))delete process.env[key];Object.assign(process.env,snapshot);}
 test('customer collection fails closed without complete settings and explicit consent',()=>{
   assert.equal(customerSettings({}).enabled,false);
   assert.equal(customerSettings({...env,CUSTOMER_DATA_KEY:''}).enabled,false);
@@ -51,3 +52,20 @@ test('PostgreSQL storage, consent, encrypted rows, aggregates, masking, expiry a
   }finally{if(server)await new Promise(resolve=>server.close(resolve));await db.close();}
 });
 test('CSV escapes spreadsheet formulas and quotes',()=>{assert.equal(csv([{value:'=1+1',note:'a"b'}]),'\uFEFF"value","note"\r\n"\'=1+1","a""b"');});
+
+test('admin assets and API work below the same-domain /admin path',async()=>{
+  const previous={...process.env};Object.assign(process.env,{CUSTOMER_ADMIN_BASE_PATH:'/admin',CUSTOMER_ADMIN_PUBLIC:'1',CUSTOMER_ADMIN_ALLOWED_HOSTS:'127.0.0.1',CUSTOMER_ADMIN_ALLOWED_ORIGINS:'127.0.0.1'});
+  const db=new PGlite();await db.exec(await readFile(new URL('../deploy/customer-schema.sql',import.meta.url),'utf8'));
+  const store=new CustomerStore(db,env),token='56'.repeat(32),server=createAdminServer(store,token,0);
+  try{
+    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base='http://127.0.0.1:'+server.address().port;
+    const redirect=await fetch(base+'/admin',{redirect:'manual'});
+    assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'/admin/');
+    assert.equal((await fetch(base+'/admin/')).status,200);
+    assert.equal((await fetch(base+'/admin/admin.js')).status,200);
+    const result=await fetch(base+'/admin/api/clicks',{method:'POST',headers:{Origin:'http://127.0.0.1','Content-Type':'application/json',Authorization:'Bearer '+token},body:'{}'});
+    assert.equal(result.status,200);
+  }finally{
+    server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await db.close();restoreEnv(previous);
+  }
+});

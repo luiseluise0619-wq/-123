@@ -4,7 +4,7 @@ let token='',kind='surveys',before='',next=null,rows=[],lockTimer;
 const labels={id:'제출 ID',createdAt:'제출 시각',email:'이메일',sido:'시·도',gu:'구',industry:'업종',stage:'창업 단계',age:'연령 구간',business:'사업자 상태',when:'창업 시기',need:'지원 관심',cost:'예산',privacyVersion:'동의 문구 버전',expiresAt:'삭제 예정일',day:'날짜',event:'버튼',device:'기기',count:'클릭 수'};
 function lock(){token='';rows=[];el('table').replaceChildren();el('workspace').hidden=true;el('login').hidden=false;el('logout').hidden=true;el('key').value='';el('search').value='';clearTimeout(lockTimer);}
 async function request(path,body={}){
-  const response=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
+  const response=await fetch('api/'+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
   if(!response.ok){if(response.status===401)lock();throw new Error('요청 실패 ('+response.status+'). 연결과 관리자 키를 확인해 주세요.');}
   return response;
 }

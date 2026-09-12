@@ -13,16 +13,15 @@
 //   · 키가 없으면 configured:false 로 정직하게 비운다 — 예시 공고를 지어내지 않는다.
 //
 // 필요 환경변수
-//   DATA_GO_KR_KEY   공공데이터포털 서비스키(Decoding). 다른 수집기와 같은 키를 쓸 수 있다
+//   KSTARTUP_API_KEY K-Startup 전용 키(선택). 없으면 DATA_GO_KR_KEY 를 쓴다.
+//   DATA_GO_KR_KEY   공공데이터포털 일반 서비스키. 이 API 활용신청은 별도로 필요하다.
 //                    — 단, 창업지원사업 공고 서비스도 따로 '활용신청'을 해야 한다.
-//   SUPPORT_API_URL  공고 목록 엔드포인트. 기관마다 경로가 달라 환경변수로 뺐다.
-//                    승인 화면의 '요청주소'를 그대로 넣는다.
-//
-// ⚠ 응답 필드 매핑은 실제 응답으로 확인해야 한다
-//   아래 pickField() 가 흔한 필드 이름들을 훑어 우리 모양으로 바꾼다.
-//   키를 넣고 한 번 호출해 본 뒤, 실제 필드명을 FIELDS 에 추가하는 것이 정확하다.
-import { fetchT, encKey, ymdLocal } from './_http.js';
+// 상류 주소는 코드의 공식 K-Startup endpoint로 고정한다. 환경변수로 임의 주소를
+// 받으면 설정 실수만으로 서비스키를 엉뚱한 서버에 보낼 수 있다.
+import { fetchT, encKey, ymdLocal, boundedJson } from './_http.js';
 import { safeError } from './_err.js';
+
+const KSTARTUP_API_URL = 'https://apis.data.go.kr/B552735/kisedKstartupService01/getAnnouncementInformation01';
 
 function publicLink(value) {
   try {
@@ -33,17 +32,17 @@ function publicLink(value) {
 
 // 우리 화면이 쓰는 모양. 여기 없는 건 화면에 안 쓴다.
 const FIELDS = {
-  title:    ['intgSprtBizNm', 'pblancNm', 'bizPbancNm', 'title', '사업명', '공고명'],
-  org:      ['jrsdInsttNm', 'excInsttNm', 'organName', '기관명', '주관기관'],
-  deadline: ['reqstEndDe', 'pbancRcptEndDt', 'endDate', '접수종료일', '마감일'],
-  url:      ['detailPgUrl', 'pblancUrl', 'url', '상세페이지'],
-  kind:     ['sprtRealmNm', 'supportType', '지원분야'],
-  region:   ['areaNm', 'region', '지역'],
-  target:   ['trgetNm', 'target', '지원대상'],
+  title:    ['biz_pbanc_nm', 'intgSprtBizNm', 'pblancNm', 'bizPbancNm', 'title', '사업명', '공고명'],
+  org:      ['pbanc_ntrp_nm', 'sprv_inst', 'jrsdInsttNm', 'excInsttNm', 'organName', '기관명', '주관기관'],
+  deadline: ['pbanc_rcpt_end_dt', 'reqstEndDe', 'pbancRcptEndDt', 'endDate', '접수종료일', '마감일'],
+  url:      ['detl_pg_url', 'detailPgUrl', 'pblancUrl', 'url', '상세페이지'],
+  kind:     ['supt_biz_clsfc', 'sprtRealmNm', 'supportType', '지원분야'],
+  region:   ['supt_regin', 'areaNm', 'region', '지역'],
+  target:   ['aply_trgt_ctnt', 'aply_trgt', 'trgetNm', 'target', '지원대상'],
   // 카드에 '무엇을 얼마나 주는지'가 없으면 신청으로 이어지지 않는다.
-  content:  ['bizIntrcn', 'sprtCn', 'pblancCn', 'bizCn', '지원내용', '사업개요'],
+  content:  ['pbanc_ctnt', 'bizIntrcn', 'sprtCn', 'pblancCn', 'bizCn', '지원내용', '사업개요'],
   amount:   ['sprtAmt', 'bdgtAmt', 'sportAmount', '지원금액', '지원규모'],
-  start:    ['reqstBeginDe', 'pbancRcptBgngDt', 'startDate', '접수시작일'],
+  start:    ['pbanc_rcpt_bgng_dt', 'reqstBeginDe', 'pbancRcptBgngDt', 'startDate', '접수시작일'],
 };
 
 function pickField(row, names) {
@@ -63,9 +62,9 @@ function parseDate(s) {
 }
 
 export default async function handler(req, res) {
-  const key = process.env.DATA_GO_KR_KEY;
-  const base = process.env.SUPPORT_API_URL;
-  if (!key || !base) {
+  const key = process.env.KSTARTUP_API_KEY || process.env.DATA_GO_KR_KEY;
+  const base = KSTARTUP_API_URL;
+  if (!key) {
     return res.status(200).json({
       ok: false, configured: false, items: [],
       // 사용자에게는 환경변수 이름 같은 개발자 메시지를 노출하지 않는다.
@@ -76,12 +75,12 @@ export default async function handler(req, res) {
 
   try {
     // serviceKey 는 URLSearchParams 에 넣지 않는다 — Encoding 형태 키가 이중 인코딩돼 깨진다.
-    const qs = new URLSearchParams({ page: '1', perPage: '200', returnType: 'JSON' });
+    const qs = new URLSearchParams({ page: '1', perPage: '200', returnType: 'json', 'cond[rcrt_prgs_yn::EQ]': 'Y' });
     const r = await fetchT(`${base}${base.includes('?') ? '&' : '?'}serviceKey=${encKey(key)}&${qs}`, {
       headers: { Accept: 'application/json' },
     });
     if (!r.ok) throw new Error('Support upstream status ' + r.status);
-    const j = await r.json();
+    const j = await boundedJson(r, 2_000_000);
     // 기관마다 목록이 담기는 자리가 다르다. 흔한 자리를 훑는다.
     const rows = (j && (j.data || j.items || (j.response && j.response.body && j.response.body.items))) || [];
     const list = Array.isArray(rows) ? rows : (rows.item || []);

@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { deploymentFiles } from './deploy-files.mjs';
 import { build } from './build-html.mjs';
+import { buildAssets, BUNDLE_PATH } from './build-assets.mjs';
 import { validateData } from './validate-data.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -14,6 +15,7 @@ export async function buildDeployment(destination) {
   if ((await readdir(dest)).length) throw new Error('Choose an empty release directory: ' + dest);
   const html = await readFile(path.join(ROOT, 'frontend/index.html'), 'utf8');
   if (html !== build()) throw new Error('Run npm run build:html first');
+  if (await readFile(BUNDLE_PATH,'utf8') !== buildAssets()) throw new Error('Run npm run build:html first');
   validateData(path.join(ROOT, 'frontend/data/v3'));
   const manifest = {};
   for (const rel of await deploymentFiles(ROOT)) {

@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import vm from 'node:vm';
 import {buildDeployment} from '../scripts/build-deploy.mjs';
+import {BUNDLE_SOURCES} from '../scripts/build-assets.mjs';
 import {createServer} from '../server/app.js';
 import support from '../api/support.js';
 import {fetchT} from '../api/_http.js';
@@ -20,9 +21,11 @@ test('HTML build CLI actually runs on Windows and Linux',()=>{
 
 test('browser script order loads every prototype part; unmount destroys charts',async()=>{
   const html=await readFile(path.join(root,'frontend/index.html'),'utf8');
+  const publicScripts=[...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(m=>m[1]);
+  assert.ok(publicScripts.includes('./app.bundle.js?v=1'));assert.ok(publicScripts.length<=8);
   const context=vm.createContext({console,window:{},document:{},clearTimeout,
     DCLogic:class {setState(v){this.state={...this.state,...v};}}});
-  for(const [,src] of html.matchAll(/<script src="\.\/((?:logic\/[^"?]+|app-logic)\.js)"/g)) {
+  for(const src of BUNDLE_SOURCES.filter(src=>src!=='dc-runtime.js')) {
     vm.runInContext(await readFile(path.join(root,'frontend',src),'utf8'),context,{filename:src});
   }
   const Component=vm.runInContext('MysbizonLogic(DCLogic)',context);
@@ -47,7 +50,7 @@ test('upstream timeout preserves caller cancellation',async t=>{
 test('support rejects failed upstream and strips executable links',async t=>{
   const old=global.fetch,env={...process.env};
   t.after(()=>{global.fetch=old;process.env=env;});
-  Object.assign(process.env,{DATA_GO_KR_KEY:'test-only',SUPPORT_API_URL:'https://example.test'});
+  Object.assign(process.env,{DATA_GO_KR_KEY:'test-only'});
   const call=async()=>{let body;await support({}, {status(){return this;},json(v){body=v;}});return body;};
   global.fetch=async()=>({ok:false,status:503});
   assert.equal((await call()).ok,false);
@@ -71,10 +74,10 @@ test('deploy artifact starts independently and excludes collectors, templates an
   await new Promise(r=>server.listen(0,'127.0.0.1',r));
   t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));});
   const base='http://127.0.0.1:'+server.address().port;
-  for(const url of ['/','/healthz','/api/config','/report-print.html','/privacy','/logic/home.js','/data/v3/zone_industry.json']) {
+  for(const url of ['/','/healthz','/api/config','/api/integrations','/report-print.html','/privacy','/app.bundle.js','/data/v3/zone_industry.json']) {
     const response=await fetch(base+url);assert.equal(response.status,200,url);await response.arrayBuffer();
   }
-  for(const url of ['/api/market','/vercel.json','/zone_intel.json','/screens/01-home.html']) {
+  for(const url of ['/api/market','/vercel.json','/zone_intel.json','/screens/01-home.html','/logic/home.js']) {
     assert.equal((await fetch(base+url)).status,404,url);
   }
 });
@@ -85,7 +88,7 @@ test('router enforces concurrency before awaiting and preserves API method/rate 
   await new Promise(r=>server.listen(0,'127.0.0.1',r));
   t.after(async()=>{global.fetch=old;process.env=env;server.closeAllConnections();await new Promise(r=>server.close(r));});
   const base='http://127.0.0.1:'+server.address().port;
-  Object.assign(process.env,{ALLOWED_ORIGIN:base,DATA_GO_KR_KEY:'test-only',SUPPORT_API_URL:'https://example.test'});
+  Object.assign(process.env,{ALLOWED_ORIGIN:base,DATA_GO_KR_KEY:'test-only'});
   global.fetch=async(url,options)=>{
     if(String(url).startsWith(base))return old(url,options);
     await new Promise(r=>setTimeout(r,100));

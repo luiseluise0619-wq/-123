@@ -1,6 +1,6 @@
 # 회사 계정으로 API 이전하기
 
-2026-09-11 코드 조사 및 공식 안내 확인. 이 문서는 이전 대상과 절차 안내입니다. 개인/회사 계정 로그인, 키 발급·교체·폐기, 운영 배포는 실행하지 않았습니다. 실제 사용 중인 개인 계정의 계약·승인 목록은 저장소만으로 알 수 없습니다.
+2026-09-12 코드 조사 및 공식 안내 확인. 이 문서는 이전 대상과 절차 안내입니다. 실제 사용 중인 개인 계정의 계약·승인 목록은 저장소만으로 알 수 없습니다.
 
 ## 먼저 방문할 사이트
 
@@ -13,7 +13,9 @@
 |추가 연동|[한국은행 ECOS Open API](https://ecos.bok.or.kr/api/) → 인증키 신청 안내|ECOS 인증키|미공개 `api/market.js`의 `ECOS_KEY`. 키만 넣어도 현재 화면에 연결되지는 않음|
 |추가 연동|[KAMIS Open API](https://www.kamis.or.kr/customer/reference/openapi_list.do) → 사용신청|인증키 + 요청자 ID|미공개 `api/market.js`의 `KAMIS_KEY`, `KAMIS_ID`. 공공데이터포털을 통한 신청 경로도 공식 안내에 있음|
 |추가 연동|[오피넷 Open API](https://www.opinet.co.kr/user/custapi/custApiInfo.do) → 인증키 발급|오피넷 인증키|미공개 `api/market.js`의 `OPINET_KEY`. 국내 석유제품 가격용; 국제유가까지 된다고 단정하지 않음|
-|임대통계 자동화 검토|[한국부동산원 R-ONE Open API](https://www.reb.or.kr/r-one/portal/openapi/openApiIntroPage.do) → 로그인 → 인증키 발급내역/목록|필요 통계에 맞는 인증키 및 통계코드|현재 정적 임대료 자료를 더 안정적으로 갱신하기 위한 후보. Node에 완성된 직접 연동은 없음|
+|임대통계 자동화|[한국부동산원 R-ONE Open API](https://www.reb.or.kr/r-one/portal/openapi/openApiIntroPage.do) → 로그인 → 인증키 발급내역/목록|인증키와 통계표·주기·지역·항목 코드|Node `api/integrations.js`의 고정 서버 어댑터. 현재 정적 임대료 자료를 보완하는 조회 경로|
+|환율|[한국수출입은행 환율 API](https://www.data.go.kr/data/3068846/openapi.do) → 회사 계정 활용신청|수출입은행 인증키|Node `api/integrations.js`; 새 `oapi.koreaexim.go.kr` 주소 사용|
+|AI 해설|[Google AI Studio API 키](https://ai.google.dev/gemini-api/docs/api-key) → 회사 Cloud 프로젝트|Gemini API 키와 프로젝트 권한|Node `api/integrations.js`; 서버 헤더 인증, 저장 비활성, 입력 크기·개인정보 모양·호출 수 제한|
 
 서울 인증키 발급은 공식 이용안내를, KAMIS의 인증키와 요청자 ID 조합은 [요청 변수 명세](https://www.kamis.or.kr/customer/reference/openapi_list.do?action=detail&boardno=1)를 기준으로 확인했습니다. ECOS 페이지는 서비스 주소만 확인됐고 본문이 추출되지 않아 현재 로그인·신청 화면의 세부 절차를 확정하지 않았습니다.
 
@@ -25,14 +27,13 @@
 - 공정거래위원회 가맹사업/브랜드 정보: 브랜드·비용 API의 승인 및 endpoint를 개별 확인.
 - 창업진흥원 K-Startup 사업공고: 지원사업 연결 후보. [기관 공식 API 조회 화면](https://nidview.k-startup.go.kr/view/public/kisedKstartupService/contentInformation)에서 제공 항목을 확인할 수 있습니다.
 
-현재 `api/support.js`는 `SUPPORT_API_URL`을 외부 설정으로 받는 범용 파서입니다. 특정 K-Startup API에 완전히 맞춰 검증된 상태가 아닙니다. 실제로 신청한 서비스의 JSON 파라미터, 페이지 수집, 제목·마감일·원문 링크 필드를 맞추고 샘플 응답 테스트를 한 뒤 연결해야 합니다. `DATA_GO_KR_KEY`와 URL만 입력하면 모든 지원사업이 완성되는 것은 아닙니다.
+`api/support.js`는 공식 K-Startup 공고 endpoint와 현재 snake_case 응답 필드에 맞춰 고정했습니다. `DATA_GO_KR_KEY` 또는 별도 `KSTARTUP_API_KEY`를 넣으면 연결되지만, 공공데이터포털에서 K-Startup 조회서비스를 활용신청한 키여야 합니다. 사용자가 지정한 임의 URL로 키를 보내지 않습니다.
 
 ## 지금 운영에는 필요하지 않은 계정
 
 |사이트|필요해지는 경우|현재 코드|
 |---|---|---|
 |[Naver Developers](https://developers.naver.com/docs/common/openapiguide/appregister.md)|검색 트렌드 기능을 실제 연결할 때|Python 실험 코드의 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`; Node 미사용|
-|[Google AI Studio API 키](https://ai.google.dev/gemini-api/docs/api-key)|Gemini 상담 기능을 회사 Google Cloud 프로젝트에서 다시 검증할 때|Python의 `GEMINI_API_KEY` 또는 `GOOGLE_API_KEY`; Node 미사용|
 |[Kakao Developers](https://developers.kakao.com/docs/ko/kakaomap/common)|지도·주소 검색을 새로 구현할 때|현재 안내문에 카카오가 언급되지만 운영 Node에서 호출하는 카카오 키 경로는 확인되지 않음|
 
 네이버는 회사/단체라면 단체 회원 사용을 공식적으로 권장합니다. Google API 키는 Cloud 프로젝트에 연결되므로 회사 이메일로 로그인하는 것 외에 프로젝트 권한과 결제 주체를 함께 확인해야 합니다. [Google 프로젝트·결제 설명](https://ai.google.dev/gemini-api/docs/billing/)에 따라 관리하세요. Gemini를 재활성화할 때는 저장소의 오래된 모델 지정과 현재 키 유형/SDK 지원도 별도로 점검해야 합니다.
@@ -44,7 +45,7 @@
 |서울|`SEOUL_API_KEY`|`SEOUL_OPENDATA_API_KEY`|workflow가 일부 Python 단계에 같은 secret을 두 이름으로 전달함|
 |공공데이터포털|`DATA_GO_KR_KEY`|`DATA_GO_KR_API_KEY`, `SERVICE_KEY`|Node와 수집기, Python 실험 설정을 구분함|
 |KAMIS|`KAMIS_KEY`, `KAMIS_ID`|`KAMIS_CERT_KEY`, `KAMIS_CERT_ID`|Node 미공개 코드와 Python 실험 코드의 변수명이 다름|
-|Gemini|`GEMINI_API_KEY`|`GOOGLE_API_KEY`|현재 Node 운영과 무관함|
+|Gemini|`GEMINI_API_KEY`|`GOOGLE_API_KEY`|운영 Node는 `GEMINI_API_KEY`만 읽음|
 
 서로 다른 기관의 키는 호환되지 않습니다. 소스의 `DATA_GO_KR_KEY or REB_API_KEY` 같은 fallback 이름만 보고 두 인증 체계를 같은 것으로 처리하면 안 됩니다. 선택한 endpoint의 인증 명세를 기준으로 매핑해야 합니다.
 
@@ -56,10 +57,10 @@
 4. staging용 secret을 먼저 교체합니다. 읽기 전용 수집 응답과 schema·분기·단위·행 수를 검사하고, 실패한 수집이 기존 정상 파일을 덮어쓰지 않는지 확인합니다.
 5. Brevo는 회사 발신자와 도메인 인증을 완료합니다. 실제 DNS 레코드는 계정 화면에서 제공한 값을 사용합니다. [Brevo 발신자·도메인 안내](https://developers.brevo.com/docs/getting-started-with-senders-and-domains).
 6. 검증 후 운영 secret 교체: 수집용은 GitHub 저장소/Environment secrets, 요청 시 필요한 Node 키는 Render Environment 또는 VPS `/etc/mysbizon.env`. 브라우저/정적 JSON에는 넣지 않습니다.
-7. 실제 health·지원사업 조회·승인된 테스트 수신자 메일로 결과를 확인합니다. 짧은 되돌리기 기간 뒤 사용 중인 작업이 없음을 확인하고 개인 키를 폐기합니다.
+7. `/healthz`, `/api/integrations`, 지원사업과 각 승인 API의 실제 응답을 확인합니다. 짧은 되돌리기 기간 뒤 사용 중인 작업이 없음을 확인하고 개인 키를 폐기합니다.
 8. GitHub 저장소 소유권/배포 연결, Render workspace, Cafe24 계약·서버 관리자, 회사 도메인/DNS도 함께 대조합니다. API 키만 바꾸어도 인프라 소유권이 자동으로 이전되지는 않습니다.
 
-이번에는 실제 계정에 들어가거나 키를 교체하지 않았습니다. 현재 서비스의 Node 기본 구동에는 외부 API 키가 필요하지 않고, 수집 갱신·지원사업·메일 등 각 기능을 켤 때 해당 인증이 필요합니다.
+키는 `sudo bash deploy/configure-integrations.sh`의 숨김 입력으로 `/etc/mysbizon-node.env`에 저장합니다. 현재 서비스의 Node 기본 구동에는 외부 API 키가 필요하지 않고, 해당 기능을 켤 때만 각 인증이 필요합니다.
 
 ## 추가할 데이터 우선순위
 

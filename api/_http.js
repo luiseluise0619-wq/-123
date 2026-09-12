@@ -25,6 +25,34 @@ export function encKey(k) {
   return /%[0-9A-Fa-f]{2}/.test(String(k)) ? String(k) : encodeURIComponent(String(k));
 }
 
+/** Read JSON without allowing an upstream server to exhaust this process's memory. */
+export async function boundedJson(response, maxBytes = 2_000_000) {
+  const length = Number(response.headers?.get?.('content-length') || 0);
+  if (length > maxBytes) throw new Error('UPSTREAM_TOO_LARGE');
+  if (!response.body) {
+    const value = await response.json();
+    if (Buffer.byteLength(JSON.stringify(value)) > maxBytes) throw new Error('UPSTREAM_TOO_LARGE');
+    return value;
+  }
+  const reader = response.body.getReader(), chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBytes) {
+        await reader.cancel();
+        throw new Error('UPSTREAM_TOO_LARGE');
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return JSON.parse(Buffer.concat(chunks.map((value) => Buffer.from(value))).toString('utf8'));
+}
+
 /**
  * Date → "YYYY-MM-DD" (지역 시간 기준).
  *
