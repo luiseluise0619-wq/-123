@@ -12,6 +12,7 @@ globalThis.MysbizonParts.prep = {
       toggle:()=>this.togglePrepCheck(storageId)};};
     const nts={label:this.t('prep.sourceNts'),url:'https://ems.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7777&mi=2444'};
     const foodSafety={label:this.t('prep.sourceFoodSafety'),url:'https://www.foodsafetykorea.go.kr/portal/board/boardDetail.do?bbs_no=bbs1021&menu_grp=MENU_NEW04&menu_no=3504'};
+    const googleBusiness={label:this.t('prep.sourceGoogleBusiness'),url:'https://support.google.com/business/answer/2911778?hl=ko'};
     const contract=[
       item('use','prep.itemUse','prep.itemUseDetail'),
       item('lease','prep.itemLease','prep.itemLeaseDetail'),
@@ -38,6 +39,7 @@ globalThis.MysbizonParts.prep = {
     const marketing=[
       item('naver','prep.itemNaver','prep.itemNaverDetail'),
       item('kakao','prep.itemKakao','prep.itemKakaoDetail'),
+      item('google','prep.itemGoogle','prep.itemGoogleDetail',googleBusiness),
       item('walk','prep.itemWalk','prep.itemWalkDetail'),
       item('opening','prep.itemOpening','prep.itemOpeningDetail')
     ];

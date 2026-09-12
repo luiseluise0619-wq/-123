@@ -176,8 +176,10 @@ test('업종별 창업 체크는 진행률과 공식 확인 링크를 제공한�
   const {instance:c}=component();
   c.state.screen='prep';c.state.ind='커피-음료';
   let view=c.prepView();
-  const business=view.groups.flatMap(g=>g.items).find(i=>i.id==='business');
+  const items=view.groups.flatMap(g=>g.items),business=items.find(i=>i.id==='business'),google=items.find(i=>i.id==='google');
   assert.match(business.source.url,/nts\.go\.kr/);
+  assert.match(google.source.url,/support\.google\.com\/business/);
+  assert.match(google.label,/구글 지도/);
   business.toggle();
   view=c.prepView();
   assert.match(view.progress,/\d+%/);
