@@ -241,9 +241,14 @@ systemd-analyze verify /etc/systemd/system/mysbizon-admin.service /etc/systemd/s
 systemctl daemon-reload
 systemctl enable --now mysbizon-admin
 systemctl enable --now mysbizon-customer-purge.timer
+admin_ready=0
+for _ in $(seq 1 30); do
+  if curl -fsS -H "Host: $DOMAIN" http://127.0.0.1:3102/admin/ >/dev/null 2>&1; then admin_ready=1; break; fi
+  sleep 0.25
+done
+[[ $admin_ready == 1 ]] || { systemctl --no-pager --full status mysbizon-admin >&2 || true; exit 1; }
 nginx -t
 systemctl reload nginx
-curl -fsS -H "Host: $DOMAIN" http://127.0.0.1:3102/admin/ >/dev/null
 systemctl restart mysbizon-node
 trap - ERR
 rm -f "$SNIPPET_BACKUP"

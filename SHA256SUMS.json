@@ -136,7 +136,7 @@
   "deploy/SECURITY-RELEASE.md": "a18b930535ca148167e99107096d9828442f67bbe5729ed77dd1aeb262b4f3df",
   "deploy/configure-integrations.sh": "4273cd826e52816f4a5c516f625464eeedd65f2551004de11e7fecec2bf60c5a",
   "deploy/customer-schema.sql": "e55c5e9e81b399e31076465567bcb01abab2fa6c1b3160f12599ddb130472b8c",
-  "deploy/install-customer-admin.sh": "aaf9bcca54ab42f70230d9b15a531f3905ccadb393b846de05e32245eb6ab0cb",
+  "deploy/install-customer-admin.sh": "df4be0d0e94a9b4dd3a410f8dfa1d94e73d63c1bf5fdb8fa881dd7871a2cb0c6",
   "deploy/mysbizon.service": "5ae9f96c32cad617ea4d0402f3c91345fe71b63048ee286860eb2febca819c17",
   "deploy/nginx-admin-public.example": "d64dc347fc106a4323e4d079c448c80409561e77b6207037925addb60ea7d628",
   "deploy/nginx.conf.example": "76eea97e8f3372f1a05a7ce9ab1294333d29d6bf76e9213458e2f1bf52429cde",
