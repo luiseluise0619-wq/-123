@@ -21,6 +21,8 @@
 6. 직원은 `https://mysbizon.mycafe24.com/admin/`에서 1차 Basic Auth와 2차 관리자 키를 차례로 입력합니다. 별도 도메인이나 DNS 구매는 필요 없습니다.
 7. 설치 스크립트는 매일 실행되는 `mysbizon-customer-purge.timer`도 켭니다. 설문 만료, 클릭 90일, 감사 365일 이후 실제 행을 삭제합니다.
 
+2차 관리자 키가 화면 공유·채팅·로그 등에 노출되면 `sudo bash deploy/rotate-customer-admin-token.sh`로 즉시 교체합니다. 새 키는 한 번만 표시되며 비밀번호 관리자에 저장합니다.
+
 DB 권한은 웹용(설문 INSERT, 클릭 INSERT/UPDATE)과 관리자용(조회·삭제·감사 기록), 스키마 소유자를 분리하세요. 각각 다른 프로세스 환경 파일의 CUSTOMER_DATABASE_URL을 사용합니다. 필요한 RETURNING/ON CONFLICT 동작에 대한 최소 SELECT 권한도 실제 DB에서 검증해야 합니다.
 
 ## 필수 운영 확인
