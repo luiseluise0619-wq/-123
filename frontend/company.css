@@ -65,6 +65,10 @@ nav[aria-label] [role=button] { min-height:44px; }
 header [role=button] { min-height:44px;display:inline-flex;align-items:center; }
 /* 도우미 버튼(40px)에 마지막 줄이 가리지 않을 만큼만 남긴다 */
 main { padding-bottom:104px !important; }
+.site-footer{width:100%;max-width:1280px;margin:0 auto;padding:0 32px 40px}
+.site-footer-contact{min-height:68px;padding:16px 20px;border:1px solid var(--line);border-radius:16px;background:var(--card);display:flex;align-items:center;justify-content:space-between;gap:20px}
+.site-footer-contact-label{font-size:13px;font-weight:600;color:var(--ink3)}
+.site-footer-contact-value{font-size:14px;font-weight:600;color:var(--ink2);text-align:right}
 [role=button] { touch-action:manipulation; }
 [role=status] { overflow-wrap:anywhere; }
 .home-hero { min-height:720px !important; }
@@ -93,6 +97,8 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
   /* 탭바(≈60px) + 도우미 버튼 자리 */
   main { padding-bottom:150px !important; }
   .home-hero { min-height:780px !important;padding-top:42px !important; }
+  .site-footer{padding:0 16px calc(92px + env(safe-area-inset-bottom,0px))}
+  .site-footer-contact{min-height:62px;padding:14px 16px;gap:8px}
   .hero-eyebrow { font-size:12px;margin-bottom:18px; }
   .hero-search { margin-top:28px !important; }
   .hero-search > div:first-child { padding:10px !important;border-radius:22px !important; }
@@ -107,6 +113,7 @@ html[data-theme=dark] .hero-search > div:first-child { border-color:var(--line-s
   main > section:first-of-type { padding-top:44px !important; }
   header nav { gap:6px; }
 }
+@media(min-width:600px) and (max-width:999px){.site-footer{padding:0 24px 40px}}
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after { animation:none !important;transition:none !important;scroll-behavior:auto !important; }
 }

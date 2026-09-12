@@ -196,6 +196,16 @@ globalThis.MysbizonParts.i18n = {
       'map.noPosition':'표시할 상권 위치가 없어요.',
       'map.failed':'지도를 불러오지 못했어요. 아래 목록은 계속 사용할 수 있어요.',
       'map.pick':'{zone} 선택',
+      'map.summary':'{zone} 간단 정보',
+      'map.currentIndustry':'선택 업종 · {industry}',
+      'map.monthlyPerStore':'가게당 월매출',
+      'map.stores':'같은 업종 가게',
+      'map.recommendations':'추천 업종',
+      'map.recommendationBasis':'가게당 월매출과 표본 수 기준 · 추정',
+      'map.rank':'{n}순위',
+      'map.clickHint':'번호를 누르면 상권 매출과 추천 업종 1~3순위가 바로 떠요.',
+      'footer.contact':'문의 이메일',
+      'footer.pending':'준비 중',
 
       'hub.peekTop':'{ind} · {n}곳 중 1위 {zone}',
       'home.stamp':'서울 상권 {n}곳 · {q} 기준',
@@ -5354,6 +5364,57 @@ globalThis.MysbizonParts.map = {
     this._kakaoBounds=null;
   },
 
+  kakaoInfoCard(pin){
+    const card=document.createElement('section');
+    card.setAttribute('aria-label',this.t('map.summary',{zone:pin.name}));
+    Object.assign(card.style,{
+      width:'min(292px, calc(100vw - 56px))',padding:'15px 16px',borderRadius:'16px',
+      border:'1px solid var(--line-strong)',background:'var(--card)',color:'var(--ink)',
+      boxShadow:'0 14px 34px rgba(0,0,0,.22)',fontFamily:'inherit',lineHeight:'1.35',
+      pointerEvents:'auto'
+    });
+    const title=document.createElement('strong');
+    title.textContent=pin.name;
+    Object.assign(title.style,{display:'block',fontSize:'16px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
+    const current=document.createElement('div');
+    current.textContent=this.t('map.currentIndustry',{industry:pin.industry});
+    Object.assign(current.style,{marginTop:'3px',fontSize:'12px',color:'var(--ink3)'});
+    const metrics=document.createElement('div');
+    Object.assign(metrics.style,{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginTop:'12px'});
+    for(const [label,value] of [[this.t('map.monthlyPerStore'),pin.monthlyPer],[this.t('map.stores'),pin.stores]]){
+      const cell=document.createElement('div');
+      Object.assign(cell.style,{minWidth:'0',padding:'9px 10px',borderRadius:'10px',background:'var(--surface)'});
+      const small=document.createElement('span');small.textContent=label;
+      Object.assign(small.style,{display:'block',fontSize:'10.5px',color:'var(--ink3)'});
+      const big=document.createElement('b');big.textContent=value;
+      Object.assign(big.style,{display:'block',marginTop:'3px',fontSize:'13px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
+      cell.append(small,big);metrics.appendChild(cell);
+    }
+    card.append(title,current,metrics);
+    if(pin.recommendations&&pin.recommendations.length){
+      const heading=document.createElement('div');
+      heading.textContent=this.t('map.recommendations');
+      Object.assign(heading.style,{marginTop:'12px',fontSize:'11px',fontWeight:'700',color:'var(--ink2)'});
+      const list=document.createElement('ol');
+      Object.assign(list.style,{listStyle:'none',margin:'6px 0 0',padding:'0',display:'grid',gap:'4px'});
+      for(const row of pin.recommendations){
+        const item=document.createElement('li');
+        Object.assign(item.style,{display:'flex',alignItems:'baseline',gap:'7px',fontSize:'12px'});
+        const rank=document.createElement('b');rank.textContent=this.t('map.rank',{n:row.rank});
+        Object.assign(rank.style,{flex:'none',color:'var(--accent-text)'});
+        const name=document.createElement('span');name.textContent=row.name;
+        Object.assign(name.style,{flex:'1',minWidth:'0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
+        const value=document.createElement('span');value.textContent=row.value;
+        Object.assign(value.style,{flex:'none',color:'var(--ink2)'});
+        item.append(rank,name,value);list.appendChild(item);
+      }
+      const basis=document.createElement('div');basis.textContent=this.t('map.recommendationBasis');
+      Object.assign(basis.style,{marginTop:'7px',fontSize:'10px',color:'var(--ink3)'});
+      card.append(heading,list,basis);
+    }
+    return card;
+  },
+
   paintKakaoMap(){
     if(this.state.screen!=='map') {this.destroyKakaoMap();return;}
     const el=document.getElementById('kakao-map');
@@ -5398,6 +5459,10 @@ globalThis.MysbizonParts.map = {
       button.addEventListener('click',p.pick);
       const overlay=new K.CustomOverlay({map,position,content:button,xAnchor:.5,yAnchor:.5,zIndex:p.on?10:2});
       overlays.push(overlay);
+      if(p.on){
+        const info=new K.CustomOverlay({map,position,content:this.kakaoInfoCard(p),xAnchor:.5,yAnchor:1.22,zIndex:30});
+        overlays.push(info);
+      }
     }
     if(pins.length>1) map.setBounds(bounds,46,46,46,46);
     else map.setLevel(4);
@@ -5690,8 +5755,24 @@ globalThis.MysbizonParts.views = {
           const p=SM.pts[o.id]||[50,50], on=o.id===sel.id;
           const ll=SM.lls&&SM.lls[o.id];
           const rr=side/100*(on?3.2:2.5);
+          const zone=S.zi&&S.zi.zones&&S.zi.zones[o.id];
+          const industries=((zone&&zone.rows)||[]).map(row=>({
+            name:this.indName((S.zi.inds||[])[row[0]]||('업종 '+row[0])),
+            stores:Number(row[1])||0,
+            monthlyPer:Number(row[1])>0?Number(row[2])/Number(row[1])/3:0
+          })).filter(row=>row.stores>0&&Number.isFinite(row.monthlyPer)&&row.monthlyPer>0);
+          // 점포 5곳 이하는 한 가게 실적에 순위가 크게 흔들린다. 표본이 충분한
+          // 업종을 먼저 쓰고, 세 가지가 안 될 때만 남은 업종으로 채운다.
+          const stable=industries.filter(row=>row.stores>5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
+          const fallback=industries.filter(row=>row.stores<=5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
+          const recommendations=[...stable,...fallback].slice(0,3).map((row,rank)=>({
+            rank:rank+1,name:row.name,value:this.won(row.monthlyPer)
+          }));
           return {n:i+1, name:this.zoneLabelOf(o.name), x:p[0], y:p[1], on:on,
             lat:Array.isArray(ll)?ll[0]:null, lng:Array.isArray(ll)?ll[1]:null,
+            industry:this.indName(S.ind),
+            monthlyPer:this.won(o.per/3), stores:o.stores.toLocaleString()+'곳',
+            recommendations,
             r:rr.toFixed(2),
             ty:(p[1]+rr*0.36).toFixed(2), fs:(rr*1.05).toFixed(2),
             fill:on?'var(--accent)':'var(--ink3)',
@@ -6663,6 +6744,9 @@ class Component extends DCLogic {
       mapCols:this.L('1fr','1fr','minmax(0,1.35fr) minmax(300px,1fr)'),
       mapHeight:this.L('300px','360px','430px'),
       mapLoading:this.t('map.loading'),
+      mapClickHint:this.t('map.clickHint'),
+      footerContactLabel:this.t('footer.contact'),
+      footerContactValue:this.t('footer.pending'),
       dashCols:this.L('1fr','1fr','minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr)'),
       navCols:this.L('1fr','200px minmax(0,1fr)','200px minmax(0,1fr)'),
       dsCard:this.ds('card'), dsCardHi:this.ds('cardHi'),

@@ -1559,5 +1559,15 @@
   "map.unavailable": "地图暂时无法使用，您仍可从下方列表选择商圈。",
   "map.noPosition": "没有可显示的商圈位置。",
   "map.failed": "地图加载失败，下方列表仍可使用。",
-  "map.pick": "选择{zone}"
+  "map.pick": "选择{zone}",
+  "map.summary": "{zone}简要信息",
+  "map.currentIndustry": "已选行业 · {industry}",
+  "map.monthlyPerStore": "每店月销售额",
+  "map.stores": "同业店铺",
+  "map.recommendations": "推荐行业",
+  "map.recommendationBasis": "根据每店月销售额和样本量估算",
+  "map.rank": "第{n}名",
+  "map.clickHint": "点击编号即可查看商圈销售额和前三名推荐行业。",
+  "footer.contact": "联系邮箱",
+  "footer.pending": "准备中"
 }

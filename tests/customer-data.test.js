@@ -39,7 +39,7 @@ test('PostgreSQL storage, consent, encrypted rows, aggregates, masking, expiry a
     const token='34'.repeat(32);server=createAdminServer(store,token,0);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
     const base='http://127.0.0.1:'+server.address().port;
     const request=(route,body={},auth=token,origin=base)=>fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+auth,Origin:origin},body:JSON.stringify(body)});
-    assert.equal((await request('list',{},'bad')).status,401);
+    assert.equal((await request('list',{},'bad')).status,403);
     assert.equal((await request('list',{},token,'https://attacker.invalid')).status,403);
     assert.equal((await request('list')).status,200);
     const exported=await(await request('export',{reveal:true})).text();

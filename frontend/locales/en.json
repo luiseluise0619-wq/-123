@@ -1527,5 +1527,15 @@
   "map.unavailable": "The map is unavailable. You can still choose an area from the list below.",
   "map.noPosition": "No area location is available to display.",
   "map.failed": "We could not load the map. The list below is still available.",
-  "map.pick": "Select {zone}"
+  "map.pick": "Select {zone}",
+  "map.summary": "Summary for {zone}",
+  "map.currentIndustry": "Selected business · {industry}",
+  "map.monthlyPerStore": "Monthly sales per shop",
+  "map.stores": "Shops in this business",
+  "map.recommendations": "Recommended businesses",
+  "map.recommendationBasis": "Estimated from monthly sales per shop and sample size",
+  "map.rank": "No. {n}",
+  "map.clickHint": "Select a number to see area sales and the top three recommended businesses.",
+  "footer.contact": "Contact email",
+  "footer.pending": "Coming soon"
 }

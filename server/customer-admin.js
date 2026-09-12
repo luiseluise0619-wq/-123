@@ -69,7 +69,10 @@ export function createAdminServer(store,token,port){
       }
       if(req.headers['content-type']!=='application/json')return send(415,{error:'JSON required'});
       const supplied=String(req.headers.authorization||'').replace(/^Bearer /,'');
-      if(!timingSafeEqual(expected,tokenHash(supplied))){const blocked=limit('auth',5,60000);return send(blocked?429:401,{error:'관리자 키를 확인해 주세요.'});}
+      // Nginx의 1차 Basic 인증도 401을 사용한다. 여기서 같은 코드를 보내면
+      // 브라우저가 2차 키 실패를 1차 실패로 오해해 Basic 인증창을 다시 띄운다.
+      // 2차 키는 본인 확인은 끝났지만 권한이 부족한 403으로 구분한다.
+      if(!timingSafeEqual(expected,tokenHash(supplied))){const blocked=limit('auth',5,60000);return send(blocked?429:403,{error:'2차 관리자 키가 맞지 않습니다.'});}
       if(limit('queries',60,60000))return send(429,{error:'잠시 후 다시 시도해 주세요.'});
       const body=JSON.parse(await readBody(req));
       const apiPath=prefix&&url.pathname.startsWith(prefix+'/api/')?url.pathname.slice(prefix.length):url.pathname;

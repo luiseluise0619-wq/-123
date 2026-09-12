@@ -5,7 +5,13 @@ const labels={id:'제출 ID',createdAt:'제출 시각',email:'이메일',sido:'�
 function lock({clearKey=true}={}){token='';rows=[];el('table').replaceChildren();el('workspace').hidden=true;el('login').hidden=false;el('logout').hidden=true;if(clearKey)el('key').value='';el('search').value='';clearTimeout(lockTimer);}
 async function request(path,body={}){
   const response=await fetch('api/'+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
-  if(!response.ok){if(response.status===401)lock({clearKey:false});throw new Error('요청 실패 ('+response.status+'). 2차 관리자 키를 확인해 주세요.');}
+  if(!response.ok){
+    let message='요청을 처리하지 못했습니다.';
+    try{const data=await response.json();if(data&&data.error)message=data.error;}catch{}
+    if(response.status===401||(response.status===403&&message.includes('2차 관리자 키'))){lock({clearKey:false});message='2차 관리자 키가 맞지 않습니다.';}
+    else if(response.status===429)message='입력 횟수가 많아 잠시 잠겼습니다. 60초 뒤 다시 시도해 주세요.';
+    throw new Error(message+' ('+response.status+')');
+  }
   return response;
 }
 function paint(){
@@ -20,7 +26,7 @@ function paint(){
 }
 async function load(){const data=await(await request(kind==='surveys'?'list':'clicks',{before,reveal:el('reveal').checked})).json();rows=data.rows;next=data.next;paint();el('status').textContent=rows.length+'건을 불러왔어요.';}
 async function run(fn){try{el('status').textContent='처리 중…';await fn();}catch(e){el('status').textContent=e.message;}}
-el('login-form').onsubmit=e=>{e.preventDefault();run(async()=>{token=el('key').value.trim();await load();el('key').value='';el('login').hidden=true;el('workspace').hidden=false;el('logout').hidden=false;clearTimeout(lockTimer);lockTimer=setTimeout(()=>{lock();el('status').textContent='15분이 지나 잠겼어요.';},15*60000);});};
+el('login-form').onsubmit=e=>{e.preventDefault();run(async()=>{token=el('key').value.trim();if(!/^[a-f0-9]{64}$/i.test(token))throw new Error('2차 관리자 키는 공백 없는 영문·숫자 64자리입니다.');await load();el('key').value='';el('login').hidden=true;el('workspace').hidden=false;el('logout').hidden=false;clearTimeout(lockTimer);lockTimer=setTimeout(()=>{lock();el('status').textContent='15분이 지나 잠겼어요.';},15*60000);});};
 el('logout').onclick=lock;
 for(const k of ['surveys','clicks'])el(k).onclick=()=>run(async()=>{kind=k;before='';el('surveys').setAttribute('aria-pressed',String(k==='surveys'));el('clicks').setAttribute('aria-pressed',String(k==='clicks'));await load();});
 el('refresh').onclick=()=>run(load);el('reveal').onchange=()=>run(load);el('search').oninput=paint;

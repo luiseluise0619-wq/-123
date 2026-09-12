@@ -268,8 +268,24 @@ globalThis.MysbizonParts.views = {
           const p=SM.pts[o.id]||[50,50], on=o.id===sel.id;
           const ll=SM.lls&&SM.lls[o.id];
           const rr=side/100*(on?3.2:2.5);
+          const zone=S.zi&&S.zi.zones&&S.zi.zones[o.id];
+          const industries=((zone&&zone.rows)||[]).map(row=>({
+            name:this.indName((S.zi.inds||[])[row[0]]||('업종 '+row[0])),
+            stores:Number(row[1])||0,
+            monthlyPer:Number(row[1])>0?Number(row[2])/Number(row[1])/3:0
+          })).filter(row=>row.stores>0&&Number.isFinite(row.monthlyPer)&&row.monthlyPer>0);
+          // 점포 5곳 이하는 한 가게 실적에 순위가 크게 흔들린다. 표본이 충분한
+          // 업종을 먼저 쓰고, 세 가지가 안 될 때만 남은 업종으로 채운다.
+          const stable=industries.filter(row=>row.stores>5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
+          const fallback=industries.filter(row=>row.stores<=5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
+          const recommendations=[...stable,...fallback].slice(0,3).map((row,rank)=>({
+            rank:rank+1,name:row.name,value:this.won(row.monthlyPer)
+          }));
           return {n:i+1, name:this.zoneLabelOf(o.name), x:p[0], y:p[1], on:on,
             lat:Array.isArray(ll)?ll[0]:null, lng:Array.isArray(ll)?ll[1]:null,
+            industry:this.indName(S.ind),
+            monthlyPer:this.won(o.per/3), stores:o.stores.toLocaleString()+'곳',
+            recommendations,
             r:rr.toFixed(2),
             ty:(p[1]+rr*0.36).toFixed(2), fs:(rr*1.05).toFixed(2),
             fill:on?'var(--accent)':'var(--ink3)',

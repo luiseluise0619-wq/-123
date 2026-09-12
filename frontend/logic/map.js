@@ -43,6 +43,57 @@ globalThis.MysbizonParts.map = {
     this._kakaoBounds=null;
   },
 
+  kakaoInfoCard(pin){
+    const card=document.createElement('section');
+    card.setAttribute('aria-label',this.t('map.summary',{zone:pin.name}));
+    Object.assign(card.style,{
+      width:'min(292px, calc(100vw - 56px))',padding:'15px 16px',borderRadius:'16px',
+      border:'1px solid var(--line-strong)',background:'var(--card)',color:'var(--ink)',
+      boxShadow:'0 14px 34px rgba(0,0,0,.22)',fontFamily:'inherit',lineHeight:'1.35',
+      pointerEvents:'auto'
+    });
+    const title=document.createElement('strong');
+    title.textContent=pin.name;
+    Object.assign(title.style,{display:'block',fontSize:'16px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
+    const current=document.createElement('div');
+    current.textContent=this.t('map.currentIndustry',{industry:pin.industry});
+    Object.assign(current.style,{marginTop:'3px',fontSize:'12px',color:'var(--ink3)'});
+    const metrics=document.createElement('div');
+    Object.assign(metrics.style,{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginTop:'12px'});
+    for(const [label,value] of [[this.t('map.monthlyPerStore'),pin.monthlyPer],[this.t('map.stores'),pin.stores]]){
+      const cell=document.createElement('div');
+      Object.assign(cell.style,{minWidth:'0',padding:'9px 10px',borderRadius:'10px',background:'var(--surface)'});
+      const small=document.createElement('span');small.textContent=label;
+      Object.assign(small.style,{display:'block',fontSize:'10.5px',color:'var(--ink3)'});
+      const big=document.createElement('b');big.textContent=value;
+      Object.assign(big.style,{display:'block',marginTop:'3px',fontSize:'13px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
+      cell.append(small,big);metrics.appendChild(cell);
+    }
+    card.append(title,current,metrics);
+    if(pin.recommendations&&pin.recommendations.length){
+      const heading=document.createElement('div');
+      heading.textContent=this.t('map.recommendations');
+      Object.assign(heading.style,{marginTop:'12px',fontSize:'11px',fontWeight:'700',color:'var(--ink2)'});
+      const list=document.createElement('ol');
+      Object.assign(list.style,{listStyle:'none',margin:'6px 0 0',padding:'0',display:'grid',gap:'4px'});
+      for(const row of pin.recommendations){
+        const item=document.createElement('li');
+        Object.assign(item.style,{display:'flex',alignItems:'baseline',gap:'7px',fontSize:'12px'});
+        const rank=document.createElement('b');rank.textContent=this.t('map.rank',{n:row.rank});
+        Object.assign(rank.style,{flex:'none',color:'var(--accent-text)'});
+        const name=document.createElement('span');name.textContent=row.name;
+        Object.assign(name.style,{flex:'1',minWidth:'0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
+        const value=document.createElement('span');value.textContent=row.value;
+        Object.assign(value.style,{flex:'none',color:'var(--ink2)'});
+        item.append(rank,name,value);list.appendChild(item);
+      }
+      const basis=document.createElement('div');basis.textContent=this.t('map.recommendationBasis');
+      Object.assign(basis.style,{marginTop:'7px',fontSize:'10px',color:'var(--ink3)'});
+      card.append(heading,list,basis);
+    }
+    return card;
+  },
+
   paintKakaoMap(){
     if(this.state.screen!=='map') {this.destroyKakaoMap();return;}
     const el=document.getElementById('kakao-map');
@@ -87,6 +138,10 @@ globalThis.MysbizonParts.map = {
       button.addEventListener('click',p.pick);
       const overlay=new K.CustomOverlay({map,position,content:button,xAnchor:.5,yAnchor:.5,zIndex:p.on?10:2});
       overlays.push(overlay);
+      if(p.on){
+        const info=new K.CustomOverlay({map,position,content:this.kakaoInfoCard(p),xAnchor:.5,yAnchor:1.22,zIndex:30});
+        overlays.push(info);
+      }
     }
     if(pins.length>1) map.setBounds(bounds,46,46,46,46);
     else map.setLevel(4);

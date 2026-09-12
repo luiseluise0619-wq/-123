@@ -1268,7 +1268,7 @@
                 <span role="button" tabIndex="0" onClick="{{ p.pick }}" style="{{ p.chip }}">{{ p.n }} {{ p.name }}</span>
               </sc-for>
             </div>
-            <p style="{{ dsSub }}; margin-top:12px">번호를 누르면 그 상권으로 바뀌어요.</p>
+            <p style="{{ dsSub }}; margin-top:12px">{{ mapClickHint }}</p>
           </div>
 
           <div style="min-width:0;align-self:start">
@@ -2353,6 +2353,12 @@
       </sc-if>
     </sc-if>
   </main>
+  <footer class="site-footer" aria-label="{{ footerContactLabel }}">
+    <div class="site-footer-contact">
+      <span class="site-footer-contact-label">{{ footerContactLabel }}</span>
+      <span class="site-footer-contact-value">{{ footerContactValue }}</span>
+    </div>
+  </footer>
 </div>
 
 </x-dc>
