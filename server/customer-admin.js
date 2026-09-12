@@ -68,7 +68,12 @@ export function createAdminServer(store,token,port){
         return send(403,{error:'허용되지 않은 요청입니다.'});
       }
       if(req.headers['content-type']!=='application/json')return send(415,{error:'JSON required'});
-      const supplied=String(req.headers.authorization||'').replace(/^Bearer /,'');
+      // Nginx Basic 인증은 Authorization 헤더를 계속 사용한다. 앱의 2차 키는
+      // 별도 헤더로 받아 두 인증이 서로 덮어쓰지 않게 한다. Bearer는 내부 도구와
+      // 이전 배포본의 호환을 위해서만 받는다.
+      const authorization=String(req.headers.authorization||'');
+      const legacyBearer=/^Bearer /i.test(authorization)?authorization.replace(/^Bearer /i,''):'';
+      const supplied=String(req.headers['x-mysbizon-admin-key']||legacyBearer).trim();
       // Nginx의 1차 Basic 인증도 401을 사용한다. 여기서 같은 코드를 보내면
       // 브라우저가 2차 키 실패를 1차 실패로 오해해 Basic 인증창을 다시 띄운다.
       // 2차 키는 본인 확인은 끝났지만 권한이 부족한 403으로 구분한다.

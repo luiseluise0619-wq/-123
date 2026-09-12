@@ -76,6 +76,8 @@ globalThis.MysbizonParts.data = {
           reportEmailEnabled:!!c.reportEmailEnabled,
           customerData:c.customerData,
           kakaoMapKey:c.kakaoMap?.enabled&&/^[A-Za-z0-9_-]{16,128}$/.test(key)?key:'',
+          publicContactEmail:/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(c.publicContact?.email||''))
+            ? String(c.publicContact.email) : '',
         });
       }).catch(()=>{});
   },

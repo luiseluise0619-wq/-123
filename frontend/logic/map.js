@@ -56,7 +56,7 @@ globalThis.MysbizonParts.map = {
     title.textContent=pin.name;
     Object.assign(title.style,{display:'block',fontSize:'16px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'});
     const current=document.createElement('div');
-    current.textContent=this.t('map.currentIndustry',{industry:pin.industry});
+    current.textContent=this.t('map.currentIndustry',{industry:pin.industry})+' · '+pin.period;
     Object.assign(current.style,{marginTop:'3px',fontSize:'12px',color:'var(--ink3)'});
     const metrics=document.createElement('div');
     Object.assign(metrics.style,{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginTop:'12px'});

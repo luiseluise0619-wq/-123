@@ -18,7 +18,7 @@
 3. `npm ci`로 개발·테스트 의존성을 설치합니다. 운영 artifact에는 `npm ci --omit=dev`를 실행합니다. 운영 의존성은 `pg`, 테스트 의존성은 PostgreSQL WASM 검증용 PGlite입니다.
 4. 환경변수에 DB URL, 서로 다른 무작위 32바이트 hex 암호화 키/관리자 키, 보유 일수(1~365), 회사명, 문의처, 동의 문구 버전을 설정합니다. 값은 채팅·GitHub에 올리지 않습니다. 회사 처리방침을 게시한 후 `CUSTOMER_DATA_ENABLED=true`로 켭니다. 어느 필수 설정이 빠져도 수집은 비활성입니다.
 5. 웹과 관리자는 `mysbizon-node` 비로그인 OS 계정의 서로 다른 systemd 서비스로 운영됩니다. 관리자 프로세스도 외부 포트를 열지 않습니다.
-6. 직원은 `https://mysbizon.mycafe24.com/admin/`에서 1차 Basic Auth와 2차 관리자 키를 차례로 입력합니다. 별도 도메인이나 DNS 구매는 필요 없습니다.
+6. 직원은 `https://mysbizon.mycafe24.com/admin/`에서 1차 Basic Auth와 2차 관리자 키를 차례로 입력합니다. 1차 인증은 표준 `Authorization` 헤더, 2차 키는 전용 `X-Mysbizon-Admin-Key` 헤더로 분리되어 서로 덮어쓰지 않습니다. 별도 도메인이나 DNS 구매는 필요 없습니다.
 7. 설치 스크립트는 매일 실행되는 `mysbizon-customer-purge.timer`도 켭니다. 설문 만료, 클릭 90일, 감사 365일 이후 실제 행을 삭제합니다.
 
 2차 관리자 키가 화면 공유·채팅·로그 등에 노출되면 `sudo bash deploy/rotate-customer-admin-token.sh`로 즉시 교체합니다. 새 키는 한 번만 표시되며 비밀번호 관리자에 저장합니다.

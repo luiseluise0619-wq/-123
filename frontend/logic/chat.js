@@ -29,6 +29,7 @@ globalThis.MysbizonParts.chat = {
     };
     if(/본전|손익|얼마.*팔|매출.*필요/.test(t)){
       const c=this.calc(sel);
+      if(c.valid===false) return {text:c.error,cta:this.t('chat.bep.cta'),go:'diag'};
       return {
         text:this.tn('chat.bep.text',{zone:this.zoneLabelOf(sel.name), amt:this.man(c.bep)}),
         facts:[{label:this.t('chat.bep.bep'),value:this.man(c.bep)},

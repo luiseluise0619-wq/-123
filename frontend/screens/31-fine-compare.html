@@ -23,7 +23,7 @@
       <sc-if value="{{ fc.hasList }}">
         <!-- 결론: 상위 세 곳 -->
         <section style="padding:28px 0 0">
-          <h2 style="{{ ds3 }}">가장 잘 되는 세 곳</h2>
+          <h2 style="{{ ds3 }}">점포당 참고 매출이 높은 세 곳</h2>
           <div data-rail="fcTop" style="{{ fc.topRail.trackStyle }}; margin-top:14px">
             <sc-for list="{{ fc.top }}" as="t">
               <div style="{{ fc.topRail.itemStyle }}">
@@ -33,7 +33,7 @@
                   <span style="flex:1;min-width:0;font-size:18px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span>
                 </div>
                 <div style="{{ dsNumSm }}; margin-top:12px">{{ t.per }}</div>
-                <div class="u-note-t">가게 한 곳당 월매출 (추정)</div>
+                <div class="u-note-t">점포당 참고 매출 (추정)</div>
                 <div style="{{ t.vsStyle }}">{{ t.vs }}</div>
                 <div class="u-note" style="margin-top:10px">경쟁 점포 {{ t.stores }}</div>
                 <sc-if value="{{ t.thin }}">

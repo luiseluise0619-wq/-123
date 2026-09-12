@@ -81,9 +81,11 @@ globalThis.MysbizonParts.comparison = {
           diag:()=>this.setState({sel:o.id,screen:'diag'}),
           drop:()=>this.setState({picks:PICKS.filter(x=>x!==o.id)}),
           best:false,
+          badge:'', badgeStyle:'display:none',
+          dot:'display:none',
           cardStyle:'background:var(--card);border:1px solid var(--line);'
             +'border-radius:var(--r-lg);padding:20px;min-width:0;position:relative',
-          cells:[{label:'예상 매출 (추정)', value:this.won(o.per/3), note:'',
+          cells:[{label:'상권 참고 매출 (추정)', value:this.won(o.per/3), note:'',
                   valStyle:'font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums', bar:null},
                  {label:'경쟁 점포', value:o.stores.toLocaleString()+'곳', note:'',
                   valStyle:'font-size:21px;font-weight:600;letter-spacing:-0.02em;margin-top:3px;font-variant-numeric:tabular-nums', bar:null}]
@@ -126,20 +128,20 @@ globalThis.MysbizonParts.comparison = {
     const MX={per:Math.max(...picks.map(o=>o.per)),sales:Math.max(...picks.map(o=>o.sales)),stores:Math.max(...picks.map(o=>o.stores))};
     const maxPop=Math.max(...RK.list.map(o=>o.pop||0),0)||null;
 
-    // 종합 1위의 근거 — 지표별 순위에서 뽑는다. 뜬구름 문장을 쓰지 않는다.
+    // 현재 가중치에서 점수가 가장 높은 후보의 근거 — 지표별 순위에서 뽑는다.
     const whyWin=(()=>{
       if(!top) return [];
       const w=[];
       const r=top._rank||{};
       // 1위라도 동점이면 '가장'이라고 쓰지 않는다 — 공동 1위는 이긴 게 아니다
-      if(wPer===top)   w.push({ok:true,  text:'예상 매출이 담은 곳 중 가장 높아요'});
+      if(wPer===top)   w.push({ok:true,  text:'상권 참고 매출이 담은 곳 중 가장 높아요'});
       if(wPop===top)   w.push({ok:true,  text:'유동인구가 담은 곳 중 가장 많아요'});
       if(wSales===top) w.push({ok:true,  text:'상권 소비 규모가 가장 커요'});
       if(wStore===top) w.push({ok:true,  text:'같은 업종 경쟁이 가장 적어요'});
-      if(!w.length && r.per===1) w.push({ok:true, text:'예상 매출이 담은 곳 중 가장 높은 축이에요 (공동 1위)'});
+      if(!w.length && r.per===1) w.push({ok:true, text:'상권 참고 매출이 담은 곳 중 가장 높은 축이에요 (공동 1위)'});
       const n=picks.length;
       if(r.stores===n) w.push({ok:false, text:'경쟁 점포는 담은 곳 중 가장 많아요'});
-      if(r.per===n)    w.push({ok:false, text:'예상 매출은 담은 곳 중 가장 낮아요'});
+      if(r.per===n)    w.push({ok:false, text:'상권 참고 매출은 담은 곳 중 가장 낮아요'});
       if(top.src.stores<10) w.push({ok:false, text:'표본이 '+top.src.stores+'곳뿐이라 참고 수준으로 봐주세요'});
       if(top._missing&&top._missing.length)
         w.push({ok:false, text:top._missing.join('·')+' 자료가 없어 이 기준에서 빼고 계산했어요'});
@@ -191,7 +193,7 @@ globalThis.MysbizonParts.comparison = {
         name:o.name,
         dot:'flex:none;width:9px;height:9px;border-radius:50%;background:'+o._color,
         best:o._place===1,
-        badge:o._place===1?'종합 1위':'',
+        badge:o._place===1?'저장한 후보 중 1위':'',
         pick:()=>this.setState({sel:o.id}),
         style:'display:flex;align-items:center;gap:11px;padding:13px 14px;border-radius:var(--r-sm);cursor:pointer;'
           +(o._place===1?'background:var(--color-primary-soft)':'background:var(--color-surface)')
@@ -209,12 +211,12 @@ globalThis.MysbizonParts.comparison = {
         const winOf=(o,badge,text)=> o? {name:o.name, badge:badge,
           value:text, text:text, color:this.slotHex(o._slot)} : null;
 
-        push('cmp-per',{type:'bar', title:'어디가 더 많이 파나요?', sub:'가게 한 곳당 월매출 (추정)',
+        push('cmp-per',{type:'bar', title:'점포당 참고 매출은 어디가 높나요?', sub:'같은 기간·업종의 점포당 참고 매출 (추정)',
           unit:'원', period:q, height:260, labels:names,
-          datasets:[{label:'가게 한 곳당 월매출', data:RK.list.map(o=>Math.round(o.per)), colors:cols}],
+          datasets:[{label:'점포당 참고 매출', data:RK.list.map(o=>Math.round(o.per)), colors:cols}],
           winner: wPer? {name:wPer.name, badge:'매출 1위', color:this.slotHex(wPer._slot),
             value:this.won(wPer.per),
-            text:'담은 '+picks.length+'곳 중 예상 매출이 가장 높아요.'} : null});
+            text:'담은 '+picks.length+'곳 중 상권 참고 매출이 가장 높아요.'} : null});
 
         if(RK.list.some(o=>o.pop!=null))
           push('cmp-pop',{type:'bar', title:'어디에 사람이 더 많나요?', sub:'상권이 속한 행정동 하루 유동인구',
@@ -249,7 +251,7 @@ globalThis.MysbizonParts.comparison = {
         diag:()=>this.setState({sel:o.id,screen:'diag'}),
         drop:()=>this.setState({picks:PICKS.filter(x=>x!==o.id)}),
         best:first,
-        badge:first?'🥇 종합 1위':(o._place+'위'),
+        badge:first?'🥇 저장한 후보 중 1위':(o._place+'위'),
         badgeStyle:'flex:none;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;'
           +(first?'background:var(--color-primary);color:var(--on-accent)'
                  :'background:var(--color-surface);color:var(--color-text-secondary)'),
@@ -260,7 +262,7 @@ globalThis.MysbizonParts.comparison = {
           +';border-left:5px solid '+o._color
           +';border-radius:var(--r-lg);padding:20px;min-width:0;position:relative',
         cells:[
-          {label:'예상 매출 (추정)', value:monthly(src.per),
+          {label:'상권 참고 매출 (추정)', value:monthly(src.per),
            note:o===wPer?'담은 곳 중 가장 높아요':'',
            valStyle:bigc,
            bar:'width:'+Math.max(Math.min(src.per/MX.per,1)*100,2).toFixed(1)+'%;height:100%;background:'+o._color+';border-radius:2px'},

@@ -38,7 +38,7 @@ test('PostgreSQL storage, consent, encrypted rows, aggregates, masking, expiry a
     assert.equal(Number((await store.clicks())[0].count),2);
     const token='34'.repeat(32);server=createAdminServer(store,token,0);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
     const base='http://127.0.0.1:'+server.address().port;
-    const request=(route,body={},auth=token,origin=base)=>fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+auth,Origin:origin},body:JSON.stringify(body)});
+    const request=(route,body={},auth=token,origin=base)=>fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-Mysbizon-Admin-Key':auth,Origin:origin},body:JSON.stringify(body)});
     assert.equal((await request('list',{},'bad')).status,403);
     assert.equal((await request('list',{},token,'https://attacker.invalid')).status,403);
     assert.equal((await request('list')).status,200);
@@ -63,7 +63,9 @@ test('admin assets and API work below the same-domain /admin path',async()=>{
     assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'/admin/');
     assert.equal((await fetch(base+'/admin/')).status,200);
     assert.equal((await fetch(base+'/admin/admin.js')).status,200);
-    const result=await fetch(base+'/admin/api/clicks',{method:'POST',headers:{Origin:'http://127.0.0.1','Content-Type':'application/json',Authorization:'Bearer '+token},body:'{}'});
+    // 실제 공개 경로에서는 Nginx가 Authorization: Basic 을 사용한다. 앱 2차 키는
+    // 전용 헤더로 함께 와도 서로 덮어쓰지 않아야 한다.
+    const result=await fetch(base+'/admin/api/clicks',{method:'POST',headers:{Origin:'http://127.0.0.1','Content-Type':'application/json',Authorization:'Basic dGVzdDp0ZXN0','X-Mysbizon-Admin-Key':token},body:'{}'});
     assert.equal(result.status,200);
   }finally{
     server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await db.close();restoreEnv(previous);

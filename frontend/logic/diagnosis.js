@@ -6,33 +6,36 @@ globalThis.MysbizonParts.diagnosis = {
     const S=this.state;
     const {arrowUp,arrowDn,arrowInfo}=MysbizonConst.TREND_STYLES;
     // ── 진단
-    const c=this.calc(sel), over=c.profit>=0;
-    const revName = S.scen==='적게 팔릴 때'?'적게 팔릴 때':(S.scen==='잘될 때'?'잘될 때':'이 자리 평균');
-    const mx=Math.max(c.rev,c.bep)*1.18||1;
+    const c=this.calc(sel), valid=c.valid!==false, over=valid&&c.profit>=0;
+    const revName = S.scen==='적게 팔릴 때'?'참고 매출의 70%':(S.scen==='잘될 때'?'참고 매출의 130%':'상권 참고 매출');
+    const mx=valid?(Math.max(c.rev,c.bep)*1.18||1):1;
     const I=S.sbi&&S.sbi.ind?S.sbi.ind[S.ind]:null;
     const unit=sel.unit||(I&&I.unit);
     const unitSrc=sel.unit?'이 자리에서 손님 1명이 쓰는 돈':'서울 전체에서 손님 1명이 쓰는 돈';
-    const dailyAmt=c.bep/30, dailyCnt=unit?Math.ceil(dailyAmt*1e4/unit):null;
+    const dailyAmt=valid?c.bep/30:null, dailyCnt=(valid&&unit)?Math.ceil(dailyAmt*1e4/unit):null;
     const TL=['00–06','06–11','11–14','14–17','17–21','21–24'], TH=[6,5,3,3,4,3];
     const tm=I&&I.tmzon; let pk=0;
     if(tm) tm.forEach((v,i)=>{ if(v>tm[pk]) pk=i; });
 
     out.d={
       eyebrow:this.t('mv.head',{ind:this.indName(S.ind), zone:this.zoneLabelOf(sel.name)}),
-      headline: over?'지금 조건에서는 본전을 넘어요.':'지금 조건에서는 본전에 못 미쳐요.',
-      bep:this.man(c.bep), rev:this.man(c.rev), revName:revName,
+      valid:valid,
+      headline: valid?(over?'지금 조건에서는 본전을 넘어요.':'지금 조건에서는 본전에 못 미쳐요.'):'원가율을 다시 확인해 주세요.',
+      bep:valid?this.man(c.bep):'계산할 수 없음', rev:this.man(c.rev), revName:revName,
+      bepLabel:valid?'월 이만큼 팔면 본전':'원가율을 100% 미만으로 입력해 주세요',
+      gaugeHint:valid?'막대는 상권 참고 매출을 쓴 가정, 세로선은 본전선이에요':'',
       // 값이 작은 쪽이 왼쪽 — 라벨 순서를 막대 위치에서 끌어낸다
-      gaugeLabels:[{v:c.rev,label:revName,value:this.man(c.rev)},{v:c.bep,label:'본전',value:this.man(c.bep)}]
+      gaugeLabels:(valid?[{v:c.rev,label:revName,value:this.man(c.rev)},{v:c.bep,label:'본전',value:this.man(c.bep)}]:[])
         .sort((a,b)=>a.v-b.v)
         .map((g,i)=>({label:g.label, value:g.value,
           // 영어 라벨은 길다('Average for this spot') — 못 줄이면 390px 화면이 밀린다.
           // 줄바꿈은 허용하고, 금액만 안 끊기게 둔다(아래 조각의 <b>).
           style:(i===0?'text-align:left':'text-align:right;margin-left:auto')})),
-      fill:'position:absolute;left:0;top:0;bottom:0;width:'+Math.max(Math.min(c.rev/mx*100,100),1).toFixed(1)+'%;border-radius:6px;background:'+(over?'var(--good)':'var(--warn)')+';transition:width .2s cubic-bezier(.2,.7,.3,1)',
-      mark:'position:absolute;top:-7px;bottom:-7px;left:'+Math.min(c.bep/mx*100,100).toFixed(1)+'%;width:2px;background:var(--ink);border-radius:1px;transition:left .2s cubic-bezier(.2,.7,.3,1)',
+      fill:valid?('position:absolute;left:0;top:0;bottom:0;width:'+Math.max(Math.min(c.rev/mx*100,100),1).toFixed(1)+'%;border-radius:6px;background:'+(over?'var(--good)':'var(--warn)')+';transition:width .2s cubic-bezier(.2,.7,.3,1)'):'display:none',
+      mark:valid?('position:absolute;top:-7px;bottom:-7px;left:'+Math.min(c.bep/mx*100,100).toFixed(1)+'%;width:2px;background:var(--ink);border-radius:1px;transition:left .2s cubic-bezier(.2,.7,.3,1)'):'display:none',
       gapStyle:'font-size:13px;margin-top:11px;font-weight:500;white-space:nowrap;color:'+(over?'var(--good)':'var(--warn)'),
-      gap: this.t(over?'diag.left':'diag.short',{amt:this.man(Math.abs(c.profit))}),
-      factors:[
+      gap: valid?this.t(over?'diag.left':'diag.short',{amt:this.man(Math.abs(c.profit))}):c.error,
+      factors:valid?[
         over? {sign:'↑', arrow:arrowUp, text:'이 매출이면 인건비·임대료를 덮어요'}
             : {sign:'↓', arrow:arrowDn, text:this.t('diag.fixed',{amt:this.man(c.fixed)})},
         over
@@ -45,7 +48,7 @@ globalThis.MysbizonParts.diagnosis = {
           : (c.invest>0
             ? {sign:'↓', arrow:arrowDn, text:'지금 조건에서는 초기투자를 회수하지 못해요'}
             : {sign:'·', arrow:arrowInfo, text:'초기투자를 넣으면 회수기간도 나와요'})
-      ],
+      ]:[],
       thinStyle: sel.stores<=5?'font-size:12.5px;color:var(--warn);margin-top:26px;max-width:600px;text-wrap:pretty':'display:none',
       // 업종 이름이 문장 안에 들어가면 통째로는 사전에서 못 찾는다 — 자리표시자로 둔다
       thin: sel.stores>5 ? ''
@@ -55,11 +58,11 @@ globalThis.MysbizonParts.diagnosis = {
         +'세금·대출 이자는 넣지 않았어요. 회수기간은 초기투자(보증금+권리금+인테리어) ÷ 월 영업이익이고, 보증금은 나갈 때 돌려받지만 묶이는 돈이라 포함했어요.'
     };
 
-    const num=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?'':this.bound(v,0,k==='cogs'?95:100000,0)});};
+    const num=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?'':this.bound(v,0,k==='cogs'?1000:100000,0)});};
     const ovr=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?null:this.bound(v,0,k==='staffOv'?100:100000,0)});};
 
     // 다른 화면과 같은 방식으로 접는다 — 문장은 그대로 두고 '데이터 기준 보기' 안으로 넣는다.
-    out.d.note=this.dataNote('bep', '본전 = 고정비 ÷ (1 − 원가율) 로 계산해요.', [['계산 기준', out.d.honesty]]);
+    out.d.note=this.dataNote('bep', '본전 = 고정비 ÷ (1 − 원가율) 로 계산해요. 원가율이 100% 이상이면 계산하지 않아요.', [['계산 기준', out.d.honesty]]);
     // 평수 하나로 규모가 움직인다
     // 슬라이더는 '계산에 쓰는 평수'를 보여준다. 설문에서 상한을 넘는 값을 넣었을 때
     // 슬라이더만 다른 숫자를 들고 있으면 화면과 계산이 어긋난다.
@@ -96,7 +99,7 @@ globalThis.MysbizonParts.diagnosis = {
       const n=c.rev>0? Math.max(Math.round(v/c.rev*20),0) : 0;
       return {n:Math.min(n,20), col:col};
     };
-    const dotSets=[['원가',c.rev*c.cogs,'var(--accent)'],['임대료',c.rent,'var(--accent-2)'],['인건비',c.labor,'var(--accent-3)'],['기타',c.etc,'var(--ink2)']];
+    const dotSets=valid?[['원가',c.rev*c.cogs,'var(--accent)'],['임대료',c.rent,'var(--accent-2)'],['인건비',c.labor,'var(--accent-3)'],['기타',c.etc,'var(--ink2)']]:[];
     out.moneyDots=dotSets.map(([label,v,col])=>{
       const d=dotOf(v,col);
       const cells=[];
@@ -105,23 +108,23 @@ globalThis.MysbizonParts.diagnosis = {
         word: c.rev>0? (v/c.rev>=0.4?'가장 무거워요':(v/c.rev>=0.2?'부담돼요':'가벼워요')) : ''};
     });
     // 항목별 독립 막대다 — 한 예산을 나눠 쓰는 그림이 아니라고 분명히 쓴다
-    const totPct=c.rev>0? Math.round((c.rev*c.cogs+c.rent+c.labor+c.etc)/c.rev*100) : 0;
-    out.dotNote = c.rev>0
+    const totPct=valid&&c.rev>0? Math.round((c.rev*c.cogs+c.rent+c.labor+c.etc)/c.rev*100) : 0;
+    out.dotNote = !valid?c.error:(c.rev>0
       ? (totPct>100
         ? '한 줄이 매출 전체(20칸)이고, 칠한 칸이 그 항목이 가져가는 몫이에요. 네 항목을 더하면 '+totPct+'%로 매출을 넘어서 남는 게 없어요.'
         : '한 줄이 매출 전체(20칸)이고, 칠한 칸이 그 항목이 가져가는 몫이에요. 네 항목을 더하면 '+totPct+'%, 나머지 '+(100-totPct)+'%가 내 몫이에요.')
-      : '';
+      : '');
     out.scens=['적게 팔릴 때','보통일 때','잘될 때'].map(p=>({
       label:p, pick:()=>this.setState({scen:p}),
       style:'font-size:14px;padding:9px 18px;border-radius:9px;cursor:pointer;white-space:nowrap;min-height:40px;display:inline-flex;align-items:center;transition:background .16s;'+(S.scen===p?'background:var(--card);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)':'color:var(--ink2)')
     }));
-    out.scenNote = S.scen==='적게 팔릴 때'? '이 동네 평균의 70%만 팔린다고 보고 계산해요. 70%는 우리가 정한 값이에요.'
-      : (S.scen==='잘될 때'? '이 동네 평균보다 30% 더 팔린다고 보고 계산해요. 30%는 우리가 정한 값이에요.'
+    out.scenNote = S.scen==='적게 팔릴 때'? '상권 참고 매출의 70%를 매출 가정으로 써요. 70%는 우리가 정한 값이에요.'
+      : (S.scen==='잘될 때'? '상권 참고 매출의 130%를 매출 가정으로 써요. 130%는 우리가 정한 값이에요.'
       : this.t('bep.scenNote',{ind:this.tr(this.indName(S.ind))}));
     out.condHint=this.t('diag.cond',{area:c.area, rent:this.man(c.rent), n:c.staff});
 
-    const parts=[['원가',c.rev*c.cogs,'var(--accent)'],['임대료',c.rent,'var(--accent-2)'],['인건비',c.labor,'var(--accent-3)'],['기타',c.etc,'var(--ink2)']];
-    if(c.profit>0) parts.push(['남는 돈',c.profit,'var(--good)']);
+    const parts=valid?[['원가',c.rev*c.cogs,'var(--accent)'],['임대료',c.rent,'var(--accent-2)'],['인건비',c.labor,'var(--accent-3)'],['기타',c.etc,'var(--ink2)']]:[];
+    if(valid&&c.profit>0) parts.push(['남는 돈',c.profit,'var(--good)']);
     // 1만원 기준으로 바꿔 말한다 — 금액보다 비중이 바로 읽힌다
     const tot=parts.reduce((a,[,v])=>a+Math.max(v,0),0)||1;
     // 몫을 먼저 계산하고 그 다음에 글자로 만든다.
@@ -131,34 +134,36 @@ globalThis.MysbizonParts.diagnosis = {
       won:this.wonRaw(Math.round(Math.max(v,0)/tot*10000)),
       style:'flex:'+Math.max(v,0.01)+' 0 auto;background:'+col+';display:block',
       chip:'width:9px;height:9px;border-radius:2px;background:'+col+';display:inline-block'}));
-    out.stackLead=(()=>{
+    out.stackLead=valid?(()=>{
       const left=c.profit>0?Math.round(c.profit/tot*10000):0;
       return c.profit>0
         ? '1만원어치 팔면 '+left.toLocaleString()+'원이 남아요.'
         : '1만원어치 팔면 '+Math.round(Math.abs(c.profit)/tot*10000).toLocaleString()+'원이 모자라요.';
-    })();
+    })():c.error;
     const rowS='display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-top:1px solid var(--line);font-size:15px';
     const vS='font-variant-numeric:tabular-nums;white-space:nowrap';
-    out.moneyRows=[
+    out.moneyRows=valid?[
       {label:revName, value:this.man(c.rev), style:rowS, valStyle:vS},
       {label:'− 원가 '+Math.round(c.cogs*100)+'%', value:this.man(c.rev*c.cogs), style:rowS, valStyle:vS},
       {label:'− 임대료', value:this.man(c.rent), style:rowS, valStyle:vS},
       {label:'− 인건비 '+c.staff+'명', value:this.man(c.labor), style:rowS, valStyle:vS},
       {label:'− 기타', value:this.man(c.etc), style:rowS, valStyle:vS},
       {label:'남는 돈', value:this.man(c.profit), style:rowS+';border-top:1px solid var(--line-strong);padding-top:15px;font-weight:600', valStyle:vS+';font-weight:600;color:'+(over?'var(--good)':'var(--warn)')}
-    ];
-    out.moneyHint = over? this.t('diag.leftLabel',{amt:this.man(c.profit)})
-      : this.t('diag.short',{amt:this.man(Math.abs(c.profit))});
+    ]:[];
+    // 잘못된 원가율은 화면 맨 위에서 이미 구체적으로 안내한다. 접힌 비용 카드에
+    // 같은 오류를 다시 붙이면 한 화면에 같은 경고가 두 번 보여 다음 행동이 흐려진다.
+    out.moneyHint = valid?(over? this.t('diag.leftLabel',{amt:this.man(c.profit)})
+      : this.t('diag.short',{amt:this.man(Math.abs(c.profit))})):'';
 
     out.dayStats=[
       {value: dailyCnt? dailyCnt.toLocaleString()+'건':'—', label:'하루 결제 건수'},
-      {value: this.man(dailyAmt), label:'하루 매출'},
+      {value: valid?this.man(dailyAmt):'—', label:'하루 매출'},
       {value: (dailyCnt&&tm)? Math.ceil(dailyCnt*tm[pk]/100/TH[pk]).toLocaleString()+'건':'—', label:TL[pk]+'시 시간당'}
     ];
     out.dayHint = dailyCnt? '하루 '+dailyCnt.toLocaleString()+'건':'—';
-    out.dayWhy = dailyCnt
+    out.dayWhy = !valid?c.error:(dailyCnt
       ? this.t('bep.dayWhy',{bep:this.man(c.bep), src:this.tr(unitSrc), unit:unit.toLocaleString(), ind:this.tr(this.indName(S.ind))})
-      : '이 장사는 결제 1건당 추정 금액이 자료에 없어 건수를 낼 수 없어요.';
+      : '이 장사는 결제 1건당 추정 금액이 자료에 없어 건수를 낼 수 없어요.');
 
     const R=S.sti&&S.sti.ind?S.sti.ind[S.ind]:null;
     const bigv='font-size:24px;font-weight:500;letter-spacing:-0.02em;margin-top:5px;font-variant-numeric:tabular-nums';

@@ -14,7 +14,28 @@ globalThis.MysbizonParts.views = {
     const findGu = S.findGu || '';
     const Lall = r.list;
     const Lgu = findGu ? Lall.filter(o=>(S.zgu||{})[o.id]===findGu) : Lall;
-    const L = Lgu.length ? Lgu : Lall;
+    const findHasData = !findGu || Lgu.length>0;
+    // rank()의 백분위는 서울 전체 기준이다. 구를 고른 화면에서 그 값을 그대로 쓰면
+    // '구 안의 비교'라는 표시와 산식이 어긋난다. 선택한 구의 후보만 다시 백분위화한다.
+    const scopedRank=items=>{
+      const list=items.map(o=>({...o}));
+      const pct=(key,inv)=>{const sorted=[...list].sort((a,b)=>a[key]-b[key]),n=sorted.length;
+        for(let start=0;start<n;){let end=start;while(end+1<n&&sorted[end+1][key]===sorted[start][key])end++;
+          const value=n===1?50:((start+end)/2)/(n-1)*100;
+          for(let j=start;j<=end;j++)sorted[j]['_'+key]=inv?100-value:value;start=end+1;}
+      };
+      pct('sales',false);pct('stores',true);pct('per',false);
+      list.forEach(o=>{o.c1=o._sales*.45;o.c2=o._stores*.35;o.c3=o._per*.20;o.score=o.c1+o.c2+o.c3;});
+      list.sort((a,b)=>((a.stores<=5)-(b.stores<=5))||(b.score-a.score));
+      return list;
+    };
+    // 자치구 재계산은 후보지 화면에만 적용한다. 지도·정밀분석에서 findGu까지
+    // 이어 쓰면 지도 자치구 선택을 바꿔도 이전 구 후보만 남는 문제가 생긴다.
+    const useFindScope=S.screen==='find'&&findHasData&&!!findGu;
+    const L = useFindScope ? scopedRank(Lgu) : Lall;
+    out.findHasData=findHasData;
+    out.findNoData=!findHasData;
+    out.findNoDataText=findHasData?'':this.tn('fc.none',{gu:this.placeName(findGu),ind:this.indName(S.ind)})+' '+this.t('fc.pickOther');
     // 홈에서 고른 지역이 이 업종에 기록이 있으면 그 자리를 먼저 보여준다
     const fromHome = (!S.sel && S.homeZone) ? L.find(o=>o.name===S.homeZone) : null;
     const sel = S.sel ? (L.find(o=>o.id===S.sel)||L[0]) : (fromHome||L[0]);
@@ -32,7 +53,7 @@ globalThis.MysbizonParts.views = {
       return inP? '비교에서 빼기' : (PICKS.length>=3? '비교 3곳 꽉 찼어요' : '비교에 담기 ('+PICKS.length+'/3)');
     };
     const monthly=v=>this.won(v/3);
-    const grade=sc=>sc>=75?['매우 유망','var(--good)']:(sc>=60?['괜찮음','var(--good)']:(sc>=45?['보통','var(--ink2)']:['조심','var(--warn)']));
+    const grade=sc=>sc>=75?[this.t('find.gradeHigh'),'var(--good)']:(sc>=60?[this.t('find.gradeUpper'),'var(--good)']:(sc>=45?[this.t('find.gradeMid'),'var(--ink2)']:[this.t('find.gradeLow'),'var(--warn)']));
 
     // ── 결론
     const g=grade(sel.score);
@@ -40,18 +61,19 @@ globalThis.MysbizonParts.views = {
     // 백분위가 낮으면 그 항목은 강점이 아니다 — 부호와 문장을 값에서 끌어낸다
     // 최상급은 진짜 1위 한 곳에만 쓴다. 백분위 99.9도 2위일 수 있다.
     const demandTop = sel.sales===Math.max(...L.map(o=>o.sales));
+    const scopeName=useFindScope?this.placeName(findGu):this.placeName('서울');
     const demandLine = sel._sales>=60
-      ? {sign:'↑', arrow:arrowUp, text:demandTop? '상권 전체 매출이 서울에서 가장 높아요' : '상권 전체 매출이 높아요 · 서울 상위 '+more+'%'}
+      ? {sign:'↑', arrow:arrowUp, text:demandTop?this.t('find.demandTop',{scope:scopeName,n:L.length.toLocaleString()}):this.t('find.demandHigh',{pct:more})}
       : (sel._sales>=40
-        ? {sign:'↑', arrow:arrowUp, text:'상권 전체 매출은 중간 수준이에요 · 서울 상위 '+more+'%'}
-        : {sign:'↓', arrow:arrowDn, text:'손님이 적어요 · 서울 상위 '+more+'%'});
+        ? {sign:'↑', arrow:arrowUp, text:this.t('find.demandMid',{pct:more})}
+        : {sign:'↓', arrow:arrowDn, text:this.t('find.demandLow',{pct:more})});
     const compLine = sel._stores>=60
       ? {sign:'↑', arrow:arrowUp, text:'경쟁이 적어요 · 같은 가게 '+sel.stores.toLocaleString()+'곳'}
       : (sel._stores>=40
         ? {sign:'↑', arrow:arrowUp, text:'경쟁은 보통이에요 · 같은 가게 '+sel.stores.toLocaleString()+'곳'}
         : {sign:'↓', arrow:arrowDn, text:'경쟁이 치열해요 · 같은 가게 '+sel.stores.toLocaleString()+'곳'});
     out.t={
-      eyebrow:this.t('find.rank',{ind:this.indName(S.ind), n:r.covered.toLocaleString(), r:(L.indexOf(sel)+1)})
+      eyebrow:this.t('find.rankScoped',{scope:scopeName,ind:this.indName(S.ind), n:L.length.toLocaleString(), r:(L.indexOf(sel)+1)})
         +((S.homeZone&&!S.sel)? (fromHome? ' · '+this.tr('홈에서 고른 지역')
             : ' · '+this.tn('find.noRecordIn',{zone:this.placeName(S.homeZone)})) : ''),
       name:this.zoneLabelOf(sel.name), score:Math.round(sel.score),
@@ -78,13 +100,14 @@ globalThis.MysbizonParts.views = {
       verdict:(()=>{
         const scores=L.map(o=>o.score).sort((a,b)=>a-b);
         const med=scores[Math.floor(scores.length/2)];
-        const rank=L.indexOf(sel)+1, pct=Math.round(rank/L.length*100);
-        return sel.score>=med*1.15? this.tn('find.ok',{ind:this.indName(S.ind)})   // 이름은 바로 위 제목에 이미 있다
-          : (sel.score>=med*0.9? '한 번 더 살펴볼 만해요.' : '서울 중앙값보다 아쉬운 자리예요.');
+        return sel.score>=med*1.15? this.t('find.relativeHigh')
+          : (sel.score>=med*0.9? this.t('find.relativeMid') : this.t('find.relativeLow'));
       })(),
-      pctText:(()=>{ const rank=L.indexOf(sel)+1; return '서울 상위 '+Math.max(Math.round(rank/L.length*100),1)+'%'; })(),
+      pctText:(()=>{ const rank=L.indexOf(sel)+1; return this.t('find.rankCount',{n:L.length.toLocaleString(),r:rank}); })(),
       medText:(()=>{ const s=L.map(o=>o.score).sort((a,b)=>a-b); return Math.round(s[Math.floor(s.length/2)])+'점'; })(),
-      pctFine:(()=>{ const r=(L.indexOf(sel)+1)/L.length*100; return '서울 상위 '+(r<1?r.toFixed(1):Math.round(r))+'%'; })(),
+      pctFine:(()=>{ const rank=L.indexOf(sel)+1; return this.t('find.rankCount',{n:L.length.toLocaleString(),r:rank}); })(),
+      scoreFormula:this.t('find.scoreFormula'),
+      scoreScope:this.t('find.scoreScope',{scope:scopeName,n:L.length.toLocaleString()}),
       scoreBar:(()=>{
         const mx=Math.max(...L.map(o=>o.score),1);
         return 'display:block;width:'+(sel.score/mx*100).toFixed(1)+'%;height:100%;border-radius:5px;background:var(--accent)';
@@ -103,7 +126,7 @@ globalThis.MysbizonParts.views = {
         const M=[];
         // 매출·소비 규모는 쏠림이 커서 '중앙값 대비 %'가 1000% 를 넘는다 → 백분위로 말한다
         const vSales=this.pctRank(sel.per, L.map(o=>o.per), true);
-        M.push(this.mx('예상 매출 (추정)', this.won(sel.per/3), vSales.text, vSales.tone));
+        M.push(this.mx('상권 참고 매출 (추정)', this.won(sel.per/3), vSales.text, vSales.tone));
         // 경쟁은 '적을수록 좋다' — 부호가 아니라 의미로 색을 정한다
         const vComp=this.vs(sel.stores, medOf('stores'), '', {moreIsBetter:false, moreWord:'많아요', lessWord:'적어요'});
         M.push(this.mx('경쟁 점포', sel.stores.toLocaleString()+'곳', vComp.text, vComp.tone));
@@ -120,11 +143,11 @@ globalThis.MysbizonParts.views = {
       // 점수만 던지면 '왜 87점인지'를 알 수 없다. 근거 세 줄을 함께 둔다.
       why:(()=>{
         const out=[];
-        if(sel._sales>=55) out.push('상권 전체 매출이 서울 중앙값보다 높아요');
-        else if(sel._sales<=35) out.push('상권 전체 매출은 서울 중앙값보다 낮아요');
-        if(sel._stores>=55) out.push('같은 업종 경쟁이 서울 중앙값보다 적어요');
-        else if(sel._stores<=35) out.push('같은 업종 경쟁이 서울 중앙값보다 많아요');
-        if(sel._per>=55) out.push('가게 한 곳당 매출이 높은 편이에요');
+        if(sel._sales>=55) out.push(this.t('find.whySalesHigh',{scope:scopeName}));
+        else if(sel._sales<=35) out.push(this.t('find.whySalesLow',{scope:scopeName}));
+        if(sel._stores>=55) out.push(this.t('find.whyCompLow',{scope:scopeName}));
+        else if(sel._stores<=35) out.push(this.t('find.whyCompHigh',{scope:scopeName}));
+        if(sel._per>=55) out.push(this.t('find.whyPerHigh',{scope:scopeName}));
         const lp=S.zlp&&S.zlp[sel.id];
         if(lp) out.push(this.t('fact.dongPop',{dong:this.placeName(lp.dong), n:Math.round(lp.tot).toLocaleString()}));
         if(sel.stores<10) out.push('다만 표본이 '+sel.stores+'곳뿐이라 참고용이에요');
@@ -143,7 +166,7 @@ globalThis.MysbizonParts.views = {
         return [
           {q:'이 동네 가게들은 얼마나 벌고 있나요?',
            head:salesWord[0], headStyle:hs(salesWord[1]),
-           body:this.t('reason.salesBody',{amt:this.won(sel.per/3)}),
+           body:this.tn('reason.salesReference',{ind:this.indName(S.ind),amt:this.won(sel.per/3)}),
            sample:'표본 '+sel.stores.toLocaleString()+'곳'+(sel.stores<10?' · 적어서 참고용으로 봐주세요':'')},
           {q:'경쟁이 얼마나 치열한가요?',
            head:compWord[0], headStyle:hs(compWord[1]),
@@ -159,18 +182,18 @@ globalThis.MysbizonParts.views = {
           cardStyle:'flex:0 0 '+this.L('84%','300px','320px')+';scroll-snap-align:start;min-width:0;padding:20px;border-radius:20px;background:var(--surface);display:flex;flex-direction:column'}));
       })(),
       parts:[
-        {label:'손님이 많다', meaning:demandTop?'서울 최다':'상위 '+more+'%', bar:'width:'+sel._sales.toFixed(1)+'%;height:100%;background:var(--accent);border-radius:3px'},
-        {label:'경쟁이 적다', meaning:'적은 쪽 '+fewer+'%', bar:'width:'+sel._stores.toFixed(1)+'%;height:100%;background:var(--accent-2);border-radius:3px'},
-        {label:'한 집당 잘 번다', meaning:this.t('rentPer',{amt:monthly(sel.per)}), bar:'width:'+sel._per.toFixed(1)+'%;height:100%;background:var(--accent-3);border-radius:3px'}
+        {label:'상권 소비 규모', meaning:demandTop?'비교군 1위':'상위 '+more+'%', bar:'width:'+sel._sales.toFixed(1)+'%;height:100%;background:var(--accent);border-radius:3px'},
+        {label:'경쟁 점포가 적다', meaning:'적은 쪽 '+fewer+'%', bar:'width:'+sel._stores.toFixed(1)+'%;height:100%;background:var(--accent-2);border-radius:3px'},
+        {label:'점포당 참고 매출', meaning:this.t('rentPer',{amt:monthly(sel.per)}), bar:'width:'+sel._per.toFixed(1)+'%;height:100%;background:var(--accent-3);border-radius:3px'}
       ]
     };
     out.rowsRail=this.rail('cand',{per:3});
-    out.rows=L.slice(1,9).map((o,i)=>({
-      rank:i+2, name:this.zoneLabelOf(o.name), score:Math.round(o.score),
+    out.rows=L.filter(o=>o.id!==sel.id).slice(0,8).map(o=>({
+      rank:L.indexOf(o)+1, name:this.zoneLabelOf(o.name), score:Math.round(o.score),
       // 두 백분위 중 더 두드러진 쪽을 그 자리의 성격으로 쓴다 — 같은 말이 반복되지 않게
       meaning: o.stores<=5 ? '가게 '+o.stores+'곳뿐'
-        : (Math.abs(o._sales-o._stores)<8 ? '손님·경쟁 균형'
-          : (o._sales>o._stores ? '상권 매출 상위 '+Math.round(100-o._sales)+'%' : '경쟁 적은 쪽 '+Math.round(100-o._stores)+'%')),
+        : (Math.abs(o._sales-o._stores)<8 ? '수요·경쟁 지표가 비슷해요'
+          : (o._sales>o._stores ? '상권 소비 규모 · 비교군 상위 '+Math.round(100-o._sales)+'%' : '경쟁 점포 · 적은 쪽 '+Math.round(100-o._stores)+'%')),
       pick:()=>this.setState({sel:o.id}),
       togglePick:pickToggle(o),
       // 가로 카드 — 스냅으로 한 장씩 멈춘다
@@ -188,19 +211,19 @@ globalThis.MysbizonParts.views = {
       pickStyle: 'display:inline-flex;align-items:center;min-height:44px;margin:-14px 0;padding-right:12px;'
         +(PICKS.indexOf(o.id)>=0
         ? 'font-size:12.5px;color:var(--accent-text);cursor:pointer;white-space:nowrap;font-weight:600'
-        : (PICKS.length>=5
+        : (PICKS.length>=3
           ? 'font-size:12.5px;color:var(--ink3);white-space:nowrap'
           : 'font-size:12.5px;color:var(--ink3);cursor:pointer;white-space:nowrap')),
       row:'display:flex;align-items:baseline;gap:12px;padding:13px 0;border-top:1px solid var(--line)'
     }));
     // 긴 회색 문단을 그대로 두지 않는다 — 한 줄만 보이고 나머지는 접는다(§14)
     out.note=this.dataNote('find',
-      '예상 매출은 상권 소비액을 점포 수로 나눈 추정값이에요.',
+      '상권 참고 매출은 상권 소비액을 점포 수로 나눈 추정값이며, 새 가게의 예상 매출은 아니에요.',
       [['계산 방법','기회점수 = 상권 소비액(45%) + 경쟁 점포 수(35%) + 가게 한 곳당 매출(20%). 저희가 정한 비율로 합친 값이에요.'],
        ['데이터 출처','서울시 상권분석서비스 · 서울 열린데이터광장 생활인구'],
        ['기준 기간', this.qtr(r.quarter)],
        ['다룬 범위','서울 상권 '+r.total.toLocaleString()+'곳 중 이 업종 자료가 있는 '+r.covered.toLocaleString()+'곳'],
-       ['주의','임대료는 상권 단위로 공개되지 않아 점수에 넣지 못했어요. 예상 매출은 실측이 아니라 추정값이에요.']]);
+       ['주의','임대료는 상권 단위로 공개되지 않아 점수에 넣지 못했어요. 상권 참고 매출은 새 가게의 매출 예측이 아니에요.']]);
     out.honesty='';
 
     this.fillDiagnosisView(out, sel, L);
@@ -283,7 +306,7 @@ globalThis.MysbizonParts.views = {
           }));
           return {n:i+1, name:this.zoneLabelOf(o.name), x:p[0], y:p[1], on:on,
             lat:Array.isArray(ll)?ll[0]:null, lng:Array.isArray(ll)?ll[1]:null,
-            industry:this.indName(S.ind),
+            industry:this.indName(S.ind), period:this.qtr(r.quarter),
             monthlyPer:this.won(o.per/3), stores:o.stores.toLocaleString()+'곳',
             recommendations,
             r:rr.toFixed(2),
@@ -343,10 +366,10 @@ globalThis.MysbizonParts.views = {
         const scores=L.map(o=>o.score).sort((a,b)=>a-b);
         const med=scores[Math.floor(scores.length/2)];
         if(sel.stores<10) return '데이터가 적어서 참고용으로 봐주세요.';
-        return sel.score>=med*1.15? '진입을 검토해볼 만해요.'
-          : (sel.score>=med*0.9? '가능하지만 확인할 게 있어요.' : '지금 조건으로는 조심하셔야 해요.');
+        return sel.score>=med*1.15? this.t('find.relativeHigh')
+          : (sel.score>=med*0.9? this.t('find.relativeMid') : this.t('find.relativeLow'));
       })(),
-      sub:'수요·경쟁·매출을 서울과 견주고, 무엇을 더 확인해야 하는지 알려드려요.',
+      sub:'수요·경쟁·참고 매출을 서울 비교군과 견주고, 무엇을 더 확인해야 하는지 보여드려요.',
       // 지도분석 화면이 아니면 접는다 — 중첩 sc-if가 접히지 않아 style로 막는다
       prosSectionStyle:(S.screen==='map'? 'padding:44px 0 0' : 'display:none'),
       prosOnly:'display:none',
@@ -358,8 +381,8 @@ globalThis.MysbizonParts.views = {
         const medOf=key=>{ const v=L.map(o=>o[key]).sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; };
         if(sel.sales>=medOf('sales')) good.push('손님이 쓰는 돈이 서울 중앙값보다 많아요.');
         else care.push('손님이 쓰는 돈이 서울 중앙값보다 적어요.');
-        if(sel.per>=medOf('per')) good.push('가게 한 곳당 매출이 높은 편이에요.');
-        else care.push('가게 한 곳당 매출이 낮은 편이에요.');
+        if(sel.per>=medOf('per')) good.push('점포당 참고 매출이 서울 비교군 중앙값보다 높아요.');
+        else care.push('점포당 참고 매출이 서울 비교군 중앙값보다 낮아요.');
         if(sel.stores<=medOf('stores')) good.push('같은 장사가 서울 중앙값보다 적어요.');
         else care.push('같은 장사가 많은 편이에요.');
         if(lp){
@@ -403,7 +426,7 @@ globalThis.MysbizonParts.views = {
             deltaStyle:'font-size:13px;font-weight:600;white-space:nowrap;color:'+tone};
         };
         const rows=[
-          row('가게 한 곳당 월매출', sel.per/3, med('per')/3, v=>this.won(v),
+          row('점포당 참고 매출 (추정)', sel.per/3, med('per')/3, v=>this.won(v),
               {skewed:true, all:L.map(o=>o.per/3), moreIsBetter:true}),
           row('같은 업종 점포 수', sel.stores, med('stores'), v=>Math.round(v).toLocaleString()+'곳',
               {moreIsBetter:false}),
@@ -429,15 +452,15 @@ globalThis.MysbizonParts.views = {
         const fit=(()=>{
           if(sel.stores<10) return {word:'판단 보류', tone:'flat',
             why:'표본이 '+sel.stores+'곳뿐이라 단정할 수 없어요'};
-          if(sel.score>=70) return {word:'좋음', tone:'good', why:''};
-          if(sel.score>=50) return {word:'보통', tone:'flat', why:''};
-          return {word:'주의', tone:'warn', why:''};
+          if(sel.score>=70) return {word:'비교상 높음', tone:'good', why:''};
+          if(sel.score>=50) return {word:'비교상 보통', tone:'flat', why:''};
+          return {word:'비교상 낮음', tone:'warn', why:''};
         })();
         const good=[], care=[];
         const push=(arr,label,text)=>arr.push({label:label, text:text});
         const vSales=this.pctRank(sel.per, L.map(o=>o.per), true);
-        if(sel._per>=55) push(good,'예상 매출', vSales.text);
-        else if(sel._per<=35) push(care,'예상 매출', vSales.text);
+        if(sel._per>=55) push(good,'점포당 참고 매출', vSales.text);
+        else if(sel._per<=35) push(care,'점포당 참고 매출', vSales.text);
         const vComp=this.vs(sel.stores, med('stores'), '', {moreIsBetter:false});
         if(sel._stores>=55) push(good,'경쟁 강도', vComp.text);
         else if(sel._stores<=35) push(care,'경쟁 강도', vComp.text);
@@ -558,7 +581,7 @@ globalThis.MysbizonParts.views = {
           here.push({label:'추정 객단가', value:this.wonRaw(Math.round(sel.unit)), tag:'(추정)'});
         }
         here.push({label:'같은 가게 수', value:sel.stores.toLocaleString()+'곳', tag:''});
-        here.push({label:'가게 한 곳당 월매출', value:this.won(sel.per/3), tag:'(추정)'});
+        here.push({label:'점포당 참고 매출', value:this.won(sel.per/3), tag:'(추정)'});
         // 장사 전체(서울) 상수 — 자리를 바꿔도 변하지 않는다
         const seoul=[
           {label:'폐업률', value:myRate.toFixed(1)+'%', tag:'서울 전체 · 폐업 ÷ 전체 × 100'},

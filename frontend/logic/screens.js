@@ -86,10 +86,10 @@ globalThis.MysbizonParts.screens = {
     const push=(id,opt)=>{ const c=this.chartCard(id,opt); if(c) C.push(c); };
     const q=this.qtr(zi.quarter);
     const byPer=list.slice(0,12);
-    push('zc-per',{type:'hbar', title:'자치구별 예상 매출', sub:'가게 한 곳당 월매출 (추정) · 상위 12곳',
+    push('zc-per',{type:'hbar', title:'자치구별 참고 매출', sub:'점포당 월매출 (추정) · 상위 12곳',
       unit:'원', period:q, height:300,
       labels:byPer.map(o=>this.placeName(o.gu)),
-      datasets:[{label:'가게 한 곳당 월매출', data:byPer.map(o=>Math.round(o.per/3)),
+      datasets:[{label:'점포당 참고 매출', data:byPer.map(o=>Math.round(o.per/3)),
         colors:byPer.map(o=>o.gu===picked?'on':'')}]});
     const byStore=list.slice().sort((a,b)=>b.stores-a.stores).slice(0,12);
     push('zc-store',{type:'hbar', title:'자치구별 경쟁 점포 수', sub:'같은 업종 점포가 많은 12곳',
@@ -141,7 +141,7 @@ globalThis.MysbizonParts.screens = {
       })),
       // 긴 회색 문단 대신 한 줄 + 펼치기 (design.js dataNote)
       note:this.dataNote('zc',
-        '금액은 가게 한 곳이 한 달에 파는 돈의 추정값이에요. 어느 한 가게의 실적은 아니에요.',
+        '금액은 상권·업종 집계값으로 계산한 점포당 참고 매출이에요. 어느 한 가게의 실적이나 새 가게의 예상 매출은 아니에요.',
         [['어떻게 계산했나요',
           '자치구 안 상권 매출을 다 더해 같은 업종 가게 수로 나눴어요. 원자료가 3개월치라 3으로 나눠 한 달 값으로 적었어요.'],
          ['무엇이 빠졌나요',
@@ -172,7 +172,7 @@ globalThis.MysbizonParts.screens = {
         name:this.indName(S.regPick),
         lead:this.tn('rg.share',{ind:this.indName(S.regPick), pct:share.toFixed(1)}),
         facts:[
-          {label:'가게 한 곳이 한 달에 파는 돈', value:this.won(per/3), tag:'(추정)'},
+          {label:'점포당 참고 매출', value:this.won(per/3), tag:'(추정)'},
           {label:'가게 수', value:stores.toLocaleString()+'곳', tag:''},
           {label:'손님이 쓴 돈 (3개월)', value:this.won(sales), tag:''},
           {label:'결제 1건당 추정 금액', value:unit? this.wonRaw(unit):'데이터 없음', tag:unit?'실제 집계':'정부 자료에 없어 점수에 넣지 않았어요'}
@@ -302,7 +302,7 @@ globalThis.MysbizonParts.screens = {
         row:'display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--line);cursor:pointer'
       };}),
       // 긴 회색 문단을 화면에 그대로 두지 않는다(§5·§6) — 한 줄만 두고 나머지는 접는다
-      note:this.dataNote('fc','금액은 가게 한 곳당 월매출 추정값이에요.',[
+      note:this.dataNote('fc','금액은 상권·업종 집계값으로 계산한 점포당 참고 매출이며 새 가게의 예상 매출은 아니에요.',[
         ['어떻게 계산하나요','손님이 쓴 돈을 가게 수로 나눈 값이라 어느 한 가게의 실적이 아니에요.'],
         ['자치구는 어떻게 붙였나요','상권 좌표로 붙였고, 경계에서 250m 안쪽인 곳은 두 구를 함께 적었어요 — 강남역처럼 강남대로를 경계로 서쪽이 서초구인 곳이 그래요.']
       ])

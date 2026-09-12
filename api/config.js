@@ -8,11 +8,20 @@ function kakaoMapSettings() {
   return valid?{enabled:true,javascriptKey}:{enabled:false};
 }
 
+function publicContactSettings(){
+  const email=String(process.env.PUBLIC_CONTACT_EMAIL||'').trim();
+  // 이 값은 사이트 하단에 공개되는 주소다. 잘못된 값이나 줄바꿈을 그대로
+  // HTML/mailto에 넣지 않도록 일반 이메일 형태와 길이만 통과시킨다.
+  return /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,24}$/.test(email)&&email.length<=254
+    ? {email} : {};
+}
+
 export function publicConfig(customerData=customerSettings()) {
   return {
     reportEmailEnabled:process.env.REPORT_EMAIL_ENABLED === 'true' && !!process.env.BREVO_API_KEY && !!process.env.REPORT_FROM_EMAIL,
     customerData,
     kakaoMap:kakaoMapSettings(),
+    publicContact:publicContactSettings(),
   };
 }
 

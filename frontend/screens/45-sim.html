@@ -1,4 +1,4 @@
-    <!-- 정밀비교 — 담아 둔 상권을 공개 데이터로 견준다. 결론(종합 1위)이 먼저다.
+    <!-- 정밀비교 — 담아 둔 상권을 공개 데이터로 견준다. 현재 기준의 결론이 먼저다.
      ※ 내 숫자를 직접 넣는 계산은 여기가 아니라 '본전 계산'이다 — 둘을 섞지 않는다. -->
     <sc-if value="{{ onSim }}">
       <section class="u-sec">
@@ -23,13 +23,13 @@
         </sc-if>
       </sc-if>
 
-      <!-- ③ 종합 1위 -->
+      <!-- ③ 저장한 후보 중 1위 -->
       <sc-if value="{{ c.hasVerdict }}">
         <section style="padding:20px 0 0">
           <div style="{{ dsCardHi }}">
             <div style="display:flex;align-items:center;gap:9px">
               <span style="{{ c.bestSlotStyle }}"></span>
-              <span class="u-lab">종합 1위</span>
+              <span class="u-lab">저장한 후보 중 1위</span>
             </div>
             <div style="font-size:26px;font-weight:700;letter-spacing:-.03em;margin-top:6px">{{ c.bestName }}</div>
             <div style="font-size:15.5px;line-height:1.55;margin-top:8px;text-wrap:pretty">{{ c.verdict }}</div>

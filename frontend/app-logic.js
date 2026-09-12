@@ -128,15 +128,8 @@ class Component extends DCLogic {
       };
       window.addEventListener('popstate', this._onPop);
     }catch(e){}
-    // 처음 온 분에게만 소개·사용법을 띄운다.
-    // '시작하기'를 누르면 다시 안 뜨고, '일주일 동안 안 보기'는 그 기간만 쉰다.
-    // localStorage 가 막힌 브라우저(사생활 보호 모드 등)에서는 그냥 띄우지 않는다 —
-    // 매번 뜨는 것보다 안 뜨는 쪽이 덜 성가시다.
-    try{
-      const seen = localStorage.getItem('mysbizon.noticeSeen');
-      const until = Number(localStorage.getItem('mysbizon.noticeUntil')||0);
-      if(!seen && !(until && Date.now() < until)) this.setState({notice:true});
-    }catch(e){}
+    // 소개창은 첫 방문에 자동으로 띄우지 않는다. 홈의 업종·지역 선택이 첫 행동이고,
+    // 자세한 소개가 필요할 때 설정에서 직접 열 수 있다.
     // 첫 그림 뒤에도 한 번 — componentDidUpdate 는 첫 렌더에서 안 불린다
     this._firstPaint=setTimeout(()=>{ try{ this.paintCharts(); this.bindRails(); this.paintKakaoMap(); this.trDom(); }catch(e){} },0);
     // 인쇄본(report-print.html)에서 '← 분석으로 돌아가기' 로 돌아왔을 때.
@@ -319,7 +312,7 @@ class Component extends DCLogic {
       // 세 걸음 — 처음 온 분이 무엇부터 하면 되는지
       aboutSteps:[
         {n:'1', title:'업종과 지역을 고른다', body:'첫 화면에서 장사 종류만 고르면 서울 동네가 좋은 순서로 줄 서요.'},
-        {n:'2', title:'후보를 견준다',       body:'마음에 드는 곳을 담아 두면 매출·손님·경쟁으로 종합 1위를 뽑아 드려요.'},
+        {n:'2', title:'후보를 견준다',       body:'마음에 드는 곳을 담아 두면 참고 매출·수요·경쟁 차이를 나란히 보여드려요.'},
         {n:'3', title:'내 숫자로 계산한다',   body:'평수와 임대료를 넣으면 월 얼마를 팔아야 본전인지 나와요.'}
       ],
       // 메뉴 네 가지 — 각각 답하는 질문 하나
@@ -349,15 +342,10 @@ class Component extends DCLogic {
       aboutMoreOpen:!!S.aboutMore,
       aboutMoreLabel:S.aboutMore? '접기' : '이 서비스가 지키는 것',
       aboutMoreToggle:()=>this.setState({aboutMore:!S.aboutMore}),
-      // 시작하기 = 봤다고 기록. 자동으로는 다시 뜨지 않는다.
-      noticeConfirm:()=>{
-        try{ localStorage.setItem('mysbizon.noticeSeen','1'); }catch(e){}
-        this.setState({notice:false});
-      },
-      noticeWeek:()=>{
-        try{ localStorage.setItem('mysbizon.noticeUntil', String(Date.now()+7*24*60*60*1000)); }catch(e){}
-        this.setState({notice:false});
-      },
+      noticeConfirm:()=>this.setState({notice:false}),
+      aboutPrivacy:(!S.reportEmailEnabled&&!S.customerData?.enabled)
+        ? this.t('privacy.aboutOff')
+        : this.t('privacy.aboutOptional'),
       // 전국 확장 자리 — 지금 자료가 있는 곳은 서울뿐이다. 없는 곳은 없다고 적는다.
       sidoSel:S.sido||'서울특별시',
       sidoOptions:['서울특별시','부산광역시','대구광역시','인천광역시','광주광역시','대전광역시','울산광역시','세종특별자치시','경기도','강원특별자치도','충청북도','충청남도','전북특별자치도','전라남도','경상북도','경상남도','제주특별자치도']
@@ -418,7 +406,7 @@ class Component extends DCLogic {
           fineCmp:{d:'한 자치구 안의 상권을 빠짐없이 훑어요',        cta:'훑어보기'},
           map        :{d:'고른 상권이 정확히 어디인지 위치로 확인해요',   cta:'지도 열기'},
           fineDetail :{d:'매출·수요·경쟁·비용을 뜯어보고 왜 그런지 읽어요', cta:'분석 보기'},
-          sim        :{d:'담아 둔 상권을 견주고 종합 1위를 뽑아 줘요',      cta:'비교 시작'},
+          sim        :{d:'담아 둔 상권의 참고 매출·수요·경쟁 차이를 보여줘요', cta:'비교 시작'},
           diag       :{d:'이 자리 한 곳의 본전선을 확인해요',              cta:'본전 보기'}
         };
         const selId = S.sel || S.zoneId;
@@ -632,7 +620,13 @@ class Component extends DCLogic {
       mapLoading:this.t('map.loading'),
       mapClickHint:this.t('map.clickHint'),
       footerContactLabel:this.t('footer.contact'),
-      footerContactValue:this.t('footer.pending'),
+      footerEyebrow:this.t('footer.eyebrow'),
+      footerTitle:this.t('footer.title'),
+      footerDescription:S.publicContactEmail?this.t('footer.ready'):this.t('footer.description'),
+      footerContactValue:S.publicContactEmail||this.t('footer.pending'),
+      footerContactReady:!!S.publicContactEmail,
+      footerContactPending:!S.publicContactEmail,
+      footerContactHref:S.publicContactEmail?'mailto:'+S.publicContactEmail:'',
       dashCols:this.L('1fr','1fr','minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr)'),
       navCols:this.L('1fr','200px minmax(0,1fr)','200px minmax(0,1fr)'),
       dsCard:this.ds('card'), dsCardHi:this.ds('cardHi'),

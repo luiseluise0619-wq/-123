@@ -30,7 +30,7 @@ globalThis.MysbizonParts.report = {
         // 그 칸을 실제로 손댔을 때만 '직접 넣으신 값'이라고 적는다.
         const touched=S.rp_touched||{};
         const said=k=>touched[k]? '직접 넣으신 값' : '기본 가정';
-        const bep=c?[
+        const bep=c&&c.valid!==false?[
           {label:'월 본전선 (이만큼 팔면 본전)', value:this.man(c.bep), tag:'고정비 ÷ (1 − 원가율)'},
           {label:'월매출 가정 ('+S.scen+')', value:this.man(c.rev), tag:'상권 평균 추정 × '+c.mult},
           {label:'월 영업이익', value:this.man(c.profit), tag:'세금·대출 이자는 빼지 않음'},
@@ -40,8 +40,8 @@ globalThis.MysbizonParts.report = {
           {label:'평수', value:c.area+'평', tag:said('area')},
           {label:'인건비', value:this.man(c.labor),
            tag:(touched.staffOv&&S.staffOv!=null)?'직접 넣으신 직원 수':'평수로 추정'},
-          {label:'원가율', value:Math.round(c.cogs*100)+'%', tag:'기본 가정'}
-        ]:null;
+          {label:'원가율', value:Math.round(c.cogs*100)+'%', tag:'계산에 쓴 값'}
+        ]:(c?[{label:'손익 계산',value:'계산할 수 없음',tag:c.error}]:null);
         if(c&&c.payback!=null) bep.push(
           {label:'회수기간', value:c.payback.toFixed(1)+'개월', tag:'초기투자 ÷ 월 영업이익'});
         const payload={
@@ -56,12 +56,12 @@ globalThis.MysbizonParts.report = {
           supportMax:supportMaxForReport,
           bep:bep,
           // 돈이 어디로 나가는지 — 매출 대비 비중
-          money:c?(()=>{
+          money:c&&c.valid!==false?(()=>{
             const rev=c.rev||1;
             const rows=[
-              {label:'임대료', v:S.rent||0},
+              {label:'임대료', v:c.rent},
               {label:'인건비', v:c.labor||0},
-              {label:'재료비', v:rev*(S.cogs||0)/100},
+              {label:'재료비', v:rev*c.cogs},
               {label:'그 밖의 운영비', v:c.etc||0}
             ];
             const mx=Math.max(...rows.map(o=>o.v),1);

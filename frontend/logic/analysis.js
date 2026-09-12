@@ -60,9 +60,9 @@ globalThis.MysbizonParts.analysis = {
       if(inGu.length>1){
         const top=inGu.slice().sort((a,b)=>b.per-a.per).slice(0,12);
         push('mv-sales-gu',{type:'hbar', title:this.t('mv.guWhere',{gu:this.placeName(gu)}),
-          sub:'가게 한 곳당 월매출 (추정)', unit:'원', period:q, height:280,
+          sub:'점포당 참고 매출 (추정)', unit:'원', period:q, height:280,
           labels:top.map(nameOf),
-          datasets:[{label:'가게 한 곳당 월매출', data:top.map(o=>Math.round(o.per/3)),
+          datasets:[{label:'점포당 참고 매출', data:top.map(o=>Math.round(o.per/3)),
             colors:top.map(o=>o.id===sel.id?'on':'')}]});
       }
       // ③ 이 자리에서 다른 업종은 얼마나 파는지
@@ -71,9 +71,9 @@ globalThis.MysbizonParts.analysis = {
         const rows=z.rows.filter(r=>r[1]&&r[2]).map(r=>({n:S.zi.inds[r[0]], per:r[2]/r[1]}))
           .sort((a,b)=>b.per-a.per).slice(0,12);
         push('mv-sales-near',{type:'hbar', title:'이 자리에서 다른 장사는 얼마나 파나요?',
-          sub:'같은 자리 업종별 가게 한 곳당 매출', unit:'원', period:q, height:280,
+          sub:'같은 상권의 업종별 점포당 참고 매출', unit:'원', period:q, height:280,
           labels:rows.map(o=>this.indName(o.n)),
-          datasets:[{label:'가게 한 곳당 월매출', data:rows.map(o=>Math.round(o.per/3)),
+          datasets:[{label:'점포당 참고 매출', data:rows.map(o=>Math.round(o.per/3)),
             colors:rows.map(o=>o.n===S.ind?'on':'')}]});
       }
       // ④ 하루 중 언제 · 무슨 요일에 파나 — 카드 매출 기반 추정(서울시 상권분석서비스).
@@ -203,10 +203,10 @@ globalThis.MysbizonParts.analysis = {
           datasets:[{label:'점포 수', data:byStore.map(o=>o.st),
             colors:byStore.map(o=>o.n===S.ind?'on':'')}]});
         const byPer=rows.slice().sort((a,b)=>b.per-a.per).slice(0,12);
-        push('mv-near-per',{type:'hbar', title:'이 자리에서 뭘 팔면 잘 팔리나요?',
-          sub:'가게 한 곳당 월매출 (추정)', unit:'원', period:q, height:280,
+        push('mv-near-per',{type:'hbar', title:'업종별 참고 매출은 어떻게 다른가요?',
+          sub:'이 상권 자료에 포함된 업종의 점포당 월매출 (추정)', unit:'원', period:q, height:280,
           labels:byPer.map(o=>this.indName(o.n)),
-          datasets:[{label:'가게 한 곳당 월매출', data:byPer.map(o=>Math.round(o.per/3)),
+          datasets:[{label:'점포당 참고 매출', data:byPer.map(o=>Math.round(o.per/3)),
             colors:byPer.map(o=>o.n===S.ind?'on':'')}]});
       }
     }
@@ -372,7 +372,7 @@ globalThis.MysbizonParts.analysis = {
 
     // 매출
     const mp=med('per'), diff=Math.round((sel.per-mp)/mp*100);
-    const sRows=[{label:'가게 한 곳당 월매출', value:this.won(sel.per/3), tag:'(추정)'},
+    const sRows=[{label:'점포당 참고 매출', value:this.won(sel.per/3), tag:'(추정)'},
       {label:'서울 중앙값', value:this.won(mp/3), tag:'이 장사 동네들의 중앙값'},
       {label:'손님이 쓴 돈 (3개월)', value:this.won(sel.sales), tag:''}];
     // 언제 파나 — 상권 자체 값(전 업종 합계)이 있으면 그걸, 없으면 서울 전체 이 업종 값(둘 다 카드 매출 추정)
@@ -407,14 +407,14 @@ globalThis.MysbizonParts.analysis = {
           bar:'display:block;width:100%;height:'+(18+((vals[i]-mn)/sp)*46).toFixed(0)+'px;border-radius:4px 4px 0 0;background:var(--accent);opacity:'+(0.4+0.6*((vals[i]-mn)/sp)).toFixed(2)})),
         full:'서울 전체 합계라 이 동네만의 흐름은 아니에요. 21분기 전체는 시세분석에서 볼 수 있어요.'};
     }
-    out.push({key:'sales', title:'매출 · 얼마나 버나요',
-      q:'가게 한 곳이 한 달에 얼마 파나요?',
+    out.push({key:'sales', title:'참고 매출 · 점포당 얼마인가요',
+      q:'이 상권의 점포당 참고 매출은 얼마인가요?',
       big:this.won(sel.per/3),
       bigLabel:this.t('mv.estMedian',{amt:this.won(mp/3)}),
       // 1107% 는 맞는 값이어도 사람이 못 믿는다 — 배수로 말한다(design.js ratioText)
       verdict:((this.ratioText(sel.per/3, mp/3)||{}).text || '서울 중앙값과 비슷해요')+'.',
       rows:sRows, bars:[], trend:trend,
-      note:'한 곳당 매출은 손님이 쓴 돈을 가게 수로 나눈 추정값이라 어느 한 가게의 실적이 아니에요.'});
+      note:'점포당 참고 매출은 상권에서 손님이 쓴 돈을 점포 수로 나눈 추정값이라 어느 한 가게의 실적이나 새 가게의 예상 매출은 아니에요.'});
 
     // 비용
     const kRows=[];

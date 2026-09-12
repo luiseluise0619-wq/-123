@@ -38,16 +38,20 @@ test('공개 설정은 카카오 JavaScript 키만 전달하고 서버 비밀은
   t.after(()=>{process.env=before;});
   Object.assign(process.env,{
     KAKAO_JAVASCRIPT_KEY:'a'.repeat(32),
+    PUBLIC_CONTACT_EMAIL:'help@example.com',
     GEMINI_API_KEY:'gemini-must-stay-secret',
     CUSTOMER_ADMIN_TOKEN:'admin-must-stay-secret',
   });
   const config=publicConfig({enabled:false});
   assert.deepEqual(config.kakaoMap,{enabled:true,javascriptKey:'a'.repeat(32)});
+  assert.deepEqual(config.publicContact,{email:'help@example.com'});
   const body=JSON.stringify(config);
   assert.ok(!body.includes('gemini-must-stay-secret'));
   assert.ok(!body.includes('admin-must-stay-secret'));
   process.env.KAKAO_JAVASCRIPT_KEY='not a valid key';
   assert.deepEqual(publicConfig({enabled:false}).kakaoMap,{enabled:false});
+  process.env.PUBLIC_CONTACT_EMAIL='bad\nvalue@example.com';
+  assert.deepEqual(publicConfig({enabled:false}).publicContact,{});
 });
 test('운영 라우터: 소스 노출 회귀·본문 제한·JSON MIME·보안 헤더',async t=>{
   const root=fileURLToPath(new URL('../frontend',import.meta.url));

@@ -580,14 +580,10 @@
           <div style="display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap">
             <button onClick="{{ noticeConfirm }}" style="flex:1;min-width:110px;font-size:15.5px;font-weight:600;color:var(--on-accent);background:var(--accent);border:none;border-radius:14px;height:50px;cursor:pointer;transition:filter .16s,transform .2s cubic-bezier(.2,0,0,1)" style-hover="filter:brightness(1.05)" style-active="transform:scale(.98)">시작하기</button>
           </div>
-          <div style="margin-top:12px;text-align:center">
-            <span role="button" tabIndex="0" onClick="{{ noticeWeek }}" style="font-size:13px;color:var(--ink3);cursor:pointer;white-space:nowrap">일주일 동안 안 보기</span>
-          </div>
-
           <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink3);line-height:1.7;text-wrap:pretty">
             데이터 · 서울시 상권분석서비스, 서울 열린데이터광장, 국세청, 한국부동산원, 카카오 로컬<br>
             오픈소스 · 아이콘 Lucide (ISC · 일부 Feather MIT) · 검색 정렬 cmdk (MIT) · 위치 계산 Floating UI (MIT) · 서체 Pretendard (OFL)<br>
-            개인정보 · 리포트를 메일로 받을 때만 이메일을 받아요. 그 밖에는 아무것도 수집하지 않아요.
+            개인정보 · {{ aboutPrivacy }}
           </div>
         </div>
       </div>
@@ -1164,7 +1160,7 @@
       <sc-if value="{{ fc.hasList }}">
         <!-- 결론: 상위 세 곳 -->
         <section style="padding:28px 0 0">
-          <h2 style="{{ ds3 }}">가장 잘 되는 세 곳</h2>
+          <h2 style="{{ ds3 }}">점포당 참고 매출이 높은 세 곳</h2>
           <div data-rail="fcTop" style="{{ fc.topRail.trackStyle }}; margin-top:14px">
             <sc-for list="{{ fc.top }}" as="t">
               <div style="{{ fc.topRail.itemStyle }}">
@@ -1174,7 +1170,7 @@
                   <span style="flex:1;min-width:0;font-size:18px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span>
                 </div>
                 <div style="{{ dsNumSm }}; margin-top:12px">{{ t.per }}</div>
-                <div class="u-note-t">가게 한 곳당 월매출 (추정)</div>
+                <div class="u-note-t">점포당 참고 매출 (추정)</div>
                 <div style="{{ t.vsStyle }}">{{ t.vs }}</div>
                 <div class="u-note" style="margin-top:10px">경쟁 점포 {{ t.stores }}</div>
                 <sc-if value="{{ t.thin }}">
@@ -1524,7 +1520,7 @@
                   <span style="flex:1;min-width:0;font-size:17px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.gu }}</span>
                 </div>
                 <div style="{{ dsNumSm }}; margin-top:12px">{{ c.per }}</div>
-                <div class="u-note-t">가게 한 곳당 월매출 (추정)</div>
+                <div class="u-note-t">점포당 참고 매출 (추정)</div>
                 <div style="position:relative;height:6px;border-radius:3px;background:var(--surface);margin-top:12px">
                   <span style="display:block;height:100%;border-radius:3px;overflow:hidden"><span style="{{ c.bar }}"></span></span>
                   <span style="{{ zc.medLine }}"></span>
@@ -1663,7 +1659,7 @@
                 </div>
               </sc-for>
             </div>
-            <p style="font-size:12.5px;color:var(--ink3);margin:24px 0 0;max-width:640px;text-wrap:pretty">막대는 가게 한 곳이 한 달에 파는 돈이에요. 목록에 없는 장사는 안 되는 게 아니라, 자료가 없어서 알 수 없는 거예요. 동네마다 매출 상위 15개 업종까지만 담겨 있어요.</p>
+            <p style="font-size:12.5px;color:var(--ink3);margin:24px 0 0;max-width:640px;text-wrap:pretty">막대는 업종별 점포당 참고 매출(추정)이에요. 목록에 없는 장사는 안 되는 게 아니라, 이 자료에 없어 알 수 없는 거예요. 원자료에는 상권별 매출 상위 15개 업종만 들어 있어요.</p>
           </div>
 
           <!-- 2단: 고른 업종 -->
@@ -1756,8 +1752,16 @@
         </sc-if>
       </section>
 
+      <sc-if value="{{ findNoData }}">
+        <section style="padding:24px 0 0;max-width:640px">
+          <div class="u-h">이 조건은 비교할 자료가 없어요</div>
+          <p style="{{ dsBody }}; margin-top:8px">{{ findNoDataText }}</p>
+        </section>
+      </sc-if>
+
       <!-- 결과: 결론 → 지표 → 다음 행동 -->
       <sc-if value="{{ ready }}">
+      <sc-if value="{{ findHasData }}">
         <section style="padding:12px 0 0;animation:riseIn .28s cubic-bezier(.2,.7,.3,1) both">
           <div class="u-lab-p" style="text-wrap:pretty;max-width:640px">{{ t.eyebrow }}</div>
           <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-top:8px">
@@ -1810,6 +1814,8 @@
                   </div>
                 </sc-for>
               </div>
+              <div style="{{ dsSub }};margin-top:18px">{{ t.scoreFormula }}</div>
+              <div style="{{ dsSub }};margin-top:5px">{{ t.scoreScope }}</div>
             </div>
           </sc-if>
         </section>
@@ -1864,6 +1870,7 @@
           </sc-if>
         </section>
       </sc-if>
+      </sc-if>
     </sc-if>
     <!-- 진단 -->
     <sc-if value="{{ onDiag }}">
@@ -1873,11 +1880,11 @@
         <div style="margin-top:24px;max-width:640px;padding:24px;border-radius:var(--r-lg);background:var(--card)">
           <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
             <div style="font-size:clamp(40px,7vw,64px);font-weight:700;letter-spacing:-0.04em;line-height:.94;font-variant-numeric:tabular-nums">{{ d.bep }}</div>
-            <div style="padding-bottom:6px;font-size:14px;color:var(--ink2);white-space:nowrap">월 이만큼 팔면 본전</div>
+            <div style="padding-bottom:6px;font-size:14px;color:var(--ink2);white-space:nowrap">{{ d.bepLabel }}</div>
           </div>
           <div class="u-mt">
-          <!-- 막대 = 예상 매출, 세로 눈금 = 본전선. 무엇이 무엇인지 안 쓰면 못 읽는다 -->
-          <div style="font-size:12.5px;color:var(--ink3);margin-bottom:8px">막대는 예상 매출, 세로선은 본전선이에요</div>
+          <!-- 막대 = 상권 참고 매출을 쓴 가정, 세로 눈금 = 본전선 -->
+          <div style="font-size:12.5px;color:var(--ink3);margin-bottom:8px">{{ d.gaugeHint }}</div>
           <div style="position:relative;height:12px;border-radius:6px;background:var(--surface)">
             <div style="{{ d.fill }}"></div>
             <div style="{{ d.mark }}"></div>
@@ -2100,7 +2107,7 @@
         </sc-if>
       </section>
     </sc-if>
-    <!-- 정밀비교 — 담아 둔 상권을 공개 데이터로 견준다. 결론(종합 1위)이 먼저다.
+    <!-- 정밀비교 — 담아 둔 상권을 공개 데이터로 견준다. 현재 기준의 결론이 먼저다.
      ※ 내 숫자를 직접 넣는 계산은 여기가 아니라 '본전 계산'이다 — 둘을 섞지 않는다. -->
     <sc-if value="{{ onSim }}">
       <section class="u-sec">
@@ -2125,13 +2132,13 @@
         </sc-if>
       </sc-if>
 
-      <!-- ③ 종합 1위 -->
+      <!-- ③ 저장한 후보 중 1위 -->
       <sc-if value="{{ c.hasVerdict }}">
         <section style="padding:20px 0 0">
           <div style="{{ dsCardHi }}">
             <div style="display:flex;align-items:center;gap:9px">
               <span style="{{ c.bestSlotStyle }}"></span>
-              <span class="u-lab">종합 1위</span>
+              <span class="u-lab">저장한 후보 중 1위</span>
             </div>
             <div style="font-size:26px;font-weight:700;letter-spacing:-.03em;margin-top:6px">{{ c.bestName }}</div>
             <div style="font-size:15.5px;line-height:1.55;margin-top:8px;text-wrap:pretty">{{ c.verdict }}</div>
@@ -2355,8 +2362,20 @@
   </main>
   <footer class="site-footer" aria-label="{{ footerContactLabel }}">
     <div class="site-footer-contact">
-      <span class="site-footer-contact-label">{{ footerContactLabel }}</span>
-      <span class="site-footer-contact-value">{{ footerContactValue }}</span>
+      <div class="site-footer-contact-copy">
+        <span class="site-footer-contact-eyebrow">{{ footerEyebrow }}</span>
+        <strong class="site-footer-contact-title">{{ footerTitle }}</strong>
+        <span class="site-footer-contact-description">{{ footerDescription }}</span>
+      </div>
+      <div class="site-footer-contact-slot">
+        <span class="site-footer-contact-label">{{ footerContactLabel }}</span>
+        <sc-if value="{{ footerContactReady }}">
+          <a class="site-footer-contact-value" href="{{ footerContactHref }}">{{ footerContactValue }}</a>
+        </sc-if>
+        <sc-if value="{{ footerContactPending }}">
+          <span class="site-footer-contact-value is-pending">{{ footerContactValue }}</span>
+        </sc-if>
+      </div>
     </div>
   </footer>
 </div>

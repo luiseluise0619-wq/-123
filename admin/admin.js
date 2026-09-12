@@ -4,7 +4,9 @@ let token='',kind='surveys',before='',next=null,rows=[],lockTimer;
 const labels={id:'제출 ID',createdAt:'제출 시각',email:'이메일',sido:'시·도',gu:'구',industry:'업종',stage:'창업 단계',age:'연령 구간',business:'사업자 상태',when:'창업 시기',need:'지원 관심',cost:'예산',privacyVersion:'동의 문구 버전',expiresAt:'삭제 예정일',day:'날짜',event:'버튼',device:'기기',count:'클릭 수'};
 function lock({clearKey=true}={}){token='';rows=[];el('table').replaceChildren();el('workspace').hidden=true;el('login').hidden=false;el('logout').hidden=true;if(clearKey)el('key').value='';el('search').value='';clearTimeout(lockTimer);}
 async function request(path,body={}){
-  const response=await fetch('api/'+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
+  // 같은 URL의 Nginx Basic 인증도 Authorization 헤더를 쓴다. 2차 키까지
+  // 그 헤더에 넣으면 브라우저가 기억한 1차 인증과 서로 덮어쓰므로 전용 헤더로 분리한다.
+  const response=await fetch('api/'+path,{method:'POST',headers:{'Content-Type':'application/json','X-Mysbizon-Admin-Key':token},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
   if(!response.ok){
     let message='요청을 처리하지 못했습니다.';
     try{const data=await response.json();if(data&&data.error)message=data.error;}catch{}

@@ -28,6 +28,17 @@ test('비정상 입력에서도 손익 계산이 NaN/Infinity/음수 고정비�
     assert.ok(result.fixed>=0);assert.ok(result.area>=1);
   }
 });
+test('원가율 100% 이상은 본전과 영업이익을 계산하지 않는다',()=>{
+  const {instance:c}=component();
+  for(const cogs of [100,101,250]){
+    c.state.cogs=cogs;
+    const result=c.calc({per:90000000});
+    assert.equal(result.valid,false);
+    assert.equal(result.bep,null);
+    assert.equal(result.profit,null);
+    assert.match(result.error,/100% 미만/);
+  }
+});
 test('실데이터로 모든 화면 view model 생성과 미리보기 계산을 실행한다',()=>{
   const {instance:c,context}=component();
   const data=name=>JSON.parse(fs.readFileSync(new URL('../frontend/data/v3/'+name+'.json',import.meta.url),'utf8'));
@@ -42,15 +53,45 @@ test('실데이터로 모든 화면 view model 생성과 미리보기 계산을 
   // 리포트 결과물(PDF·CSV·메일)에는 설문 답 + 지원사업 + 손익이 들어간다.
   // 화면(리포트 탭)에는 손익을 그리지 않는다 — 사장님 지시 2026-09-07.
   Object.assign(c.state,{rp_sido:'서울',rp_gu:'마포구',rp_ind:'커피-음료',
-    rp_stage:'아직 준비 중이에요 (예비창업자)',rp_age:'만 39세 이하'});
+    rp_stage:'아직 준비 중이에요 (예비창업자)',rp_age:'만 39세 이하',rent:'',cogs:''});
   c.renderVals().rp.preview();
   assert.equal(context.location.href,'report-print.html');
   assert.ok(payload.survey.length,'설문 답이 담겨야 한다');
   assert.equal(payload.survey[0].value,'서울 마포구');
   assert.ok(payload.bep.length,'손익이 리포트 결과물에 담겨야 한다');
   assert.ok(!payload.bep[1].value.startsWith('0만'),'월매출 가정이 0 이면 안 된다');
+  assert.equal(payload.money.find(o=>o.label==='임대료').value,'400만원','빈 임대료는 기본 가정을 표시해야 한다');
+  assert.ok(payload.money.find(o=>o.label==='재료비').value!=='0원','빈 원가율은 기본 가정을 표시해야 한다');
   // 화면 쪽에는 손익 view model 이 없어야 한다(예전 rv 블록은 지웠다)
   assert.equal(c.renderVals().rp.rv,undefined,'리포트 화면에 손익이 되살아났다');
+});
+
+test('직접 고른 상권이 1위가 아니어도 다른 후보 목록에 실제 1위가 보인다',()=>{
+  const {instance:c}=component();const data=n=>JSON.parse(fs.readFileSync(new URL('../frontend/data/v3/'+n+'.json',import.meta.url),'utf8'));
+  Object.assign(c.state,{screen:'find',zi:data('zone_industry'),sbi:data('sales_by_industry'),sti:data('stores_by_industry'),zgu:data('zone_gu').gu,zbd:data('zone_border').border,smap:data('seoul_map'),zlp:data('zone_livepop').zone,rentStats:data('rent'),salesHistory:data('sales_history'),income:data('income'),ind:'한식음식점'});
+  const ranked=c.rank();
+  c.state.sel=ranked.list[9].id;
+  const view=c.renderVals();
+  assert.equal(view.rows[0].rank,1);
+  assert.equal(view.rows[0].name,c.zoneLabelOf(ranked.list[0].name));
+  assert.match(view.t.pctFine,/비교 가능한 .*곳 중 10위/);
+});
+
+test('자치구를 고르면 그 구의 후보만으로 점수와 순위를 다시 계산한다',()=>{
+  const {instance:c}=component();const data=n=>JSON.parse(fs.readFileSync(new URL('../frontend/data/v3/'+n+'.json',import.meta.url),'utf8'));
+  Object.assign(c.state,{screen:'find',zi:data('zone_industry'),sbi:data('sales_by_industry'),sti:data('stores_by_industry'),zgu:data('zone_gu').gu,zbd:data('zone_border').border,smap:data('seoul_map'),zlp:data('zone_livepop').zone,rentStats:data('rent'),salesHistory:data('sales_history'),income:data('income'),ind:'한식음식점'});
+  const ranked=c.rank();
+  const counts={};for(const o of ranked.list){const gu=c.state.zgu[o.id];if(gu)counts[gu]=(counts[gu]||0)+1;}
+  const gu=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0],n=counts[gu];
+  c.state.findGu=gu;c.state.sel=null;
+  const view=c.renderVals();
+  assert.match(view.t.eyebrow,new RegExp(gu+'.*'+n.toLocaleString()+'.*1위'));
+  assert.match(view.t.scoreScope,new RegExp(gu+'.*'+n.toLocaleString()));
+  assert.ok(view.rows.every(o=>o.gu.includes(gu)), '다른 자치구 후보가 섞이면 안 된다');
+  c.state.findGu='자료없는구';
+  const empty=c.renderVals();
+  assert.equal(empty.findHasData,false);assert.equal(empty.findNoData,true);
+  assert.match(empty.findNoDataText,/다른 자치구/);
 });
 
 test('62개 업종·13개 화면을 실제 자료로 계산하며 비정상 숫자를 출력하지 않는다',()=>{

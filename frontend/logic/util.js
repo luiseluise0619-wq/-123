@@ -186,22 +186,25 @@ globalThis.MysbizonParts.util = {
     // 비운 임대료를 0 으로 치면 본전선이 1,523 → 908만원 으로 떨어지는데,
     // 화면 꼬리표는 그대로 '기본 400만원' 이라 거짓을 말하게 된다.
     const rent=this.bound(S.rent,0,100000,D.rent), etc=sz.etc, staff=sz.staff;
-    const cogs=this.bound(S.cogs,0,95,D.cogs)/100;
-    const labor=staff*250, fixed=rent+labor+etc, bep=fixed/(1-cogs);
+    const cogsPct=this.bound(S.cogs,0,1000,D.cogs);
+    const cogs=cogsPct/100;
+    const valid=cogsPct<100;
+    const labor=staff*250, fixed=rent+labor+etc;
+    const bep=valid?fixed/(1-cogs):null;
     const mult=(S.scen==='적게 팔릴 때'?0.7:(S.scen==='잘될 때'?1.3:1));
     const avg=z? z.per/3/1e4 : 0;
     const rev = avg*mult;
-    const profit = rev*(1-cogs)-fixed;
+    const profit = valid?rev*(1-cogs)-fixed:null;
     // 처음 한 번 나가는 돈 — 사장님이 넣은 값만 쓴다(기본 가정을 두지 않는다).
     // 회수기간 = 초기투자 ÷ 월 영업이익. 이익이 0 이하면 회수되지 않으므로 null.
     const invest = this.bound(S.deposit,0,1000000,0)
                  + this.bound(S.premium,0,1000000,0)
                  + this.bound(S.interior,0,1000000,0);
-    const payback = (invest>0 && profit>0) ? invest/profit : null;
+    const payback = (valid && invest>0 && profit>0) ? invest/profit : null;
     return {rent,etc,staff,labor,cogs,fixed,bep,avg,rev,mult,area:sz.area,
       staffAuto:sz.staffAuto, etcAuto:sz.etcAuto,
       invest, payback,
-      profit};
+      valid,error:valid?'':'원가율은 100% 미만이어야 본전과 영업이익을 계산할 수 있어요.',profit};
   },
 
   // Lucide 아이콘 (lucide-icons/lucide@main, ISC). 텍스트 글리프(✕, ›) 대신 쓴다.

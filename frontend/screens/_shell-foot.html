@@ -1,8 +1,20 @@
   </main>
   <footer class="site-footer" aria-label="{{ footerContactLabel }}">
     <div class="site-footer-contact">
-      <span class="site-footer-contact-label">{{ footerContactLabel }}</span>
-      <span class="site-footer-contact-value">{{ footerContactValue }}</span>
+      <div class="site-footer-contact-copy">
+        <span class="site-footer-contact-eyebrow">{{ footerEyebrow }}</span>
+        <strong class="site-footer-contact-title">{{ footerTitle }}</strong>
+        <span class="site-footer-contact-description">{{ footerDescription }}</span>
+      </div>
+      <div class="site-footer-contact-slot">
+        <span class="site-footer-contact-label">{{ footerContactLabel }}</span>
+        <sc-if value="{{ footerContactReady }}">
+          <a class="site-footer-contact-value" href="{{ footerContactHref }}">{{ footerContactValue }}</a>
+        </sc-if>
+        <sc-if value="{{ footerContactPending }}">
+          <span class="site-footer-contact-value is-pending">{{ footerContactValue }}</span>
+        </sc-if>
+      </div>
     </div>
   </footer>
 </div>

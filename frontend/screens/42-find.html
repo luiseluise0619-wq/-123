@@ -59,8 +59,16 @@
         </sc-if>
       </section>
 
+      <sc-if value="{{ findNoData }}">
+        <section style="padding:24px 0 0;max-width:640px">
+          <div class="u-h">이 조건은 비교할 자료가 없어요</div>
+          <p style="{{ dsBody }}; margin-top:8px">{{ findNoDataText }}</p>
+        </section>
+      </sc-if>
+
       <!-- 결과: 결론 → 지표 → 다음 행동 -->
       <sc-if value="{{ ready }}">
+      <sc-if value="{{ findHasData }}">
         <section style="padding:12px 0 0;animation:riseIn .28s cubic-bezier(.2,.7,.3,1) both">
           <div class="u-lab-p" style="text-wrap:pretty;max-width:640px">{{ t.eyebrow }}</div>
           <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-top:8px">
@@ -113,6 +121,8 @@
                   </div>
                 </sc-for>
               </div>
+              <div style="{{ dsSub }};margin-top:18px">{{ t.scoreFormula }}</div>
+              <div style="{{ dsSub }};margin-top:5px">{{ t.scoreScope }}</div>
             </div>
           </sc-if>
         </section>
@@ -166,5 +176,6 @@
             </div>
           </sc-if>
         </section>
+      </sc-if>
       </sc-if>
     </sc-if>

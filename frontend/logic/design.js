@@ -99,15 +99,15 @@ globalThis.MysbizonParts.design = {
     const shown=Math.max(top,1);
     const good=moreIsBetter? p>=60 : p<=40;
     const mid=p>=35&&p<=65;
-    return {text:'서울 상위 '+shown+'%', tone:mid?'flat':(good?'good':'warn')};
+    return {text:'비교군 상위 '+shown+'%', tone:mid?'flat':(good?'good':'warn')};
   },
 
-  // 서울 중앙값과 견준 한 줄. good 이 true 면 '많을수록 좋은' 지표다.
+  // 호출한 화면이 넘긴 비교군 중앙값과 견준 한 줄. good 이 true 면 '많을수록 좋은' 지표다.
   vs(v, med, unit, opt){
     const o=opt||{};
     if(v==null||med==null||!isFinite(v)||!isFinite(med)||med===0) return {text:'', tone:'flat'};
     const d=Math.round((v-med)/med*100);
-    if(Math.abs(d)<5) return {text:'서울 중앙값과 비슷해요', tone:'flat'};
+    if(Math.abs(d)<5) return {text:'비교군 중앙값과 비슷해요', tone:'flat'};
     const more=d>0;
     const goodDir=o.moreIsBetter!==false;      // 기본은 '많을수록 좋다'
     const tone=(more===goodDir)?'good':(o.badIsRed?'bad':'warn');
@@ -115,10 +115,10 @@ globalThis.MysbizonParts.design = {
     // '서울 평균보다 718% 많아요'는 맞는 값이어도 머리에 안 들어온다 — 배수로 말한다
     if(Math.abs(d)>=200){
       const r=v/med;
-      return {text:'서울 중앙값의 약 '+(r>=10?Math.round(r):r.toFixed(1))+'배 수준이에요',
+      return {text:'비교군 중앙값의 약 '+(r>=10?Math.round(r):r.toFixed(1))+'배 수준이에요',
               tone:tone, diff:d};
     }
-    return {text:'서울 중앙값보다 '+Math.abs(d)+'% '+(more?word:less), tone:tone, diff:d};
+    return {text:'비교군 중앙값보다 '+Math.abs(d)+'% '+(more?word:less), tone:tone, diff:d};
   },
 
   rentRef(zoneName){
