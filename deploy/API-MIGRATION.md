@@ -16,6 +16,7 @@
 |임대통계 자동화|[한국부동산원 R-ONE Open API](https://www.reb.or.kr/r-one/portal/openapi/openApiIntroPage.do) → 로그인 → 인증키 발급내역/목록|인증키|Node `api/integrations.js`의 고정 서버 어댑터. 소규모·중대형·집합상가의 임대료·공실률·임대가격지수를 허용 목록에서 조회|
 |환율|[한국수출입은행 환율 API](https://www.data.go.kr/data/3068846/openapi.do) → 회사 계정 활용신청|수출입은행 인증키|Node `api/integrations.js`; 새 `oapi.koreaexim.go.kr` 주소 사용|
 |AI 해설|[Google AI Studio API 키](https://ai.google.dev/gemini-api/docs/api-key) → 회사 Cloud 프로젝트|Gemini API 키와 프로젝트 권한|Node `api/integrations.js`; 서버 헤더 인증, 저장 비활성, 입력 크기·개인정보 모양·호출 수 제한|
+|지도|[Kakao Developers](https://developers.kakao.com/) → 앱 → 플랫폼 키 → JavaScript 키|JavaScript 키와 운영 JavaScript SDK 도메인|Node `/api/config`에서 지도 화면에만 전달. `KAKAO_JAVASCRIPT_KEY`; 운영 도메인 제한 필수|
 
 서울 인증키 발급은 공식 이용안내를, KAMIS의 인증키와 요청자 ID 조합은 [요청 변수 명세](https://www.kamis.or.kr/customer/reference/openapi_list.do?action=detail&boardno=1)를 기준으로 확인했습니다. ECOS 페이지는 서비스 주소만 확인됐고 본문이 추출되지 않아 현재 로그인·신청 화면의 세부 절차를 확정하지 않았습니다.
 
@@ -34,7 +35,6 @@
 |사이트|필요해지는 경우|현재 코드|
 |---|---|---|
 |[Naver Developers](https://developers.naver.com/docs/common/openapiguide/appregister.md)|검색 트렌드 기능을 실제 연결할 때|Python 실험 코드의 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`; Node 미사용|
-|[Kakao Developers](https://developers.kakao.com/docs/ko/kakaomap/common)|지도·주소 검색을 새로 구현할 때|현재 안내문에 카카오가 언급되지만 운영 Node에서 호출하는 카카오 키 경로는 확인되지 않음|
 
 네이버는 회사/단체라면 단체 회원 사용을 공식적으로 권장합니다. Google API 키는 Cloud 프로젝트에 연결되므로 회사 이메일로 로그인하는 것 외에 프로젝트 권한과 결제 주체를 함께 확인해야 합니다. [Google 프로젝트·결제 설명](https://ai.google.dev/gemini-api/docs/billing/)에 따라 관리하세요. Gemini를 재활성화할 때는 저장소의 오래된 모델 지정과 현재 키 유형/SDK 지원도 별도로 점검해야 합니다.
 

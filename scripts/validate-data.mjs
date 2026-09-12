@@ -15,7 +15,9 @@ export function validateData(root){
   if(zi.n_zones!==Object.keys(zi.zones).length||zi.n_inds!==zi.inds.length)fail('zone counts');
   for(const n of ['sales_by_industry','stores_by_industry'])if(!object(data[n].ind)||data[n].quarter!==zi.quarter)fail(n+' quarter/ind');
   if(!object(data.zone_gu.gu)||!object(data.zone_border.border))fail('zone mapping');
-  const map=data.seoul_map;if(!object(map.gus)||!object(map.pts))fail('map');
+  const map=data.seoul_map;if(!object(map.gus)||!object(map.pts)||!object(map.lls))fail('map');
+  const llEntries=Object.entries(map.lls);
+  if(llEntries.length<1500||llEntries.some(([,v])=>!Array.isArray(v)||v.length!==2||!Number.isFinite(v[0])||!Number.isFinite(v[1])||v[0]<37.3||v[0]>37.75||v[1]<126.7||v[1]>127.3))fail('map coordinates');
   for(const p of Object.values(map.pts))if(!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite))fail('map coordinates');
   for(const g of Object.values(map.gus))if(typeof g.d!=='string'||! /^[MmLlHhVvCcSsQqTtAaZz0-9., eE+\-]+$/.test(g.d))fail('map geometry');
   if(!object(data.zone_livepop.zone))fail('livepop');

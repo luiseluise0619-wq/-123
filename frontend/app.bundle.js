@@ -191,6 +191,11 @@ globalThis.MysbizonParts.i18n = {
       'menu.zoneCompare':'지역비교','menu.find':'후보지',
       'menu.sweep':'자치구 훑기','menu.map':'지도','menu.detail':'정밀분석',
       'menu.sim':'정밀비교','menu.bep':'본전 계산',
+      'map.loading':'지도를 불러오는 중이에요',
+      'map.unavailable':'지도를 불러올 수 없어요. 아래 목록에서 상권을 선택할 수 있어요.',
+      'map.noPosition':'표시할 상권 위치가 없어요.',
+      'map.failed':'지도를 불러오지 못했어요. 아래 목록은 계속 사용할 수 있어요.',
+      'map.pick':'{zone} 선택',
 
       'hub.peekTop':'{ind} · {n}곳 중 1위 {zone}',
       'home.stamp':'서울 상권 {n}곳 · {q} 기준',
@@ -2206,7 +2211,14 @@ globalThis.MysbizonParts.data = {
   },
   loadConfig(){
     return this.loadData('/api/config').then(r=>r.json())
-      .then(c=>this.setState({reportEmailEnabled:!!c.reportEmailEnabled,customerData:c.customerData})).catch(()=>{});
+      .then(c=>{
+        const key=String(c.kakaoMap?.javascriptKey||'');
+        this.setState({
+          reportEmailEnabled:!!c.reportEmailEnabled,
+          customerData:c.customerData,
+          kakaoMapKey:c.kakaoMap?.enabled&&/^[A-Za-z0-9_-]{16,128}$/.test(key)?key:'',
+        });
+      }).catch(()=>{});
   },
 
 };
@@ -5296,6 +5308,117 @@ globalThis.MysbizonParts.market.priceView = function(){
     return out;
   };
 
+/* source: logic/map.js */
+'use strict';
+// 카카오 지도는 지도 화면에 들어왔을 때만 받는다. 키는 서버 설정에서 오고 SDK
+// 주소는 이 파일의 고정된 Kakao 도메인만 사용한다.
+globalThis.MysbizonParts = globalThis.MysbizonParts || {};
+globalThis.MysbizonParts.map = {
+  kakaoMapStatus(el,text){
+    if(!el) return;
+    el.replaceChildren();
+    const msg=document.createElement('span');
+    msg.textContent=text;
+    Object.assign(msg.style,{padding:'14px 16px',color:'var(--ink3)',fontSize:'14px',lineHeight:'1.6'});
+    el.appendChild(msg);
+  },
+
+  loadKakaoMapsSdk(key){
+    if(globalThis.kakao?.maps?.Map) return Promise.resolve(globalThis.kakao.maps);
+    if(globalThis.__mysbizonKakaoMapsPromise) return globalThis.__mysbizonKakaoMapsPromise;
+    globalThis.__mysbizonKakaoMapsPromise=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.id='mysbizon-kakao-maps-sdk';
+      script.async=true;
+      script.src='https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey='+encodeURIComponent(key);
+      script.referrerPolicy='strict-origin-when-cross-origin';
+      script.onload=()=>{
+        if(!globalThis.kakao?.maps?.load) return reject(new Error('Kakao Maps SDK unavailable'));
+        globalThis.kakao.maps.load(()=>resolve(globalThis.kakao.maps));
+      };
+      script.onerror=()=>reject(new Error('Kakao Maps SDK failed to load'));
+      document.head.appendChild(script);
+    }).catch(error=>{
+      globalThis.__mysbizonKakaoMapsPromise=null;
+      throw error;
+    });
+    return globalThis.__mysbizonKakaoMapsPromise;
+  },
+
+  destroyKakaoMap(){
+    if(this._kakaoResizeObserver){this._kakaoResizeObserver.disconnect();this._kakaoResizeObserver=null;}
+    for(const overlay of this._kakaoOverlays||[]){try{overlay.setMap(null);}catch(e){}}
+    this._kakaoOverlays=[];
+    this._kakaoMap=null;
+    this._kakaoContainer=null;
+    this._kakaoBounds=null;
+  },
+
+  paintKakaoMap(){
+    if(this.state.screen!=='map') {this.destroyKakaoMap();return;}
+    const el=document.getElementById('kakao-map');
+    if(!el) return;
+    const key=String(this.state.kakaoMapKey||'');
+    const pins=(this._kakaoPins||[]).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lng));
+    if(!key){this.destroyKakaoMap();this.kakaoMapStatus(el,this.t('map.unavailable'));return;}
+    if(!pins.length){this.destroyKakaoMap();this.kakaoMapStatus(el,this.t('map.noPosition'));return;}
+    this.loadKakaoMapsSdk(key).then(()=>{
+      if(this.state.screen!=='map') return;
+      const current=document.getElementById('kakao-map');
+      if(!current) return;
+      this.drawKakaoMap(current,pins);
+    }).catch(()=>{
+      const current=document.getElementById('kakao-map');
+      if(current) this.kakaoMapStatus(current,this.t('map.failed'));
+    });
+  },
+
+  drawKakaoMap(el,pins){
+    this.destroyKakaoMap();
+    el.replaceChildren();
+    const K=globalThis.kakao?.maps;
+    if(!K?.Map) return this.kakaoMapStatus(el,this.t('map.failed'));
+    const first=pins.find(p=>p.on)||pins[0];
+    const map=new K.Map(el,{center:new K.LatLng(first.lat,first.lng),level:4});
+    const bounds=new K.LatLngBounds(), overlays=[];
+    for(const p of pins){
+      const position=new K.LatLng(p.lat,p.lng);
+      bounds.extend(position);
+      const button=document.createElement('button');
+      button.type='button';
+      button.textContent=String(p.n);
+      button.title=p.name;
+      button.setAttribute('aria-label',this.t('map.pick',{zone:p.name}));
+      Object.assign(button.style,{
+        width:p.on?'38px':'32px',height:p.on?'38px':'32px',borderRadius:'50%',
+        border:'3px solid var(--card)',background:p.on?'var(--accent)':'var(--ink2)',
+        color:p.on?'var(--on-accent)':'var(--card)',fontSize:'13px',fontWeight:'700',
+        boxShadow:'0 5px 16px rgba(25,31,40,.24)',cursor:'pointer',padding:'0',
+      });
+      button.addEventListener('click',p.pick);
+      const overlay=new K.CustomOverlay({map,position,content:button,xAnchor:.5,yAnchor:.5,zIndex:p.on?10:2});
+      overlays.push(overlay);
+    }
+    if(pins.length>1) map.setBounds(bounds,46,46,46,46);
+    else map.setLevel(4);
+    try{map.addControl(new K.ZoomControl(),K.ControlPosition.RIGHT);}catch(e){}
+    this._kakaoMap=map;
+    this._kakaoContainer=el;
+    this._kakaoBounds=bounds;
+    this._kakaoOverlays=overlays;
+    if(typeof ResizeObserver!=='undefined'){
+      this._kakaoResizeObserver=new ResizeObserver(()=>{
+        if(this._kakaoMap&&document.body.contains(el)){
+          this._kakaoMap.relayout();
+          if(pins.length>1)this._kakaoMap.setBounds(bounds,46,46,46,46);
+          else this._kakaoMap.setCenter(new K.LatLng(first.lat,first.lng));
+        }
+      });
+      this._kakaoResizeObserver.observe(el);
+    }
+  },
+};
+
 /* source: logic/views.js */
 'use strict';
 // 자료가 있을 때만 만들 수 있는 화면들 — 후보지·본전 계산·지도·정밀분석·비교분석.
@@ -5508,10 +5631,13 @@ globalThis.MysbizonParts.views = {
     const seoulOnly=(S.sido||'서울특별시')==='서울특별시';
     const GU_ALL=['서울 전체','종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구','강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구','금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
     const mapGu=S.mapGu||'서울 전체';
-    const near=(mapGu==='서울 전체'
+    const candidates=(mapGu==='서울 전체'
       ? L
       : L.filter(o=>{ const g=(S.zgu&&S.zgu[o.id])||''; return g===mapGu || (S.zbd&&S.zbd[o.id]&&S.zbd[o.id][1]===mapGu); })
-    ).slice(0,6);
+    );
+    // 현재 고른 상권은 순위가 낮아도 지도에서 사라지지 않게 첫 핀으로 둔다.
+    const selectedInGu=candidates.find(o=>o.id===sel.id);
+    const near=(selectedInGu?[selectedInGu,...candidates.filter(o=>o.id!==sel.id)]:candidates).slice(0,6);
     const SM=S.smap;
     const mp=(()=>{
       if(!SM) return {ready:false, gus:[], pins:[], vb:'0 0 100 100', labels:[]};
@@ -5562,8 +5688,10 @@ globalThis.MysbizonParts.views = {
         }),
         pins:near.map((o,i)=>{
           const p=SM.pts[o.id]||[50,50], on=o.id===sel.id;
+          const ll=SM.lls&&SM.lls[o.id];
           const rr=side/100*(on?3.2:2.5);
           return {n:i+1, name:this.zoneLabelOf(o.name), x:p[0], y:p[1], on:on,
+            lat:Array.isArray(ll)?ll[0]:null, lng:Array.isArray(ll)?ll[1]:null,
             r:rr.toFixed(2),
             ty:(p[1]+rr*0.36).toFixed(2), fs:(rr*1.05).toFixed(2),
             fill:on?'var(--accent)':'var(--ink3)',
@@ -5576,6 +5704,9 @@ globalThis.MysbizonParts.views = {
         })
       };
     })();
+    // DOM이 그려진 뒤 카카오 지도 모듈이 읽는다. 지도 SDK가 실패해도 이 값과
+    // 아래 목록은 그대로 남아서 상권 선택을 막지 않는다.
+    this._kakaoPins=mp.pins;
     // 절 목록은 렌더마다 한 번만 계산한다 — 탭과 카드가 같은 배열을 봐야 한다
     this._mvA=this.mvSections(sel,L);
     out.mv={
@@ -5986,13 +6117,14 @@ class Component extends DCLogic {
     this.placePanel();
     // 차트와 가로 슬라이드는 DOM 이 그려진 뒤에 붙인다.
     // DC 가 다시 그려도 같은 canvas 면 값만 갱신한다(charts.js 참조).
-    this.paintCharts(); this.bindRails();
+    this.paintCharts(); this.bindRails(); this.paintKakaoMap();
     // 마크업에 그대로 적힌 한국어를 옮긴다(한국어일 때는 아무 일도 안 한다)
     this.trDom();
   }
 
   componentWillUnmount(){
     this.destroyCharts();
+    this.destroyKakaoMap();
     try{ if(this._onPop) window.removeEventListener('popstate', this._onPop); }catch(e){}
     if(this._out) document.removeEventListener('click',this._out,false);
     if(this._noHover) document.removeEventListener('click',this._noHover,true);
@@ -6039,7 +6171,7 @@ class Component extends DCLogic {
       if(!seen && !(until && Date.now() < until)) this.setState({notice:true});
     }catch(e){}
     // 첫 그림 뒤에도 한 번 — componentDidUpdate 는 첫 렌더에서 안 불린다
-    this._firstPaint=setTimeout(()=>{ try{ this.paintCharts(); this.bindRails(); this.trDom(); }catch(e){} },0);
+    this._firstPaint=setTimeout(()=>{ try{ this.paintCharts(); this.bindRails(); this.paintKakaoMap(); this.trDom(); }catch(e){} },0);
     // 인쇄본(report-print.html)에서 '← 분석으로 돌아가기' 로 돌아왔을 때.
     // 설문 답(rp_*)까지 되살린다 — 안 그러면 미리보기를 한 번 본 대가로
     // 8문항을 처음부터 다시 답해야 했다.
@@ -6529,6 +6661,8 @@ class Component extends DCLogic {
       ds1:this.ds('h1'), ds2:this.ds('h2'), ds3:this.ds('h3'),
       // 모바일에서는 전부 1열. 세로 메뉴도 위쪽 가로 목록이 된다.
       mapCols:this.L('1fr','1fr','minmax(0,1.35fr) minmax(300px,1fr)'),
+      mapHeight:this.L('300px','360px','430px'),
+      mapLoading:this.t('map.loading'),
       dashCols:this.L('1fr','1fr','minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr)'),
       navCols:this.L('1fr','200px minmax(0,1fr)','200px minmax(0,1fr)'),
       dsCard:this.ds('card'), dsCardHi:this.ds('cardHi'),
@@ -6636,7 +6770,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','screens','chat','charts','carousel','market','views']) {
+for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','screens','chat','charts','carousel','market','map','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {

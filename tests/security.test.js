@@ -6,6 +6,7 @@ import {createServer} from '../server/app.js';
 import {createLimiter,clientIp} from '../server/security.js';
 import {isAllowedOrigin} from '../api/_origin.js';
 import {reportInput} from '../api/report.js';
+import {publicConfig} from '../api/config.js';
 
 test('출처의 스킴·포트·호스트를 정확히 비교하고 프리뷰 전체 허용을 제거',()=>{
   process.env.ALLOWED_ORIGIN='https://service.example';
@@ -32,6 +33,22 @@ test('요청 제한 만료·메모리 상한·프록시 헤더 위조 방어',()
   const req={socket:{remoteAddress:'127.0.0.1'},headers:{'x-forwarded-for':'1.2.3.4, 8.8.8.8'}};
   assert.equal(clientIp(req,0),'127.0.0.1');assert.equal(clientIp(req,1),'8.8.8.8');
 });
+test('공개 설정은 카카오 JavaScript 키만 전달하고 서버 비밀은 숨김',t=>{
+  const before={...process.env};
+  t.after(()=>{process.env=before;});
+  Object.assign(process.env,{
+    KAKAO_JAVASCRIPT_KEY:'a'.repeat(32),
+    GEMINI_API_KEY:'gemini-must-stay-secret',
+    CUSTOMER_ADMIN_TOKEN:'admin-must-stay-secret',
+  });
+  const config=publicConfig({enabled:false});
+  assert.deepEqual(config.kakaoMap,{enabled:true,javascriptKey:'a'.repeat(32)});
+  const body=JSON.stringify(config);
+  assert.ok(!body.includes('gemini-must-stay-secret'));
+  assert.ok(!body.includes('admin-must-stay-secret'));
+  process.env.KAKAO_JAVASCRIPT_KEY='not a valid key';
+  assert.deepEqual(publicConfig({enabled:false}).kakaoMap,{enabled:false});
+});
 test('운영 라우터: 소스 노출 회귀·본문 제한·JSON MIME·보안 헤더',async t=>{
   const root=fileURLToPath(new URL('../frontend',import.meta.url));
   const server=createServer(root);await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -39,7 +56,7 @@ test('운영 라우터: 소스 노출 회귀·본문 제한·JSON MIME·보안 �
   const base='http://127.0.0.1:'+server.address().port;
   process.env.ALLOWED_ORIGIN=base;
   for(const url of ['/%61pi/_origin.js','/%61pi/lead.js','/API/lead.js','/api/lead.js','/%2561pi/lead.js','/.env','/%2e%2e%2fpackage.json','/api/ch.at','/api/ch/at'])assert.equal((await fetch(base+url)).status,404,url);
-  const home=await fetch(base+'/');assert.equal(home.status,200);assert.equal(home.headers.get('x-content-type-options'),'nosniff');assert.ok(home.headers.get('content-security-policy').includes("frame-ancestors 'none'"));assert.ok(home.headers.get('content-security-policy').includes("script-src 'self';"));assert.ok(!home.headers.get('content-security-policy').includes('unsafe-eval'));
+  const home=await fetch(base+'/');assert.equal(home.status,200);assert.equal(home.headers.get('x-content-type-options'),'nosniff');assert.ok(home.headers.get('content-security-policy').includes("frame-ancestors 'none'"));assert.ok(home.headers.get('content-security-policy').includes("script-src 'self'"));assert.ok(home.headers.get('content-security-policy').includes('https://dapi.kakao.com'));assert.ok(!home.headers.get('content-security-policy').includes('unsafe-eval'));
   assert.equal((await fetch(base+'/api/report',{method:'POST',headers:{Origin:base},body:'{}'})).status,415);
   assert.equal((await fetch(base+'/api/report',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'x'.repeat(65537)})).status,413);
   assert.equal((await fetch(base+'/api/report',{method:'POST',headers:{Origin:'https://evil.test','Content-Type':'application/json'},body:'{}'})).status,403);

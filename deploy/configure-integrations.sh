@@ -37,6 +37,7 @@ read_secret KSTARTUP_API_KEY "K-Startup에 별도 키를 쓸 때만 입력"
 read_secret RONE_API_KEY "R-ONE 키"
 read_secret EXIM_API_KEY "한국수출입은행 키"
 read_secret GEMINI_API_KEY "Gemini 키"
+read_secret KAKAO_JAVASCRIPT_KEY "카카오 지도 JavaScript 키"
 upsert GEMINI_MODEL "gemini-3.8-flash"
 
 if grep -q '^RONE_API_KEY=.' "$ENV_FILE"; then

@@ -209,10 +209,13 @@ globalThis.MysbizonParts.views = {
     const seoulOnly=(S.sido||'서울특별시')==='서울특별시';
     const GU_ALL=['서울 전체','종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구','강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구','금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
     const mapGu=S.mapGu||'서울 전체';
-    const near=(mapGu==='서울 전체'
+    const candidates=(mapGu==='서울 전체'
       ? L
       : L.filter(o=>{ const g=(S.zgu&&S.zgu[o.id])||''; return g===mapGu || (S.zbd&&S.zbd[o.id]&&S.zbd[o.id][1]===mapGu); })
-    ).slice(0,6);
+    );
+    // 현재 고른 상권은 순위가 낮아도 지도에서 사라지지 않게 첫 핀으로 둔다.
+    const selectedInGu=candidates.find(o=>o.id===sel.id);
+    const near=(selectedInGu?[selectedInGu,...candidates.filter(o=>o.id!==sel.id)]:candidates).slice(0,6);
     const SM=S.smap;
     const mp=(()=>{
       if(!SM) return {ready:false, gus:[], pins:[], vb:'0 0 100 100', labels:[]};
@@ -263,8 +266,10 @@ globalThis.MysbizonParts.views = {
         }),
         pins:near.map((o,i)=>{
           const p=SM.pts[o.id]||[50,50], on=o.id===sel.id;
+          const ll=SM.lls&&SM.lls[o.id];
           const rr=side/100*(on?3.2:2.5);
           return {n:i+1, name:this.zoneLabelOf(o.name), x:p[0], y:p[1], on:on,
+            lat:Array.isArray(ll)?ll[0]:null, lng:Array.isArray(ll)?ll[1]:null,
             r:rr.toFixed(2),
             ty:(p[1]+rr*0.36).toFixed(2), fs:(rr*1.05).toFixed(2),
             fill:on?'var(--accent)':'var(--ink3)',
@@ -277,6 +282,9 @@ globalThis.MysbizonParts.views = {
         })
       };
     })();
+    // DOM이 그려진 뒤 카카오 지도 모듈이 읽는다. 지도 SDK가 실패해도 이 값과
+    // 아래 목록은 그대로 남아서 상권 선택을 막지 않는다.
+    this._kakaoPins=mp.pins;
     // 절 목록은 렌더마다 한 번만 계산한다 — 탭과 카드가 같은 배열을 봐야 한다
     this._mvA=this.mvSections(sel,L);
     out.mv={

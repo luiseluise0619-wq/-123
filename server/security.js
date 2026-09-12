@@ -25,6 +25,8 @@ export function securityHeaders(res) {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  // 실행 코드는 로컬 파일만 허용한다. 템플릿의 인라인 스타일만 허용한다.
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'");
+  // 앱 코드는 로컬 파일만 쓴다. 예외는 카카오 지도 SDK와 SDK가 자체적으로
+  // 불러오는 지도 타일·스크립트다. unsafe-eval, 외부 frame, 외부 form은 허용하지 않는다.
+  const kakao="https://dapi.kakao.com https://*.kakao.com https://*.daum.net https://*.kakaocdn.net https://*.daumcdn.net";
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' "+kakao+"; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: "+kakao+"; connect-src 'self' "+kakao+"; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'");
 }

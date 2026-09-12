@@ -84,13 +84,14 @@ class Component extends DCLogic {
     this.placePanel();
     // 차트와 가로 슬라이드는 DOM 이 그려진 뒤에 붙인다.
     // DC 가 다시 그려도 같은 canvas 면 값만 갱신한다(charts.js 참조).
-    this.paintCharts(); this.bindRails();
+    this.paintCharts(); this.bindRails(); this.paintKakaoMap();
     // 마크업에 그대로 적힌 한국어를 옮긴다(한국어일 때는 아무 일도 안 한다)
     this.trDom();
   }
 
   componentWillUnmount(){
     this.destroyCharts();
+    this.destroyKakaoMap();
     try{ if(this._onPop) window.removeEventListener('popstate', this._onPop); }catch(e){}
     if(this._out) document.removeEventListener('click',this._out,false);
     if(this._noHover) document.removeEventListener('click',this._noHover,true);
@@ -137,7 +138,7 @@ class Component extends DCLogic {
       if(!seen && !(until && Date.now() < until)) this.setState({notice:true});
     }catch(e){}
     // 첫 그림 뒤에도 한 번 — componentDidUpdate 는 첫 렌더에서 안 불린다
-    this._firstPaint=setTimeout(()=>{ try{ this.paintCharts(); this.bindRails(); this.trDom(); }catch(e){} },0);
+    this._firstPaint=setTimeout(()=>{ try{ this.paintCharts(); this.bindRails(); this.paintKakaoMap(); this.trDom(); }catch(e){} },0);
     // 인쇄본(report-print.html)에서 '← 분석으로 돌아가기' 로 돌아왔을 때.
     // 설문 답(rp_*)까지 되살린다 — 안 그러면 미리보기를 한 번 본 대가로
     // 8문항을 처음부터 다시 답해야 했다.
@@ -627,6 +628,8 @@ class Component extends DCLogic {
       ds1:this.ds('h1'), ds2:this.ds('h2'), ds3:this.ds('h3'),
       // 모바일에서는 전부 1열. 세로 메뉴도 위쪽 가로 목록이 된다.
       mapCols:this.L('1fr','1fr','minmax(0,1.35fr) minmax(300px,1fr)'),
+      mapHeight:this.L('300px','360px','430px'),
+      mapLoading:this.t('map.loading'),
       dashCols:this.L('1fr','1fr','minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr)'),
       navCols:this.L('1fr','200px minmax(0,1fr)','200px minmax(0,1fr)'),
       dsCard:this.ds('card'), dsCardHi:this.ds('cardHi'),
@@ -734,7 +737,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','screens','chat','charts','carousel','market','views']) {
+for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','screens','chat','charts','carousel','market','map','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {

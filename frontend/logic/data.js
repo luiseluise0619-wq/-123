@@ -70,7 +70,14 @@ globalThis.MysbizonParts.data = {
   },
   loadConfig(){
     return this.loadData('/api/config').then(r=>r.json())
-      .then(c=>this.setState({reportEmailEnabled:!!c.reportEmailEnabled,customerData:c.customerData})).catch(()=>{});
+      .then(c=>{
+        const key=String(c.kakaoMap?.javascriptKey||'');
+        this.setState({
+          reportEmailEnabled:!!c.reportEmailEnabled,
+          customerData:c.customerData,
+          kakaoMapKey:c.kakaoMap?.enabled&&/^[A-Za-z0-9_-]{16,128}$/.test(key)?key:'',
+        });
+      }).catch(()=>{});
   },
 
 };

@@ -37,7 +37,7 @@ test('browser script order loads every prototype part; unmount destroys charts',
   c.componentWillUnmount();
   assert.equal(destroyed,2);
   assert.equal(Object.keys(c._chartInst).length,0);
-  for(const name of ['loadData','saveSurvey','home','reportView','priceView','zoneCompare','fillComparisonView']) {
+  for(const name of ['loadData','saveSurvey','home','reportView','priceView','zoneCompare','fillComparisonView','paintKakaoMap']) {
     assert.equal(typeof c[name],'function',name);
   }
 });

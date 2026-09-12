@@ -10,8 +10,11 @@
 |R-ONE|`RONE_API_KEY`|소규모·중대형·집합상가의 임대료·공실률·임대가격지수 공식 코드가 서버에 고정되어 있어 키만 필요|
 |한국수출입은행 환율|`EXIM_API_KEY`|2026년 신규 `oapi.koreaexim.go.kr` 주소 사용|
 |Gemini|`GEMINI_API_KEY`|기본 모델 `gemini-3.8-flash`; 키는 헤더로만 전송|
+|카카오 지도|`KAKAO_JAVASCRIPT_KEY`|JavaScript SDK 도메인에 `https://mysbizon.mycafe24.com` 등록|
 
 `GET /api/integrations`는 연결 여부만 보여 주고 키 값은 반환하지 않습니다. `POST /api/public-data`는 정해진 기관·데이터만 조회하며 사용자가 외부 URL을 지정할 수 없습니다. `POST /api/gemini`는 이메일·전화번호·주민번호 모양의 입력을 거부하고 `store:false`로 호출합니다.
+
+카카오 지도 JavaScript 키는 브라우저 SDK가 직접 사용하므로 `/api/config`를 통해 브라우저에 전달됩니다. 서버용 REST API 키나 어드민 키와 성격이 다릅니다. 키 오용은 카카오 Developers의 `[앱] > [플랫폼 키] > [JavaScript 키] > [JavaScript SDK 도메인]`에서 운영 도메인을 제한해 막습니다. 지도 키만 바꿀 때는 `sudo bash deploy/configure-kakao-map.sh`를 실행하면 입력값이 화면에 표시되지 않습니다.
 
 `data.go.kr`은 하나의 통합 데이터 API가 아닙니다. 같은 서비스키를 쓰더라도 상가정보, 주차장, K-Startup 등 필요한 API를 각각 활용신청해야 합니다. R-ONE은 공개 요청이 임의의 통계표를 지정하지 못하도록 지원할 상가 유형과 지표의 공식 코드를 서버 허용 목록에 고정했습니다. 기본 지역은 서울이며, 조회 요청에서 검증된 6자리 R-ONE 지역·상권 코드를 선택할 수 있습니다.
 

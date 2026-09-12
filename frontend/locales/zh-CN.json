@@ -1554,5 +1554,10 @@
   "customer.saving": "保存中…",
   "customer.saved": "问卷已保存。这不会发送邮件。",
   "customer.failed": "未能保存。请确认同意和邮箱后重试。",
-  "customer.retention": "保存期限：{days}天 · 联系方式：{contact}"
+  "customer.retention": "保存期限：{days}天 · 联系方式：{contact}",
+  "map.loading": "正在加载地图",
+  "map.unavailable": "地图暂时无法使用，您仍可从下方列表选择商圈。",
+  "map.noPosition": "没有可显示的商圈位置。",
+  "map.failed": "地图加载失败，下方列表仍可使用。",
+  "map.pick": "选择{zone}"
 }

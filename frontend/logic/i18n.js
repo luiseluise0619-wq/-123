@@ -161,6 +161,11 @@ globalThis.MysbizonParts.i18n = {
       'menu.zoneCompare':'지역비교','menu.find':'후보지',
       'menu.sweep':'자치구 훑기','menu.map':'지도','menu.detail':'정밀분석',
       'menu.sim':'정밀비교','menu.bep':'본전 계산',
+      'map.loading':'지도를 불러오는 중이에요',
+      'map.unavailable':'지도를 불러올 수 없어요. 아래 목록에서 상권을 선택할 수 있어요.',
+      'map.noPosition':'표시할 상권 위치가 없어요.',
+      'map.failed':'지도를 불러오지 못했어요. 아래 목록은 계속 사용할 수 있어요.',
+      'map.pick':'{zone} 선택',
 
       'hub.peekTop':'{ind} · {n}곳 중 1위 {zone}',
       'home.stamp':'서울 상권 {n}곳 · {q} 기준',

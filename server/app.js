@@ -1,6 +1,6 @@
 import http from 'node:http';
 import report from '../api/report.js';
-import config from '../api/config.js';
+import config,{publicConfig} from '../api/config.js';
 import support from '../api/support.js';
 import {statusHandler,publicDataHandler,geminiHandler} from '../api/integrations.js';
 import {submitCustomer,recordClick,customerHandler} from '../api/customer.js';
@@ -24,7 +24,7 @@ export function createServer(root,{customerStore}={}) {
   if(customerStore){
     handlers.set('customer-submit',customerHandler('submit',customerStore));
     handlers.set('customer-event',customerHandler('event',customerStore));
-    handlers.set('config',(_req,res)=>res.status(200).json({reportEmailEnabled:false,customerData:customerStore.settings}));
+    handlers.set('config',(_req,res)=>res.status(200).json(publicConfig(customerStore.settings)));
   }
   const limit = createLimiter(); let inFlight = 0;
   const server = http.createServer(async (req, res) => {

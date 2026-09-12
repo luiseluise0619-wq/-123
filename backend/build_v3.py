@@ -209,10 +209,14 @@ def main():
             P, err = got
             pts = {cd: P(z["lon"], z["lat"]) for cd, z in zmap.items()
                    if z.get("lon") is not None and z.get("lat") is not None}
-            new_map = dict(old_map, pts=pts)          # gus(자치구 경로)는 손대지 않는다
+            # 실제 지도 SDK는 화면용 0~100 좌표가 아니라 WGS84가 필요하다.
+            # 다섯째 자리(약 1m)까지 보존하되 상권 중심점 이상으로 정밀하다고 표현하지 않는다.
+            lls = {cd: [round(z["lat"], 5), round(z["lon"], 5)] for cd, z in zmap.items()
+                   if z.get("lon") is not None and z.get("lat") is not None}
+            new_map = dict(old_map, pts=pts, lls=lls) # gus(자치구 경로)는 손대지 않는다
             json.dump(new_map, open(os.path.join(V3, "seoul_map.json"), "w", encoding="utf-8"),
                       ensure_ascii=False)
-            made.append(f"seoul_map.json(점 {len(pts)} 갱신·투영 오차 {err:.3f})")
+            made.append(f"seoul_map.json(점 {len(pts)}·위경도 {len(lls)} 갱신·투영 오차 {err:.3f})")
         else:
             kept.append("seoul_map.json")
     else:

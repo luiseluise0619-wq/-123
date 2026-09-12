@@ -1522,5 +1522,10 @@
   "customer.saving": "Saving…",
   "customer.saved": "Survey saved. This does not send an email.",
   "customer.failed": "Could not save. Check your consent and email, then try again.",
-  "customer.retention": "Retention: {days} days · Contact: {contact}"
+  "customer.retention": "Retention: {days} days · Contact: {contact}",
+  "map.loading": "Loading the map",
+  "map.unavailable": "The map is unavailable. You can still choose an area from the list below.",
+  "map.noPosition": "No area location is available to display.",
+  "map.failed": "We could not load the map. The list below is still available.",
+  "map.pick": "Select {zone}"
 }

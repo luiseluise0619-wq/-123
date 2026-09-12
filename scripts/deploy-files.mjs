@@ -16,7 +16,7 @@ export async function filesUnder(root, dir) {
 export async function deploymentFiles(root) {
   const files = [
     'package.json', 'package-lock.json', 'server.js', 'scripts/validate-data.mjs','scripts/customer-purge.mjs',
-    'deploy/customer-schema.sql', 'deploy/configure-integrations.sh', 'deploy/install-customer-admin.sh', 'deploy/rotate-customer-admin-token.sh',
+    'deploy/customer-schema.sql', 'deploy/configure-integrations.sh', 'deploy/configure-kakao-map.sh', 'deploy/install-customer-admin.sh', 'deploy/rotate-customer-admin-token.sh',
     'api/config.js', 'api/report.js', 'api/support.js', 'api/customer.js', 'api/integrations.js',
     'api/_origin.js', 'api/_request.js', 'api/_http.js', 'api/_err.js',
     'frontend/zone_rent.json', 'THIRD-PARTY.md',
