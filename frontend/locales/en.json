@@ -1785,12 +1785,12 @@
   "map.selectedPoint": "Selected point",
   "map.industryLabel": "Business type",
   "map.nearestDistance": "nearest {distance} m",
-  "map.salesFormula": "Quarterly spend ÷ {stores} businesses ÷ 3 months · not one store’s sales",
+  "map.salesFormula": "Quarterly estimated sales for Seoul’s ‘{industry}’ category ÷ {stores} stores ÷ 3 months · the store count may differ from Kakao search results",
   "prep.groupProgress": "{done}/{total} complete",
   "map.noZoneTitle": "No area data is linked here",
   "map.noZoneNearby": "No valid area data for this business was found within 500 m. Choose another point.",
   "map.overlapTitle": "Nearby commercial-area data",
   "map.overlapNote": "Several commercial areas overlap here. Compare distance and sales, then choose the area that matches the actual site.",
   "map.regionReference": "district reference",
-  "map.fallbackFormula": "Quarterly sales across {zones} commercial areas ÷ {stores} stores ÷ 3 months. This is not a sales forecast for the selected site."
+  "map.fallbackFormula": "Quarterly sales for Seoul’s ‘{industry}’ category across {zones} commercial areas ÷ {stores} stores ÷ 3 months. The store count may differ from Kakao search results, and this is not a sales forecast for the selected site."
 }

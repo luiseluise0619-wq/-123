@@ -1817,12 +1817,12 @@
   "map.selectedPoint": "所选位置",
   "map.industryLabel": "分析行业",
   "map.nearestDistance": "最近 {distance}米",
-  "map.salesFormula": "季度消费额 ÷ 同行业{stores}家 ÷ 3个月 · 非单店业绩",
+  "map.salesFormula": "首尔市‘{industry}’分类季度推算销售额 ÷ {stores}家店铺 ÷ 3个月 · 店铺数可能与Kakao搜索结果不同",
   "prep.groupProgress": "已完成 {done}/{total}",
   "map.noZoneTitle": "此处没有可关联的商圈数据",
   "map.noZoneNearby": "所选位置500米内没有该行业的有效商圈数据，请选择其他位置。",
   "map.overlapTitle": "该位置附近的商圈数据",
   "map.overlapNote": "这里有多个商圈重叠。请比较距离和销售额，并选择与实际位置相符的商圈。",
   "map.regionReference": "行政区参考值",
-  "map.fallbackFormula": "{zones}个商圈的季度销售额合计 ÷ {stores}家店铺 ÷ 3个月。该数值并非所选位置的销售预测。"
+  "map.fallbackFormula": "首尔市‘{industry}’分类在{zones}个商圈的季度销售额合计 ÷ {stores}家店铺 ÷ 3个月。店铺数可能与Kakao搜索结果不同，且该数值并非所选位置的销售预测。"
 }

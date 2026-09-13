@@ -281,7 +281,7 @@ globalThis.MysbizonParts.map = {
       :(demandStrong?this.t('map.summaryDemand'):(compStrong?this.t('map.summaryCompetition'):this.t('map.summaryNeutral')))));
     const picked=sel&&(S.picks||[]).includes(sel.id);
     const metrics=hasZone&&sel?[
-      {label:this.t('map.referenceSales'),value:this.won(sel.per/3),note:this.t('map.salesFormula',{stores:sel.stores.toLocaleString()})},
+      {label:this.t('map.referenceSales'),value:this.won(sel.per/3),note:this.t('map.salesFormula',{industry:this.indName(S.ind),stores:sel.stores.toLocaleString()})},
       {label:this.t('map.footTraffic'),value:lp?Math.round(lp.tot).toLocaleString()+this.t('common.people'):this.t('common.noData'),note:lp?this.t('map.dongBasis',{dong:this.placeName(lp.dong)}):''},
       {label:this.t('map.competitorCount'),value:loading?this.t('map.loadingShort'):(loaded?comps.length+this.t('common.place'):this.t('common.beforeLookup')),note:this.t('map.radiusBasis')},
       {label:this.t('map.franchise'),value:loaded?franchise.length+this.t('common.place'):this.t('common.beforeLookup'),note:''},
@@ -306,7 +306,7 @@ globalThis.MysbizonParts.map = {
       hasPoint,hasZone,showResult:hasZone,noZone:hasPoint&&!hasZone,needsPoint:!hasPoint,address:S.mapAddress||this.t('map.addressResolving'),
       noZoneTitle:this.t('map.noZoneTitle'),zone:hasZone&&sel?this.zoneLabelOf(sel.name):'',industry:this.indName(S.ind),period:this.qtr(r.quarter),
       nearbyZones,hasNearbyZones:nearbyZones.length>1,
-      fallback:fallback?{...fallback,note:this.t('map.fallbackFormula',{zones:fallback.zones,stores:fallback.stores})}:null,hasFallback:!!fallback,
+      fallback:fallback?{...fallback,note:this.t('map.fallbackFormula',{industry:this.indName(S.ind),zones:fallback.zones,stores:fallback.stores})}:null,hasFallback:!!fallback,
       metrics:metrics.slice(0,3),detailMetrics:metrics.slice(3),summary,
       brands:brandRows,hasBrands:brandRows.length>0,recommendations,hasRecommendations:recommendations.length>0,
       detail:()=>this.setState({screen:'fineDetail'}),togglePick:sel?pickToggle(sel):()=>{},
