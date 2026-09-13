@@ -82,7 +82,9 @@ def load_store_by_trdar(path):
     for row in r:
         low={k.lower():v for k,v in row.items()}
         q=gv(low,"stdr_yyqu_cd","기준_년분기_코드"); tc=(gv(low,"trdar_cd","상권_코드") or "").strip()
-        ind=gv(low,"svc_induty_cd_nm","서비스_업종_코드_명"); st=fnum(gv(low,"stor_co","점포_수","일반_점포_수"))
+        ind=gv(low,"svc_induty_cd_nm","서비스_업종_코드_명"); st=fnum(gv(
+            low,"similr_induty_stor_co","전체_점포_수","tot_stor_co","점포_수",
+            "stor_co","일반_점포_수"))
         if q and tc and ind: per.setdefault(q,{})[(tc,ind)]=st
     fh.close()
     if not per: return {},None

@@ -27,7 +27,7 @@ CAND = {
     "y":       ["YDNTS_VALUE", "YDNTS_VAL"],
     "ind":     ["SVC_INDUTY_CD_NM", "SVC_INDUTY_NM"],
     "sales":   ["THSMON_SELNG_AMT", "SELNG_AMT"],
-    "stores":  ["STOR_CO", "SIMILR_INDUTY_STOR_CO", "TOT_STOR_CO"],
+    "stores":  ["SIMILR_INDUTY_STOR_CO", "TOT_STOR_CO", "STOR_CO"],
     "quarter": ["STDR_YYQU_CD"],
 }
 

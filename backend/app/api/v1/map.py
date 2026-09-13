@@ -44,8 +44,9 @@ def load_zones(industry: str = "", crs: str = "EPSG:5181"):
     df["rev"] = pd.to_numeric(df["THSMON_SELNG_AMT"], errors="coerce")
     agg = {"x": ("XCNTS_VALUE", "first"), "y": ("YDNTS_VALUE", "first"),
            "name": (name_col, "first"), "rev": ("rev", "sum")}
-    if "STOR_CO" in df.columns:
-        df["stor"] = pd.to_numeric(df["STOR_CO"], errors="coerce"); agg["stores"] = ("stor", "mean")
+    store_col = next((c for c in ("SIMILR_INDUTY_STOR_CO", "TOT_STOR_CO", "STOR_CO") if c in df.columns), None)
+    if store_col:
+        df["stor"] = pd.to_numeric(df[store_col], errors="coerce"); agg["stores"] = ("stor", "mean")
     if "SIMILR_INDUTY_STOR_CO" in df.columns:
         df["sim"] = pd.to_numeric(df["SIMILR_INDUTY_STOR_CO"], errors="coerce"); agg["comp"] = ("sim", "mean")
     if "TOT_FLPOP_CO" in df.columns:
