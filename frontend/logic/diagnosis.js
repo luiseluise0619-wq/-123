@@ -60,11 +60,11 @@ globalThis.MysbizonParts.diagnosis = {
     out.d.quick=valid?[
       {label:this.t('bep.quickFixed'),value:this.man(c.fixed)},
       {label:this.t('bep.quickVariable'),value:this.man(c.rev*c.cogs)},
-      {label:this.t('bep.quickBep'),value:this.man(c.bep)},
-      {label:this.t('bep.quickProfit'),value:this.man(c.profit)},
-      {label:this.t('bep.quickDaily'),value:this.man(dailyAmt)}
+      {label:this.t('bep.quickProfit'),value:this.man(c.profit)}
     ]:[];
     out.d.prepCta=this.t('prep.continue');
+    out.d.compareCta=this.t('prep.compareCta');
+    out.d.mapCta=this.t('prep.mapCta');
 
     const num=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?'':this.bound(v,0,k==='cogs'?1000:100000,0)});};
     const ovr=k=>e=>{const v=e.target.value;this.setState({[k]:v===''?null:this.bound(v,0,k==='staffOv'?100:1000000,0)});};

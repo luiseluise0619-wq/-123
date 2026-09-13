@@ -9,7 +9,7 @@ class Component extends DCLogic {
     openWhy:false, open:{cond:false,money:false,day:false,risk:false},
     scen:'보통일 때', ...MysbizonConst.BEP_DEFAULT,
     staffOv:null, laborOv:null, etcOv:null, management:null, days:30, revOv:null,
-    mapPoint:null, mapAddress:'', mapZoneId:null, mapZoneDistance:null, competitors:null, competitorsLoading:false,
+    mapPoint:null, mapAddress:'', mapGu:'', mapZoneId:null, mapZoneDistance:null, competitors:null, competitorsLoading:false,
     competitorsOpen:false, showCompetitorPins:false, prepChecks:{}, prepOpen:'contract',
   };
 

@@ -1788,5 +1788,9 @@
   "map.salesFormula": "Quarterly spend ÷ {stores} businesses ÷ 3 months · not one store’s sales",
   "prep.groupProgress": "{done}/{total} complete",
   "map.noZoneTitle": "No area data is linked here",
-  "map.noZoneNearby": "No valid area data for this business was found within 500 m. Choose another point."
+  "map.noZoneNearby": "No valid area data for this business was found within 500 m. Choose another point.",
+  "map.overlapTitle": "Nearby commercial-area data",
+  "map.overlapNote": "Several commercial areas overlap here. Compare distance and sales, then choose the area that matches the actual site.",
+  "map.regionReference": "district reference",
+  "map.fallbackFormula": "Quarterly sales across {zones} commercial areas ÷ {stores} stores ÷ 3 months. This is not a sales forecast for the selected site."
 }

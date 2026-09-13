@@ -162,6 +162,36 @@ test('지도 업종을 바꾸면 그 업종 자료가 있는 가장 가까운 �
   assert.equal(c.state.mapZoneId,null,'500m 밖 상권을 클릭 지점에 강제로 붙이면 안 된다');
 });
 
+test('상권이 겹치는 위치는 가까운 상권별 매출을 숨기지 않고 선택하게 한다',()=>{
+  const {instance:c}=component();
+  c.state.smap={lls:{near:[37.5,127],other:[37.5008,127.0008],far:[37.52,127.02]}};
+  c.state.zi={inds:['커피-음료'],zones:{
+    near:{nm:'가까운 상권',rows:[[0,10,300000000]]},
+    other:{nm:'겹치는 상권',rows:[[0,5,300000000]]},
+    far:{nm:'먼 상권',rows:[[0,2,300000000]]}
+  }};
+  const rows=c.nearbyZonesForIndustry(37.5,127,'커피-음료',500);
+  assert.deepEqual(Array.from(rows,o=>o.id),['near','other']);
+  assert.ok(rows[0].distance<rows[1].distance);
+  assert.equal(Math.round(rows[0].sales/rows[0].stores/3/10000),1000);
+  assert.equal(Math.round(rows[1].sales/rows[1].stores/3/10000),2000);
+});
+
+test('상권이 없는 서울 위치는 해당 자치구 업종 평균만 참고값으로 보여 준다',()=>{
+  const {instance:c}=component();
+  const data=n=>JSON.parse(fs.readFileSync(new URL('../frontend/data/v3/'+n+'.json',import.meta.url),'utf8'));
+  Object.assign(c.state,{screen:'map',ind:'커피-음료',mapPoint:{lat:37.70,lng:126.95},mapAddress:'서울특별시 은평구 산 1',mapGu:'은평구',mapZoneId:null,competitors:[],
+    zi:data('zone_industry'),sbi:data('sales_by_industry'),sti:data('stores_by_industry'),zgu:data('zone_gu').gu,
+    zbd:data('zone_border').border,smap:data('seoul_map'),zlp:data('zone_livepop').zone,rentStats:data('rent'),salesHistory:data('sales_history'),income:data('income')});
+  const view=c.renderVals().mv;
+  assert.equal(view.hasZone,false);
+  assert.equal(view.hasFallback,true);
+  assert.equal(view.fallback.gu,'은평구');
+  assert.ok(view.fallback.stores>0);
+  assert.ok(view.fallback.zones>0);
+  assert.match(view.fallback.value,/만원/);
+});
+
 test('지도 상태가 바뀌어도 기존 지도 컨테이너와 지도 객체를 다시 쓴다',()=>{
   const {instance:c,context}=component();let replaced=null,synced=0,relayout=0;
   const old={id:'old'},placeholder={replaceWith(value){replaced=value;}};
@@ -202,8 +232,12 @@ test('지도는 상권 업종 참고 순위 3개를 보여 주고 비교 후보�
 
 test('업종별 창업 체크는 진행률과 공식 확인 링크를 제공한다',()=>{
   const {instance:c}=component();
-  c.state.screen='prep';c.state.ind='커피-음료';
+  c.state.screen='prep';c.state.ind='커피-음료';c.state.zi={inds:['커피-음료','한식음식점'],zones:{}};
   let view=c.prepView();
+  assert.equal(view.indOptions.length,2);
+  view.onIndSel({target:{value:'한식음식점'}});
+  assert.equal(c.state.ind,'한식음식점');
+  c.state.ind='커피-음료';
   assert.equal(view.groups.filter(g=>g.open).length,1);
   assert.equal(view.groups[0].open,true);
   const items=view.groups.flatMap(g=>g.items),business=items.find(i=>i.id==='business'),google=items.find(i=>i.id==='google');

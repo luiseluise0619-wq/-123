@@ -5,6 +5,13 @@
         <h1 style="{{ ds1 }};margin-top:8px">{{ prep.title }}</h1>
         <p style="{{ dsBody }};margin-top:10px;max-width:720px">{{ prep.sub }}</p>
 
+        <label for="prep-industry" style="display:flex;align-items:center;gap:12px;margin-top:22px;width:fit-content;max-width:100%">
+          <span style="font-size:13px;font-weight:650;color:var(--ink2);white-space:nowrap">{{ prep.industryLabel }}</span>
+          <select id="prep-industry" aria-label="{{ prep.industryLabel }}" value="{{ prep.indSel }}" onChange="{{ prep.onIndSel }}" style="{{ selectStyle }};min-width:180px;max-width:240px">
+            <sc-for list="{{ prep.indOptions }}" as="o"><option value="{{ o.raw }}">{{ o.label }}</option></sc-for>
+          </select>
+        </label>
+
         <div style="margin-top:26px;max-width:620px">
           <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
             <strong style="font-size:18px">{{ prep.progress }}</strong>

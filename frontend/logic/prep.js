@@ -74,6 +74,9 @@ globalThis.MysbizonParts.prep = {
 
     return {eyebrow:this.t('prep.eyebrow'),title:this.t('prep.title',{ind:this.indName(ind)}),
       sub:this.t('prep.sub'),
+      industryLabel:this.t('map.industryLabel'),indSel:ind,
+      indOptions:(S.zi?S.zi.inds:[]).map(n=>({raw:n,label:this.indName(n)})).sort((a,b)=>a.label.localeCompare(b.label,'ko')),
+      onIndSel:e=>{const value=e.target.value;if(S.mapPoint)this.changeMapIndustry(value);else this.setState({ind:value,sel:null,zoneId:null});},
       progress:this.t('prep.progress',{pct}),progressDetail:this.t('prep.progressDetail',{done,total:all.length}),
       progressBar:'display:block;width:'+pct+'%;height:100%;border-radius:999px;background:var(--accent);transition:width .2s',
       groups,advice:advice.slice(0,5),adviceTitle:this.t('prep.adviceTitle'),

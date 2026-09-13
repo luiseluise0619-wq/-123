@@ -69,18 +69,28 @@ globalThis.MysbizonParts.map = {
   },
 
   nearestZoneForIndustry(lat,lng,industry){
+    return this.nearbyZonesForIndustry(lat,lng,industry,Infinity)[0]||null;
+  },
+
+  nearbyZonesForIndustry(lat,lng,industry,maxDistance=500){
     const zi=this.state.zi,lls=this.state.smap&&this.state.smap.lls;
-    if(!zi||!lls||!Array.isArray(zi.inds)) return this.nearestZoneForPoint(lat,lng);
-    const indIndex=zi.inds.indexOf(industry),point={lat:Number(lat),lng:Number(lng)};
-    if(indIndex<0) return this.nearestZoneForPoint(lat,lng);
-    let best=null,distance=Infinity;
-    for(const [id,zone] of Object.entries(zi.zones||{})){
-      const ll=lls[id],has=(zone.rows||[]).some(row=>row[0]===indIndex&&row[1]>0&&row[2]>0);
-      if(!has||!Array.isArray(ll)) continue;
-      const d=this.mapDistance(point,{lat:Number(ll[0]),lng:Number(ll[1])});
-      if(d<distance){best=id;distance=d;}
+    if(!zi||!lls||!Array.isArray(zi.inds)){
+      const nearest=this.nearestZoneForPoint(lat,lng);
+      return nearest&&nearest.distance<=maxDistance?[nearest]:[];
     }
-    return best?{id:best,distance}:null;
+    const indIndex=zi.inds.indexOf(industry),point={lat:Number(lat),lng:Number(lng)};
+    if(indIndex<0){
+      const nearest=this.nearestZoneForPoint(lat,lng);
+      return nearest&&nearest.distance<=maxDistance?[nearest]:[];
+    }
+    const matches=[];
+    for(const [id,zone] of Object.entries(zi.zones||{})){
+      const ll=lls[id],row=(zone.rows||[]).find(row=>row[0]===indIndex&&row[1]>0&&row[2]>0);
+      if(!row||!Array.isArray(ll)) continue;
+      const d=this.mapDistance(point,{lat:Number(ll[0]),lng:Number(ll[1])});
+      if(d<=maxDistance) matches.push({id,distance:d,stores:Number(row[1]),sales:Number(row[2]),name:zone.nm||id});
+    }
+    return matches.sort((a,b)=>a.distance-b.distance);
   },
 
   kakaoSelectedPin(){
@@ -122,11 +132,17 @@ globalThis.MysbizonParts.map = {
     this.syncKakaoMapLayers({lat:Number(lat),lng:Number(lng)});
   },
 
+  mapGuFromText(value){
+    const hit=String(value||'').match(/서울(?:특별시)?\s+([^\s]+구)(?:\s|$)/);
+    return hit?hit[1]:'';
+  },
+
   chooseMapPoint(lat,lng,label){
     this.previewKakaoPoint(lat,lng);
     const closest=this.nearestZoneForIndustry(lat,lng,this.state.ind),nearest=closest&&closest.distance<=500?closest:null;
-    const address=String(label||'').trim();
+    const address=String(label||'').trim(),gu=this.mapGuFromText(address);
     this.setState({mapPoint:{lat:Number(lat),lng:Number(lng)},mapAddress:address,
+      mapGu:gu||'',
       sel:nearest?nearest.id:null,zoneId:nearest?nearest.id:null,mapZoneId:nearest?nearest.id:null,mapZoneDistance:closest?Math.round(closest.distance):null,
       competitors:null,competitorsLoading:true,competitorsOpen:false,showCompetitorPins:false,mapSearchMsg:''});
     this.resolveMapAddress(Number(lat),Number(lng)); this.fetchNearbyCompetitors(Number(lat),Number(lng));
@@ -146,8 +162,9 @@ globalThis.MysbizonParts.map = {
       const geocoder=new K.services.Geocoder();
       geocoder.coord2Address(lng,lat,(rows,status)=>{
         if(status!==K.services.Status.OK||!rows||!rows[0]) return;
-        const row=rows[0],addr=(row.road_address&&row.road_address.address_name)||(row.address&&row.address.address_name)||'';
-        if(addr&&this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({mapAddress:addr});
+        const row=rows[0],addressRow=row.road_address||row.address||{},addr=addressRow.address_name||'';
+        const gu=addressRow.region_2depth_name||this.mapGuFromText(addr);
+        if(addr&&this.state.mapPoint&&this.mapDistance(this.state.mapPoint,{lat,lng})<5) this.setState({mapAddress:addr,mapGu:gu||''});
       });
     }).catch(()=>{});
   },
@@ -224,6 +241,23 @@ globalThis.MysbizonParts.map = {
   buildMapView(base,sel,L,r,pickToggle,pickLabelOf){
     const S=this.state,point=S.mapPoint,hasPoint=!!point,comps=Array.isArray(S.competitors)?S.competitors:[];
     const mapZoneId=S.mapZoneId,hasZone=hasPoint&&!!mapZoneId&&!!sel&&sel.id===mapZoneId;
+    const nearbyZones=hasPoint?this.nearbyZonesForIndustry(point.lat,point.lng,S.ind,500).slice(0,5).map(row=>({
+      id:row.id,name:this.zoneLabelOf(row.name),distance:Math.round(row.distance)+'m',
+      sales:this.won(row.sales/row.stores/3),active:row.id===mapZoneId,
+      style:'width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;text-align:left;padding:11px 0;border-top:1px solid var(--line);background:transparent;cursor:pointer;color:var(--ink);'+(row.id===mapZoneId?'font-weight:700':'font-weight:500'),
+      choose:()=>this.setState({sel:row.id,zoneId:row.id,mapZoneId:row.id,mapZoneDistance:Math.round(row.distance)})
+    })):[];
+    const fallback=(()=>{
+      if(hasZone||!hasPoint||!S.mapGu||!S.zi||!S.zgu) return null;
+      const indIndex=S.zi.inds.indexOf(S.ind);let stores=0,sales=0,zones=0;
+      if(indIndex<0) return null;
+      for(const [id,item] of Object.entries(S.zi.zones||{})){
+        if(S.zgu[id]!==S.mapGu) continue;
+        const row=(item.rows||[]).find(row=>row[0]===indIndex&&row[1]>0&&row[2]>0);
+        if(!row) continue;stores+=Number(row[1]);sales+=Number(row[2]);zones++;
+      }
+      return stores&&sales?{gu:S.mapGu,value:this.won(sales/stores/3),stores,zones}:null;
+    })();
     const franchise=comps.filter(o=>o.franchise),independent=comps.filter(o=>!o.franchise),brands={};
     franchise.forEach(o=>{const b=brands[o.brand]||(brands[o.brand]={count:0,distance:Infinity});b.count++;b.distance=Math.min(b.distance,Number(o.distance)||Infinity);});
     const brandRows=Object.entries(brands).sort((a,b)=>b[1].count-a[1].count).slice(0,5).map(([name,b])=>({name,
@@ -260,7 +294,8 @@ globalThis.MysbizonParts.map = {
       labels:{majorBrands:this.t('map.majorBrands'),detail:this.t('map.detail'),nearby:this.t('map.nearby'),
         nearbyTitle:this.t('map.nearbyTitle'),places:this.t('common.place'),radiusNote:this.t('map.radiusBasis'),
         loadingNearby:this.t('map.loadingNearby'),noNearby:this.t('map.noNearby'),
-        recommendations:this.t('map.recommendations'),recommendationBasis:this.t('map.recommendationBasis')},
+        recommendations:this.t('map.recommendations'),recommendationBasis:this.t('map.recommendationBasis'),
+        overlapTitle:this.t('map.overlapTitle'),overlapNote:this.t('map.overlapNote'),regionReference:this.t('map.regionReference')},
       eyebrow:this.t('map.eyebrow'),target:this.t('map.title'),sub:this.t('map.sub'),
       indOptions:(S.zi?S.zi.inds:[]).map(n=>({raw:n,label:this.indName(n)})).sort((a,b)=>a.label.localeCompare(b.label,'ko')),
       indSel:S.ind,onIndSel:e=>this.changeMapIndustry(e.target.value),industryLabel:this.t('map.industryLabel'),
@@ -270,6 +305,8 @@ globalThis.MysbizonParts.map = {
       searchPlaceholder:this.t('map.searchPlaceholder'),searchMsg:S.mapSearchMsg||'',hasSearchMsg:!!S.mapSearchMsg,
       hasPoint,hasZone,showResult:hasZone,noZone:hasPoint&&!hasZone,needsPoint:!hasPoint,address:S.mapAddress||this.t('map.addressResolving'),
       noZoneTitle:this.t('map.noZoneTitle'),zone:hasZone&&sel?this.zoneLabelOf(sel.name):'',industry:this.indName(S.ind),period:this.qtr(r.quarter),
+      nearbyZones,hasNearbyZones:nearbyZones.length>1,
+      fallback:fallback?{...fallback,note:this.t('map.fallbackFormula',{zones:fallback.zones,stores:fallback.stores})}:null,hasFallback:!!fallback,
       metrics:metrics.slice(0,3),detailMetrics:metrics.slice(3),summary,
       brands:brandRows,hasBrands:brandRows.length>0,recommendations,hasRecommendations:recommendations.length>0,
       detail:()=>this.setState({screen:'fineDetail'}),togglePick:sel?pickToggle(sel):()=>{},
