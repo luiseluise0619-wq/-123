@@ -143,7 +143,7 @@ globalThis.MysbizonParts.util = {
     const S=this.state, a=this.bound(S.area,1,1000,globalThis.MysbizonConst.BEP_DEFAULT.area);
     return {
       area:a,
-      staff: S.staffOv!=null? Math.round(this.bound(S.staffOv,0,100,0)) : Math.max(Math.round(a/10),1),
+      staff: S.staffOv!=null? Math.round(this.bound(S.staffOv,0,100,0)) : Math.max(Math.ceil(a/10),1),
       etc: S.etcOv!=null? this.bound(S.etcOv,0,100000,0) : Math.round(a*6),
       staffAuto: S.staffOv==null, etcAuto: S.etcOv==null
     };
@@ -195,7 +195,7 @@ globalThis.MysbizonParts.util = {
     const fixed=rent+management+labor+etc;
     const bep=valid?fixed/(1-cogs):null;
     const mult=(S.scen==='적게 팔릴 때'?0.7:(S.scen==='잘될 때'?1.3:1));
-    const avg=z? z.per/3/1e4 : 0;
+    const avg=z? z.per/1e4 : 0;
     const rev = S.revOv!=null?this.bound(S.revOv,0,1000000,avg*mult):avg*mult;
     const profit = valid?rev*(1-cogs)-fixed:null;
     // 처음 한 번 나가는 돈 — 사장님이 넣은 값만 쓴다(기본 가정을 두지 않는다).

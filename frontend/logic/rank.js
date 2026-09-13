@@ -20,7 +20,7 @@ globalThis.MysbizonParts.rank = {
   RANK_METRICS(){
     return [
       {k:'per',    label:'상권 참고 매출', short:'참고 매출', unit:'원', dir: 1, win:'참고 매출 1위', lose:'참고 매출 낮음'},
-      {k:'pop',    label:'유동인구',   short:'유동인구', unit:'명', dir: 1, win:'수요 1위',   lose:'수요 낮음'},
+      {k:'pop',    label:'시간대 생활인구', short:'생활인구', unit:'명', dir: 1, win:'관측값 1위', lose:'관측값 낮음'},
       {k:'stores', label:'경쟁 점포',   short:'경쟁',   unit:'곳', dir:-1, win:'경쟁 유리',  lose:'경쟁 많음'},
       {k:'sales',  label:'소비 규모',   short:'소비',   unit:'원', dir: 1, win:'소비 1위',   lose:'소비 낮음'},
       {k:'rent',   label:'임대료',     short:'임대료',  unit:'원', dir:-1, win:'임대료 유리', lose:'임대료 높음'},

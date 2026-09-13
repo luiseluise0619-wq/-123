@@ -296,7 +296,7 @@ globalThis.MysbizonParts.market.priceView = function(){
       const cur=series.filter(v=>v!=null).slice(-1)[0];
       const prev=series.filter(v=>v!=null).slice(-5)[0];
       // 업종 이름이 앞에 붙으면 통째로는 사전에서 못 찾는다 — 조각마다 옮긴 뒤 잇는다
-      out.title=this.tr(this.indName(pick))+' · '+this.tr('서울 전체 분기 매출');
+      out.title=this.tr(this.indName(pick))+' · '+this.tr('서울 전체 당월 추정매출');
       out.now=this.won(cur);
       out.nowLabel=this.qtr(qs[qs.length-1]);
       if(cur&&prev){
@@ -306,7 +306,7 @@ globalThis.MysbizonParts.market.priceView = function(){
           +(Math.abs(g)<3?'var(--ink3)':(g>0?'var(--good)':'var(--warn)'));
       }
       push('pr-sales-trend',{type:'line', title:this.tr(this.indName(pick))+' '+this.tr('매출 추이'),
-        sub:'서울 전체 분기 합계', unit:'원',
+        sub:'서울 전체 당월 추정매출', unit:'원',
         period:this.qtr(qs[0])+' ~ '+this.qtr(qs[qs.length-1]), height:250,
         labels:qs.map(qLabel), datasets:[{label:this.indName(pick), data:series}]});
       // 최근 분기 업종 비교 — 다른 질문(어느 업종이 큰가)
@@ -316,7 +316,7 @@ globalThis.MysbizonParts.market.priceView = function(){
       push('pr-sales-rank',{type:'hbar', title:'업종별 매출 비교', sub:'최근 분기 상위 12개',
         unit:'원', period:this.qtr(lastQ), height:300,
         labels:top.map(o=>this.indName(o.n)),
-        datasets:[{label:'분기 매출', data:top.map(o=>o.v),
+        datasets:[{label:'당월 추정매출', data:top.map(o=>o.v),
           colors:top.map(o=>o.n===pick?'on':'')}]});
       // 성장률 — 또 다른 질문(어느 업종이 크고 있는가)
       const grow=inds.map(n=>{
@@ -337,7 +337,7 @@ globalThis.MysbizonParts.market.priceView = function(){
         pick:()=>this.setState({prPick:n,prIndustry:n}),
         style:'display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-sm);cursor:pointer;'
           +(n===pick?'background:var(--accent-3)':'')}));
-      out.note='서울시 상권분석서비스 분기 매출을 업종별로 합친 값이에요. 상권 하나가 아니라 서울 전체 기준이에요.';
+      out.note='서울시 상권분석서비스의 분기별 당월 추정매출을 업종별로 합친 값이에요. 상권 하나가 아니라 서울 전체 기준이에요.';
     }
 
     // ── 개·폐업 ────────────────────────────────────────────────────

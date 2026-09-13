@@ -193,6 +193,8 @@ def main():
         print(f"  생활인구: 수치 갱신 {refreshed} · 새 상권 {added} · 새 수치 없어 유지 {stale}")
         if zone_lp:
             json.dump({"source": "서울 열린데이터광장 생활인구 · 상권→행정동 배정은 기존 배포본을 유지",
+                       "basis": lp.get("basis") or (str(lp.get("hour"))+"시" if lp.get("hour") else None),
+                       "stdr_date": lp.get("stdr_date"), "weekday": lp.get("weekday"),
                        "n": len(zone_lp), "zone": zone_lp},
                       open(os.path.join(V3, "zone_livepop.json"), "w", encoding="utf-8"), ensure_ascii=False)
             made.append(f"zone_livepop.json({len(zone_lp)})")

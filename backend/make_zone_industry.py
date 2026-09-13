@@ -61,7 +61,7 @@ CAND = {
     "ind":     ["SVC_INDUTY_CD_NM", "SVC_INDUTY_NM"],
     "sales":   ["THSMON_SELNG_AMT", "SELNG_AMT"],
     "cnt":     ["THSMON_SELNG_CO", "SELNG_CO"],
-    # SIMILR_INDUTY_STOR_CO=전체 점포, STOR_CO=일반 점포. 분기 매출을
+    # SIMILR_INDUTY_STOR_CO=전체 점포, STOR_CO=일반 점포. 당월 추정매출을
     # 전체 점포로 나눠야 하므로 프랜차이즈가 포함된 전체 점포를 우선한다.
     "stores":  ["SIMILR_INDUTY_STOR_CO", "TOT_STOR_CO", "STOR_CO"],
     "quarter": ["STDR_YYQU_CD"],

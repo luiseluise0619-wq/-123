@@ -15,8 +15,11 @@ class OpportunityScoreEngine:
         comp_growth_norm = max(0.0, min(1.0, (competitor_growth + 0.1) / 0.4))
         rent_eff_norm = max(0.0, min(1.0, 1.0 - (rent_per_m2 / 150000.0)))
         
-        # Opportunity Formula
-        raw_opp = (demand_norm - comp_growth_norm + rent_eff_norm) / 3.0
+        # 각 항목을 0~1의 '좋은 정도'로 맞춘 뒤 가중 평균한다.
+        # 예전 식은 경쟁도를 빼고도 3으로 나눠 이론상 최고점이 66.7점이라
+        # GREEN 기준(68점)에 절대 도달할 수 없었다.
+        competition_efficiency = 1.0 - comp_growth_norm
+        raw_opp = demand_norm * 0.40 + competition_efficiency * 0.35 + rent_eff_norm * 0.25
         opp_score = round(max(0.0, min(1.0, raw_opp)) * 100.0, 1)
         
         # Zone Classification
@@ -41,6 +44,7 @@ class OpportunityScoreEngine:
             "components": {
                 "demand_growth_norm": round(demand_norm * 100, 1),
                 "competition_growth_norm": round(comp_growth_norm * 100, 1),
+                "competition_efficiency_norm": round(competition_efficiency * 100, 1),
                 "rent_efficiency_norm": round(rent_eff_norm * 100, 1)
             }
         }

@@ -25,7 +25,7 @@ globalThis.MysbizonParts.views = {
           for(let j=start;j<=end;j++)sorted[j]['_'+key]=inv?100-value:value;start=end+1;}
       };
       pct('sales',false);pct('stores',true);pct('per',false);
-      list.forEach(o=>{o.c1=o._sales*.45;o.c2=o._stores*.35;o.c3=o._per*.20;o.score=o.c1+o.c2+o.c3;});
+      list.forEach(o=>{o.c1=o._per*.65;o.c2=o._stores*.35;o.c3=0;o.score=o.c1+o.c2;});
       list.sort((a,b)=>((a.stores<=5)-(b.stores<=5))||(b.score-a.score));
       return list;
     };
@@ -52,7 +52,7 @@ globalThis.MysbizonParts.views = {
       const inP=PICKS.indexOf(o.id)>=0;
       return inP? this.t('cmp.remove') : (PICKS.length>=5? this.t('cmp.fullFive') : this.t('cmp.saveCount',{n:PICKS.length}));
     };
-    const monthly=v=>this.won(v/3);
+    const monthly=v=>this.won(v);
     const grade=sc=>sc>=75?[this.t('find.gradeHigh'),'var(--good)']:(sc>=60?[this.t('find.gradeUpper'),'var(--good)']:(sc>=45?[this.t('find.gradeMid'),'var(--ink2)']:[this.t('find.gradeLow'),'var(--warn)']));
 
     // ── 결론
@@ -99,12 +99,12 @@ globalThis.MysbizonParts.views = {
       // 얼마나 못 믿을지는 바로 아래 thinWarn 한 줄이 이미 말한다(§12).
       verdict:(()=>{
         const scores=L.map(o=>o.score).sort((a,b)=>a-b);
-        const med=scores[Math.floor(scores.length/2)];
+        const i=Math.floor(scores.length/2),med=scores.length%2?scores[i]:(scores[i-1]+scores[i])/2;
         return sel.score>=med*1.15? this.t('find.relativeHigh')
           : (sel.score>=med*0.9? this.t('find.relativeMid') : this.t('find.relativeLow'));
       })(),
       pctText:(()=>{ const rank=L.indexOf(sel)+1; return this.t('find.rankCount',{n:L.length.toLocaleString(),r:rank}); })(),
-      medText:(()=>{ const s=L.map(o=>o.score).sort((a,b)=>a-b); return Math.round(s[Math.floor(s.length/2)])+'점'; })(),
+      medText:(()=>{ const s=L.map(o=>o.score).sort((a,b)=>a-b),i=Math.floor(s.length/2); return Math.round(s.length%2?s[i]:(s[i-1]+s[i])/2)+'점'; })(),
       pctFine:(()=>{ const rank=L.indexOf(sel)+1; return this.t('find.rankCount',{n:L.length.toLocaleString(),r:rank}); })(),
       scoreFormula:this.t('find.scoreFormula'),
       scoreScope:this.t('find.scoreScope',{scope:scopeName,n:L.length.toLocaleString()}),
@@ -114,27 +114,27 @@ globalThis.MysbizonParts.views = {
       })(),
       scoreMed:(()=>{
         const s=L.map(o=>o.score).sort((a,b)=>a-b);
-        const med=s[Math.floor(s.length/2)], mx=Math.max(...L.map(o=>o.score),1);
+        const i=Math.floor(s.length/2),med=s.length%2?s[i]:(s[i-1]+s[i])/2, mx=Math.max(...L.map(o=>o.score),1);
         return 'position:absolute;top:-5px;bottom:-5px;left:'+(med/mx*100).toFixed(1)+'%;width:2px;background:var(--ink);border-radius:1px';
       })(),
       // 지표 → 숫자 → 의미. 숫자만 던지지 않는다.
       metrics:(()=>{
-        const medOf=k=>{ const v=L.map(o=>o[k]).sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; };
+        const medOf=k=>{ const v=L.map(o=>o[k]).sort((a,b)=>a-b),i=Math.floor(v.length/2); return v.length%2?v[i]:(v[i-1]+v[i])/2; };
         const lp=S.zlp&&S.zlp[sel.id];
         const pops=L.map(o=>(S.zlp&&S.zlp[o.id])?S.zlp[o.id].tot:null).filter(v=>v!=null).sort((a,b)=>a-b);
-        const popMed=pops.length?pops[Math.floor(pops.length/2)]:null;
+        const pi=Math.floor(pops.length/2),popMed=pops.length?(pops.length%2?pops[pi]:(pops[pi-1]+pops[pi])/2):null;
         const M=[];
         // 매출·소비 규모는 쏠림이 커서 '중앙값 대비 %'가 1000% 를 넘는다 → 백분위로 말한다
         const vSales=this.pctRank(sel.per, L.map(o=>o.per), true);
-        M.push(this.mx('상권 참고 매출 (추정)', this.won(sel.per/3), vSales.text, vSales.tone));
+        M.push(this.mx('상권 참고 매출 (추정)', this.won(sel.per), vSales.text, vSales.tone));
         // 경쟁은 '적을수록 좋다' — 부호가 아니라 의미로 색을 정한다
         const vComp=this.vs(sel.stores, medOf('stores'), '', {moreIsBetter:false, moreWord:'많아요', lessWord:'적어요'});
         M.push(this.mx('경쟁 점포', sel.stores.toLocaleString()+'곳', vComp.text, vComp.tone));
         if(lp){
           const vPop=this.vs(lp.tot, popMed, '', {moreIsBetter:true});
-          M.push(this.mx('유동인구', Math.round(lp.tot).toLocaleString()+'명', vPop.text, vPop.tone));
+          M.push(this.mx('시간대 평균 생활인구', Math.round(lp.tot).toLocaleString()+'명', vPop.text, vPop.tone));
         } else {
-          M.push(this.mx('유동인구', '자료 없음', '이 상권은 아직 집계되지 않았어요', 'flat'));
+          M.push(this.mx('시간대 평균 생활인구', '자료 없음', '이 상권은 아직 집계되지 않았어요', 'flat'));
         }
         const vSpend=this.pctRank(sel.sales, L.map(o=>o.sales), true);
         M.push(this.mx('상권 소비 규모', this.won(sel.sales), vSpend.text, vSpend.tone));
@@ -166,13 +166,12 @@ globalThis.MysbizonParts.views = {
         return [
           {q:'이 동네 가게들은 얼마나 벌고 있나요?',
            head:salesWord[0], headStyle:hs(salesWord[1]),
-           body:this.tn('reason.salesReference',{ind:this.indName(S.ind),amt:this.won(sel.per/3)}),
+           body:this.tn('reason.salesReference',{ind:this.indName(S.ind),amt:this.won(sel.per)}),
            sample:'표본 '+sel.stores.toLocaleString()+'곳'+(sel.stores<10?' · 적어서 참고용으로 봐주세요':'')},
           {q:'경쟁이 얼마나 치열한가요?',
            head:compWord[0], headStyle:hs(compWord[1]),
-           body:this.t('reason.compBody',{n:sel.stores.toLocaleString()})
-             +(lp? ' '+this.t('reason.compPer',{v:(sel.stores/(lp.tot/10000)).toFixed(1)}) : ''),
-           sample:lp? this.t('reason.popSample',{n:Math.round(lp.tot).toLocaleString(), dong:this.placeName(lp.dong)}) : '유동인구 데이터 없음'},
+           body:this.t('reason.compBody',{n:sel.stores.toLocaleString()}),
+           sample:lp? this.t('reason.popSample',{n:Math.round(lp.tot).toLocaleString(), dong:this.placeName(lp.dong)}) : '생활인구 데이터 없음'},
           {q:'가게가 오래 버티고 있나요?',
            head:stab[0], headStyle:hs(stab[1]),
            body:R? '서울 전체에서 3개월 동안 '+R.opened.toLocaleString()+'곳이 열고 '+R.closed.toLocaleString()+'곳이 닫았어요.' : '이 장사의 개·폐업 데이터가 없어요.',
@@ -219,7 +218,7 @@ globalThis.MysbizonParts.views = {
     // 긴 회색 문단을 그대로 두지 않는다 — 한 줄만 보이고 나머지는 접는다(§14)
     out.note=this.dataNote('find',
       '상권 참고 매출은 상권 소비액을 점포 수로 나눈 추정값이며, 새 가게의 예상 매출은 아니에요.',
-      [['계산 방법','기회점수 = 상권 소비액(45%) + 경쟁 점포 수(35%) + 가게 한 곳당 매출(20%). 저희가 정한 비율로 합친 값이에요.'],
+      [['계산 방법','기회점수 = 점포당 참고 매출(65%) + 경쟁 점포가 적은 정도(35%). 서로 겹치는 총매출 항목은 빼고 저희가 정한 비율로 합친 값이에요.'],
        ['데이터 출처','서울시 상권분석서비스 · 서울 열린데이터광장 생활인구'],
        ['기준 기간', this.qtr(r.quarter)],
        ['다룬 범위','서울 상권 '+r.total.toLocaleString()+'곳 중 이 업종 자료가 있는 '+r.covered.toLocaleString()+'곳'],
@@ -295,7 +294,7 @@ globalThis.MysbizonParts.views = {
           const industries=((zone&&zone.rows)||[]).map(row=>({
             name:this.indName((S.zi.inds||[])[row[0]]||('업종 '+row[0])),
             stores:Number(row[1])||0,
-            monthlyPer:Number(row[1])>0?Number(row[2])/Number(row[1])/3:0
+            monthlyPer:Number(row[1])>0?Number(row[2])/Number(row[1]):0
           })).filter(row=>row.stores>0&&Number.isFinite(row.monthlyPer)&&row.monthlyPer>0);
           // 점포 5곳 이하는 한 가게 실적에 순위가 크게 흔들린다. 표본이 충분한
           // 업종을 먼저 쓰고, 세 가지가 안 될 때만 남은 업종으로 채운다.
@@ -307,7 +306,7 @@ globalThis.MysbizonParts.views = {
           return {n:i+1, name:this.zoneLabelOf(o.name), x:p[0], y:p[1], on:on,
             lat:Array.isArray(ll)?ll[0]:null, lng:Array.isArray(ll)?ll[1]:null,
             industry:this.indName(S.ind), period:this.qtr(r.quarter),
-            monthlyPer:this.won(o.per/3), stores:o.stores.toLocaleString()+'곳',
+            monthlyPer:this.won(o.per), stores:o.stores.toLocaleString()+'곳',
             recommendations,
             r:rr.toFixed(2),
             ty:(p[1]+rr*0.36).toFixed(2), fs:(rr*1.05).toFixed(2),
@@ -333,9 +332,9 @@ globalThis.MysbizonParts.views = {
       note:this.dataNote('mv',
         '여기 숫자는 상권 전체를 집계한 추정값이에요. 한 가게의 실적이 아니에요.',
         [['매출·점포',
-          '서울열린데이터광장 상권분석서비스의 상권별 추정매출·점포 수예요. 가게 한 곳당 매출은 상권 매출을 점포 수로 나눈 값이고, 원자료가 3개월 합계라 3으로 나눠 월 기준으로 적었어요.'],
+          '서울열린데이터광장 상권분석서비스의 상권별 추정매출·점포 수예요. 가게 한 곳당 매출은 당월 추정매출을 같은 업종의 전체 점포 수로 나눈 값이에요.'],
          ['유동인구',
-          '상권이 속한 행정동의 하루 평균 생활인구예요. 상권 한 곳만의 숫자가 아니라 그 동네 전체 값이에요. 시간대별·요일별은 공개 자료에 없어 보여드리지 못해요.'],
+          '상권이 속한 행정동의 특정 시간대·요일 생활인구 관측값이에요. 하루 합계나 상권 한 곳만의 숫자가 아니에요.'],
          ['임대료·공실',
           '한국부동산원 상업용부동산 임대동향조사(서울 63개 주요 상권·권역) 자료예요. 이름이 정확히 맞는 상권만 그 값을 쓰고, 나머지는 서울 평균이라고 밝혀 적어요. 건물·점포 단위 임대료는 공개 자료에 없어요.'],
          ['비교 대상',
@@ -364,7 +363,7 @@ globalThis.MysbizonParts.views = {
       question:this.tn('mv.question',{zone:this.zoneLabelOf(sel.name), ind:this.indName(S.ind)}),
       headline:(()=>{
         const scores=L.map(o=>o.score).sort((a,b)=>a-b);
-        const med=scores[Math.floor(scores.length/2)];
+        const i=Math.floor(scores.length/2),med=scores.length%2?scores[i]:(scores[i-1]+scores[i])/2;
         if(sel.stores<10) return '데이터가 적어서 참고용으로 봐주세요.';
         return sel.score>=med*1.15? this.t('find.relativeHigh')
           : (sel.score>=med*0.9? this.t('find.relativeMid') : this.t('find.relativeLow'));
@@ -378,21 +377,14 @@ globalThis.MysbizonParts.views = {
         const lp=S.zlp&&S.zlp[sel.id];
         const R=S.sti&&S.sti.ind?S.sti.ind[S.ind]:null;
         const good=[], care=[];
-        const medOf=key=>{ const v=L.map(o=>o[key]).sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; };
+        const medOf=key=>{ const v=L.map(o=>o[key]).sort((a,b)=>a-b),m=Math.floor(v.length/2); return v.length%2?v[m]:(v[m-1]+v[m])/2; };
         if(sel.sales>=medOf('sales')) good.push('손님이 쓰는 돈이 서울 중앙값보다 많아요.');
         else care.push('손님이 쓰는 돈이 서울 중앙값보다 적어요.');
         if(sel.per>=medOf('per')) good.push('점포당 참고 매출이 서울 비교군 중앙값보다 높아요.');
         else care.push('점포당 참고 매출이 서울 비교군 중앙값보다 낮아요.');
         if(sel.stores<=medOf('stores')) good.push('같은 장사가 서울 중앙값보다 적어요.');
         else care.push('같은 장사가 많은 편이에요.');
-        if(lp){
-          const sat=sel.stores/(lp.tot/10000);
-          const sats=L.map(o=>{ const l=S.zlp&&S.zlp[o.id]; return l&&l.tot?o.stores/(l.tot/10000):null; })
-            .filter(v=>v!=null).sort((a,b)=>a-b);
-          const satMed=sats[Math.floor(sats.length/2)];
-          if(sat<=satMed) good.push('사람 수에 비해 가게가 적어요.');
-          else care.push('사람 수에 비해 가게가 조금 많아요.');
-        } else care.push('유동인구 데이터가 없어서 사람 수 대비 경쟁은 확인하지 못했어요.');
+        care.push('생활인구는 행정동 관측값이라 상권별 경쟁 점수에는 넣지 않았어요.');
         if(R){
           if(R.opened>=R.closed) good.push('이 장사는 서울에서 가게가 늘고 있어요.');
           else care.push('이 장사는 서울에서 가게가 줄고 있어요.');
@@ -403,7 +395,7 @@ globalThis.MysbizonParts.views = {
       // 이 상권은 서울과 얼마나 다를까 — 상대값까지 계산해 준다
       vs:(()=>{
         const lp=S.zlp&&S.zlp[sel.id];
-        const med=key=>{ const v=L.map(o=>o[key]).sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; };
+        const med=key=>{ const v=L.map(o=>o[key]).sort((a,b)=>a-b),m=Math.floor(v.length/2); return v.length%2?v[m]:(v[m-1]+v[m])/2; };
         // '+'가 곧 좋은 게 아니다. 경쟁 점포가 30% 많은 건 나쁜 값이다.
         // 그리고 매출처럼 쏠린 값은 '+1107%'가 나와 읽히지 않으므로 백분위로 바꾼다.
         const row=(label,mine,seoul,fmt,opt)=>{
@@ -426,16 +418,17 @@ globalThis.MysbizonParts.views = {
             deltaStyle:'font-size:13px;font-weight:600;white-space:nowrap;color:'+tone};
         };
         const rows=[
-          row('점포당 참고 매출 (추정)', sel.per/3, med('per')/3, v=>this.won(v),
-              {skewed:true, all:L.map(o=>o.per/3), moreIsBetter:true}),
+          row('점포당 참고 매출 (추정)', sel.per, med('per'), v=>this.won(v),
+              {skewed:true, all:L.map(o=>o.per), moreIsBetter:true}),
           row('같은 업종 점포 수', sel.stores, med('stores'), v=>Math.round(v).toLocaleString()+'곳',
               {moreIsBetter:false}),
-          row('상권 소비 규모 (3개월)', sel.sales, med('sales'), v=>this.won(v),
+          row('상권 당월 추정매출', sel.sales, med('sales'), v=>this.won(v),
               {skewed:true, all:L.map(o=>o.sales), moreIsBetter:true})
         ];
         if(lp){
           const tots=L.map(o=>{ const l=S.zlp&&S.zlp[o.id]; return l?l.tot:null; }).filter(v=>v!=null).sort((a,b)=>a-b);
-          rows.unshift(row('하루 오가는 사람', lp.tot, tots[Math.floor(tots.length/2)], v=>Math.round(v).toLocaleString()+'명', {moreIsBetter:true}));
+          const i=Math.floor(tots.length/2),tm=tots.length%2?tots[i]:(tots[i-1]+tots[i])/2;
+          rows.unshift(row('시간대 생활인구', lp.tot, tm, v=>Math.round(v).toLocaleString()+'명', {moreIsBetter:true}));
         }
         return {rows:rows,
           // 4열 표라 좁은 화면에서는 가로로 스크롤한다(AGENTS.md §7).
@@ -447,7 +440,7 @@ globalThis.MysbizonParts.views = {
       // 들어가자마자 차트를 던지지 않는다. '좋은가/나쁜가'와 그 이유 먼저.
       dash:(()=>{
         const A=this._mvA||this.mvSections(sel,L);
-        const med=k=>{ const v=L.map(o=>o[k]).sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; };
+        const med=k=>{ const v=L.map(o=>o[k]).sort((a,b)=>a-b),m=Math.floor(v.length/2); return v.length%2?v[m]:(v[m-1]+v[m])/2; };
         const lp=S.zlp&&S.zlp[sel.id];
         const fit=(()=>{
           if(sel.stores<10) return {word:'판단 보류', tone:'flat',
@@ -466,8 +459,9 @@ globalThis.MysbizonParts.views = {
         else if(sel._stores<=35) push(care,'경쟁 강도', vComp.text);
         if(lp){
           const tots=L.map(o=>{const l=S.zlp&&S.zlp[o.id];return l?l.tot:null;}).filter(v=>v!=null).sort((a,b)=>a-b);
-          const vPop=this.vs(lp.tot, tots[Math.floor(tots.length/2)], '', {moreIsBetter:true});
-          (vPop.tone==='good'?good:care).push({label:'유동인구', text:vPop.text});
+          const i=Math.floor(tots.length/2),tm=tots.length%2?tots[i]:(tots[i-1]+tots[i])/2;
+          const vPop=this.vs(lp.tot, tm, '', {moreIsBetter:true});
+          (vPop.tone==='good'?good:care).push({label:'시간대 생활인구', text:vPop.text});
         }
         const rf=this.rentRef(sel.name);
         if(rf&&rf.exact) push(care,'임대료', this.t('rent.perSqm',{value:rf.value, note:this.tr(rf.note)}));
@@ -577,11 +571,10 @@ globalThis.MysbizonParts.views = {
         // 이 자리에서만 달라지는 값
         const here=[];
         if(lp){
-          here.push({label:'사람 1만 명당 가게', value:(sel.stores/(lp.tot/10000)).toFixed(1)+'개', tag:'가게 ÷ 유동인구'});
           here.push({label:'추정 객단가', value:this.wonRaw(Math.round(sel.unit)), tag:'(추정)'});
         }
         here.push({label:'같은 가게 수', value:sel.stores.toLocaleString()+'곳', tag:''});
-        here.push({label:'점포당 참고 매출', value:this.won(sel.per/3), tag:'(추정)'});
+        here.push({label:'점포당 참고 매출', value:this.won(sel.per), tag:'(추정)'});
         // 장사 전체(서울) 상수 — 자리를 바꿔도 변하지 않는다
         const seoul=[
           {label:'폐업률', value:myRate.toFixed(1)+'%', tag:'서울 전체 · 폐업 ÷ 전체 × 100'},
@@ -597,7 +590,7 @@ globalThis.MysbizonParts.views = {
             '지하철 승하차 인원 — 서울 열린데이터광장에 있지만 아직 붙이지 않았어요.',
             '상주인구와 배후세대 — 골목상권분석정보의 상권배후지 자료가 필요해요.',
             '아파트 단지 수 — 같은 자료에 있어요.',
-            '시간대별 유동인구 — 지금은 하루 합계만 써요.'
+            '생활인구는 원자료의 특정 시간대·요일 관측값을 표시해요.'
           ],
           note:'폐업률 T점수는 62가지 장사의 폐업률을 표준화해 저희가 만든 값이에요. 서울시가 공표하는 창업위험도는 폐업률에 1~3년 생존율까지 함께 쓰는데, 생존율 데이터가 없어 폐업률만으로 계산했어요. 그래서 서울시 값과 달라요. 위 여섯 줄은 서울 전체 장사 기준이라 자리를 바꿔도 변하지 않아요.'
         };
@@ -607,7 +600,7 @@ globalThis.MysbizonParts.views = {
         const mv0=near.find(o=>o.id===sel.id)||sel;
         if(!mv0) return {has:false,title:'',dong:'',rows:[],facts:[],note:''};
         const lp=S.zlp&&S.zlp[mv0.id];
-        const AL=['10대','20대','30대','40대','50대','60대+'];
+        const AL=['0~19세','20대','30대','40대','50대','60~74세'];
         const rows=[];
         if(lp){
           const mxA=Math.max(...lp.age,1);
@@ -624,11 +617,11 @@ globalThis.MysbizonParts.views = {
           rows:rows,
           facts:lp?[
             {label:'추정 객단가', value:this.wonRaw(Math.round(perHead)), tag:'(추정)'},
-            {label:'여성', value:Math.round(lp.f/lp.tot*100)+'%', tag:''},
-            {label:'남성', value:Math.round(lp.m/lp.tot*100)+'%', tag:''},
+            {label:'여성', value:Math.round(lp.f/Math.max((lp.f||0)+(lp.m||0),1)*100)+'%', tag:'집계된 연령 기준'},
+            {label:'남성', value:Math.round(lp.m/Math.max((lp.f||0)+(lp.m||0),1)*100)+'%', tag:'집계된 연령 기준'},
             {label:'자치구', value:this.guLabel(mv0.id)||'—', tag:'좌표로 계산'}
           ]:[],
-          note:lp? this.t('pop.noteShort',{dong:this.placeName(lp.dong)}) : '이 자리의 유동인구 데이터가 없어요.'
+          note:lp? this.t('pop.noteShort',{dong:this.placeName(lp.dong)}) : '이 행정동의 생활인구 데이터가 없어요.'
         };
       })(),
       map:this.buildMap(near, sel.id),

@@ -51,7 +51,7 @@ def add_domain_features(df):
     매출(SELNG)은 타깃이라 절대 안 씀 — 유출 방지. 있는 컬럼으로만 계산."""
     feats = {
         # 점포당 유동인구(한 가게가 노출되는 잠재고객)
-        "F_FLPOP_PER_STORE": _ratio(df, "TOT_FLPOP_CO", "STOR_CO"),
+        "F_FLPOP_PER_STORE": _ratio(df, "TOT_FLPOP_CO", "SIMILR_INDUTY_STOR_CO"),
         # 경쟁 밀도(유사업종 대비 수요)
         "F_COMPETITION": _ratio(df, "SIMILR_INDUTY_STOR_CO", "TOT_FLPOP_CO"),
         # 주간상권 성격(오피스 vs 주거)
@@ -59,7 +59,7 @@ def add_domain_features(df):
         # 집객시설 밀도(면적당 시설)
         "F_FACILITY_DENSITY": _ratio(df, "VIATR_FCLTY_CO", "RELM_AR"),
         # 프랜차이즈 비율(상권 성숙도)
-        "F_FRANCHISE_RATIO": _ratio(df, "FRC_STOR_CO", "STOR_CO"),
+        "F_FRANCHISE_RATIO": _ratio(df, "FRC_STOR_CO", "SIMILR_INDUTY_STOR_CO"),
         # 상권 활력(운영개월/폐업개월 — 클수록 오래 버팀)
         "F_VITALITY": _ratio(df, "OPR_SALE_MT_AVRG", "CLS_SALE_MT_AVRG"),
         # 면적당 유동인구(혼잡도·노출도)
@@ -99,12 +99,13 @@ def _prepare_real(df):
     #  TARGET_PER_STORE=true 면 '점포당 평균매출'(총매출/점포수)로 바꿔 규모 tautology 제거
     #  → "이 자리 점포 하나가 얼마 벌까"를 예측(소상공인 관점).
     target_per_store = os.getenv("TARGET_PER_STORE", "false").lower() == "true"
-    if target_per_store and "STOR_CO" in df.columns:
-        stor = pd.to_numeric(df["STOR_CO"], errors="coerce")
+    store_col = next((c for c in ("SIMILR_INDUTY_STOR_CO", "TOT_STOR_CO", "STOR_CO") if c in df.columns), None)
+    if target_per_store and store_col:
+        stor = pd.to_numeric(df[store_col], errors="coerce")
         df = df[stor.fillna(0) > 0].reset_index(drop=True)
-        stor = pd.to_numeric(df["STOR_CO"], errors="coerce")
+        stor = pd.to_numeric(df[store_col], errors="coerce")
         y_revenue = df["target_monthly_revenue"].astype(float) / stor
-        print("[Prepare] TARGET_PER_STORE=true → 타겟=점포당 평균매출(총매출/점포수). 규모 tautology 제거.")
+        print(f"[Prepare] TARGET_PER_STORE=true → 타겟=점포당 평균매출(총매출/{store_col}). 규모 tautology 제거.")
     else:
         y_revenue = df["target_monthly_revenue"].astype(float)
 

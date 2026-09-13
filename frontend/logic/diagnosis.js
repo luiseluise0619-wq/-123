@@ -11,7 +11,7 @@ globalThis.MysbizonParts.diagnosis = {
     const mx=valid?(Math.max(c.rev,c.bep)*1.18||1):1;
     const I=S.sbi&&S.sbi.ind?S.sbi.ind[S.ind]:null;
     const unit=sel.unit||(I&&I.unit);
-    const unitSrc=sel.unit?'이 자리에서 손님 1명이 쓰는 돈':'서울 전체에서 손님 1명이 쓰는 돈';
+    const unitSrc=sel.unit?'이 자리의 결제 1건당 추정 금액':'서울 전체 결제 1건당 추정 금액';
     const dailyAmt=valid?c.bep/c.days:null, dailyCnt=(valid&&unit)?Math.ceil(dailyAmt*1e4/unit):null;
     const TL=['00–06','06–11','11–14','14–17','17–21','21–24'], TH=[6,5,3,3,4,3];
     const tm=I&&I.tmzon; let pk=0;
@@ -149,10 +149,11 @@ globalThis.MysbizonParts.diagnosis = {
       style:'flex:'+Math.max(v,0.01)+' 0 auto;background:'+col+';display:block',
       chip:'width:9px;height:9px;border-radius:2px;background:'+col+';display:inline-block'}));
     out.stackLead=valid?(()=>{
-      const left=c.profit>0?Math.round(c.profit/tot*10000):0;
+      const revenue=c.rev>0?c.rev:1;
+      const left=c.profit>0?Math.round(c.profit/revenue*10000):0;
       return c.profit>0
         ? '1만원어치 팔면 '+left.toLocaleString()+'원이 남아요.'
-        : '1만원어치 팔면 '+Math.round(Math.abs(c.profit)/tot*10000).toLocaleString()+'원이 모자라요.';
+        : '1만원어치 팔면 '+Math.round(Math.abs(c.profit)/revenue*10000).toLocaleString()+'원이 모자라요.';
     })():c.error;
     const rowS='display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-top:1px solid var(--line);font-size:15px';
     const vS='font-variant-numeric:tabular-nums;white-space:nowrap';
@@ -173,7 +174,7 @@ globalThis.MysbizonParts.diagnosis = {
     out.dayStats=[
       {value: dailyCnt? dailyCnt.toLocaleString()+'건':'—', label:'하루 결제 건수'},
       {value: valid?this.man(dailyAmt):'—', label:'하루 매출'},
-      {value: (dailyCnt&&tm)? Math.ceil(dailyCnt*tm[pk]/100/TH[pk]).toLocaleString()+'건':'—', label:TL[pk]+'시 시간당'}
+      {value: tm?Math.round(tm[pk]).toLocaleString()+'%':'—', label:TL[pk]+'시 매출 비중'}
     ];
     out.dayHint = dailyCnt? '하루 '+dailyCnt.toLocaleString()+'건':'—';
     out.dayWhy = !valid?c.error:(dailyCnt
@@ -188,50 +189,25 @@ globalThis.MysbizonParts.diagnosis = {
       {label:'새로 연 곳', value:R.opened.toLocaleString()+'곳', tag:'3개월', valStyle:bigv},
       {label:'프랜차이즈', value:R.fr_share+'%', tag:'', valStyle:bigv}
     ] : [];
-    // 포화도 — 가게 수를 사람 수로 나눈다. 서울 중위값이 기준선이라 우리 판단이 끼지 않는다.
-    out.sat=(()=>{
-      const vals=[];
-      L.forEach(o=>{ const l=S.zlp&&S.zlp[o.id];
-        if(l&&l.tot>0) vals.push({id:o.id, v:o.stores/(l.tot/10000)}); });
-      if(!vals.length) return {has:false};
-      const me=vals.find(o=>o.id===sel.id);
-      if(!me) return {has:false};
-      const sorted=vals.map(o=>o.v).sort((a,b)=>a-b);
-      const med=sorted[Math.floor(sorted.length/2)];
-      const ratio=me.v/med;
-      const mx=Math.max(me.v,med)*1.35;
-      // 면 색마다 그 위에 얹을 글자색이 따로 있다 — 어두운 화면에서 흰 글자는 2.9:1 까지 떨어진다
-      const state=ratio<=0.7?{t:'여유',c:'var(--good)',fg:'var(--on-good)'}
-        :(ratio<=1.3?{t:'보통',c:'var(--ink2)',fg:'var(--card)'}
-        :{t:'과밀',c:'var(--warn)',fg:'var(--on-warn)'});
-      return {
-        has:true,
-        lead:this.tn('sat.lead',{ind:this.tr(this.indName(S.ind)), v:me.v.toFixed(1), med:med.toFixed(1), word:this.tr(state.t)}),
-        mine:me.v.toFixed(1)+'개', medText:med.toFixed(1)+'개',
-        badge:state.t,
-        badgeStyle:'display:inline-block;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;white-space:nowrap;color:'+state.fg+';background:'+state.c,
-        bar:'display:block;width:'+(me.v/mx*100).toFixed(1)+'%;height:100%;border-radius:5px;background:'+state.c,
-        medMark:'position:absolute;top:-5px;bottom:-5px;left:'+(med/mx*100).toFixed(1)+'%;width:2px;background:var(--ink);border-radius:1px',
-        medLabel:'position:absolute;top:14px;left:'+(med/mx*100).toFixed(1)+'%;transform:translateX(-50%);font-size:11px;color:var(--ink3);white-space:nowrap',
-        note:'가게 수를 그 동네 유동인구로 나눈 값이에요. 가게 수만 보면 큰 동네가 늘 불리해 보이니 사람 수로 나눠 견줘요. 검은 선은 이 장사의 서울 중앙값이에요. 유동인구는 행정동 단위라 상권보다 넓어요.',
-      };
-    })();
+    // 생활인구는 행정동의 특정 시간대 관측값이며 같은 행정동의 여러 상권에 반복 배정된다.
+    // 상권 점포 수로 나누면 단위와 공간 범위가 맞지 않으므로 포화도는 계산하지 않는다.
+    out.sat={has:false};
 
     // 사람 수 대비 매출 — 유동인구가 적은데 잘 파는 자리가 진짜 공백이다
     out.foot=(()=>{
       const lp=S.zlp&&S.zlp[sel.id];
       if(!lp) return {has:false, lead:'', stats:[], note:''};
       const perHead=sel.unit;
-      const AL=['10대','20대','30대','40대','50대','60대+'];
+      const AL=['0~19세','20대','30대','40대','50대','60~74세'];
       let hi=0; lp.age.forEach((v,i)=>{ if(v>lp.age[hi]) hi=i; });
       return {
         has:true,
-        lead: '이 동네에 하루 '+Math.round(lp.tot).toLocaleString()+'명이 오가요.',
+        lead: '이 행정동의 수집 시간대 평균 생활인구는 '+Math.round(lp.tot).toLocaleString()+'명이에요.',
         stats:[
-          {label:'하루 오가는 사람', value:Math.round(lp.tot).toLocaleString()+'명', tag:this.placeName(lp.dong)},
+          {label:'시간대 평균 생활인구', value:Math.round(lp.tot).toLocaleString()+'명', tag:this.placeName(lp.dong)},
           {label:'추정 객단가', value:this.wonRaw(Math.round(perHead)), tag:'(추정)'},
           {label:'가장 많은 나이', value:AL[hi], tag:''},
-          {label:'여성 비율', value:Math.round(lp.f/lp.tot*100)+'%', tag:''}
+          {label:'여성 비율', value:Math.round(lp.f/((lp.f||0)+(lp.m||0))*100)+'%', tag:'집계된 연령 기준'}
         ],
         note:this.t('pop.noteLong',{dong:this.placeName(lp.dong)})
       };

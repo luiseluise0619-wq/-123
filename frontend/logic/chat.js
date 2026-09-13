@@ -13,7 +13,7 @@ globalThis.MysbizonParts.chat = {
     const ind=S.ind?this.tr(this.indName(S.ind)):'';
     if(!r) return {text:this.t('chat.noData')};
     const L=r.list, top=L[0];
-    const monthly=v=>this.won(v/3);
+    const monthly=v=>this.won(v);
     if(/어디|추천|자리|후보/.test(t)) return {
       text:this.tn('chat.where.text',{ind:ind, zone:this.zoneLabelOf(top.name)}),
       facts:[{label:this.t('chat.where.score'),value:Math.round(top.score)+'점'},
@@ -42,7 +42,7 @@ globalThis.MysbizonParts.chat = {
     if(/손님|누가|연령|나이|성별/.test(t)){
       const I=S.sbi&&S.sbi.ind?S.sbi.ind[S.ind]:null;
       if(!I) return {text:this.t('chat.cust.none')};
-      const AL=['10대','20대','30대','40대','50대','60대+'];
+      const AL=['0~19세','20대','30대','40대','50대','60~74세'];
       let hi=0; I.age.forEach((v,i)=>{ if(v>I.age[hi]) hi=i; });
       const age=this.tr(AL[hi]);
       return {

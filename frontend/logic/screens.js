@@ -32,20 +32,17 @@ globalThis.MysbizonParts.screens = {
     const maxPer=Math.max(...list.map(o=>o.per));
     list.sort((a,b)=>b.per-a.per);
     const top=list[0];
-    const med=arr=>{ const v=arr.filter(x=>x!=null).sort((a,b)=>a-b);
-      return v.length? v[Math.floor(v.length/2)] : null; };
+    const med=arr=>{ const v=arr.filter(x=>x!=null).sort((a,b)=>a-b),m=Math.floor(v.length/2);
+      return !v.length?null:(v.length%2?v[m]:(v[m-1]+v[m])/2); };
     const perMed=med(list.map(x=>x.per));
     const storeMed=med(list.map(x=>x.stores));
-    const satOf=o=>o.pop? o.stores/(o.pop/10000) : null;
-    const satMed=med(list.map(satOf));
     const medPct=Math.min(perMed/maxPer*100,100);
 
     // 고른 구 — 카드를 누르면 아래 차트에서 그 구가 강조된다
     const picked=(S.zcGu && list.some(o=>o.gu===S.zcGu))? S.zcGu : top.gu;
 
     const card=(o,i)=>{
-      const perM=o.per/3;
-      const sat=satOf(o);
+      const perM=o.per;
       const diff=Math.round((o.per-perMed)/perMed*100);
       const dStore=storeMed!=null? o.stores-storeMed : null;
       const on=o.gu===picked;
@@ -57,14 +54,9 @@ globalThis.MysbizonParts.screens = {
          tag: dStore==null? '' : (Math.abs(dStore)<1? '서울 중앙값과 비슷'
               : '중앙값보다 '+Math.abs(dStore).toLocaleString()+'곳 '+(dStore>0?'많아요':'적어요'))},
         {label:'유동인구', value:o.pop? Math.round(o.pop).toLocaleString()+'명' : '자료 없음',
-         tag:o.pop? '자치구 안 행정동 하루 합계' : ''},
-        {label:'상권 소비 규모', value:this.won(o.sales), tag:'최근 3개월'}
+         tag:o.pop? '자치구 안 행정동 시간대 관측값 합계' : ''},
+        {label:'상권 소비 규모', value:this.won(o.sales), tag:'당월 추정매출'}
       ];
-      if(sat!=null && satMed!=null){
-        facts.push({label:'경쟁 강도',
-          value: sat<=satMed*0.7? '여유' : (sat<=satMed*1.3? '보통' : '과밀'),
-          tag:''});
-      }
       return {
         gu:this.placeName(o.gu), rank:String(i+1).padStart(2,'0'),
         per:this.won(perM),
@@ -89,7 +81,7 @@ globalThis.MysbizonParts.screens = {
     push('zc-per',{type:'hbar', title:'자치구별 참고 매출', sub:'점포당 월매출 (추정) · 상위 12곳',
       unit:'원', period:q, height:300,
       labels:byPer.map(o=>this.placeName(o.gu)),
-      datasets:[{label:'점포당 참고 매출', data:byPer.map(o=>Math.round(o.per/3)),
+      datasets:[{label:'점포당 참고 매출', data:byPer.map(o=>Math.round(o.per)),
         colors:byPer.map(o=>o.gu===picked?'on':'')}]});
     const byStore=list.slice().sort((a,b)=>b.stores-a.stores).slice(0,12);
     push('zc-store',{type:'hbar', title:'자치구별 경쟁 점포 수', sub:'같은 업종 점포가 많은 12곳',
@@ -98,16 +90,16 @@ globalThis.MysbizonParts.screens = {
       datasets:[{label:'같은 업종 점포 수', data:byStore.map(o=>o.stores),
         colors:byStore.map(o=>o.gu===picked?'on':'')}]});
     const byPop=list.filter(o=>o.pop).sort((a,b)=>b.pop-a.pop).slice(0,12);
-    push('zc-pop',{type:'hbar', title:'자치구별 유동인구', sub:'상권이 속한 행정동 하루 유동인구 합계',
+    push('zc-pop',{type:'hbar', title:'자치구별 생활인구', sub:'상권이 속한 행정동의 시간대 관측값 · 같은 동은 한 번만 합산',
       unit:'명', period:q, height:300,
       labels:byPop.map(o=>this.placeName(o.gu)),
-      datasets:[{label:'하루 유동인구', data:byPop.map(o=>Math.round(o.pop)),
+      datasets:[{label:'시간대 생활인구', data:byPop.map(o=>Math.round(o.pop)),
         colors:byPop.map(o=>o.gu===picked?'on':'')}]});
     const bySales=list.slice().sort((a,b)=>b.sales-a.sales).slice(0,12);
-    push('zc-sales',{type:'hbar', title:'자치구별 소비 규모', sub:'최근 3개월 상권 소비 합계',
+    push('zc-sales',{type:'hbar', title:'자치구별 소비 규모', sub:'상권 당월 추정매출 합계',
       unit:'원', period:q, height:300,
       labels:bySales.map(o=>this.placeName(o.gu)),
-      datasets:[{label:'3개월 소비 규모', data:bySales.map(o=>o.sales),
+      datasets:[{label:'당월 추정매출', data:bySales.map(o=>o.sales),
         colors:bySales.map(o=>o.gu===picked?'on':'')}]});
 
     const allOpen=!!S.zcAll;
@@ -132,7 +124,7 @@ globalThis.MysbizonParts.screens = {
       hasList:allOpen,
       rows:list.map((o,i)=>({
         rank:i+1, gu:this.placeName(o.gu),
-        per:this.won(o.per/3),
+        per:this.won(o.per),
         stores:o.stores.toLocaleString()+'개',
         zones:o.zones+'곳',
         pick:()=>this.setState({zcGu:o.gu}),
@@ -143,7 +135,7 @@ globalThis.MysbizonParts.screens = {
       note:this.dataNote('zc',
         '금액은 상권·업종 집계값으로 계산한 점포당 참고 매출이에요. 어느 한 가게의 실적이나 새 가게의 예상 매출은 아니에요.',
         [['어떻게 계산했나요',
-          '자치구 안 상권 매출을 다 더해 같은 업종 가게 수로 나눴어요. 원자료가 3개월치라 3으로 나눠 한 달 값으로 적었어요.'],
+          '자치구 안 당월 추정매출을 다 더해 같은 업종의 전체 점포 수로 나눴어요.'],
          ['무엇이 빠졌나요',
           '이 업종의 매출·점포 기록이 없는 상권은 합산에서 빠졌어요. 그래서 구마다 합산에 들어간 상권 수가 달라요.'],
          ['기준 시점', this.qtr(zi.quarter)+' · '+this.tr('서울열린데이터광장 상권분석서비스')],
@@ -172,9 +164,9 @@ globalThis.MysbizonParts.screens = {
         name:this.indName(S.regPick),
         lead:this.tn('rg.share',{ind:this.indName(S.regPick), pct:share.toFixed(1)}),
         facts:[
-          {label:'점포당 참고 매출', value:this.won(per/3), tag:'(추정)'},
+          {label:'점포당 참고 매출', value:this.won(per), tag:'(추정)'},
           {label:'가게 수', value:stores.toLocaleString()+'곳', tag:''},
-          {label:'손님이 쓴 돈 (3개월)', value:this.won(sales), tag:''},
+          {label:'상권 당월 추정매출', value:this.won(sales), tag:''},
           {label:'결제 1건당 추정 금액', value:unit? this.wonRaw(unit):'데이터 없음', tag:unit?'실제 집계':'정부 자료에 없어 점수에 넣지 않았어요'}
         ],
         confirm:()=>this.setState({ind:S.regPick,sel:S.zoneId,screen:'find',openWhy:false,fromRegion:true,regPick:null}),
@@ -192,13 +184,13 @@ globalThis.MysbizonParts.screens = {
       sub:'이 동네에서 확인된 장사가 '+rows.length+'가지예요. 하나를 고르면 본전까지 계산해 드려요.',
       stats:[
         {label:'가게', value:totalStores.toLocaleString()+'곳', tag:''},
-        {label:'손님이 쓴 돈 (3개월)', value:this.won(totalSales), tag:''},
+        {label:'상권 당월 추정매출', value:this.won(totalSales), tag:''},
         {label:'확인된 장사', value:rows.length+'가지', tag:''}
       ],
       inds:rows.sort((a,b)=>b[2]-a[2]).map(r=>{
         const name=zi.inds[r[0]], per=r[2]/r[1];
         return {
-          name:this.indName(name), stores:r[1].toLocaleString()+'곳', per:this.won(per/3),
+          name:this.indName(name), stores:r[1].toLocaleString()+'곳', per:this.won(per),
           bar:'display:block;width:'+Math.max(per/maxPer*100,2).toFixed(1)+'%;height:100%;border-radius:3px;background:var(--accent);opacity:'+(0.35+0.65*(per/maxPer)).toFixed(2),
           pick:()=>this.setState({regPick:name}),
           row:'display:flex;align-items:center;gap:14px;padding:15px 0;border-top:1px solid var(--line);cursor:pointer'
@@ -236,7 +228,7 @@ globalThis.MysbizonParts.screens = {
     // 이 자치구의 중앙값 — 각 줄이 잘하는 쪽인지 못하는 쪽인지 견줄 기준.
     // 기준선이 없으면 금액만 71줄이라 어느 줄이 좋은 건지 읽히지 않는다.
     const perSorted=list.map(o=>o.per).sort((a,b)=>a-b);
-    const medPer=perSorted.length?perSorted[Math.floor(perSorted.length/2)]:0;
+    const pi=Math.floor(perSorted.length/2),medPer=perSorted.length?(perSorted.length%2?perSorted[pi]:(perSorted[pi-1]+perSorted[pi])/2):0;
     // 71줄을 그냥 늘어놓으면 '그래서 어디로?'가 안 보인다. 결론과 상위 셋을 먼저 둔다.
     const top3=list.slice(0,3);
     const showAll=!!S.fcAll;
@@ -256,7 +248,7 @@ globalThis.MysbizonParts.screens = {
       top:top3.map((o,i)=>({
         rank:String(i+1),
         name:o.name, gu:o.gu||'',
-        per:this.won(o.per/3),
+        per:this.won(o.per),
         stores:o.stores.toLocaleString()+'곳',
         thin:o.stores<=2, thinText:'표본 '+o.stores+'곳이라 참고용이에요',
         vs:(()=>{
@@ -278,7 +270,7 @@ globalThis.MysbizonParts.screens = {
       hasMore: list.length>6,
       toggleMore:()=>this.setState({fcAll:!showAll}),
       // 자치구 중앙값 — 화면 위에 기준선으로 적는다
-      medLabel:list.length? this.won(medPer/3) : '',
+      medLabel:list.length? this.won(medPer) : '',
       hasMed:list.length>0,
       rows:shown.map((o,i)=>{
         // 가게가 2곳 이하면 '가게 한 곳당'이 사실상 그 한 가게의 실적이다.
@@ -286,7 +278,7 @@ globalThis.MysbizonParts.screens = {
         const thin=o.stores<=2;
         return {
         rank:i+1, name:o.name+(o.gu&&o.gu.indexOf('경계')>=0?' · '+o.gu:''),
-        per:this.won(o.per/3),
+        per:this.won(o.per),
         // 가게 수는 두 가지를 한 번에 말해준다 — 이 숫자를 믿어도 되는지, 경쟁이 얼마나 센지
         storeTag:o.stores.toLocaleString()+'곳'+(thin?' · 표본 적음':''),
         storeStyle:'flex:none;font-size:11.5px;white-space:nowrap;font-variant-numeric:tabular-nums;'

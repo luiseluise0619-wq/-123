@@ -243,7 +243,7 @@ globalThis.MysbizonParts.map = {
     const mapZoneId=S.mapZoneId,hasZone=hasPoint&&!!mapZoneId&&!!sel&&sel.id===mapZoneId;
     const nearbyZones=hasPoint?this.nearbyZonesForIndustry(point.lat,point.lng,S.ind,500).slice(0,5).map(row=>({
       id:row.id,name:this.zoneLabelOf(row.name),distance:Math.round(row.distance)+'m',
-      sales:this.won(row.sales/row.stores/3),active:row.id===mapZoneId,
+      sales:this.won(row.sales/row.stores),active:row.id===mapZoneId,
       style:'width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;text-align:left;padding:11px 0;border-top:1px solid var(--line);background:transparent;cursor:pointer;color:var(--ink);'+(row.id===mapZoneId?'font-weight:700':'font-weight:500'),
       choose:()=>this.setState({sel:row.id,zoneId:row.id,mapZoneId:row.id,mapZoneDistance:Math.round(row.distance)})
     })):[];
@@ -256,7 +256,7 @@ globalThis.MysbizonParts.map = {
         const row=(item.rows||[]).find(row=>row[0]===indIndex&&row[1]>0&&row[2]>0);
         if(!row) continue;stores+=Number(row[1]);sales+=Number(row[2]);zones++;
       }
-      return stores&&sales?{gu:S.mapGu,value:this.won(sales/stores/3),stores,zones}:null;
+      return stores&&sales?{gu:S.mapGu,value:this.won(sales/stores),stores,zones}:null;
     })();
     const franchise=comps.filter(o=>o.franchise),independent=comps.filter(o=>!o.franchise),brands={};
     franchise.forEach(o=>{const b=brands[o.brand]||(brands[o.brand]={count:0,distance:Infinity});b.count++;b.distance=Math.min(b.distance,Number(o.distance)||Infinity);});
@@ -268,7 +268,7 @@ globalThis.MysbizonParts.map = {
     const industries=((zone&&zone.rows)||[]).map(row=>({
       name:this.indName((S.zi.inds||[])[row[0]]||('업종 '+row[0])),
       stores:Number(row[1])||0,
-      monthlyPer:Number(row[1])>0?Number(row[2])/Number(row[1])/3:0
+      monthlyPer:Number(row[1])>0?Number(row[2])/Number(row[1]):0
     })).filter(row=>row.stores>0&&Number.isFinite(row.monthlyPer)&&row.monthlyPer>0);
     const stable=industries.filter(row=>row.stores>5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
     const small=industries.filter(row=>row.stores<=5).sort((a,b)=>b.monthlyPer-a.monthlyPer);
@@ -281,7 +281,7 @@ globalThis.MysbizonParts.map = {
       :(demandStrong?this.t('map.summaryDemand'):(compStrong?this.t('map.summaryCompetition'):this.t('map.summaryNeutral')))));
     const picked=sel&&(S.picks||[]).includes(sel.id);
     const metrics=hasZone&&sel?[
-      {label:this.t('map.referenceSales'),value:this.won(sel.per/3),note:this.t('map.salesFormula',{industry:this.indName(S.ind),stores:sel.stores.toLocaleString()})},
+      {label:this.t('map.referenceSales'),value:this.won(sel.per),note:this.t('map.salesFormula',{industry:this.indName(S.ind),stores:sel.stores.toLocaleString()})},
       {label:this.t('map.footTraffic'),value:lp?Math.round(lp.tot).toLocaleString()+this.t('common.people'):this.t('common.noData'),note:lp?this.t('map.dongBasis',{dong:this.placeName(lp.dong)}):''},
       {label:this.t('map.competitorCount'),value:loading?this.t('map.loadingShort'):(loaded?comps.length+this.t('common.place'):this.t('common.beforeLookup')),note:this.t('map.radiusBasis')},
       {label:this.t('map.franchise'),value:loaded?franchise.length+this.t('common.place'):this.t('common.beforeLookup'),note:''},

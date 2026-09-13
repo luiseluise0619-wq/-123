@@ -45,33 +45,41 @@ class SeoulOpenDataCollector:
         key = settings.SEOUL_OPENDATA_API_KEY or "sample"
         return f"{self.BASE_URL}/{key}/json/{service}/{start}/{end}/"
 
-    def _call(self, service: str) -> Dict[str, Any]:
-        url = self._build_url(service)
-        resp = requests.get(url, timeout=DEFAULT_TIMEOUT)
-        resp.raise_for_status()
-        payload = resp.json()
-        # 서울 OpenAPI 응답 구조: { SERVICE: { RESULT: {CODE, MESSAGE}, row: [...] } }
-        body = payload.get(service, {})
-        result_code = body.get("RESULT", {}).get("CODE", "")
-        if result_code and result_code != "INFO-000":
-            raise RuntimeError(
-                f"Seoul API error {result_code}: {body.get('RESULT', {}).get('MESSAGE')}"
-            )
-        rows = body.get("row", [])
-        if not rows:
-            raise RuntimeError("Seoul API returned no rows")
-        return rows[0]
+    def _call(self, service: str, district_code: str) -> Dict[str, Any]:
+        """페이지를 돌며 요청한 상권 코드를 찾는다. 첫 행을 임의 지역 값으로 반환하지 않는다."""
+        start, page_size = 1, 1000
+        while True:
+            url = self._build_url(service, start, start + page_size - 1)
+            resp = requests.get(url, timeout=DEFAULT_TIMEOUT)
+            resp.raise_for_status()
+            payload = resp.json()
+            body = payload.get(service, {})
+            result_code = body.get("RESULT", {}).get("CODE", "")
+            if result_code and result_code != "INFO-000":
+                raise RuntimeError(
+                    f"Seoul API error {result_code}: {body.get('RESULT', {}).get('MESSAGE')}"
+                )
+            rows = body.get("row", [])
+            for row in rows:
+                if str(row.get("TRDAR_CD", "")) == str(district_code):
+                    return row
+            total = int(body.get("list_total_count", 0) or 0)
+            if not rows or (total and start + page_size - 1 >= total):
+                break
+            start += page_size
+        raise RuntimeError(f"Seoul API returned no row for district {district_code}")
 
     def fetch_foot_traffic(self, district_code: str = "1000001") -> Dict[str, Any]:
         """상권 유동인구 조회. 실패 시 합성 폴백을 명시적으로 반환."""
         if settings.USE_REAL_DATA and settings.SEOUL_OPENDATA_API_KEY:
             try:
-                row = self._call("VwsmTrdarFlpopQq")
+                row = self._call("VwsmTrdarFlpopQq", district_code)
                 return {
                     "district_code": district_code,
-                    "foot_traffic_daily": float(row.get("TOT_FLPOP_CO", 0)),
-                    "foot_traffic_lunch": float(row.get("TMZON_11_14_FLPOP_CO", 0)),
-                    "foot_traffic_dinner": float(row.get("TMZON_17_21_FLPOP_CO", 0)),
+                    "quarter": str(row.get("STDR_YYQU_CD", "")),
+                    "foot_traffic_total": float(row.get("TOT_FLPOP_CO", 0)),
+                    "foot_traffic_lunch_total": float(row.get("TMZON_11_14_FLPOP_CO", 0)),
+                    "foot_traffic_dinner_total": float(row.get("TMZON_17_21_FLPOP_CO", 0)),
                     "status": "SUCCESS",
                     "source": "live_api",
                 }
@@ -130,7 +138,9 @@ class SmallBusinessDataCollector:
                     "lng": lng,
                     "radius_m": radius,
                     "industry": industry,
-                    "total_stores_in_radius": len(items),
+                    "stores_in_radius_all_industries": len(items),
+                    "competitor_count": None,
+                    "note": "업종 코드 필터가 없어 전체 업종 점포 수만 확인했습니다.",
                     "status": "SUCCESS",
                     "source": "live_api",
                 }

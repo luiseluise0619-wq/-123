@@ -144,6 +144,18 @@ test('직접 입력한 관리비·인건비·영업일·예상매출이 손익 �
   assert.equal(result.profit,1000);
 });
 
+test('당월 추정매출을 다시 3으로 나누지 않고 적자 비율은 매출 기준으로 계산한다',()=>{
+  const {instance:c}=component();
+  Object.assign(c.state,{rent:400,management:0,laborOv:500,etcOv:100,cogs:50,days:30,revOv:null,scen:'보통일 때'});
+  const result=c.calc({per:90000000,unit:5000});
+  assert.equal(result.avg,9000,'당월 금액을 분기 합계로 오해해 3으로 나누면 안 된다');
+  assert.equal(result.rev,9000);
+  Object.assign(c.state,{screen:'diag',ind:'커피-음료',zi:{quarter:'20261'},sbi:{ind:{}},sti:{ind:{}},zlp:{}});
+  const out={};c.fillDiagnosisView(out,{id:'z',name:'테스트',per:10000000,unit:5000,stores:10,sales:100000000},[]);
+  const expected=Math.round(Math.abs(c.calc({per:10000000}).profit)/c.calc({per:10000000}).rev*10000).toLocaleString();
+  assert.match(out.stackLead,new RegExp(expected+'원'));
+});
+
 test('지도에서 찍은 위치는 가장 가까운 서울 상권 한 곳에 연결된다',()=>{
   const {instance:c}=component();
   c.state.smap={lls:{a:[37.5,127],b:[37.6,127.1],c:[37.7,127.2]}};
@@ -173,8 +185,8 @@ test('상권이 겹치는 위치는 가까운 상권별 매출을 숨기지 않�
   const rows=c.nearbyZonesForIndustry(37.5,127,'커피-음료',500);
   assert.deepEqual(Array.from(rows,o=>o.id),['near','other']);
   assert.ok(rows[0].distance<rows[1].distance);
-  assert.equal(Math.round(rows[0].sales/rows[0].stores/3/10000),1000);
-  assert.equal(Math.round(rows[1].sales/rows[1].stores/3/10000),2000);
+  assert.equal(Math.round(rows[0].sales/rows[0].stores/10000),3000);
+  assert.equal(Math.round(rows[1].sales/rows[1].stores/10000),6000);
 });
 
 test('상권이 없는 서울 위치는 해당 자치구 업종 평균만 참고값으로 보여 준다',()=>{
@@ -219,7 +231,7 @@ test('지도는 상권 업종 참고 순위 3개를 보여 주고 비교 후보�
   assert.equal(mapView.recommendations.map(o=>o.rank).join('|'),'1순위|2순위|3순위');
   assert.equal(new Set(mapView.recommendations.map(o=>o.name)).size,3);
   assert.match(mapView.metrics[0].label,/점포당/);
-  assert.match(mapView.metrics[0].note,/점포 .+곳 ÷ 3개월/);
+  assert.match(mapView.metrics[0].note,/당월 추정매출.*전체 점포/);
   assert.equal(mapView.indOptions.length,62);
 
   Object.assign(c.state,{screen:'sim',picks:ids.slice(0,4),sel:ids[0]});

@@ -32,7 +32,7 @@ globalThis.MysbizonParts.report = {
         const said=k=>touched[k]? '직접 넣으신 값' : '기본 가정';
         const bep=c&&c.valid!==false?[
           {label:'월 본전선 (이만큼 팔면 본전)', value:this.man(c.bep), tag:'고정비 ÷ (1 − 원가율)'},
-          {label:'월매출 가정 ('+S.scen+')', value:this.man(c.rev), tag:'상권 평균 추정 × '+c.mult},
+          {label:'월매출 가정 ('+(S.revOv!=null?'직접 입력':S.scen)+')', value:this.man(c.rev), tag:S.revOv!=null?'직접 넣으신 값':'상권 평균 추정 × '+c.mult},
           {label:'월 영업이익', value:this.man(c.profit), tag:'세금·대출 이자는 빼지 않음'},
           // 계산에 **실제로 쓴 값**을 적는다. 화면 state 를 그대로 적으면
           // 칸을 비웠을 때 '0만원' 이라고 인쇄해 놓고 계산은 400 으로 하게 된다.
@@ -60,6 +60,7 @@ globalThis.MysbizonParts.report = {
             const rev=c.rev||1;
             const rows=[
               {label:'임대료', v:c.rent},
+              {label:'관리비', v:c.management||0},
               {label:'인건비', v:c.labor||0},
               {label:'재료비', v:rev*c.cogs},
               {label:'그 밖의 운영비', v:c.etc||0}
@@ -134,9 +135,9 @@ globalThis.MysbizonParts.report = {
         const nameOf=id=>(zi&&zi.zones[id])?this.zoneLabelOf(zi.zones[id].nm):id;
         const guOf=id=>zgu[id]||'';
         // 동네 이름만 있으면 뭘 골라야 할지 알 수 없다 — 순위와 가게당 매출을 같이 적는다.
-        // per 는 3개월 합계라 /3 해서 월로 적는다(다른 화면과 같은 기준). 가게가 2곳 이하면
+        // per는 서울시 원자료의 당월 추정매출을 점포 수로 나눈 값이다. 가게가 2곳 이하면
         // '가게당'이 사실상 한 가게 실적이라 그 사실을 숨기지 않고 함께 적는다.
-        const zoneSub=z=>z.rank+'위 · 가게당 월 '+this.won(z.per/3)
+        const zoneSub=z=>z.rank+'위 · 가게당 월 '+this.won(z.per)
           +(z.stores<=2?' · 가게 '+z.stores+'곳뿐':'');
         // 쳐서 찾을 때는 순위 대신 '어디인지'를 먼저 알려준다 — 다른 구가 나올 수 있어서다
         // ── 리포트 설문 ─────────────────────────────────────────────

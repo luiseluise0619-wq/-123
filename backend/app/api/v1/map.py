@@ -40,6 +40,12 @@ def load_zones(industry: str = "", crs: str = "EPSG:5181"):
         return None
     if industry and "SVC_INDUTY_CD_NM" in df.columns:
         df = df[df["SVC_INDUTY_CD_NM"].astype(str).str.contains(industry, na=False)]
+    # 여러 분기가 들어 있는 학습 CSV라면 합산하지 않고 가장 최근 분기만 쓴다.
+    # THSMON_SELNG_AMT는 각 분기 조사 시점의 당월 추정매출이므로 분기끼리 더하면 안 된다.
+    if "STDR_YYQU_CD" in df.columns:
+        quarter = pd.to_numeric(df["STDR_YYQU_CD"], errors="coerce")
+        if quarter.notna().any():
+            df = df[quarter == quarter.max()]
     name_col = "TRDAR_CD_NM" if "TRDAR_CD_NM" in df.columns else "TRDAR_CD"
     df["rev"] = pd.to_numeric(df["THSMON_SELNG_AMT"], errors="coerce")
     agg = {"x": ("XCNTS_VALUE", "first"), "y": ("YDNTS_VALUE", "first"),
@@ -59,7 +65,11 @@ def load_zones(industry: str = "", crs: str = "EPSG:5181"):
     g = g[(g["rev"] > 0) & g["x"].notna() & g["y"].notna()]
     if g.empty:
         return None
-    g["p"] = g["rev"].rank(pct=True)
+    store_den = g["stores"].where(g["stores"] > 0) if "stores" in g.columns else None
+    g["per_store"] = g["rev"] / store_den if store_den is not None else g["rev"]
+    g["p_per"] = g["per_store"].rank(pct=True).fillna(0.5)
+    g["p_comp"] = ((1.0 - g["stores"].rank(pct=True)).fillna(0.5)
+                   if "stores" in g.columns else 0.5)
     tf = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
     lon, lat = tf.transform(g["x"].astype(float).values, g["y"].astype(float).values)
     g["lat"], g["lon"] = lat, lon
@@ -67,21 +77,21 @@ def load_zones(industry: str = "", crs: str = "EPSG:5181"):
 
     zones = []
     for _, r in g.iterrows():
-        grade = _grade(r["p"])
-        demand = r["p"] * 100
-        comp = float(r.get("comp") or 0)
-        opp = round(min(100, demand * 0.7 + max(0, 30 - comp)), 1)
+        opp = round(float(r["p_per"]) * 65 + float(r["p_comp"]) * 35, 1)
+        grade = _grade(opp / 100)
         ztype = "GREEN" if opp >= 70 else "RED" if opp <= 45 else "BLUE"
+        store_count = int(r["stores"]) if r.get("stores") == r.get("stores") else None
+        per_store = int(r["rev"] / store_count) if store_count else None
         zones.append({
             "id": str(r["TRDAR_CD"]), "name": str(r["name"]),
             "gu": str(r.get("gu") or ""), "dong": str(r.get("dong") or ""),
             "lat": round(float(r["lat"]), 5), "lng": round(float(r["lon"]), 5),
-            "grade": grade, "percentile_top": round((1 - r["p"]) * 100, 1),
+            "grade": grade, "percentile_top": round((1 - r["p_per"]) * 100, 1),
             "monthly_sales_won": int(r["rev"]),
             "opportunity_score": opp, "zone_color": GRADE_COLOR[grade], "zone_type": ztype,
-            "avg_monthly_sales": f"{r['rev']/1e8:.1f}억",
+            "avg_monthly_sales": f"{per_store/1e4:,.0f}만원" if per_store is not None else None,
             "foot_traffic_daily": int(r["foot"]) if r.get("foot") == r.get("foot") else None,
-            "stores": int(r["stores"]) if r.get("stores") == r.get("stores") else None,
+            "stores": store_count,
         })
     zones.sort(key=lambda z: -z["opportunity_score"])
     return zones

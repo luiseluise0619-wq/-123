@@ -54,11 +54,11 @@ globalThis.MysbizonParts.prep = {
     const lp=sel&&S.zlp&&S.zlp[sel.id],comps=Array.isArray(S.competitors)?S.competitors:null;
     const advice=[];
     if(sel){
-      advice.push({title:this.t('prep.adviceProfit'),basis:this.tn('prep.adviceProfitBasis',{sales:this.won(sel.per/3)}),
+      advice.push({title:this.t('prep.adviceProfit'),basis:this.tn('prep.adviceProfitBasis',{sales:this.won(sel.per)}),
         action:this.t('prep.adviceProfitAction')});
     }
     if(lp){
-      const ages=['10대','20대','30대','40대','50대','60대 이상'];let hi=0;lp.age.forEach((v,i)=>{if(v>lp.age[hi])hi=i;});
+      const ages=['0~19세','20대','30대','40대','50대','60~74세'];let hi=0;lp.age.forEach((v,i)=>{if(v>lp.age[hi])hi=i;});
       advice.push({title:this.t('prep.adviceWalk'),basis:this.t('prep.adviceWalkBasis',{dong:this.placeName(lp.dong),people:this.nfmt(Math.round(lp.tot)),age:this.tr(ages[hi])}),
         action:this.t('prep.adviceWalkAction')});
     }
