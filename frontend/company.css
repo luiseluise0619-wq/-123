@@ -185,7 +185,6 @@ main[data-screen="price"] > section:last-of-type { margin-top:20px; }
   .home-step-grid{grid-template-columns:1fr 1fr!important}
 }
 @media(max-width:799px){
-  .prep-grid{grid-template-columns:1fr!important}
 }
 @media(max-width:599px) { .compare-browser { grid-template-columns:1fr; } .market-filter { max-width:none;flex-basis:100%; } .market-filters { gap:12px; } }
 

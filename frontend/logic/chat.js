@@ -75,11 +75,22 @@ globalThis.MysbizonParts.chat = {
     const r=this.rank();
     const sel = r ? (S.sel? (r.list.find(o=>o.id===S.sel)||r.list[0]) : r.list[0]) : null;
     const log = S.chat || [{who:'ai', text:this.t('chat.hello',{ind:this.tr(this.indName(S.ind))})}];
-    const ask=q=>{
-      const a=this.answer(q,r,sel);
-      const next=[...log,{who:'me',text:q}];
-      if(a) next.push({who:'ai',...a});
-      this.setState({chat:next,draft:''},()=>this.scrollBot());
+    const ask=async q=>{
+      const question=String(q||'').trim();
+      if(!question||S.chatLoading) return;
+      const next=[...log,{who:'me',text:question}];
+      this.setState({chat:next,draft:'',chatLoading:true},()=>this.scrollBot());
+      // API 키는 브라우저로 보내지 않는다. 서버 프록시에 현재 화면의 공개 근거만 보낸다.
+      const evidence={industry:ind,quarter:r&&r.quarter,selected:sel?{zone:this.zoneLabelOf(sel.name),score:sel.score,stores:sel.stores,monthlyPerStore:sel.per}:null,
+        candidates:r?r.list.slice(0,5).map(o=>({zone:this.zoneLabelOf(o.name),score:o.score,stores:o.stores,monthlyPerStore:o.per})):[]};
+      let ai=null;
+      try{
+        const response=await fetch('/api/gemini',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,evidence}),signal:AbortSignal.timeout(20000)});
+        const json=await response.json();
+        if(json&&json.ok&&json.answer) ai={text:String(json.answer),source:'Gemini · 화면에 표시된 근거를 바탕으로 답했어요.'};
+      }catch(e){ /* 연결이 안 되면 아래의 근거 기반 답변으로 이어 간다 */ }
+      if(!ai) ai=this.answer(question,r,sel);
+      this.setState({chat:[...next,ai].filter(Boolean),chatLoading:false},()=>this.scrollBot());
     };
     const CH=['어디가 좋아요?','본전은 얼마예요?','손님은 누가 와요?','임대료 알려줘요','폐업 많아요?'];
     return {
@@ -97,6 +108,7 @@ globalThis.MysbizonParts.chat = {
           ctaGo:()=>this.setState({screen:m.go||'find'})
         };
       }),
+      loading:!!S.chatLoading,
       chips:CH.map(c=>({label:c, ask:()=>ask(c),
         style:'flex:none;font-size:13.5px;padding:9px 15px;border-radius:999px;background:var(--surface);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:color .16s'})),
       draft:S.draft||'',

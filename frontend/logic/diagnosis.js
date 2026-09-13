@@ -62,7 +62,6 @@ globalThis.MysbizonParts.diagnosis = {
       {label:this.t('bep.quickVariable'),value:this.man(c.rev*c.cogs)},
       {label:this.t('bep.quickProfit'),value:this.man(c.profit)}
     ]:[];
-    out.d.prepCta=this.t('prep.continue');
     out.d.compareCta=this.t('prep.compareCta');
     out.d.mapCta=this.t('prep.mapCta');
 

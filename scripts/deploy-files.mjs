@@ -17,9 +17,10 @@ export async function deploymentFiles(root) {
   const files = [
     'package.json', 'package-lock.json', 'server.js', 'scripts/validate-data.mjs','scripts/customer-purge.mjs',
     'deploy/customer-schema.sql', 'deploy/configure-integrations.sh', 'deploy/configure-kakao-map.sh', 'deploy/install-customer-admin.sh', 'deploy/rotate-customer-admin-token.sh',
+    'backend/collect_rone.mjs',
     'api/config.js', 'api/report.js', 'api/support.js', 'api/customer.js', 'api/integrations.js',
     'api/_origin.js', 'api/_request.js', 'api/_http.js', 'api/_err.js',
-    'frontend/zone_rent.json', 'THIRD-PARTY.md',
+    'frontend/zone_rent.json', 'frontend/data/v3/rone.json', 'THIRD-PARTY.md',
   ];
   for (const dir of ['server','admin','frontend/vendor','frontend/fonts','frontend/locales','frontend/data/v3','licenses']) {
     files.push(...await filesUnder(root, dir));

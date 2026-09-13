@@ -10,7 +10,7 @@ class Component extends DCLogic {
     scen:'보통일 때', ...MysbizonConst.BEP_DEFAULT,
     staffOv:null, laborOv:null, etcOv:null, management:null, days:30, revOv:null,
     mapPoint:null, mapAddress:'', mapGu:'', mapZoneId:null, mapZoneDistance:null, competitors:null, competitorsLoading:false,
-    competitorsOpen:false, showCompetitorPins:false, prepChecks:{}, prepOpen:'contract',
+    competitorsOpen:false, showCompetitorPins:false,
   };
 
   // 바깥을 누르면 열린 드롭다운(헤더 메뉴·지역 검색)을 닫는다
@@ -235,9 +235,8 @@ class Component extends DCLogic {
        items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],['fineCmp',T('menu.sweep')]]},
       {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'hubFine',
        items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],['sim',T('menu.sim')],['diag',T('menu.bep')]]},
-      {label:T('nav.prep'), keys:['prep'], hub:'prep', items:[['prep',T('nav.prep')]]},
-      {label:T('nav.report'), keys:['report'], hub:'report', items:[['report',T('nav.report')]]},
       {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
+      {label:T('nav.report'), keys:['report'], hub:'report', items:[['report',T('nav.report')]]},
 
     ];
 
@@ -267,7 +266,7 @@ class Component extends DCLogic {
             +(S.screen===k?'background:var(--ink);color:var(--card);font-weight:600':'background:var(--card);color:var(--ink2);font-weight:500')}))};
       })(),
       nav:MENU.map((g,gi)=>({
-        track:["nav.zone","nav.fine","nav.prep","nav.report","nav.price"][gi],
+        track:["nav.zone","nav.fine","nav.market","nav.report","nav.price"][gi],
         label:g.label, isOpen:false,
         // 모바일 탭바 아이콘(Lucide 계열 선 아이콘). 순서는 MENU 와 같다.
         hasIcon:mobileNav,
@@ -387,8 +386,6 @@ class Component extends DCLogic {
       onMapScreen:S.screen==='map',
       onFineDetail:S.screen==='fineDetail',
       goFineDetail:()=>this.setState({screen:'fineDetail',menu:null}),
-      onPrep:S.screen==='prep',
-      prep:S.screen==='prep'?this.prepView():{groups:[],advice:[]},
       onHub:S.screen==='hubZone'||S.screen==='hubFine',
       hub:(()=>{
         const zone = S.screen==='hubZone';
@@ -496,7 +493,6 @@ class Component extends DCLogic {
         };
       })(),
       goFind:go('find'), goCmp:go('sim'),
-      goPrep:go('prep'),
       // 후보지 화면은 아무것도 안 고른 상태에서 1위 상권을 보여준다(S.sel 은 null).
       // 그 상태에서 '이 상권 자세히 보기'를 누르면 화면에 보이던 상권이 그대로
       // 넘어가야 한다 — 예전에는 S.sel 이 null 이라 자치구가 '서울 전체'로 떨어지고,
@@ -742,7 +738,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','prep','screens','chat','charts','carousel','market','map','views']) {
+for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','screens','chat','charts','carousel','market','map','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {

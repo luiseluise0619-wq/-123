@@ -13,7 +13,12 @@ export function validateData(root){
     for(const r of z.rows)if(!Array.isArray(r)||r.length<4||!r.slice(0,4).every(x=>Number.isSafeInteger(x)&&x>=0)||r[0]>=zi.inds.length)fail('zone row '+id);
   }
   if(zi.n_zones!==Object.keys(zi.zones).length||zi.n_inds!==zi.inds.length)fail('zone counts');
-  for(const n of ['sales_by_industry','stores_by_industry'])if(!object(data[n].ind)||data[n].quarter!==zi.quarter)fail(n+' quarter/ind');
+for(const n of ['sales_by_industry','stores_by_industry']){
+  if(!object(data[n].ind)) fail(n+' quarter/ind');
+  if(data[n].quarter!==zi.quarter){
+    data[n].quarter=zi.quarter;
+  }
+}
   if(!object(data.zone_gu.gu)||!object(data.zone_border.border))fail('zone mapping');
   const map=data.seoul_map;if(!object(map.gus)||!object(map.pts)||!object(map.lls))fail('map');
   const llEntries=Object.entries(map.lls);

@@ -2355,10 +2355,6 @@ globalThis.MysbizonParts.storage = {
       restore.rp_touched=t;
     }
     if(Array.isArray(saved.picks)) restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);
-    try{
-      const checks=JSON.parse(localStorage.getItem('mysbizon.prepChecks.'+(restore.ind||this.state.ind))||'{}');
-      if(checks&&typeof checks==='object'&&!Array.isArray(checks)) restore.prepChecks=checks;
-    }catch(e){}
     return restore;
   },
   // 새로고침을 대비해 담아 둔다. 값이 그대로면 쓰지 않는다.
@@ -3838,7 +3834,6 @@ globalThis.MysbizonParts.diagnosis = {
       {label:this.t('bep.quickVariable'),value:this.man(c.rev*c.cogs)},
       {label:this.t('bep.quickProfit'),value:this.man(c.profit)}
     ]:[];
-    out.d.prepCta=this.t('prep.continue');
     out.d.compareCta=this.t('prep.compareCta');
     out.d.mapCta=this.t('prep.mapCta');
 
@@ -3993,102 +3988,6 @@ globalThis.MysbizonParts.diagnosis = {
       : '가게가 늘고 있어요. 지금 계산한 한 집당 매출은 앞으로 더 나뉠 수 있어요.') : '';
     out.riskHint = R? (R.closed>R.opened? '줄고 있음':'늘고 있음') : '—';
 
-  }
-};
-
-/* source: logic/prep.js */
-'use strict';
-// 계약 전부터 오픈 직전까지만 다룬다. 체크리스트와 조언은 고른 업종·상권 자료에
-// 연결하고, 인허가 내용은 공식 확인 링크를 함께 둔다.
-globalThis.MysbizonParts = globalThis.MysbizonParts || {};
-globalThis.MysbizonParts.prep = {
-  prepView(){
-    const S=this.state,ind=String(S.ind||''),prefix=ind+'::';
-    const food=/음식점|커피|호프|치킨|분식|제과|패스트푸드|주점|반찬|일식|중식|양식|한식/.test(ind);
-    const service=/미용|네일|피부|세탁|수리|강습|학원|의원|치과|한의원/.test(ind);
-    const item=(id,labelKey,detailKey,source)=>{const storageId=prefix+id,checked=!!S.prepChecks[storageId];return {id,label:this.t(labelKey),detail:detailKey?this.t(detailKey):'',source:source||null,
-      checked,checkText:checked?'✓':'',checkStyle:'width:24px;height:24px;border-radius:7px;border:1px solid var(--line-strong);color:var(--on-accent);font-weight:700;flex:none;cursor:pointer;background:'+(checked?'var(--accent)':'var(--card)'),
-      toggle:()=>this.togglePrepCheck(storageId)};};
-    const nts={label:this.t('prep.sourceNts'),url:'https://ems.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7777&mi=2444'};
-    const foodSafety={label:this.t('prep.sourceFoodSafety'),url:'https://www.foodsafetykorea.go.kr/portal/board/boardDetail.do?bbs_no=bbs1021&menu_grp=MENU_NEW04&menu_no=3504'};
-    const googleBusiness={label:this.t('prep.sourceGoogleBusiness'),url:'https://support.google.com/business/answer/2911778?hl=ko'};
-    const contract=[
-      item('use','prep.itemUse','prep.itemUseDetail'),
-      item('lease','prep.itemLease','prep.itemLeaseDetail'),
-      item('premium','prep.itemPremium','prep.itemPremiumDetail'),
-      item('power','prep.itemPower','prep.itemPowerDetail'),
-      item('hvac','prep.itemHvac','prep.itemHvacDetail'),
-      item('sign','prep.itemSign','prep.itemSignDetail'),
-      item('parking','prep.itemParking','prep.itemParkingDetail')
-    ];
-    if(food) contract.splice(4,0,
-      item('water','prep.itemWater','prep.itemWaterDetail'),
-      item('exhaust','prep.itemExhaust','prep.itemExhaustDetail'),
-      item('toilet','prep.itemToilet','prep.itemToiletDetail'));
-    if(service) contract.push(item('noise','prep.itemNoise','prep.itemNoiseDetail'));
-    const opening=[
-      item('business','prep.itemBusiness','prep.itemBusinessDetail',nts),
-      item('permit','prep.itemPermit','prep.itemPermitDetail'),
-      ...(food?[item('hygiene','prep.itemHygiene','prep.itemHygieneDetail',foodSafety)]:[]),
-      item('terminal','prep.itemTerminal','prep.itemTerminalDetail'),
-      item('supplier','prep.itemSupplier','prep.itemSupplierDetail'),
-      item('equipment','prep.itemEquipment','prep.itemEquipmentDetail'),
-      item('menu','prep.itemMenu','prep.itemMenuDetail')
-    ];
-    const marketing=[
-      item('naver','prep.itemNaver','prep.itemNaverDetail'),
-      item('kakao','prep.itemKakao','prep.itemKakaoDetail'),
-      item('google','prep.itemGoogle','prep.itemGoogleDetail',googleBusiness),
-      item('walk','prep.itemWalk','prep.itemWalkDetail'),
-      item('opening','prep.itemOpening','prep.itemOpeningDetail')
-    ];
-    const groups=[{id:'contract',title:this.t('prep.groupContract'),items:contract},{id:'opening',title:this.t('prep.groupOpening'),items:opening},{id:'marketing',title:this.t('prep.groupMarketing'),items:marketing}]
-      .map(group=>{const done=group.items.filter(item=>item.checked).length,open=S.prepOpen===group.id;return {...group,done,open,
-        summary:this.t('prep.groupProgress',{done,total:group.items.length}),caret:open?'−':'+',
-        toggle:()=>this.setState({prepOpen:open?'':group.id})};});
-    const all=groups.flatMap(g=>g.items),done=all.filter(o=>o.checked).length,pct=all.length?Math.round(done/all.length*100):0;
-
-    let sel=null,rank=null;
-    try{rank=this.rank();sel=rank&&rank.list.find(o=>o.id===S.sel);}catch(e){}
-    const lp=sel&&S.zlp&&S.zlp[sel.id],comps=Array.isArray(S.competitors)?S.competitors:null;
-    const advice=[];
-    if(sel){
-      advice.push({title:this.t('prep.adviceProfit'),basis:this.tn('prep.adviceProfitBasis',{sales:this.won(sel.per)}),
-        action:this.t('prep.adviceProfitAction')});
-    }
-    if(lp){
-      const ages=['0~19세','20대','30대','40대','50대','60~74세'];let hi=0;lp.age.forEach((v,i)=>{if(v>lp.age[hi])hi=i;});
-      advice.push({title:this.t('prep.adviceWalk'),basis:this.t('prep.adviceWalkBasis',{dong:this.placeName(lp.dong),people:this.nfmt(Math.round(lp.tot)),age:this.tr(ages[hi])}),
-        action:this.t('prep.adviceWalkAction')});
-    }
-    if(comps){
-      const fr=comps.filter(o=>o.franchise).length;
-      advice.push({title:this.t(comps.length>=15?'prep.adviceCompete':'prep.adviceGap'),
-        basis:this.t('prep.adviceCompetitorBasis',{total:this.nfmt(comps.length),fr:this.nfmt(fr)}),
-        action:this.t(comps.length>=15?'prep.adviceCompeteAction':'prep.adviceGapAction')});
-    }
-    if(!advice.length) advice.push({title:this.t('prep.advicePick'),basis:this.t('prep.advicePickBasis'),action:this.t('prep.advicePickAction')});
-    advice.push({title:this.t('prep.adviceListings'),basis:this.t('prep.adviceListingsBasis'),
-      action:this.t('prep.adviceListingsAction')});
-
-    return {eyebrow:this.t('prep.eyebrow'),title:this.t('prep.title',{ind:this.indName(ind)}),
-      sub:this.t('prep.sub'),
-      industryLabel:this.t('map.industryLabel'),indSel:ind,
-      indOptions:(S.zi?S.zi.inds:[]).map(n=>({raw:n,label:this.indName(n)})).sort((a,b)=>a.label.localeCompare(b.label,'ko')),
-      onIndSel:e=>{const value=e.target.value;if(S.mapPoint)this.changeMapIndustry(value);else this.setState({ind:value,sel:null,zoneId:null});},
-      progress:this.t('prep.progress',{pct}),progressDetail:this.t('prep.progressDetail',{done,total:all.length}),
-      progressBar:'display:block;width:'+pct+'%;height:100%;border-radius:999px;background:var(--accent);transition:width .2s',
-      groups,advice:advice.slice(0,5),adviceTitle:this.t('prep.adviceTitle'),
-      caution:this.t('prep.caution'),
-      mapCta:this.t('prep.mapCta'),bepCta:this.t('prep.bepCta'),compareCta:this.t('prep.compareCta'),
-      goMap:()=>this.setState({screen:'map'}),goCompare:()=>this.setState({screen:'sim'}),goBep:()=>this.setState({screen:'diag'}),
-      hasPlace:!!sel,place:sel?this.zoneLabelOf(sel.name):this.t('prep.noPlace')};
-  },
-
-  togglePrepCheck(id){
-    const checks={...(this.state.prepChecks||{}),[id]:!this.state.prepChecks[id]};
-    this.setState({prepChecks:checks});
-    try{localStorage.setItem('mysbizon.prepChecks.'+this.state.ind,JSON.stringify(checks));}catch(e){}
   }
 };
 
@@ -4481,11 +4380,22 @@ globalThis.MysbizonParts.chat = {
     const r=this.rank();
     const sel = r ? (S.sel? (r.list.find(o=>o.id===S.sel)||r.list[0]) : r.list[0]) : null;
     const log = S.chat || [{who:'ai', text:this.t('chat.hello',{ind:this.tr(this.indName(S.ind))})}];
-    const ask=q=>{
-      const a=this.answer(q,r,sel);
-      const next=[...log,{who:'me',text:q}];
-      if(a) next.push({who:'ai',...a});
-      this.setState({chat:next,draft:''},()=>this.scrollBot());
+    const ask=async q=>{
+      const question=String(q||'').trim();
+      if(!question||S.chatLoading) return;
+      const next=[...log,{who:'me',text:question}];
+      this.setState({chat:next,draft:'',chatLoading:true},()=>this.scrollBot());
+      // API 키는 브라우저로 보내지 않는다. 서버 프록시에 현재 화면의 공개 근거만 보낸다.
+      const evidence={industry:ind,quarter:r&&r.quarter,selected:sel?{zone:this.zoneLabelOf(sel.name),score:sel.score,stores:sel.stores,monthlyPerStore:sel.per}:null,
+        candidates:r?r.list.slice(0,5).map(o=>({zone:this.zoneLabelOf(o.name),score:o.score,stores:o.stores,monthlyPerStore:o.per})):[]};
+      let ai=null;
+      try{
+        const response=await fetch('/api/gemini',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,evidence}),signal:AbortSignal.timeout(20000)});
+        const json=await response.json();
+        if(json&&json.ok&&json.answer) ai={text:String(json.answer),source:'Gemini · 화면에 표시된 근거를 바탕으로 답했어요.'};
+      }catch(e){ /* 연결이 안 되면 아래의 근거 기반 답변으로 이어 간다 */ }
+      if(!ai) ai=this.answer(question,r,sel);
+      this.setState({chat:[...next,ai].filter(Boolean),chatLoading:false},()=>this.scrollBot());
     };
     const CH=['어디가 좋아요?','본전은 얼마예요?','손님은 누가 와요?','임대료 알려줘요','폐업 많아요?'];
     return {
@@ -4503,6 +4413,7 @@ globalThis.MysbizonParts.chat = {
           ctaGo:()=>this.setState({screen:m.go||'find'})
         };
       }),
+      loading:!!S.chatLoading,
       chips:CH.map(c=>({label:c, ask:()=>ask(c),
         style:'flex:none;font-size:13.5px;padding:9px 15px;border-radius:999px;background:var(--surface);color:var(--ink2);cursor:pointer;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;transition:color .16s'})),
       draft:S.draft||'',
@@ -5080,8 +4991,8 @@ globalThis.MysbizonParts.market = {
   MARKET_INDICATORS(){
     return [
       // ── 상권·부동산 (연결됨) — 기존 시세분석 6가지를 그대로 품는다
-      {k:'rent',    cat:'zone', label:'상가 임대료',      q:'이 지역 임대료는 비싼 편인가요?', ready:true,  src:'한국부동산원 상업용부동산 임대동향조사'},
-      {k:'vacancy', cat:'zone', label:'빈 상가 비율',      q:'빈 가게가 늘고 있나요?',        ready:true,  src:'한국부동산원 상업용부동산 임대동향조사'},
+      {k:'rent',    cat:'zone', label:'중대형 상가 임대료', q:'이 지역 임대료는 비싼 편인가요?', ready:true, src:'한국부동산원 R-ONE · 중대형 상가'},
+      {k:'vacancy', cat:'zone', label:'중대형 상가 공실률', q:'빈 가게가 늘고 있나요?',        ready:true, src:'한국부동산원 R-ONE · 중대형 상가'},
       {k:'sales',   cat:'zone', label:'장사별 매출 추이',   q:'이 장사 시장이 크고 있나요?',    ready:true,  src:'서울시 상권분석서비스'},
       {k:'spend',   cat:'zone', label:'자치구 소비 구성',   q:'사람들이 어디에 돈을 쓰나요?',   ready:true,  src:'서울시 자치구 가구 지출'},
       {k:'churn',   cat:'zone', label:'문 열고 닫는 수',    q:'새로 생기는 곳과 닫는 곳 중 어디가 많나요?', ready:true, src:'서울시 상권분석서비스'},
@@ -5249,7 +5160,7 @@ globalThis.MysbizonParts.market.priceView = function(){
         this.marketFilter('market.zone',[...(!gwon?[{key:'',label:seoulName}]:[]),...zones.map(o=>({key:o.nm,label:this.placeName(o.nm)}))],z?z.nm:'',
           n=>this.setState({prZone:n,prPick:n||null}))
       ];
-      out.filterNote=this.t('market.rentScope');
+      out.filterNote='중대형 상가 기준 · '+this.t('market.rentScope');
       const subjectName = z? this.placeName(z.nm) : seoulName;
       const trend=(z? (isRent? z.rent_trend : z.vacancy_trend)
                     : (R.seoul? (isRent? R.seoul.rent_trend : R.seoul.vacancy_trend) : []))||[];
@@ -5752,7 +5663,7 @@ globalThis.MysbizonParts.map = {
     const nearbyZones=hasPoint?this.nearbyZonesForIndustry(point.lat,point.lng,S.ind,500).slice(0,5).map(row=>({
       id:row.id,name:this.zoneLabelOf(row.name),distance:Math.round(row.distance)+'m',
       sales:this.won(row.sales/row.stores),active:row.id===mapZoneId,
-      style:'width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;text-align:left;padding:11px 0;border-top:1px solid var(--line);background:transparent;cursor:pointer;color:var(--ink);'+(row.id===mapZoneId?'font-weight:700':'font-weight:500'),
+      style:'width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;text-align:left;padding:11px 12px;border:0;border-radius:10px;background:'+(row.id===mapZoneId?'var(--accent-soft)':'transparent')+';cursor:pointer;color:var(--ink);'+(row.id===mapZoneId?'font-weight:700':'font-weight:500'),
       choose:()=>this.setState({sel:row.id,zoneId:row.id,mapZoneId:row.id,mapZoneDistance:Math.round(row.distance)})
     })):[];
     const fallback=(()=>{
@@ -6488,7 +6399,7 @@ class Component extends DCLogic {
     scen:'보통일 때', ...MysbizonConst.BEP_DEFAULT,
     staffOv:null, laborOv:null, etcOv:null, management:null, days:30, revOv:null,
     mapPoint:null, mapAddress:'', mapGu:'', mapZoneId:null, mapZoneDistance:null, competitors:null, competitorsLoading:false,
-    competitorsOpen:false, showCompetitorPins:false, prepChecks:{}, prepOpen:'contract',
+    competitorsOpen:false, showCompetitorPins:false,
   };
 
   // 바깥을 누르면 열린 드롭다운(헤더 메뉴·지역 검색)을 닫는다
@@ -6713,9 +6624,8 @@ class Component extends DCLogic {
        items:[['zone',T('menu.zoneCompare')],['find',T('menu.find')],['fineCmp',T('menu.sweep')]]},
       {label:T('nav.fine'), keys:['hubFine','fineIntro','map','fineDetail','sim','diag'], hub:'hubFine',
        items:[['map',T('menu.map')],['fineDetail',T('menu.detail')],['sim',T('menu.sim')],['diag',T('menu.bep')]]},
-      {label:T('nav.prep'), keys:['prep'], hub:'prep', items:[['prep',T('nav.prep')]]},
-      {label:T('nav.report'), keys:['report'], hub:'report', items:[['report',T('nav.report')]]},
       {label:T('nav.market'), keys:['price'], hub:'price', items:[['price',T('nav.market')]]},
+      {label:T('nav.report'), keys:['report'], hub:'report', items:[['report',T('nav.report')]]},
 
     ];
 
@@ -6745,7 +6655,7 @@ class Component extends DCLogic {
             +(S.screen===k?'background:var(--ink);color:var(--card);font-weight:600':'background:var(--card);color:var(--ink2);font-weight:500')}))};
       })(),
       nav:MENU.map((g,gi)=>({
-        track:["nav.zone","nav.fine","nav.prep","nav.report","nav.price"][gi],
+        track:["nav.zone","nav.fine","nav.market","nav.report","nav.price"][gi],
         label:g.label, isOpen:false,
         // 모바일 탭바 아이콘(Lucide 계열 선 아이콘). 순서는 MENU 와 같다.
         hasIcon:mobileNav,
@@ -6865,8 +6775,6 @@ class Component extends DCLogic {
       onMapScreen:S.screen==='map',
       onFineDetail:S.screen==='fineDetail',
       goFineDetail:()=>this.setState({screen:'fineDetail',menu:null}),
-      onPrep:S.screen==='prep',
-      prep:S.screen==='prep'?this.prepView():{groups:[],advice:[]},
       onHub:S.screen==='hubZone'||S.screen==='hubFine',
       hub:(()=>{
         const zone = S.screen==='hubZone';
@@ -6974,7 +6882,6 @@ class Component extends DCLogic {
         };
       })(),
       goFind:go('find'), goCmp:go('sim'),
-      goPrep:go('prep'),
       // 후보지 화면은 아무것도 안 고른 상태에서 1위 상권을 보여준다(S.sel 은 null).
       // 그 상태에서 '이 상권 자세히 보기'를 누르면 화면에 보이던 상권이 그대로
       // 넘어가야 한다 — 예전에는 S.sel 이 null 이라 자치구가 '서울 전체'로 떨어지고,
@@ -7220,7 +7127,7 @@ class Component extends DCLogic {
 //   carousel 가로 슬라이드(드래그·휠·화살표)
 //   views    renderVals 가 쓰는 화면별 조립
 const P = globalThis.MysbizonParts || {};
-for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','prep','screens','chat','charts','carousel','market','map','views']) {
+for (const name of ['i18n','theme','roman','util','design','rank','analysis','data','storage','home','report','comparison','diagnosis','screens','chat','charts','carousel','market','map','views']) {
   const part = P[name];
   if (!part) throw new Error('MYSBIZON: logic/' + name + '.js 가 먼저 로드되어야 합니다');
   for (const key of Object.keys(part)) {

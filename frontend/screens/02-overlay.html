@@ -36,6 +36,11 @@
               </div>
             </div>
           </sc-for>
+          <sc-if value="{{ ai.loading }}">
+            <div style="display:flex;justify-content:flex-start">
+              <div style="padding:12px 16px;border-radius:18px;background:var(--surface);color:var(--ink3);font-size:13px">잠깐만요, 자료를 보고 있어요…</div>
+            </div>
+          </sc-if>
         </div>
 
         <div style="flex:none;padding:0 18px 16px">

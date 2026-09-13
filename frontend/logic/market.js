@@ -44,8 +44,8 @@ globalThis.MysbizonParts.market = {
   MARKET_INDICATORS(){
     return [
       // ── 상권·부동산 (연결됨) — 기존 시세분석 6가지를 그대로 품는다
-      {k:'rent',    cat:'zone', label:'상가 임대료',      q:'이 지역 임대료는 비싼 편인가요?', ready:true,  src:'한국부동산원 상업용부동산 임대동향조사'},
-      {k:'vacancy', cat:'zone', label:'빈 상가 비율',      q:'빈 가게가 늘고 있나요?',        ready:true,  src:'한국부동산원 상업용부동산 임대동향조사'},
+      {k:'rent',    cat:'zone', label:'중대형 상가 임대료', q:'이 지역 임대료는 비싼 편인가요?', ready:true, src:'한국부동산원 R-ONE · 중대형 상가'},
+      {k:'vacancy', cat:'zone', label:'중대형 상가 공실률', q:'빈 가게가 늘고 있나요?',        ready:true, src:'한국부동산원 R-ONE · 중대형 상가'},
       {k:'sales',   cat:'zone', label:'장사별 매출 추이',   q:'이 장사 시장이 크고 있나요?',    ready:true,  src:'서울시 상권분석서비스'},
       {k:'spend',   cat:'zone', label:'자치구 소비 구성',   q:'사람들이 어디에 돈을 쓰나요?',   ready:true,  src:'서울시 자치구 가구 지출'},
       {k:'churn',   cat:'zone', label:'문 열고 닫는 수',    q:'새로 생기는 곳과 닫는 곳 중 어디가 많나요?', ready:true, src:'서울시 상권분석서비스'},
@@ -213,7 +213,7 @@ globalThis.MysbizonParts.market.priceView = function(){
         this.marketFilter('market.zone',[...(!gwon?[{key:'',label:seoulName}]:[]),...zones.map(o=>({key:o.nm,label:this.placeName(o.nm)}))],z?z.nm:'',
           n=>this.setState({prZone:n,prPick:n||null}))
       ];
-      out.filterNote=this.t('market.rentScope');
+      out.filterNote='중대형 상가 기준 · '+this.t('market.rentScope');
       const subjectName = z? this.placeName(z.nm) : seoulName;
       const trend=(z? (isRent? z.rent_trend : z.vacancy_trend)
                     : (R.seoul? (isRent? R.seoul.rent_trend : R.seoul.vacancy_trend) : []))||[];

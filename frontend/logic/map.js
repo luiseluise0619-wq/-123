@@ -244,7 +244,7 @@ globalThis.MysbizonParts.map = {
     const nearbyZones=hasPoint?this.nearbyZonesForIndustry(point.lat,point.lng,S.ind,500).slice(0,5).map(row=>({
       id:row.id,name:this.zoneLabelOf(row.name),distance:Math.round(row.distance)+'m',
       sales:this.won(row.sales/row.stores),active:row.id===mapZoneId,
-      style:'width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;text-align:left;padding:11px 0;border-top:1px solid var(--line);background:transparent;cursor:pointer;color:var(--ink);'+(row.id===mapZoneId?'font-weight:700':'font-weight:500'),
+      style:'width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;text-align:left;padding:11px 12px;border:0;border-radius:10px;background:'+(row.id===mapZoneId?'var(--accent-soft)':'transparent')+';cursor:pointer;color:var(--ink);'+(row.id===mapZoneId?'font-weight:700':'font-weight:500'),
       choose:()=>this.setState({sel:row.id,zoneId:row.id,mapZoneId:row.id,mapZoneDistance:Math.round(row.distance)})
     })):[];
     const fallback=(()=>{

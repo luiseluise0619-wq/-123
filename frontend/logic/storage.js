@@ -29,10 +29,6 @@ globalThis.MysbizonParts.storage = {
       restore.rp_touched=t;
     }
     if(Array.isArray(saved.picks)) restore.picks=saved.picks.filter(v=>typeof v==='string').slice(0,5);
-    try{
-      const checks=JSON.parse(localStorage.getItem('mysbizon.prepChecks.'+(restore.ind||this.state.ind))||'{}');
-      if(checks&&typeof checks==='object'&&!Array.isArray(checks)) restore.prepChecks=checks;
-    }catch(e){}
     return restore;
   },
   // 새로고침을 대비해 담아 둔다. 값이 그대로면 쓰지 않는다.
