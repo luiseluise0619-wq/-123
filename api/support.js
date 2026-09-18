@@ -62,7 +62,8 @@ function parseDate(s) {
 }
 
 export default async function handler(req, res) {
-  const key = process.env.KSTARTUP_API_KEY || process.env.DATA_GO_KR_KEY;
+  // K-Startup은 공공데이터포털 통합 서비스키만 사용한다.
+  const key = process.env.DATA_GO_KR_KEY;
   const base = KSTARTUP_API_URL;
   if (!key) {
     return res.status(200).json({

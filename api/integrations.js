@@ -73,7 +73,7 @@ export function integrationStatus(env=process.env){
   return {
     seoul:{configured:!!keyFor('SEOUL_API_KEY',env),keyOnly:true},
     dataGoKr:{configured:dataGo,keyOnly:false,note:'이용 신청한 API별 주소가 필요합니다. 상가정보 어댑터는 포함되어 있습니다.'},
-    kStartup:{configured:!!(keyFor('KSTARTUP_API_KEY',env)||keyFor('DATA_GO_KR_KEY',env)),keyOnly:true},
+    kStartup:{configured:!!keyFor('DATA_GO_KR_KEY',env),keyOnly:true},
     rOne:{configured:roneKey,keyOnly:true,note:'소규모·중대형·집합상가의 임대료·공실률·임대가격지수를 선택 조회합니다.'},
     exportImportBank:{configured:!!keyFor('EXIM_API_KEY',env),keyOnly:true},
     gemini:{configured:!!keyFor('GEMINI_API_KEY',env),keyOnly:true},
